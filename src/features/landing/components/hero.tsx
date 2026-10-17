@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FeatureCarousel } from "@/features/landing/components/feature-carousel";
+import { HeroVideo } from "@/features/landing/components/hero-video";
 import { hero } from "@/features/landing/original.content";
 
 /**
@@ -9,12 +10,21 @@ import { hero } from "@/features/landing/original.content";
  * The two columns, their order and every element inside them are unchanged.
  * Two things were added around them and one thing moved:
  *
- *   - the video and its scrim, as the section's first two children;
+ *   - the video and its scrim, as the section's first two children. The
+ *     video is a client component: `autoPlay` alone left a black screen
+ *     after a refresh, so playback is enforced in an effect, which is also
+ *     where `prefers-reduced-motion` is honoured (see `<HeroVideo>`);
  *   - `max-w-7xl` moved OFF the section and onto a new inner wrapper. The
  *     video is `absolute inset-0` and so is bounded by the section, which was
  *     capped at 1280px — it would have been a letterboxed strip down the
  *     middle of a wide display instead of a background. The columns sit at
  *     exactly the same width they did before.
+ *
+ * The section is pulled up under the header with `-mt-18` and clears it again
+ * with `pt-18` (the bar is 4.5rem: a 44px row inside 14px of padding). Without
+ * that the video stopped where the header began, and a transparent header over
+ * the cream page ground left its white type invisible on cream. Now the footage
+ * and its scrim run the full viewport and the bar floats on them.
  *
  * Layering: the section is `isolate`, so it forms a stacking context and the
  * negative z-indices below cannot escape it. Within that context the paint
@@ -25,18 +35,9 @@ import { hero } from "@/features/landing/original.content";
  */
 export function Hero() {
   return (
-    <section className="relative isolate flex w-full flex-col justify-center overflow-hidden bg-zinc-950 py-14 md:py-20 lg:py-16 min-h-[calc(100dvh-4.5rem)]">
-      <video
+    <section className="relative isolate flex w-full flex-col justify-center overflow-hidden bg-zinc-950 min-h-dvh py-14 pt-18 md:py-20 md:pt-24 lg:py-16 lg:pt-24 -mt-18">
+      <HeroVideo
         src="/hero-video.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-        // Decorative: it carries no information the copy does not, so it is
-        // hidden from assistive tech rather than described.
-        aria-hidden
-        tabIndex={-1}
-        preload="auto"
         className="absolute inset-0 -z-20 h-full w-full object-cover"
       />
 

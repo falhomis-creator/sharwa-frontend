@@ -1,7 +1,15 @@
 "use client";
 
 import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
-import { ArrowRightLeft, CreditCard, MessageCircle, Zap, type LucideIcon } from "lucide-react";
+import {
+  ArrowRightLeft,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+  MessageCircle,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { features, type FeatureIcon } from "@/features/landing/original.content";
 
@@ -10,10 +18,9 @@ const INTERVAL_MS = 4000;
 /**
  * One glyph per card, all painted the same accent green.
  *
- * The template used emoji here (⚡ 💱 📲 💳). Emoji carry their own fixed
- * colors — four different ones — and no CSS can bring them into a palette,
- * which is why they are lucide glyphs now (owner direction 2026-10-17: every
- * card icon is a single color).
+ * The template used emoji here. Emoji carry their own fixed colors — four
+ * different ones — and no CSS can bring them into a palette, which is why
+ * these are lucide glyphs.
  */
 const ICONS: Record<FeatureIcon, LucideIcon> = {
   instant: Zap,
@@ -23,52 +30,57 @@ const ICONS: Record<FeatureIcon, LucideIcon> = {
 };
 
 /**
- * The hero's second column: the template's four `.feature-card`s as an
- * auto-playing carousel.
+ * The hero's second column: the template's four feature cards as an
+ * auto-playing carousel, with arrows and pagination dots.
  *
  * Built on `motion/react` rather than shadcn's carousel: that primitive wraps
  * embla, which is not a dependency here, and this needs exactly one behaviour
- * — advance, wrap, pause. `LazyMotion` + `m` ship the DOM feature subset.
+ * — advance, wrap, hold. `LazyMotion` + `m` ship the DOM feature subset.
+ *
+ * Autoplay no longer pauses when the pointer is over the CARD. It did, and
+ * that is what made the slider look frozen: a reader's cursor comes to rest on
+ * the thing they are reading, and the carousel stopped for as long as it sat
+ * there. WCAG 2.2.2 still wants a way to stop auto-updating content, so the
+ * hold moved onto the controls — hovering the arrows or dots freezes the
+ * current card while you aim at them, and keyboard focus does the same. The
+ * card itself never stops the show.
  *
  * Direction is RTL-aware without any physical CSS: the track reads right to
  * left, so the NEXT card lives to the start-ward left and enters from -x while
- * the outgoing one leaves to +x. Advancing backwards mirrors both.
+ * the outgoing one leaves to +x. Going back mirrors both.
  *
- * Autoplay stops on hover and on keyboard focus, and `useReducedMotion` turns
- * the whole thing into a static card with working dots — the cards are
- * content, so they must never depend on motion to be reachable.
+ * Under `prefers-reduced-motion` it keeps advancing — the cards are content,
+ * and stopping leaves three of the four unreachable unless the reader finds
+ * the dots — but it crossfades in place instead of sliding.
  */
 export function FeatureCarousel() {
   const reduced = useReducedMotion();
   const [{ index, direction }, setSlide] = useState({ index: 0, direction: 1 });
-  const [paused, setPaused] = useState(false);
+  const [held, setHeld] = useState(false);
 
   const go = useCallback((next: number, dir: number) => {
     setSlide({ index: (next + features.length) % features.length, direction: dir });
   }, []);
 
   useEffect(() => {
-    if (reduced || paused) return;
+    if (held) return;
     const id = window.setInterval(
       () => setSlide((s) => ({ index: (s.index + 1) % features.length, direction: 1 })),
       INTERVAL_MS,
     );
     return () => window.clearInterval(id);
-  }, [reduced, paused]);
+  }, [held]);
 
   const feature = features[index]!;
   const Icon = ICONS[feature.icon];
-  const offset = 48 * direction;
+  const offset = reduced ? 0 : 48 * direction;
+
+  const arrowClass =
+    "flex size-11 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20";
 
   return (
     <LazyMotion features={domAnimation} strict>
-      <div
-        className="flex w-full flex-col gap-5"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onFocusCapture={() => setPaused(true)}
-        onBlurCapture={() => setPaused(false)}
-      >
+      <div className="flex w-full flex-col gap-5">
         <div
           aria-live="polite"
           aria-atomic
@@ -77,10 +89,10 @@ export function FeatureCarousel() {
           <AnimatePresence initial={false} mode="wait">
             <m.article
               key={feature.title}
-              initial={reduced ? false : { opacity: 0, x: -offset }}
+              initial={{ opacity: 0, x: -offset }}
               animate={{ opacity: 1, x: 0 }}
-              exit={reduced ? undefined : { opacity: 0, x: offset }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              exit={{ opacity: 0, x: offset }}
+              transition={{ duration: reduced ? 0.25 : 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="absolute inset-0 flex flex-col justify-center rounded-2xl border border-zinc-200/60 bg-white p-7 shadow-sm sm:p-9"
             >
               <span className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-emerald-600/8">
@@ -96,27 +108,57 @@ export function FeatureCarousel() {
           </AnimatePresence>
         </div>
 
-        <div role="tablist" aria-label="مزايا المنصة" className="flex items-center justify-center">
-          {features.map((item, i) => (
-            <button
-              key={item.title}
-              type="button"
-              role="tab"
-              aria-selected={i === index}
-              aria-label={item.title}
-              onClick={() => go(i, i > index ? 1 : -1)}
-              className="flex size-11 items-center justify-center"
-            >
-              <span
-                aria-hidden
-                className={
-                  i === index
-                    ? "block h-1.5 w-6 rounded-full bg-emerald-600 transition-all duration-200"
-                    : "block size-1.5 rounded-full bg-zinc-300 transition-all duration-200"
-                }
-              />
-            </button>
-          ))}
+        {/* Controls. Hovering or focusing anywhere in this row holds the
+            current card — the pause mechanism WCAG 2.2.2 asks for. */}
+        <div
+          className="flex items-center justify-center gap-1"
+          onMouseEnter={() => setHeld(true)}
+          onMouseLeave={() => setHeld(false)}
+          onFocusCapture={() => setHeld(true)}
+          onBlurCapture={() => setHeld(false)}
+        >
+          {/* In RTL the previous card sits to the right, so this chevron points
+              right. Both arrows are literal directions, not mirrored icons. */}
+          <button
+            type="button"
+            onClick={() => go(index - 1, -1)}
+            aria-label="البطاقة السابقة"
+            className={arrowClass}
+          >
+            <ChevronRight className="size-5" aria-hidden />
+          </button>
+
+          <div role="tablist" aria-label="مزايا المنصة" className="flex items-center">
+            {features.map((item, i) => (
+              <button
+                key={item.title}
+                type="button"
+                role="tab"
+                aria-selected={i === index}
+                aria-label={item.title}
+                onClick={() => go(i, i > index ? 1 : -1)}
+                className="flex size-11 items-center justify-center"
+              >
+                <span
+                  aria-hidden
+                  className={
+                    i === index
+                      ? "block h-1.5 w-6 rounded-full bg-emerald-500 transition-all duration-200"
+                      : "block size-1.5 rounded-full bg-white/45 transition-all duration-200"
+                  }
+                />
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => go(index + 1, 1)}
+            aria-label="البطاقة التالية"
+            className={arrowClass}
+          >
+            <ChevronLeft className="size-5" aria-hidden />
+          </button>
         </div>
       </div>
     </LazyMotion>
