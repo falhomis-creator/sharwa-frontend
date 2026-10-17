@@ -201,3 +201,240 @@
     }
   }
 }
+
+/* ===========================================================================
+ * Surface & ambient-light tokens (constitution VII: raw values live ONLY here)
+ *
+ * Everything below is strictly achromatic — zinc channels at low alpha. There
+ * is no brand hue, no colored glow and no decorative color gradient anywhere;
+ * the `linear-gradient()` calls draw 1px hairlines and the `radial-gradient()`
+ * calls are masks or neutral light pools, not color washes (constitution I).
+ * ======================================================================== */
+
+@theme inline {
+  --color-elevated: var(--elevated);
+  --color-elevated-foreground: var(--elevated-foreground);
+}
+
+:root {
+  /* A true-white sheet that lifts off the #FAFAFA page without a heavy shadow. */
+  --elevated: #ffffff;
+  --elevated-foreground: #09090b;
+  /* zinc-200 — the hairline the whole UI is separated by */
+  --grid-line: #e4e4e7;
+  /* zinc-950 channels, used only at ≤ 12% alpha */
+  --ink-rgb: 9 9 11;
+  --sheen-rgb: 255 255 255;
+  /* Neutral elevation: three stacked low-alpha zinc layers, no color, no spread */
+  --shadow-sheet:
+    0 1px 2px -1px rgb(var(--ink-rgb) / 0.06),
+    0 6px 16px -8px rgb(var(--ink-rgb) / 0.08),
+    0 24px 48px -24px rgb(var(--ink-rgb) / 0.12);
+  --shadow-lift:
+    0 1px 2px -1px rgb(var(--ink-rgb) / 0.08),
+    0 10px 28px -12px rgb(var(--ink-rgb) / 0.12),
+    0 36px 72px -32px rgb(var(--ink-rgb) / 0.16);
+  --hairline-inset: inset 0 1px 0 rgb(var(--sheen-rgb) / 0.9);
+}
+
+.dark {
+  --elevated: #0c0c0e;
+  --elevated-foreground: #fafafa;
+  --grid-line: #27272a;
+  --ink-rgb: 0 0 0;
+  --sheen-rgb: 250 250 250;
+  --shadow-sheet:
+    0 1px 2px -1px rgb(var(--ink-rgb) / 0.4),
+    0 6px 16px -8px rgb(var(--ink-rgb) / 0.5),
+    0 24px 48px -24px rgb(var(--ink-rgb) / 0.6);
+  --shadow-lift:
+    0 1px 2px -1px rgb(var(--ink-rgb) / 0.5),
+    0 10px 28px -12px rgb(var(--ink-rgb) / 0.6),
+    0 36px 72px -32px rgb(var(--ink-rgb) / 0.7);
+  --hairline-inset: inset 0 1px 0 rgb(var(--sheen-rgb) / 0.08);
+}
+
+@layer components {
+  /* ---- Ambient grid -------------------------------------------------------
+   * Two stacked layers of the same 1px hairline lattice: a permanently faint
+   * one, and a stronger one revealed only around the pointer. The pointer
+   * position arrives as --spot-x/--spot-y from `<Spotlight>` (CSS custom
+   * properties, so tracking costs no React re-render).
+   */
+  .ambient-grid {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 72px 72px;
+    background-position: center top;
+    opacity: 0.45;
+    -webkit-mask-image: linear-gradient(to bottom, black, transparent 85%);
+    mask-image: linear-gradient(to bottom, black, transparent 85%);
+  }
+
+  .ambient-grid-reveal {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 72px 72px;
+    background-position: center top;
+    -webkit-mask-image: radial-gradient(
+      220px 220px at var(--spot-x, 50%) var(--spot-y, 0%),
+      black,
+      transparent 70%
+    );
+    mask-image: radial-gradient(
+      220px 220px at var(--spot-x, 50%) var(--spot-y, 0%),
+      black,
+      transparent 70%
+    );
+    transition: opacity var(--duration-slow) var(--ease-out-soft);
+  }
+
+  /* ---- Pointer light pool -------------------------------------------------
+   * A single soft achromatic pool that tracks the cursor. In light mode it
+   * reads as a faint shade (ink at 4%); in dark mode as a faint sheen.
+   */
+  .ambient-pool {
+    background: radial-gradient(
+      420px 320px at var(--spot-x, 50%) var(--spot-y, 0%),
+      rgb(var(--ink-rgb) / 0.05),
+      transparent 72%
+    );
+  }
+
+  .dark .ambient-pool {
+    background: radial-gradient(
+      420px 320px at var(--spot-x, 50%) var(--spot-y, 0%),
+      rgb(var(--sheen-rgb) / 0.06),
+      transparent 72%
+    );
+  }
+
+  /* Light pooling *under* the dashboard frame — grounds it instead of a glow. */
+  .ambient-underlight {
+    background: radial-gradient(
+      60% 100% at 50% 0%,
+      rgb(var(--ink-rgb) / 0.07),
+      transparent 70%
+    );
+  }
+
+  .dark .ambient-underlight {
+    background: radial-gradient(
+      60% 100% at 50% 0%,
+      rgb(var(--sheen-rgb) / 0.05),
+      transparent 70%
+    );
+  }
+
+  /* ---- Elevation ---------------------------------------------------------- */
+  .sheet {
+    box-shadow: var(--shadow-sheet), var(--hairline-inset);
+  }
+
+  .sheet-lift {
+    box-shadow: var(--shadow-lift), var(--hairline-inset);
+  }
+
+  /* Hairline top edge that catches the light — the "machined" Linear/Vercel edge. */
+  .edge-sheen::before {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgb(var(--sheen-rgb) / 0.8) 20%,
+      rgb(var(--sheen-rgb) / 0.8) 80%,
+      transparent
+    );
+    pointer-events: none;
+  }
+
+  .dark .edge-sheen::before {
+    background: linear-gradient(
+      to right,
+      transparent,
+      rgb(var(--sheen-rgb) / 0.12) 20%,
+      rgb(var(--sheen-rgb) / 0.12) 80%,
+      transparent
+    );
+  }
+}
+
+@layer base {
+  /* Anchored sections clear the sticky header. */
+  [id] {
+    scroll-margin-top: 5.5rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ambient-grid-reveal,
+    .ambient-pool {
+      display: none;
+    }
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Above-the-fold entrance, in CSS rather than JS.
+ *
+ * The hero must never depend on hydration to become visible: a JS-gated
+ * `opacity: 0` costs LCP and leaves the page blank if the bundle is slow or
+ * fails. These run on paint, and the `prefers-reduced-motion` block above
+ * collapses them to their end state (duration → 0.01ms with `both`).
+ * ------------------------------------------------------------------------ */
+
+@keyframes enter-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes draw-rule {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@layer components {
+  .enter-up {
+    animation: enter-up var(--duration-slow) var(--ease-out-soft) both;
+  }
+
+  .draw-rule {
+    transform-origin: 0% 50%;
+    animation: draw-rule var(--duration-slow) var(--ease-out-soft) 350ms both;
+  }
+
+  [dir="rtl"] .draw-rule {
+    transform-origin: 100% 50%;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * A note on section reveals.
+ *
+ * There is deliberately NO scroll-triggered fade on the sections below the
+ * fold. Both ways of building one hide content until something else un-hides
+ * it: `whileInView` ships `opacity: 0` from the server and waits on hydration,
+ * and `animation-timeline: view()` resolves to its start state whenever the
+ * page is measured rather than scrolled. Each left whole sections blank in the
+ * Playwright full-page captures (constitution IV), and would do the same for a
+ * visitor whose JS is slow, blocked, or whose browser lacks the timeline.
+ *
+ * Motion on this page is therefore load-driven (the hero, above the fold) or
+ * interaction-driven (pointer light, hover, the sticky header) — never a
+ * precondition for reading the page (constitution I: motion is functional).
+ * ------------------------------------------------------------------------ */

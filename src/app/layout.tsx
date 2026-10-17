@@ -16,9 +16,13 @@ const ibmPlexArabic = localFont({
   fallback: ["Segoe UI", "Tahoma", "Arial", "sans-serif"],
 });
 
+// Numbers are secondary to running text: keeping Mono off the preload path
+// frees ~77KB of critical bandwidth for the Arabic faces the headline needs.
+// `display: swap` still paints the numerals immediately in the fallback.
 const geistMono = localFont({
   variable: "--font-geist-mono",
   display: "swap",
+  preload: false,
   src: [
     { path: "../assets/fonts/geist-mono-400.woff2", weight: "400", style: "normal" },
     { path: "../assets/fonts/geist-mono-500.woff2", weight: "500", style: "normal" },

@@ -102,6 +102,20 @@ async function checkViewport(browser: Browser, vp: Viewport): Promise<Failure[]>
     failures.push({ viewport: vp.name, kind: "http", detail: `status ${response.status()}` });
   }
   await page.evaluate(() => document.fonts.ready);
+
+  // `fullPage` captures the whole document, but `whileInView` reveals only fire
+  // for sections that have actually entered the viewport. Walk the page to the
+  // bottom and back so every reveal has settled before the shot — otherwise the
+  // screenshot shows below-the-fold sections at their initial opacity.
+  await page.evaluate(async () => {
+    const step = window.innerHeight * 0.8;
+    const end = document.body.scrollHeight;
+    for (let y = 0; y < end; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 60));
+    }
+    window.scrollTo(0, 0);
+  });
   await page.waitForTimeout(400); // let reveal animations settle (they are ≤ 300ms)
 
   const metrics = await page.evaluate(() => {
@@ -115,6 +129,9 @@ async function checkViewport(browser: Browser, vp: Viewport): Promise<Failure[]>
       const rect = el.getBoundingClientRect();
       const style = getComputedStyle(el);
       if (rect.width === 0 || rect.height === 0 || style.visibility === "hidden") continue;
+      // Visually-hidden affordances (the sr-only skip link) are collapsed to 1px
+      // on purpose and only grow on focus — they are not touch targets.
+      if (style.position === "absolute" && rect.width <= 1 && rect.height <= 1) continue;
       // inline links inside running text are exempt (prose)
       if (el.tagName === "A" && el.closest("p, li, td")) continue;
       if (rect.height < 44) {
