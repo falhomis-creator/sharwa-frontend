@@ -16,13 +16,13 @@ const ibmPlexArabic = localFont({
   fallback: ["Segoe UI", "Tahoma", "Arial", "sans-serif"],
 });
 
-// Numbers are secondary to running text: keeping Mono off the preload path
-// frees ~77KB of critical bandwidth for the Arabic faces the headline needs.
-// `display: swap` still paints the numerals immediately in the fallback.
+// Mono IS critical again: the hero now carries the dashboard mockup, whose KPI
+// numeral is the page's LCP element. With `preload: false` that numeral painted
+// in the fallback and only settled when Mono arrived, so LCP was recorded at the
+// swap (5.1s). Preloaded, the first paint of the LCP element is the final one.
 const geistMono = localFont({
   variable: "--font-geist-mono",
   display: "swap",
-  preload: false,
   src: [
     { path: "../assets/fonts/geist-mono-400.woff2", weight: "400", style: "normal" },
     { path: "../assets/fonts/geist-mono-500.woff2", weight: "500", style: "normal" },

@@ -24,7 +24,8 @@ const MIN_H: Record<Capability["size"], string> = {
 
 export function CapabilitiesBento() {
   return (
-    <section id="capabilities" className="mx-auto w-full max-w-6xl px-6">
+    <section id="capabilities" className="relative isolate mx-auto w-full max-w-6xl px-6">
+      <div aria-hidden className="dot-field pointer-events-none absolute inset-0 -z-10 opacity-60" />
       <SectionHeading {...sections.capabilities} />
 
       <ul className="mt-12 grid grid-cols-1 gap-4 lg:mt-16 lg:grid-cols-12">

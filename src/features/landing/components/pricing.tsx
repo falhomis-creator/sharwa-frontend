@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mono } from "@/components/shared/mono";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,7 +19,12 @@ export async function Pricing() {
   const free = plans.find((p) => p.is_free) ?? plans[0];
 
   return (
-    <section id="pricing" className="mx-auto w-full max-w-6xl px-6">
+    <section id="pricing" className="relative isolate mx-auto w-full max-w-6xl px-6">
+      {/* second focal point of the page — same brand light as the hero */}
+      <div
+        aria-hidden
+        className="brand-aura pointer-events-none absolute inset-x-0 top-10 -z-10 h-80 opacity-70"
+      />
       <SectionHeading {...sections.pricing} />
       {!subscriptions_enabled || plans.length <= 1 ? (
         <SinglePlan plan={free} />
@@ -35,18 +41,18 @@ function SinglePlan({ plan }: { plan?: PublicPlan }) {
   const features = plan?.features ?? [];
 
   return (
-    <div className="mt-12 grid grid-cols-1 overflow-hidden rounded-xl border border-border/60 bg-elevated lg:mt-16 lg:grid-cols-12">
+    <div className="mt-12 grid grid-cols-1 overflow-hidden rounded-2xl border border-border/60 bg-elevated shadow-xl shadow-emerald-500/10 lg:mt-16 lg:grid-cols-12">
       <div className="flex flex-col gap-4 border-b border-border/60 p-8 lg:col-span-5 lg:border-b-0 lg:border-e lg:p-12">
         <span className="text-sm text-muted-foreground">{plan?.name ?? "مجاني"}</span>
         <div className="flex items-baseline gap-2">
-          <Mono className="text-5xl font-medium tracking-tight text-foreground">0</Mono>
+          <Mono className="text-brand-gradient text-6xl font-semibold tracking-tight">0</Mono>
           <span className="text-base text-muted-foreground">ر.س / شهرياً</span>
         </div>
         <p className="text-sm leading-relaxed text-muted-foreground">
           بلا بطاقة بنكية وبلا سقف للمنتجات أو الطلبات. حين نفتح الاشتراكات سنخبرك قبل أي تغيير.
         </p>
         <Button render={<a href="#start" />}
-              nativeButton={false} className="mt-4 h-12 rounded-md text-sm">
+              nativeButton={false} className="mt-4 h-12 rounded-xl bg-emerald-600 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/35">
           {hero.cta}
         </Button>
         <Link
@@ -61,8 +67,13 @@ function SinglePlan({ plan }: { plan?: PublicPlan }) {
         <span className="text-sm text-muted-foreground">ما يشمله</span>
         <ul className="mt-6 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
           {features.map((feature) => (
-            <li key={feature} className="flex items-baseline gap-3 text-sm text-foreground">
-              <span aria-hidden className="mt-2 size-1 shrink-0 rounded-full bg-foreground" />
+            <li key={feature} className="flex items-start gap-3 text-sm text-foreground">
+              <span
+                aria-hidden
+                className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+              >
+                <Check className="size-2.5" strokeWidth={3} />
+              </span>
               {feature}
             </li>
           ))}
@@ -92,8 +103,13 @@ function PlanRows({ plan }: { plan: PublicPlan }) {
       </div>
       <ul className="mt-4 flex flex-col gap-3">
         {plan.features.map((feature) => (
-          <li key={feature} className="flex items-baseline gap-3 text-sm text-foreground">
-            <span aria-hidden className="mt-2 size-1 shrink-0 rounded-full bg-foreground" />
+          <li key={feature} className="flex items-start gap-3 text-sm text-foreground">
+            <span
+              aria-hidden
+              className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+            >
+              <Check className="size-2.5" strokeWidth={3} />
+            </span>
             {feature}
           </li>
         ))}
@@ -118,7 +134,7 @@ function PlanComparison({ plans }: { plans: PublicPlan[] }) {
                 <PlanRows plan={plan} />
               </div>
               <Button render={<a href="#start" />}
-              nativeButton={false} className="mt-8 h-12 w-full rounded-md text-sm">
+              nativeButton={false} className="mt-8 h-12 w-full rounded-xl bg-emerald-600 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/35">
                 {hero.cta}
               </Button>
             </div>
@@ -140,7 +156,7 @@ function PlanComparison({ plans }: { plans: PublicPlan[] }) {
             <div className="rounded-xl border border-border/60 bg-elevated p-8">
               <PlanRows plan={plan} />
               <Button render={<a href="#start" />}
-              nativeButton={false} className="mt-8 h-12 w-full rounded-md text-sm">
+              nativeButton={false} className="mt-8 h-12 w-full rounded-xl bg-emerald-600 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/35">
                 {hero.cta}
               </Button>
             </div>

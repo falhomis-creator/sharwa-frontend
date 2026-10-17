@@ -17,8 +17,8 @@ export function SectionHeading({
 }) {
   return (
     <div className={cn("flex max-w-2xl flex-col gap-3", className)}>
-      <span className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span aria-hidden className="h-px w-6 bg-border" />
+      <span className="flex items-center gap-2 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+        <span aria-hidden className="h-px w-6 bg-emerald-500/50" />
         {label}
       </span>
       <h2 className="text-3xl font-semibold tracking-tight text-balance md:text-4xl">{title}</h2>

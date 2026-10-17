@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Hero } from "@/features/landing/components/hero";
-import { DashboardPreview } from "@/features/landing/components/dashboard-preview";
 import { CapabilitiesBento } from "@/features/landing/components/capabilities-bento";
 import { HowItWorks } from "@/features/landing/components/how-it-works";
 import { Pricing } from "@/features/landing/components/pricing";
@@ -45,10 +44,6 @@ export default async function LandingPage() {
       <JsonLd />
 
       <Hero stats={stats} />
-
-      <div className="py-16 md:py-24">
-        <DashboardPreview />
-      </div>
 
       <div className="py-16 md:py-24">
         <CapabilitiesBento />

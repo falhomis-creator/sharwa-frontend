@@ -85,7 +85,7 @@ export function SiteHeader() {
             <Button
               render={<a href="#start" />}
               nativeButton={false}
-              className="hidden h-10 rounded-md px-4 text-sm md:inline-flex"
+              className="hidden h-10 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white shadow-md shadow-emerald-500/25 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/35 md:inline-flex"
             >
               {hero.cta}
             </Button>
@@ -138,7 +138,7 @@ export function SiteHeader() {
                 <DrawerClose
                   render={
                     <Button render={<a href="#start" />}
-              nativeButton={false} className="mt-6 h-12 w-full rounded-md text-sm">
+              nativeButton={false} className="mt-6 h-12 w-full rounded-xl bg-emerald-600 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 hover:bg-emerald-500">
                       {hero.cta}
                     </Button>
                   }

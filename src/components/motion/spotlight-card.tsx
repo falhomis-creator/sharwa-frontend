@@ -38,8 +38,9 @@ export function SpotlightCard({
       ref={ref as never}
       onPointerMove={(e: React.PointerEvent) => track(e.clientX, e.clientY)}
       className={cn(
-        "group relative isolate overflow-hidden rounded-xl border border-border/60 bg-elevated",
-        "transition-colors duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-border",
+        "group relative isolate overflow-hidden rounded-2xl border border-border/60 bg-elevated shadow-sm shadow-zinc-900/5",
+        "transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
+        "hover:-translate-y-1 hover:border-emerald-500/35 hover:shadow-xl hover:shadow-emerald-500/10",
         className,
       )}
     >

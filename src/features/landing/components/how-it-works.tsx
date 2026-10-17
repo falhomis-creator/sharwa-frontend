@@ -22,7 +22,7 @@ export function HowItWorks() {
             key={step.num}
             className={`flex flex-col gap-4 border-border/60 py-8 ${i === arr.length - 1 ? "" : "border-b lg:border-b-0 lg:border-e"} ${i === 0 ? "lg:pe-10" : "lg:px-10"} ${i === arr.length - 1 ? "lg:pe-0 lg:ps-10" : ""}`}
           >
-            <Mono className="text-6xl font-medium leading-none tracking-tight text-muted-foreground/80">
+            <Mono className="text-brand-gradient text-6xl font-bold leading-none tracking-tight">
               {step.num}
             </Mono>
             <h3 className="text-lg font-medium tracking-tight text-foreground">{step.title}</h3>

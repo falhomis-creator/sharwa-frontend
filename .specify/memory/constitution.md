@@ -1,6 +1,9 @@
 <!--
 Sync Impact Report
-- Version change: (template, unversioned) → 1.0.0
+- Version change: (template, unversioned) → 1.0.0 → 2.0.0 (2026-10-17, owner-directed)
+- 2.0.0 BREAKING: Principle I split by surface — I-أ expressive marketing (gradients, glow,
+  glassmorphism, brand emerald now ALLOWED on `(marketing)`), I-ب restrained product (1.0.0 rules
+  unchanged for dashboard/storefront/admin). Design System Constraints gained a marketing palette.
 - Modified principles: all five template placeholders replaced; count expanded from 5 to 9
   - [PRINCIPLE_1] → I. Strict Anti-AI Look (NON-NEGOTIABLE)
   - [PRINCIPLE_2] → II. Arabic-First, Native RTL (NON-NEGOTIABLE)
@@ -32,26 +35,43 @@ Sync Impact Report
 
 ## Core Principles
 
-### I. Strict Anti-AI Look (NON-NEGOTIABLE) — منع «شكل الذكاء الاصطناعي»
+### I. Expressive Marketing / Restrained Product — سطحان بصريان
 
-التصميم MUST يكون Minimalist، عالي التباين، هندسياً، وبأقل تفاصيل ممكنة. يُمنع منعاً باتاً:
+> **تعديل v2.0.0 (2026-10-17، بقرار المالك).** النسخة 1.0.0 منعت منعاً باتاً التدرجات اللونية
+> ونصوص التدرج والهالات والظلال الملونة والـ glassmorphism في **كل** الأسطح. طُبِّق ذلك حرفياً على
+> الصفحة الترويجية فجاءت «ميتة» بحكم المالك. القاعدة لم تُلغَ — **قُسِّمت حسب السطح**: الصفحة
+> الترويجية تبيع، ولوحة التاجر تُدار. ما يصحّ في الأولى لا يصحّ في الثانية.
 
-- أي تدرج لوني (gradient) بنفسجي/أزرق/فوسفوري أو نص بتدرج لوني (gradient text) أو هالات ضوئية (glow).
-- الظلال الملونة أو الثقيلة (`shadow-xl`+، ظلال بلون brand)، والـ glassmorphism المكدَّس (blur على blur).
-- رص بطاقات متماثلة (3 أو 4 أعمدة بنفس الأيقونة داخل دائرة ملونة ونفس الطول) في أي صفحة.
-- الحشو النصي والعبارات العامة («أطلق العنان»، «ثورة في التجارة»، «✨»). يُمنع الإيموجي داخل واجهة المنتج.
-- الرسوم التوضيحية الجاهزة (stock illustrations / 3D blobs) والـ hero المركزي النمطي.
+#### I-أ · الصفحة الترويجية والصفحات العامة (`(marketing)`) — تعبيرية
 
-بدلاً من ذلك يُلزم ما يلي:
+يُسمح ويُشجَّع هنا:
 
-- لوحة أحادية (zinc) بتباين حاد: الأرضية `#FAFAFA` والنص `#09090B` في الوضع الفاتح، ومعكوسهما في الداكن.
-- الفصل بين العناصر بحدود دقيقة `1px` بلون `zinc-200` (فاتح) / `zinc-800` (داكن)، لا بالظلال.
-- الألوان الدلالية فقط (نجاح/تحذير/خطأ/معلومة) لحالات البيانات، بدون لون brand في لوحة التاجر أو الصفحة الترويجية.
-- تخطيطات غير متماثلة (Bento Grid بأحجام مختلفة)، أرقام كبيرة بخط Mono، ومساحات بيضاء كبيرة بدلاً من الزخرفة.
-- الحركة (Motion) وظيفية ودقيقة: مدة 150–300ms، منحنى `ease-out`، وتحترم `prefers-reduced-motion`.
+- **تدرجات لونية** في النصوص المفتاحية والأسطح (`emerald → cyan` هو تدرج المنصة المعتمد).
+- **هالات وظلال ملونة** (`shadow-emerald-500/25` ونظائرها) حول الأزرار والأسطح البارزة.
+- **Glassmorphism** لسطح واحد بارز (طبقة blur واحدة، لا blur فوق blur).
+- **خلفيات حية**: شبكة أو نقاط مع قناع إضاءة شعاعي (Radial Gradient Mask).
+- **عناصر عائمة** وحركة دخول واضحة (`framer-motion`/`motion`).
+- **لون brand** (`emerald`) للأفعال الرئيسية.
 
-**Rationale**: المنافسون المرجعيون (Linear، Vercel Geist، Stripe، Apple) يكسبون الثقة بالهدوء البصري
-والدقة؛ «شكل الذكاء الاصطناعي» يُفقد المنصة مصداقيتها أمام التاجر العربي الجاد.
+ويبقى ممنوعاً حتى هنا:
+
+- العبارات العامة والحشو («أطلق العنان»، «ثورة في التجارة») والإيموجي داخل الواجهة.
+- الرسوم التوضيحية الجاهزة (stock illustrations / 3D blobs).
+- رص بطاقات متماثلة بنفس الأيقونة داخل دائرة ملونة ونفس الطول.
+- أي حركة لا تحترم `prefers-reduced-motion`، أو تجعل المحتوى غير مقروء قبل تنفيذ JS.
+
+#### I-ب · لوحة التاجر والمتجر و Super Admin — مُقيَّدة (NON-NEGOTIABLE)
+
+هنا تبقى قواعد 1.0.0 كما هي بلا استثناء:
+
+- لوحة أحادية (zinc) بتباين حاد؛ الفصل بحدود `1px` لا بالظلال.
+- الألوان الدلالية فقط لحالات البيانات، **بلا لون brand وبلا تدرجات وبلا هالات وبلا glassmorphism**.
+- أرقام `font-mono tabular-nums`، تخطيطات غير متماثلة، مساحات بيضاء بدل الزخرفة.
+- الحركة وظيفية: 150–300ms، `ease-out`، وتحترم `prefers-reduced-motion`.
+
+**Rationale**: التاجر يرى الصفحة الترويجية مرة واحدة ويقرر؛ ويرى اللوحة ثماني ساعات يومياً.
+الأولى تحتاج جاذبية بصرية تُقنع، والثانية تحتاج هدوءاً لا يُرهق ولا يزاحم البيانات. فصل السطحين
+يحفظ الهدفين معاً بدل التضحية بأحدهما — وهو ما فشلت فيه النسخة 1.0.0.
 
 ### II. Arabic-First, Native RTL (NON-NEGOTIABLE) — عربي أصيل
 
@@ -167,9 +187,12 @@ git reset --hard <tag>   # الوسم المذكور، وإلا آخر وسم *-
 
 ## Design System Constraints — قيود نظام التصميم
 
-- **اللوحة**: zinc فقط. فاتح: `background #FAFAFA`، `foreground #09090B`، `border zinc-200`، `muted zinc-500`.
+- **اللوحة (المنتج)**: zinc فقط. فاتح: `background #FAFAFA`، `foreground #09090B`، `border zinc-200`، `muted zinc-500`.
   داكن: `background #09090B`، `foreground #FAFAFA`، `border zinc-800`. الألوان الدلالية:
   `emerald-600` نجاح، `amber-600` تحذير، `red-600` خطأ/حذف، `sky-600` معلومة — تُستخدم للنص والنقاط الصغيرة لا للمساحات.
+- **اللوحة (الترويجي، I-أ)**: zinc كأساس + `emerald` لون brand للأفعال، وتدرج `emerald-500 → cyan-500`
+  للكلمات المفتاحية والأسطح. الرموز في `globals.css` تحت البادئة `--brand-*` و`--glow-*` و`--glass-*`.
+  **هذه الرموز ممنوعة خارج `src/app/(marketing)/**` و`src/features/landing/**`.**
 - **التيبوغرافي**: مقياس 12/14/16/20/24/32/48/64px؛ العناوين `tracking-tight` ووزن 500–600 لا 700+.
   الأرقام المالية `font-mono tabular-nums` دائماً.
 - **المسافات**: شبكة 4px؛ padding البطاقات 16–24px؛ الفواصل بين الأقسام 48–96px في الـ Landing.
