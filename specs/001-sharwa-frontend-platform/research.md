@@ -17,6 +17,7 @@
 - **Decision**: إبقاء `cacheComponents: true` و`partialPrefetching: true` (موجودان في `next.config.ts`). القاعدة: `'use cache'` + `cacheLife()` + `cacheTag('store:<store>')` **فقط** للقراءات العامة في مجموعة المتجر (`/api/v1/config/`, `/catalog/categories/`, `/catalog/products*`) وللمحتوى الثابت (الصفحة الترويجية). كل ما يعتمد على كوكي (السلة، جلسة التاجر، لوحة الإدارة) **غير مُكاش** ويُغلَّف بـ `<Suspense>` بهيكل skeleton.
 - **Rationale**: `08-caching.md`: الدوال المكاشة تأخذ مفاتيحها من وسائطها → تمرير `store` كوسيط صريح يضمن عزل المستأجرين (الدستور VIII، M47 FR-47.09). `headers()`/`cookies()` غير متاحة داخل `'use cache'`، لذا يُحلّ المستأجر خارجها ويُمرَّر.
 - **Alternatives**: تعطيل Cache Components والعودة لنموذج `fetch` cache القديم — يفقد الـ static shell للصفحة الترويجية وصفحات المتجر (SC-003 LCP).
+- **Gotchas (مُكتشفة في Phase 2)**: (1) `export const dynamic = 'force-dynamic'` **مرفوض** مع `cacheComponents` — الـ Route Handlers التي تقرأ الطلب ديناميكية تلقائياً؛ (2) Next يعيد توجيه `/api/v1/config/` إلى بلا شرطة بـ 308 افتراضياً، لذا ضُبط `skipTrailingSlashRedirect: true` ليصل مسار Django كما هو إلى الـ BFF.
 
 ## R-03 — حلّ المستأجر وإعادة كتابة المسار
 

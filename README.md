@@ -18,8 +18,8 @@ npm run dev
 |---|---|
 | `http://localhost:3000/` | `(marketing)` landing |
 | `http://localhost:3000/register` | `(onboarding)` |
-| `http://demo.localhost:3000/` | `(storefront)` for store `demo` |
-| `http://demo.localhost:3000/dashboard` | `(dashboard)` |
+| `http://noor.localhost:3000/` | `(storefront)` for store `noor` |
+| `http://noor.localhost:3000/dashboard` | `(dashboard)` |
 | `http://console.localhost:3000/` | `(admin)` |
 
 ## Quality gates (before any `rp/*-after` tag)

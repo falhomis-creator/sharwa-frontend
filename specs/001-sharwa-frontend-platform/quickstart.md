@@ -30,13 +30,13 @@ npm run dev
 |---|---|
 | `http://localhost:3000/` | الصفحة الترويجية `(marketing)` بالعربية RTL، خط IBM Plex Sans Arabic، لوحة zinc |
 | `http://localhost:3000/register` | معالج التأسيس `(onboarding)` |
-| `http://demo.localhost:3000/` | متجر `demo`: مع mocks → واجهة المتجر؛ مع Django بلا متجر → صفحة «لم نجد متجراً» (404) |
-| `http://demo.localhost:3000/dashboard` | لوحة التاجر `(dashboard)` (تسجيل دخول عبر BFF) |
+| `http://noor.localhost:3000/` | متجر `noor`: مع mocks → واجهة المتجر؛ مع Django بلا متجر → صفحة «لم نجد متجراً» (404) |
+| `http://noor.localhost:3000/dashboard` | لوحة التاجر `(dashboard)` (تسجيل دخول عبر BFF) |
 | `http://console.localhost:3000/` | لوحة إدارة المنصة `(admin)` |
 | `http://localhost:3000/_s/demo/` | **404** (البادئات الداخلية محجوبة من الشبكة) |
 
 ## 4. سيناريوهات التحقق (تُنفَّذ لكل وحدة قبل وسم `*-after`)
-1. **حلّ المستأجر**: افتح `demo.localhost:3000` و`shop2.localhost:3000` بالتناوب 5 مرات؛ `store_name` في الرأس يطابق الـ host كل مرة؛ لا `?store=` في أي رابط.
+1. **حلّ المستأجر**: افتح `noor.localhost:3000` و`shop2.localhost:3000` بالتناوب 5 مرات؛ `store_name` في الرأس يطابق الـ host كل مرة؛ لا `?store=` في أي رابط.
 2. **503 التجهيز**: اضبط mock الـ probe ليعيد 503 ثم `provisioning`×3 ثم `ready` → صفحة الانتظار تتحول آلياً إلى `dashboard_url` (M47 US-47.3).
 3. **كوكيز السلة**: أضف منتجاً من PDP، أعد تحميل الصفحة، العدّاد يبقى (كوكي `sessionid` first-party عبر BFF).
 4. **CSRF**: تسجيل دخول التاجر ينجح بلا قراءة `document.cookie`؛ POST تالٍ يحمل `X-CSRFToken`.
