@@ -1,14 +1,30 @@
 "use client";
 
 import { AnimatePresence, LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
+import { ArrowRightLeft, CreditCard, MessageCircle, Zap, type LucideIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
-import { features } from "@/features/landing/original.content";
+import { features, type FeatureIcon } from "@/features/landing/original.content";
 
 const INTERVAL_MS = 4000;
 
 /**
- * The hero's second column: the template's four `.feature-card`s turned into
- * an auto-playing carousel (owner direction 2026-10-17).
+ * One glyph per card, all painted the same accent green.
+ *
+ * The template used emoji here (⚡ 💱 📲 💳). Emoji carry their own fixed
+ * colors — four different ones — and no CSS can bring them into a palette,
+ * which is why they are lucide glyphs now (owner direction 2026-10-17: every
+ * card icon is a single color).
+ */
+const ICONS: Record<FeatureIcon, LucideIcon> = {
+  instant: Zap,
+  currency: ArrowRightLeft,
+  whatsapp: MessageCircle,
+  payment: CreditCard,
+};
+
+/**
+ * The hero's second column: the template's four `.feature-card`s as an
+ * auto-playing carousel.
  *
  * Built on `motion/react` rather than shadcn's carousel: that primitive wraps
  * embla, which is not a dependency here, and this needs exactly one behaviour
@@ -41,6 +57,7 @@ export function FeatureCarousel() {
   }, [reduced, paused]);
 
   const feature = features[index]!;
+  const Icon = ICONS[feature.icon];
   const offset = 48 * direction;
 
   return (
@@ -64,16 +81,15 @@ export function FeatureCarousel() {
               animate={{ opacity: 1, x: 0 }}
               exit={reduced ? undefined : { opacity: 0, x: offset }}
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="sharwa-card absolute inset-0 flex flex-col justify-center rounded-2xl p-7 sm:p-9"
+              className="absolute inset-0 flex flex-col justify-center rounded-2xl border border-zinc-200/60 bg-white p-7 shadow-sm sm:p-9"
             >
-              <span
-                aria-hidden
-                className="sharwa-icon-tile mb-5 flex size-16 items-center justify-center rounded-2xl text-[1.7rem]"
-              >
-                {feature.icon}
+              <span className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-emerald-600/8">
+                <Icon className="size-7 text-emerald-600" aria-hidden />
               </span>
-              <h2 className="sharwa-ink text-xl font-extrabold sm:text-[1.4rem]">{feature.title}</h2>
-              <p className="sharwa-muted mt-3 text-sm leading-[1.75] sm:text-base">
+              <h2 className="sharwa-ink text-xl font-extrabold sm:text-[1.4rem]">
+                {feature.title}
+              </h2>
+              <p className="mt-3 text-sm leading-[1.75] text-zinc-500 sm:text-base">
                 {feature.body}
               </p>
             </m.article>
@@ -93,8 +109,11 @@ export function FeatureCarousel() {
             >
               <span
                 aria-hidden
-                data-active={i === index}
-                className="sharwa-dot block h-1.5 rounded-full data-[active=false]:w-1.5 data-[active=true]:w-6"
+                className={
+                  i === index
+                    ? "block h-1.5 w-6 rounded-full bg-emerald-600 transition-all duration-200"
+                    : "block size-1.5 rounded-full bg-zinc-300 transition-all duration-200"
+                }
               />
             </button>
           ))}

@@ -4,17 +4,19 @@ import { nav } from "@/features/landing/original.content";
 
 /**
  * `.navbar` ported from the original template: the wordmark at the start of
- * the line, the actions at the end, a frosted bar on a single hairline.
+ * the line, the actions at the end, on a single zinc hairline.
  *
- * Two actions only (owner direction 2026-10-17). The template's third button,
- * "🔗 محفظتي (شروة باي)", is deliberately gone. The section anchors this
- * header used to carry went with the sections themselves — the page is the
- * hero and nothing else, so there is nothing left to navigate to and no
- * mobile drawer to open.
+ * Two actions only. The template's third button, "🔗 محفظتي (شروة باي)", is
+ * deliberately gone, and so are the section anchors — the page is the hero
+ * and nothing else, so there is nothing to navigate to and no drawer to open.
+ *
+ * "إنشاء متجر" is ink, not green: the green belongs to the hero's primary
+ * action, and two greens competing in one viewport is the noise this palette
+ * removes.
  */
 export function SiteHeader() {
   return (
-    <header className="sharwa-navbar sticky top-0 z-50 w-full backdrop-blur-md">
+    <header className="sharwa-navbar sticky top-0 z-50 w-full border-b border-zinc-200/60 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-4 px-6 py-3.5 sm:px-8">
         <Link
           href="/"
@@ -27,13 +29,13 @@ export function SiteHeader() {
         <nav aria-label="إجراءات الحساب" className="flex items-center gap-2 sm:gap-2.5">
           <Link
             href="/login"
-            className="sharwa-nav-link flex min-h-11 items-center rounded-xl px-3 text-sm font-bold sm:px-4"
+            className="flex min-h-11 items-center rounded-xl px-3 text-sm font-bold text-zinc-600 transition-colors hover:text-zinc-900 sm:px-4"
           >
             {nav.login}
           </Link>
           <Link
             href="/register"
-            className="sharwa-nav-btn flex min-h-11 items-center rounded-xl px-5 text-sm font-bold sm:px-[22px]"
+            className="flex min-h-11 items-center rounded-xl bg-zinc-900 px-5 text-sm font-bold text-white transition-colors hover:bg-zinc-700 sm:px-[22px]"
           >
             {nav.createStore}
           </Link>

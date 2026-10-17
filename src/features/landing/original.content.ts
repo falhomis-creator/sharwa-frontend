@@ -15,9 +15,16 @@
  * not edit this copy — it belongs to the product, not to this repository.
  */
 
+/**
+ * Which monochrome icon a card draws. The template used emoji (⚡ 💱 📲 💳),
+ * and emoji carry their own fixed colors — four different ones, which is
+ * precisely the visual noise this palette removes. They are keys now; the
+ * carousel maps them to lucide glyphs it paints in the one accent green.
+ */
+export type FeatureIcon = "instant" | "currency" | "whatsapp" | "payment";
+
 export interface Feature {
-  /** The template's `.feature-icon` glyph. */
-  icon: string;
+  icon: FeatureIcon;
   title: string;
   body: string;
 }
@@ -37,11 +44,16 @@ export const nav = {
 
 export const hero = {
   badge: "منصة المتاجر الإلكترونية المتكاملة",
-  badgeGlyph: "🚀",
-  /** `<h1>` split exactly where the template's `<br>` and `<span>` fall. */
+  /**
+   * `<h1>` split where the template's `<br>` falls.
+   *
+   * The template's gradient `<span>` wrapped "منصة شروة"; the accent is now
+   * the brand word alone, because exactly one word on this page is blue
+   * (owner direction 2026-10-17). "منصة" reads as body ink with the rest.
+   */
   titleLine1: "أطلق متجرك الإلكتروني الاحترافي",
-  titleLine2Before: "مع ",
-  titleAccent: "منصة شروة",
+  titleLine2Before: "مع منصة ",
+  titleAccent: "شروة",
   titleLine2After: " بسهولة",
   subtitle:
     "ابدأ تجارتك الإلكترونية بكل قوة: إدارة المنتجات، استقبال وإرسال إشعارات الواتساب للعملاء، دعم كامل لأسعار الصرف المتعددة، والدفع بالمحافظ الإلكترونية.",
@@ -50,22 +62,22 @@ export const hero = {
 
 export const features: Feature[] = [
   {
-    icon: "⚡",
+    icon: "instant",
     title: "متجر فوري ونطاق مخصص",
     body: "احصل على متجر متكامل فوري بنطاق فرعي فائق السرعة مهيأ بالكامل للبيع.",
   },
   {
-    icon: "💱",
+    icon: "currency",
     title: "إدارة العملات والصرف",
     body: "دعم الريال السعودي، الدولار، واليمني (صنعاء وعدن) مع تحويل تلقائي للأسعار.",
   },
   {
-    icon: "📲",
+    icon: "whatsapp",
     title: "إشعارات واتساب تلقائية",
     body: "إشعار فوري للتاجر بطلبات الشراء، وإشعار للزبون عند تجهيز طلبه تلقائياً.",
   },
   {
-    icon: "💳",
+    icon: "payment",
     title: "طرق الدفع والمحافظ",
     body: "دعم الدفع عند الاستلام، إرفاق إشعارات التحويل، والدفع المباشر عبر المحافظ.",
   },

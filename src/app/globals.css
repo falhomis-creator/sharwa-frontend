@@ -719,178 +719,49 @@
 }
 
 /* ===========================================================================
- * SHARWA ORIGINAL SURFACE — a direct port of the platform's own landing page
- * (`sharwa_saas/tenants/templates/tenants/home.html`), owner direction
- * 2026-10-17: "clone the original interface exactly".
+ * MARKETING PALETTE (owner direction 2026-10-17: "unify the colors")
  *
- * Every value below is lifted from that file's `:root`, with ONE deliberate
- * departure: the canvas. The template declares `--bg-light: #f8fafc` (a cool
- * slate), and the owner asked for the warm cream the interface actually reads
- * as on screen. Warm neutrals replace the cool ones on the page ground and
- * the hairlines; the teal, the badge and the gradients are untouched.
+ * The whole marketing surface runs on THREE values and nothing else:
  *
- * teal-600 #0d9488 · teal-700 #0f766e · teal-100 #ccfbf1 · teal-200 #99f6e4
- * slate-900 #0f172a · slate-500 #64748b · indigo-500 #6366f1
+ *   ground   #FCF8F3   warm cream, flat — no gradient, ever
+ *   ink      #1C1C1C   body and headings (zinc-500 for secondary text)
+ *   green    emerald-600  the ONLY accent: badge, primary action, card icons
+ *   blue     blue-600     reserved for exactly one word — «شروة»
+ *
+ * Everything else is a Tailwind neutral utility applied at the call site, so
+ * the palette is readable from the markup rather than hidden behind classes
+ * here. Only the two values Tailwind has no utility for live in this file:
+ * the cream ground, and the ink.
+ *
+ * The teal/indigo gradients, the colored glows and the warm-tinted hairlines
+ * that used to live here are gone, not overridden.
+ *
+ * This surface is LIGHT ONLY. `color-scheme: light` is declared rather than a
+ * parallel set of `dark:` variants, because a single unified palette was the
+ * ask — a second one would undo it. Form controls and scrollbars follow.
  * ======================================================================== */
 
 :root {
-  --sharwa-primary: #0d9488;
-  --sharwa-primary-dark: #0f766e;
-  --sharwa-ink: #0f172a;
-  --sharwa-muted: #64748b;
-  /* the warm ground: cream with an apricot cast, never bright white */
-  --sharwa-canvas: #fbf5ec;
-  --sharwa-canvas-2: #f6e9d9;
-  --sharwa-surface: #ffffff;
-  --sharwa-line: #ece2d5;
-  --sharwa-tile: #f6f1ea;
-  --sharwa-badge-bg: #ccfbf1;
-  --sharwa-badge-line: #99f6e4;
-  --sharwa-accent-2: #6366f1;
-  --sharwa-shadow-rgb: 13 148 136;
-}
-
-.dark {
-  --sharwa-primary: #2dd4bf;
-  --sharwa-primary-dark: #5eead4;
-  --sharwa-ink: #f8fafc;
-  --sharwa-muted: #94a3b8;
-  --sharwa-canvas: #14110e;
-  --sharwa-canvas-2: #1f1a15;
-  --sharwa-surface: #1c1917;
-  --sharwa-line: #332c25;
-  --sharwa-tile: #272019;
-  --sharwa-badge-bg: #134e4a;
-  --sharwa-badge-line: #115e59;
-  --sharwa-accent-2: #a5b4fc;
-  --sharwa-shadow-rgb: 45 212 191;
+  --sharwa-ground: #fcf8f3;
+  --sharwa-ink: #1c1c1c;
 }
 
 @layer components {
-  /* The page ground: warm cream lifted by a single apricot pool behind the
-     hero, so the fold has depth without a second color. */
   .sharwa-canvas {
-    background-color: var(--sharwa-canvas);
-    background-image: radial-gradient(
-      80% 60% at 78% 0%,
-      var(--sharwa-canvas-2),
-      transparent 70%
-    );
+    background-color: var(--sharwa-ground);
+    color-scheme: light;
   }
 
+  /* The sticky bar: the same cream, held just translucent enough for the
+     blur to register. An opacity modifier cannot be applied to an arbitrary
+     CSS variable in a utility, so the mix lives here. */
+  .sharwa-navbar {
+    background-color: color-mix(in srgb, var(--sharwa-ground) 85%, transparent);
+  }
+
+  /* The one text color Tailwind has no utility for. Secondary text uses
+     `text-zinc-500`, which needs nothing here. */
   .sharwa-ink {
     color: var(--sharwa-ink);
-  }
-
-  .sharwa-muted {
-    color: var(--sharwa-muted);
-  }
-
-  .sharwa-primary {
-    color: var(--sharwa-primary);
-  }
-
-  /* `.navbar` — frosted, hairline bottom rule. */
-  .sharwa-navbar {
-    background-color: color-mix(in srgb, var(--sharwa-canvas) 88%, transparent);
-    border-bottom: 1px solid var(--sharwa-line);
-  }
-
-  /* `.nav-btn` — dark pill that turns teal on hover. */
-  .sharwa-nav-btn {
-    background-color: var(--sharwa-ink);
-    color: var(--sharwa-canvas);
-    transition: background-color var(--duration-base) var(--ease-out-soft);
-  }
-
-  .sharwa-nav-btn:hover {
-    background-color: var(--sharwa-primary);
-  }
-
-  .sharwa-nav-link {
-    color: var(--sharwa-ink);
-    transition: color var(--duration-base) var(--ease-out-soft);
-  }
-
-  .sharwa-nav-link:hover {
-    color: var(--sharwa-primary);
-  }
-
-  /* `.hero-badge` — teal-100 on a teal-200 hairline. */
-  .sharwa-badge {
-    background-color: var(--sharwa-badge-bg);
-    color: var(--sharwa-primary-dark);
-    border: 1px solid var(--sharwa-badge-line);
-  }
-
-  /* `.hero h1 span` — teal → indigo at 135deg.
-     The `inline-block` + vertical padding is carried over verbatim from the
-     original, and its reason with it: `background-clip: text` makes the glyph
-     a window onto the gradient, and anything outside the background box is
-     painted with nothing. At weight 900 the dots of ش and the ة rise above
-     the inline box and were being cut off. The negative margin cancels the
-     padding's effect on line height, so nothing else moves. */
-  .sharwa-gradient-text {
-    background-image: linear-gradient(135deg, var(--sharwa-primary), var(--sharwa-accent-2));
-    background-clip: text;
-    -webkit-background-clip: text;
-    color: transparent;
-    -webkit-text-fill-color: transparent;
-    display: inline-block;
-    padding: 0.16em 0;
-    margin: -0.16em 0;
-  }
-
-  @supports not ((background-clip: text) or (-webkit-background-clip: text)) {
-    .sharwa-gradient-text {
-      background-image: none;
-      color: var(--sharwa-primary);
-      -webkit-text-fill-color: currentColor;
-    }
-  }
-
-  /* `.btn-cta` — teal gradient, teal shadow, 2px lift on hover. */
-  .sharwa-cta {
-    background-image: linear-gradient(
-      135deg,
-      var(--sharwa-primary),
-      var(--sharwa-primary-dark)
-    );
-    color: #ffffff;
-    box-shadow: 0 10px 25px rgb(var(--sharwa-shadow-rgb) / 0.35);
-    transition:
-      transform var(--duration-base) var(--ease-out-soft),
-      box-shadow var(--duration-base) var(--ease-out-soft);
-  }
-
-  .sharwa-cta:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 30px rgb(var(--sharwa-shadow-rgb) / 0.45);
-  }
-
-  .dark .sharwa-cta {
-    color: #042f2e;
-  }
-
-  /* `.feature-card` — white sheet, hairline, soft corners. */
-  .sharwa-card {
-    background-color: var(--sharwa-surface);
-    border: 1px solid var(--sharwa-line);
-  }
-
-  /* `.feature-icon` */
-  .sharwa-icon-tile {
-    background-color: var(--sharwa-tile);
-  }
-
-  .sharwa-dot {
-    background-color: var(--sharwa-line);
-    transition:
-      background-color var(--duration-base) var(--ease-out-soft),
-      width var(--duration-base) var(--ease-out-soft);
-  }
-
-  .sharwa-dot[data-active="true"] {
-    background-color: var(--sharwa-primary);
   }
 }
