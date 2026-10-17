@@ -1,27 +1,30 @@
 "use client";
 
-import { LazyMotion, domAnimation } from "motion/react";
+import { LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * Hero mockup wrapper (constitution I-أ).
+ * Hero mockup wrapper with smooth upward Framer Motion (`motion/react`) reveal.
  *
- * The rise itself (y 50 → 0) is a CSS animation, NOT framer-motion: this
- * subtree holds the page's LCP element, and a JS-driven transform cannot start
- * until hydration completes — which measured LCP 4.8s on the mobile preset
- * against 1.6s for the CSS equivalent. The two are visually identical.
- *
- * `motion/react` (the package framer-motion was renamed to) still drives the
- * floating badges, which are small, never the LCP element, and genuinely want a
- * JS timeline. This component supplies their `LazyMotion`/`domAnimation`
- * provider — the feature subset rather than the full bundle, and `strict` so a
- * stray `motion.*` import fails loudly instead of pulling the whole library.
+ * Supplies the `LazyMotion`/`domAnimation` provider for the dashboard mockup
+ * and its orbiting live-signal badges, rising smoothly into place on load
+ * while respecting `prefers-reduced-motion`.
  */
 export function MockupReveal({ children, className }: { children: ReactNode; className?: string }) {
+  const reduced = useReducedMotion();
+
   return (
     <LazyMotion features={domAnimation} strict>
-      <div className={cn("rise-in", className)}>{children}</div>
+      <m.div
+        initial={reduced ? false : { opacity: 0, y: 56, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.85, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+        className={cn("will-change-transform", className)}
+      >
+        {children}
+      </m.div>
     </LazyMotion>
   );
 }
+

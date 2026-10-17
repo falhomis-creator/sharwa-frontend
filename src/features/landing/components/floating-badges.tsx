@@ -1,41 +1,43 @@
 "use client";
 
 import { m, useReducedMotion } from "motion/react";
-import { Bell, TrendingUp } from "lucide-react";
+import { Bell, TrendingUp, Wallet } from "lucide-react";
 import { Mono } from "@/components/shared/mono";
 import { cn } from "@/lib/utils";
 
 /**
- * Live-signal badges orbiting the hero mockup (constitution I-أ): the platform
- * should read as something already running, not a static picture.
+ * Live-signal badges orbiting the hero glassmorphism dashboard mockup.
  *
- * Each badge enters with `motion/react` (the package framer-motion was renamed
- * to) and then drifts on a CSS loop, so the idle animation costs no JS frames.
- * `useReducedMotion` drops both the entrance and the drift.
- *
- * Uses the lightweight `m` component; the `LazyMotion`/`domAnimation` provider
- * is supplied by `<MockupReveal>`, which wraps this subtree.
+ * Each badge enters with `motion/react` (Framer Motion) and drifts smoothly
+ * on a CSS loop.
  */
 const BADGES = [
   {
     icon: Bell,
-    title: "طلب جديد",
-    value: "SH-10493",
+    title: "طلب جديد · مدفوع",
+    value: "SH-10493 · 640 ر.س",
     mono: true,
-    // RTL-safe logical insets only (constitution II). Negative values push the
-    // badge clear of the frame; only applied from lg, where there is room.
-    position: "-top-4 end-2 lg:-top-6 lg:end-[-9%]",
+    position: "-top-5 end-4 xl:-top-6 xl:-end-10",
     drift: "drift",
-    delay: 0.3,
+    delay: 0.35,
   },
   {
     icon: TrendingUp,
-    title: "مبيعات اليوم",
-    value: "%18+",
+    title: "نمو مبيعات اليوم",
+    value: "+18.4%",
     mono: true,
-    position: "top-[42%] start-2 lg:start-[-9%]",
+    position: "top-[44%] -start-2 xl:-start-12",
     drift: "drift-slow",
-    delay: 0.4,
+    delay: 0.45,
+  },
+  {
+    icon: Wallet,
+    title: "تسوية شروة باي",
+    value: "24,860 ر.س",
+    mono: true,
+    position: "-bottom-5 end-6 xl:-bottom-6 xl:-end-10",
+    drift: "drift-slowest",
+    delay: 0.55,
   },
 ] as const;
 
@@ -47,16 +49,16 @@ export function FloatingBadges() {
       {BADGES.map((badge) => {
         const Icon = badge.icon;
         const content = (
-          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/25 bg-background px-4 py-3 shadow-xl shadow-emerald-500/15">
-            <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-emerald-500/12 text-emerald-600 dark:text-emerald-400">
+          <div className="flex items-center gap-3 rounded-2xl border border-white/50 bg-white/80 px-4 py-3 shadow-2xl shadow-emerald-600/15 backdrop-blur-2xl dark:border-white/15 dark:bg-zinc-900/80">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white shadow-md shadow-emerald-600/30">
               <Icon className="size-4" aria-hidden />
             </span>
             <span className="flex flex-col leading-tight">
-              <span className="text-[0.7rem] text-muted-foreground">{badge.title}</span>
+              <span className="text-[0.7rem] font-medium text-muted-foreground">{badge.title}</span>
               {badge.mono ? (
-                <Mono className="text-[0.8rem] font-semibold text-foreground">{badge.value}</Mono>
+                <Mono className="mt-0.5 text-xs font-bold text-foreground">{badge.value}</Mono>
               ) : (
-                <span className="text-[0.8rem] font-semibold text-foreground">{badge.value}</span>
+                <span className="mt-0.5 text-xs font-bold text-foreground">{badge.value}</span>
               )}
             </span>
           </div>
@@ -78,9 +80,9 @@ export function FloatingBadges() {
           <m.div
             key={badge.title}
             aria-hidden
-            initial={{ opacity: 0, scale: 0.9, y: 12 }}
+            initial={{ opacity: 0, scale: 0.9, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: badge.delay, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.45, delay: badge.delay, ease: [0.16, 1, 0.3, 1] }}
             className={cn("pointer-events-none absolute z-20 hidden lg:block", badge.position)}
           >
             <div className={badge.drift}>{content}</div>
@@ -90,3 +92,4 @@ export function FloatingBadges() {
     </>
   );
 }
+

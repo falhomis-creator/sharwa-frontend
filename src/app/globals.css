@@ -74,11 +74,11 @@
 
 :root {
   /* surfaces */
-  --background: #fafafa;
+  --background: #ffffff;
   --foreground: #09090b;
-  --card: #fafafa;
+  --card: #ffffff;
   --card-foreground: #09090b;
-  --popover: #fafafa;
+  --popover: #ffffff;
   --popover-foreground: #09090b;
   /* actions */
   --primary: #09090b;
@@ -470,67 +470,80 @@
 }
 
 @layer components {
+  /* ---- Subtle Architectural Grid Pattern --------------------------------- */
+  .hero-grid {
+    background-image:
+      linear-gradient(to right, rgb(var(--ink-rgb) / 0.045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--ink-rgb) / 0.045) 1px, transparent 1px);
+    background-size: 64px 64px;
+    background-position: center top;
+    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 25%, black 30%, transparent 85%);
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 25%, black 30%, transparent 85%);
+  }
+
+  .dark .hero-grid {
+    background-image:
+      linear-gradient(to right, rgb(var(--sheen-rgb) / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(var(--sheen-rgb) / 0.05) 1px, transparent 1px);
+  }
+
   /* ---- Live background: dot field under a radial light mask -------------- */
   .dot-field {
     background-image: radial-gradient(var(--dot) 1px, transparent 1px);
-    background-size: 22px 22px;
-    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 25%, transparent 78%);
-    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 25%, transparent 78%);
+    background-size: 24px 24px;
+    opacity: 0.65;
+    -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 15%, black 20%, transparent 80%);
+    mask-image: radial-gradient(ellipse 75% 65% at 50% 15%, black 20%, transparent 80%);
   }
 
   /* Two-stop brand aura: emerald leading, cyan trailing. Sits behind content. */
-  /* No `filter: blur()` here on purpose: blurring a full-width, 32rem-tall
-     layer cost ~1.3s of style+layout on the mobile Lighthouse preset. A wider
-     gradient falloff is visually equivalent and essentially free. */
   .brand-aura {
     background:
-      radial-gradient(58% 46% at 50% 24%, rgb(var(--brand-rgb) / 0.1), transparent 72%),
-      radial-gradient(36% 36% at 76% 40%, rgb(var(--brand-2-rgb) / 0.07), transparent 74%);
+      radial-gradient(60% 50% at 50% 28%, rgb(var(--brand-rgb) / 0.14), transparent 72%),
+      radial-gradient(40% 40% at 72% 38%, rgb(var(--brand-2-rgb) / 0.09), transparent 74%),
+      radial-gradient(40% 40% at 28% 36%, rgb(var(--brand-rgb) / 0.08), transparent 74%);
   }
 
   .dark .brand-aura {
     background:
-      radial-gradient(58% 46% at 50% 24%, rgb(var(--brand-rgb) / 0.14), transparent 72%),
-      radial-gradient(36% 36% at 76% 40%, rgb(var(--brand-2-rgb) / 0.1), transparent 74%);
+      radial-gradient(60% 50% at 50% 28%, rgb(var(--brand-rgb) / 0.18), transparent 72%),
+      radial-gradient(40% 40% at 72% 38%, rgb(var(--brand-2-rgb) / 0.12), transparent 74%),
+      radial-gradient(40% 40% at 28% 36%, rgb(var(--brand-rgb) / 0.1), transparent 74%);
   }
 
-  /* ---- The focal glow -----------------------------------------------------
-   * A single soft pool directly behind the start form. It exists to break the
-   * white and pull the eye to the one thing the page is asking for; kept well
-   * under the aura's weight so the form's own shadow still reads.
-   */
+  /* ---- The focal glow (Soft Radial Glow behind the start form) ------------ */
   .start-glow {
     background: radial-gradient(
-      46% 120% at 50% 52%,
-      rgb(var(--brand-rgb) / 0.26),
-      rgb(var(--brand-2-rgb) / 0.1) 46%,
-      transparent 72%
+      52% 130% at 50% 50%,
+      rgb(var(--brand-rgb) / 0.32),
+      rgb(var(--brand-2-rgb) / 0.14) 48%,
+      transparent 74%
     );
   }
 
   .dark .start-glow {
     background: radial-gradient(
-      46% 120% at 50% 52%,
-      rgb(var(--brand-rgb) / 0.3),
-      rgb(var(--brand-2-rgb) / 0.12) 46%,
-      transparent 72%
+      52% 130% at 50% 50%,
+      rgb(var(--brand-rgb) / 0.36),
+      rgb(var(--brand-2-rgb) / 0.16) 48%,
+      transparent 74%
     );
   }
 
   /* ---- The start field: the one surface that must read as liftable ------ */
   .start-field {
     box-shadow:
-      0 1px 2px 0 rgb(var(--ink-rgb) / 0.08),
-      0 4px 10px -3px rgb(var(--ink-rgb) / 0.12),
-      0 14px 30px -12px rgb(var(--ink-rgb) / 0.18),
-      0 36px 70px -34px rgb(var(--ink-rgb) / 0.35);
+      0 1px 2px 0 rgb(var(--ink-rgb) / 0.06),
+      0 8px 20px -6px rgb(var(--ink-rgb) / 0.1),
+      0 24px 48px -16px rgb(var(--brand-rgb) / 0.18),
+      0 40px 80px -32px rgb(var(--ink-rgb) / 0.22);
   }
 
   .dark .start-field {
     box-shadow:
       0 2px 8px -4px rgb(0 0 0 / 0.5),
-      0 10px 24px -14px rgb(0 0 0 / 0.55),
-      0 28px 60px -30px rgb(0 0 0 / 0.7);
+      0 16px 36px -12px rgb(var(--brand-rgb) / 0.22),
+      0 32px 68px -28px rgb(0 0 0 / 0.75);
   }
 
   /* ---- Brand tile: the logo mark's ground ------------------------------- */
@@ -544,10 +557,10 @@
   }
 
   /* Glow pooling under the floating mockup — grounds it in brand light. */
-  /* Sits BELOW the mockup, not under it: the glass is translucent, so a glow
-     centred on the frame tints the order table green and costs readability. */
   .mockup-glow {
-    background: radial-gradient(55% 100% at 50% 100%, rgb(var(--brand-rgb) / 0.32), transparent 76%);
+    background:
+      radial-gradient(60% 90% at 50% 55%, rgb(var(--brand-rgb) / 0.26), transparent 74%),
+      radial-gradient(45% 70% at 50% 95%, rgb(var(--brand-2-rgb) / 0.18), transparent 76%);
   }
 
   /* ---- Glass: ONE blur layer, never blur over blur ----------------------
