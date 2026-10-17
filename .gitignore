@@ -42,3 +42,8 @@ next-env.d.ts
 
 # python (speckit scripts)
 __pycache__/
+
+# visual checks / playwright
+playwright-report/
+test-results/
+docs/visual-checks/**/*.tmp.png

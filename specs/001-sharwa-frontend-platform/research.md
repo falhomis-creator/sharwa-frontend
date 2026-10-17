@@ -81,9 +81,9 @@
 
 ## R-07 — الخطوط
 
-- **Decision**: `next/font/google`: `IBM_Plex_Sans_Arabic` (أوزان 400/500/600، `subsets: ['arabic','latin']`, `display: 'swap'`, متغير `--font-sans`) و`Geist_Mono` (`--font-mono`). يُحذف `Geist` (sans) من `layout.tsx`. الأرقام المالية/المعرّفات عبر فئة `font-mono tabular-nums` حصراً (مكوّن `<Money>`/`<Mono>`).
-- **Rationale**: كلاهما موجود في `@next/font` font-data (تم التحقق)؛ الدستور II.
-- **Alternatives**: ملفات محلية `next/font/local` — تُستخدم فقط إن منعت الشبكة الجلب في البناء.
+- **Decision** (مُحدَّث 2026-10-17 أثناء Phase 1): `next/font/local` بملفات مُستضافة ذاتياً في `src/assets/fonts/`: IBM Plex Sans Arabic 400/500/600 (ملف كامل الحروف لكل وزن) و Geist Mono متغير 100–900، `display: 'swap'`, المتغيران `--font-ibm-plex-arabic` و`--font-geist-mono` يغذيان `--font-sans`/`--font-mono` في `globals.css`. الأرقام المالية/المعرّفات عبر `font-mono tabular-nums` حصراً (مكوّن `<Money>`/`<Mono>`).
+- **Rationale**: الخطة الأصلية كانت `next/font/google`؛ لكن في `next dev` يطبّق محمّل Google مهلة صلبة 3 ثوانٍ لكل ملف (`fetch-resource.js`)، ومع 18 ملف subset متزامناً من هذه الشبكة فشل التحميل («Module not found: @vercel/turbopack-next/internal/font/google/font») رغم أن `curl` ينجح في ~1s. الاستضافة الذاتية حتمية في dev وCI وتعمل بلا شبكة؛ الترخيص OFL 1.1 (موثَّق في `src/assets/fonts/README.md`). يحقق الدستور II وIX (`next/font` + swap).
+- **Alternatives**: `next/font/google` (مرفوض للسبب أعلاه)؛ `@font-face` يدوي في CSS (يفقد تحسينات `next/font` لإزاحة التخطيط).
 
 ## R-08 — الرموز التصميمية
 
