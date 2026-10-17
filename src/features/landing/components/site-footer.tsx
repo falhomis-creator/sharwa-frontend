@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { cacheLife } from "next/cache";
 import { Mono } from "@/components/shared/mono";
-import { LogoMark } from "@/components/shared/logo";
 import { footer } from "@/features/landing/landing.content";
 
 /**
@@ -27,8 +26,7 @@ export async function SiteFooter() {
       <div className="mx-auto w-full max-w-6xl px-6 py-14">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-12">
           <div className="flex flex-col gap-3 lg:col-span-5">
-            <div className="flex items-center gap-2.5">
-              <LogoMark className="size-8" />
+            <div className="flex items-baseline gap-2">
               <span className="text-base font-semibold tracking-tight">شروه</span>
               <Mono className="text-[0.7rem] text-muted-foreground">sharwa</Mono>
             </div>

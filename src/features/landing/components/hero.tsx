@@ -1,42 +1,53 @@
-import { DashboardPreview } from "@/features/landing/components/dashboard-preview";
-import { HeroIntro } from "@/features/landing/components/hero-intro";
+import Link from "next/link";
+import { FeatureCarousel } from "@/features/landing/components/feature-carousel";
+import { hero } from "@/features/landing/original.content";
 
 /**
- * Hero Section — Shopify-inspired conversion centerpiece & Glassmorphism Dashboard Mockup.
+ * Split-screen hero (owner direction 2026-10-17): the original template's
+ * centred copy block and its four feature cards, re-laid as two columns on
+ * `lg` — copy on the reading side, the card carousel opposite.
  *
- * Layered depth back-to-front:
- * 1. Expansive pure-white canvas with a Subtle Grid Pattern (`hero-grid`) + masked `dot-field`.
- * 2. Soft Radial Glow (`brand-aura` + central emerald radial pool) illuminating the store form.
- * 3. Monumental typography + massive store creation form (`<HeroIntro />`).
- * 4. Floating Glassmorphism Dashboard Mockup (`<DashboardPreview />`) rising smoothly with Framer Motion.
+ * The copy itself is the template's, unchanged: badge, the two headline lines
+ * split exactly where its `<br>` and gradient `<span>` fall, the subtitle, and
+ * the single gradient CTA. Nothing has been added around it.
  */
 export function Hero() {
   return (
-    <section className="relative isolate overflow-hidden bg-background pb-28 md:pb-40">
-      {/* Layer 1 — Subtle architectural grid pattern + masked dot matrix */}
-      <div aria-hidden className="hero-grid pointer-events-none absolute inset-0 -z-30" />
-      <div aria-hidden className="dot-field pointer-events-none absolute inset-0 -z-30" />
+    <section className="mx-auto flex w-full max-w-7xl flex-col justify-center px-6 py-14 sm:px-8 md:py-20 lg:min-h-[calc(100dvh-4.5rem)] lg:py-16">
+      <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-14 xl:gap-20">
+        <div className="flex flex-col items-start text-start">
+          <span className="sharwa-badge inline-flex items-center gap-2 rounded-full px-[18px] py-1.5 text-[13px] font-extrabold">
+            <span aria-hidden>{hero.badgeGlyph}</span>
+            {hero.badge}
+          </span>
 
-      {/* Layer 2 — Soft Radial Glow (emerald & cyan ambient light wash) */}
-      <div
-        aria-hidden
-        className="brand-aura pointer-events-none absolute inset-x-0 -top-24 -z-20 h-[42rem]"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-32 -z-20 mx-auto h-96 max-w-4xl rounded-full bg-emerald-500/10 blur-3xl dark:bg-emerald-500/15"
-      />
+          <h1 className="sharwa-ink mt-5 text-[2rem] leading-[1.35] font-black sm:text-[2.6rem] lg:text-[2.9rem]">
+            {hero.titleLine1}
+            <br />
+            {hero.titleLine2Before}
+            <span className="sharwa-gradient-text">{hero.titleAccent}</span>
+            {hero.titleLine2After}
+          </h1>
 
-      {/* Layer 3 — Central Shopify-inspired Store Creation Stack */}
-      <div className="mx-auto w-full max-w-6xl px-6 pt-16 sm:pt-24 md:pt-28">
-        <HeroIntro />
-      </div>
+          <p className="sharwa-muted mt-5 max-w-xl text-[15px] leading-[1.8] sm:text-[17px]">
+            {hero.subtitle}
+          </p>
 
-      {/* Layer 4 — Floating Glassmorphism Dashboard Mockup */}
-      <div className="mt-16 sm:mt-20 md:mt-24">
-        <DashboardPreview />
+          <Link
+            href="/register"
+            className="sharwa-cta mt-9 inline-flex min-h-[3.4rem] w-full items-center justify-center gap-2.5 rounded-[14px] px-9 text-[17px] font-extrabold sm:w-auto"
+          >
+            <span>{hero.cta}</span>
+            {/* The template's own arrow. It points along the reading direction,
+                so it is a literal character, not a mirrored icon. */}
+            <span aria-hidden>←</span>
+          </Link>
+        </div>
+
+        <div className="w-full lg:justify-self-end">
+          <FeatureCarousel />
+        </div>
       </div>
     </section>
   );
 }
-

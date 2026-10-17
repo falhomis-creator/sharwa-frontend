@@ -38,15 +38,15 @@ const port = baseDomain === "localhost" ? ":3000" : "";
 export const metadata: Metadata = {
   metadataBase: new URL(`${protocol}://${baseDomain}${port}`),
   title: {
-    default: "شروه",
-    template: "%s · شروه",
+    default: "شروة",
+    template: "%s",
   },
-  description: "منصة شروه للتجارة الإلكترونية — أنشئ متجرك وابدأ البيع في أقل من دقيقة.",
-  applicationName: "شروه",
+  description: "منصة شروة للتجارة الإلكترونية — أنشئ متجرك وابدأ البيع في أقل من دقيقة.",
+  applicationName: "شروة",
   openGraph: {
     type: "website",
     locale: "ar_SA",
-    siteName: "شروه",
+    siteName: "شروة",
   },
 };
 
