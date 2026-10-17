@@ -484,14 +484,63 @@
      gradient falloff is visually equivalent and essentially free. */
   .brand-aura {
     background:
-      radial-gradient(46% 52% at 32% 34%, rgb(var(--brand-rgb) / 0.2), transparent 76%),
-      radial-gradient(44% 50% at 70% 44%, rgb(var(--brand-2-rgb) / 0.17), transparent 78%);
+      radial-gradient(58% 46% at 50% 24%, rgb(var(--brand-rgb) / 0.1), transparent 72%),
+      radial-gradient(36% 36% at 76% 40%, rgb(var(--brand-2-rgb) / 0.07), transparent 74%);
   }
 
   .dark .brand-aura {
     background:
-      radial-gradient(46% 52% at 32% 34%, rgb(var(--brand-rgb) / 0.2), transparent 76%),
-      radial-gradient(44% 50% at 70% 44%, rgb(var(--brand-2-rgb) / 0.16), transparent 78%);
+      radial-gradient(58% 46% at 50% 24%, rgb(var(--brand-rgb) / 0.14), transparent 72%),
+      radial-gradient(36% 36% at 76% 40%, rgb(var(--brand-2-rgb) / 0.1), transparent 74%);
+  }
+
+  /* ---- The focal glow -----------------------------------------------------
+   * A single soft pool directly behind the start form. It exists to break the
+   * white and pull the eye to the one thing the page is asking for; kept well
+   * under the aura's weight so the form's own shadow still reads.
+   */
+  .start-glow {
+    background: radial-gradient(
+      46% 120% at 50% 52%,
+      rgb(var(--brand-rgb) / 0.26),
+      rgb(var(--brand-2-rgb) / 0.1) 46%,
+      transparent 72%
+    );
+  }
+
+  .dark .start-glow {
+    background: radial-gradient(
+      46% 120% at 50% 52%,
+      rgb(var(--brand-rgb) / 0.3),
+      rgb(var(--brand-2-rgb) / 0.12) 46%,
+      transparent 72%
+    );
+  }
+
+  /* ---- The start field: the one surface that must read as liftable ------ */
+  .start-field {
+    box-shadow:
+      0 1px 2px 0 rgb(var(--ink-rgb) / 0.08),
+      0 4px 10px -3px rgb(var(--ink-rgb) / 0.12),
+      0 14px 30px -12px rgb(var(--ink-rgb) / 0.18),
+      0 36px 70px -34px rgb(var(--ink-rgb) / 0.35);
+  }
+
+  .dark .start-field {
+    box-shadow:
+      0 2px 8px -4px rgb(0 0 0 / 0.5),
+      0 10px 24px -14px rgb(0 0 0 / 0.55),
+      0 28px 60px -30px rgb(0 0 0 / 0.7);
+  }
+
+  /* ---- Brand tile: the logo mark's ground ------------------------------- */
+  .brand-tile {
+    background-image: linear-gradient(
+      to bottom left,
+      rgb(var(--brand-rgb)),
+      rgb(var(--brand-2-ink-rgb))
+    );
+    box-shadow: 0 2px 10px -3px rgb(var(--brand-rgb) / 0.55);
   }
 
   /* Glow pooling under the floating mockup — grounds it in brand light. */
@@ -501,7 +550,10 @@
     background: radial-gradient(55% 100% at 50% 100%, rgb(var(--brand-rgb) / 0.32), transparent 76%);
   }
 
-  /* ---- Glass: ONE blur layer, never blur over blur ---------------------- */
+  /* ---- Glass: ONE blur layer, never blur over blur ----------------------
+   * Elevation here is the baseline. The hero's frame overrides it with
+   * `.float-frame`, which is declared later in this sheet and therefore wins
+   * at equal specificity. */
   .glass {
     background: rgb(var(--glass-surface) / 0.74);
     -webkit-backdrop-filter: blur(14px) saturate(140%);
@@ -556,9 +608,11 @@
  * preset. A CSS animation starts at first paint. Identical to the eye. */
 @keyframes rise-in {
   from {
-    transform: translateY(50px) scale(0.98);
+    opacity: 0;
+    transform: translateY(64px) scale(0.975);
   }
   to {
+    opacity: 1;
     transform: none;
   }
 }
@@ -566,8 +620,31 @@
 @layer components {
   @media (prefers-reduced-motion: no-preference) {
     .rise-in {
-      animation: rise-in 600ms var(--ease-out-soft) 100ms both;
+      animation: rise-in 900ms var(--ease-out-soft) 260ms both;
+      will-change: transform, opacity;
     }
+  }
+
+  /* Depth under the floating frame: three stacked falloffs — a tight contact
+   * shadow, a mid body, and a wide ambient one tinted with brand light. A
+   * single large blur reads as fog; stacked falloffs read as an object with
+   * weight sitting above the page. */
+  .float-frame {
+    box-shadow:
+      0 1px 0 0 rgb(var(--glass-edge) / 0.6) inset,
+      0 2px 6px -2px rgb(9 9 11 / 0.1),
+      0 18px 40px -18px rgb(9 9 11 / 0.22),
+      0 48px 90px -40px rgb(var(--brand-rgb) / 0.3),
+      0 72px 140px -60px rgb(9 9 11 / 0.3);
+  }
+
+  .dark .float-frame {
+    box-shadow:
+      0 1px 0 0 rgb(var(--glass-edge) / 0.1) inset,
+      0 2px 6px -2px rgb(0 0 0 / 0.5),
+      0 18px 40px -18px rgb(0 0 0 / 0.6),
+      0 48px 90px -40px rgb(var(--brand-rgb) / 0.26),
+      0 72px 140px -60px rgb(0 0 0 / 0.75);
   }
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { m, useReducedMotion } from "motion/react";
-import { Bell, PackageCheck, TrendingUp } from "lucide-react";
+import { Bell, TrendingUp } from "lucide-react";
 import { Mono } from "@/components/shared/mono";
 import { cn } from "@/lib/utils";
 
@@ -36,15 +36,6 @@ const BADGES = [
     position: "top-[42%] start-2 lg:start-[-9%]",
     drift: "drift-slow",
     delay: 0.4,
-  },
-  {
-    icon: PackageCheck,
-    title: "شُحنت اليوم",
-    value: "24 طلباً",
-    mono: false,
-    position: "-bottom-5 end-[12%] lg:end-[-6%]",
-    drift: "drift-slowest",
-    delay: 0.5,
   },
 ] as const;
 

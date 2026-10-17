@@ -13,7 +13,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
-import { Mono } from "@/components/shared/mono";
+import { Logo, LogoMark } from "@/components/shared/logo";
 import { cn } from "@/lib/utils";
 import { hero, nav } from "@/features/landing/landing.content";
 
@@ -51,14 +51,10 @@ export function SiteHeader() {
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-6 px-6">
           <Link
             href="/"
-            className="group flex min-h-11 items-center gap-2 rounded-md px-1 text-base font-semibold tracking-tight"
+            aria-label="شروه — الصفحة الرئيسية"
+            className="flex min-h-11 items-center rounded-md transition-opacity hover:opacity-85"
           >
-            <span className="flex items-baseline gap-2">
-              شروه
-              <Mono className="text-[0.7rem] font-normal text-muted-foreground transition-colors group-hover:text-foreground">
-                sharwa
-              </Mono>
-            </span>
+            <Logo mark="size-8" />
           </Link>
 
           <nav aria-label="أقسام الصفحة" className="hidden items-center gap-1 md:flex">
@@ -74,18 +70,31 @@ export function SiteHeader() {
           </nav>
 
           <div className="ms-auto flex items-center gap-2">
+            {/* Sign-in is one of the fold's two jobs, so it is a real bordered
+                action at every width — not a muted ghost link that disappears
+                under sm (owner direction 2026-10-17). */}
             <Button
               render={<Link href="/login" />}
               nativeButton={false}
-              variant="ghost"
-              className="hidden h-10 rounded-md px-3 text-sm text-muted-foreground hover:text-foreground sm:inline-flex"
+              variant="outline"
+              aria-label={hero.ctaLogin}
+              className="h-11 rounded-lg border-border/80 px-3.5 text-sm font-medium text-foreground transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/6 hover:text-emerald-700 sm:h-10 sm:px-4 dark:hover:text-emerald-300"
             >
-              دخول التاجر
+              {/* The label shortens under sm, where the full one crowds the
+                  hamburger. Both spans stay in the DOM — CSS, not React, picks
+                  one — so the accessible name comes from `aria-label` instead
+                  of the two of them read back-to-back. */}
+              <span aria-hidden className="sm:hidden">
+                دخول
+              </span>
+              <span aria-hidden className="hidden sm:inline">
+                {hero.ctaLogin}
+              </span>
             </Button>
             <Button
               render={<a href="#start" />}
               nativeButton={false}
-              className="hidden h-10 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white shadow-md shadow-emerald-500/25 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/35 md:inline-flex"
+              className="hidden h-10 rounded-lg bg-emerald-600 px-4 text-sm font-semibold text-white shadow-md shadow-emerald-600/30 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-lg hover:shadow-emerald-500/40 md:inline-flex"
             >
               {hero.cta}
             </Button>
@@ -105,7 +114,10 @@ export function SiteHeader() {
               />
               <DrawerContent className="px-6 pb-8">
                 <DrawerHeader className="px-0">
-                  <DrawerTitle className="text-start text-base">شروه</DrawerTitle>
+                  <DrawerTitle className="flex items-center gap-2.5 text-start text-base">
+                    <LogoMark className="size-7" />
+                    شروه
+                  </DrawerTitle>
                   <DrawerDescription className="text-start">
                     أقسام الصفحة والدخول إلى لوحة التاجر.
                   </DrawerDescription>

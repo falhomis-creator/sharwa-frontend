@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Hero } from "@/features/landing/components/hero";
+import { ProofBar } from "@/features/landing/components/proof-bar";
 import { CapabilitiesBento } from "@/features/landing/components/capabilities-bento";
 import { HowItWorks } from "@/features/landing/components/how-it-works";
 import { Pricing } from "@/features/landing/components/pricing";
@@ -43,7 +44,14 @@ export default async function LandingPage() {
     <>
       <JsonLd />
 
-      <Hero stats={stats} />
+      <Hero />
+
+      {/* The proof figures used to sit inside the hero, where they pulled the
+          glance off the start field. They are still on the page, one scroll
+          down, as the lead-in to the capabilities (owner direction 2026-10-17). */}
+      <div className="mx-auto w-full max-w-6xl px-6">
+        <ProofBar stats={stats} />
+      </div>
 
       <div className="py-16 md:py-24">
         <CapabilitiesBento />

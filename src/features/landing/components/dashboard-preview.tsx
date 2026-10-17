@@ -41,7 +41,7 @@ export function DashboardPreview() {
         <div
           role="img"
           aria-label="معاينة لوحة تحكم التاجر: طلبات اليوم وإيراده وأحدث خمسة طلبات"
-          className="glass relative overflow-hidden rounded-2xl"
+          className="glass float-frame relative overflow-hidden rounded-[1.4rem]"
         >
           {/* window chrome */}
           <div className="flex h-11 items-center gap-3 border-b border-white/20 px-4 dark:border-white/5">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type CSSProperties, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -28,17 +28,12 @@ function validate(name: string): string | null {
 }
 
 /**
- * The single conversion point of the page. One field inside one shell with the
- * emerald action welded to its end — the merchant types a name and is handed to
- * M02 `/register?store_name=…` (US-02.1 contract).
+ * The page's single conversion point, and the thing the whole hero is built to
+ * point at: one field with the emerald action welded to its end, sized so it
+ * out-weighs every other element above the fold. The merchant types a name and
+ * is handed to M02 `/register?store_name=…` (US-02.1 contract).
  */
-export function StartForm({
-  className,
-  style,
-}: {
-  className?: string;
-  style?: CSSProperties;
-}) {
+export function StartForm({ className }: { className?: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -65,8 +60,7 @@ export function StartForm({
       noValidate
       onSubmit={onSubmit}
       aria-busy={busy}
-      style={style}
-      className={cn("w-full max-w-xl", className)}
+      className={cn("w-full", className)}
     >
       <Label htmlFor="store_name" className="sr-only">
         اسم المتجر
@@ -74,8 +68,15 @@ export function StartForm({
 
       <div
         className={cn(
-          "flex w-full items-center gap-1 rounded-2xl border bg-background p-1.5 shadow-xl shadow-emerald-500/5 transition-colors duration-200",
-          invalid ? "border-destructive" : "border-border/70 focus-within:border-emerald-500/60",
+          // Below sm the field and the action stack: side by side at 390px the
+          // input is left with ~160px, which is not enough to read a shop name
+          // back while typing it.
+          "start-field flex w-full flex-col gap-2 rounded-[1.15rem] border bg-elevated p-2",
+          "sm:flex-row sm:items-center sm:gap-1.5",
+          "transition-colors duration-200",
+          invalid
+            ? "border-destructive"
+            : "border-border/70 focus-within:border-emerald-500/70 dark:border-white/10",
         )}
       >
         <input
@@ -89,12 +90,12 @@ export function StartForm({
           aria-invalid={invalid}
           aria-describedby={invalid ? "store_name-error" : "store_name-hint"}
           onInput={() => error && setError(null)}
-          className="h-12 min-w-0 flex-1 bg-transparent px-4 text-base text-foreground placeholder:text-muted-foreground focus-visible:outline-none md:text-sm"
+          className="h-13 w-full min-w-0 bg-transparent px-4 text-base text-foreground placeholder:text-muted-foreground/80 focus-visible:outline-none sm:flex-1"
         />
         <Button
           type="submit"
           disabled={busy}
-          className="h-12 shrink-0 gap-2 rounded-xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-lg shadow-emerald-500/25 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/35 disabled:translate-y-0 disabled:shadow-none"
+          className="h-13 w-full shrink-0 gap-2 rounded-[0.85rem] bg-emerald-600 px-6 sm:w-auto text-[0.95rem] font-semibold text-white shadow-lg shadow-emerald-600/30 transition-all duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/40 disabled:translate-y-0 disabled:shadow-none"
         >
           {busy ? "جارٍ التحويل…" : hero.cta}
           <ArrowLeft
@@ -105,12 +106,12 @@ export function StartForm({
       </div>
 
       {invalid ? (
-        <p id="store_name-error" role="alert" className="mt-3 text-sm text-destructive">
+        <p id="store_name-error" role="alert" className="mt-3.5 text-sm text-destructive">
           {error}
         </p>
       ) : (
-        <p id="store_name-hint" className="mt-3 text-sm text-muted-foreground">
-          بلا بطاقة بنكية. تختار النطاق الفرعي في الخطوة التالية.
+        <p id="store_name-hint" className="mt-3.5 text-sm text-muted-foreground">
+          {hero.startHint}
         </p>
       )}
     </form>

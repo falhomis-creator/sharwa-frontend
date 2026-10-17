@@ -43,12 +43,17 @@ export const nav = [
 export const hero = {
   eyebrow: "منصة تجارة إلكترونية متعددة المتاجر",
   title: "متجر إلكتروني كامل، من أول طلب إلى آخر شحنة",
-  /** The two words the headline rests on; rendered with a drawn 1px rule. */
+  /** The two words the headline rests on; carry the brand gradient. */
   titleAccent: "آخر شحنة",
-  subtitle:
-    "المتجر، لوحة التحكم، نقطة البيع، المحفظة، والشحن في منصة واحدة بالعربية. سجّل اسم متجرك وابدأ بإضافة منتجاتك خلال دقائق.",
+  /** Trimmed to one line: the hero sells the field below it, not itself. */
+  subtitle: "اكتب اسم متجرك وابدأ البيع بالعربية خلال دقائق.",
   cta: "ابدأ متجرك",
   ctaSecondary: "شاهد القدرات",
+  /** The second of the hero's two actions (header + under the form). */
+  ctaLogin: "تسجيل الدخول للتجار",
+  loginPrompt: "لديك متجر بالفعل؟",
+  /** Sits under the field — the one objection worth answering at this point. */
+  startHint: "مجاناً، وبلا بطاقة بنكية.",
 } as const;
 
 /**
