@@ -1,0 +1,55 @@
+import type { Metadata } from "next";
+import { getOverview } from "@/features/dashboard-shell/api/overview";
+import { getSession } from "@/features/dashboard-shell/api/session";
+import { requestIdentity } from "@/features/tenant/request";
+import { TodayBar } from "@/features/dashboard-shell/components/overview/today-bar";
+import { NewOrdersBlock } from "@/features/dashboard-shell/components/overview/new-orders-block";
+import { AttentionBlock } from "@/features/dashboard-shell/components/overview/attention-block";
+import { TopProductsBlock } from "@/features/dashboard-shell/components/overview/top-products-block";
+import { TrafficSourcesBlock } from "@/features/dashboard-shell/components/overview/traffic-sources-block";
+import { RetryBlock } from "@/features/dashboard-shell/components/overview/retry-block";
+
+export const metadata: Metadata = { title: "النظرة العامة", robots: { index: false, follow: false } };
+
+/**
+ * `/dashboard` — the overview (M03 US-03.4, US-03.5).
+ *
+ * Layout: the six-number bar, then a 12-column Bento at 8/4 and then 4/8 (FR-03.10 — no row
+ * of equal-width cards anywhere). One column on mobile with differing heights.
+ *
+ * The page awaits its data instead of streaming it behind a `<Suspense>`: any boundary at or
+ * above the shell layout lets Next flush a static shell with a 200 BEFORE the layout's
+ * session gate resolves, which turned an unauthenticated request into overview markup plus
+ * a client-side redirect. Without one, the gate produces a real 307 to the login screen.
+ */
+export default async function DashboardOverviewPage() {
+  const [identity, session] = await Promise.all([requestIdentity(), getSession()]);
+  const { data } = await getOverview(identity.store, identity.storeHost);
+
+  if (!data) {
+    return (
+      <RetryBlock
+        title="تعذّر تحميل النظرة العامة"
+        description="عقد لوحة النظرة العامة غير متاح بعد على الخادم."
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-xl font-semibold tracking-tight">{session?.store_name ?? identity.store}</h1>
+        <p className="text-sm text-muted-foreground">ما حدث اليوم، وما يحتاج تدخلك الآن.</p>
+      </div>
+
+      <TodayBar initial={data.today} store={identity.store} />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <NewOrdersBlock rows={data.new_orders} storeUrl={identity.storeOrigin} />
+        <AttentionBlock attention={data.attention} />
+        <TopProductsBlock products={data.top_products} />
+        <TrafficSourcesBlock sources={data.traffic_sources} />
+      </div>
+    </div>
+  );
+}

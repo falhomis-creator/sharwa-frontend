@@ -765,3 +765,53 @@
     color: var(--sharwa-ink);
   }
 }
+
+/* ===========================================================================
+ * PRODUCT SURFACE (constitution I-ب) — dashboard · storefront · admin · tenant
+ * guard pages. Strictly zinc: hairlines, no brand hue, no gradient, no glow,
+ * no glassmorphism. None of the MARKETING classes above may be used here.
+ * ======================================================================== */
+
+/* Indeterminate 1px progress line (M47 US-47.3.1: no fake percentages).
+ * Grows from the inline start, then collapses back — direction-agnostic, so it
+ * reads the same in RTL and LTR without a physical `translateX`. */
+@keyframes hairline-progress {
+  0% {
+    transform: scaleX(0);
+  }
+  50% {
+    transform: scaleX(1);
+  }
+  100% {
+    transform: scaleX(0);
+  }
+}
+
+@layer components {
+  .hairline-track {
+    height: 1px;
+    background-color: var(--border);
+    overflow: hidden;
+  }
+
+  .hairline-progress {
+    display: block;
+    height: 1px;
+    background-color: var(--foreground);
+    transform-origin: 0% 50%;
+    animation: hairline-progress 1.6s var(--ease-out-soft) infinite;
+  }
+
+  [dir="rtl"] .hairline-progress {
+    transform-origin: 100% 50%;
+  }
+
+  /* Reduced motion: a static hairline at rest rather than a frozen fragment. */
+  @media (prefers-reduced-motion: reduce) {
+    .hairline-progress {
+      animation: none;
+      transform: scaleX(1);
+      background-color: var(--muted-foreground);
+    }
+  }
+}

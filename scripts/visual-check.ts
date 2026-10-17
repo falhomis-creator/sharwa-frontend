@@ -2,6 +2,13 @@
  * Visual self-verification (constitution IV).
  *
  *   npm run visual-check -- --slug 01-landing --url http://localhost:3000/ [--no-dark] [--name extra]
+ *     [--viewports desktop,mobile,mobile-dark] [--cookie "k=v"] [--click "<selector>"] [--wait 800]
+ *
+ * `--viewports` picks a subset (or adds `mobile-dark`/`tablet-dark`), `--cookie` seeds a
+ * session before the first navigation, and `--click` clicks a selector after load — which
+ * is how interaction-only states (the collapsed rail, the open mobile drawer) get captured.
+ * A `--click` target that is absent or hidden is skipped, so one invocation can cover the
+ * viewports where the control exists.
  *
  * Captures docs/visual-checks/<slug>/{desktop,tablet,mobile,desktop-dark}.png and FAILS (exit 1) when:
  *   - any console.error, or a console.warning mentioning hydration, is emitted
@@ -50,12 +57,16 @@ async function launchBrowser(): Promise<Browser> {
 
 type Viewport = { name: string; width: number; height: number; colorScheme: "light" | "dark" };
 
-const VIEWPORTS: Viewport[] = [
+const ALL_VIEWPORTS: Viewport[] = [
   { name: "desktop", width: 1440, height: 900, colorScheme: "light" },
   { name: "tablet", width: 768, height: 1024, colorScheme: "light" },
   { name: "mobile", width: 390, height: 844, colorScheme: "light" },
   { name: "desktop-dark", width: 1440, height: 900, colorScheme: "dark" },
+  { name: "tablet-dark", width: 768, height: 1024, colorScheme: "dark" },
+  { name: "mobile-dark", width: 390, height: 844, colorScheme: "dark" },
 ];
+
+const DEFAULT_VIEWPORTS = ["desktop", "tablet", "mobile", "desktop-dark"];
 
 function arg(flag: string): string | undefined {
   const i = process.argv.indexOf(flag);
@@ -66,9 +77,28 @@ const slug = arg("--slug");
 const url = arg("--url");
 const extraName = arg("--name"); // optional suffix, e.g. "login" → desktop-login.png
 const noDark = process.argv.includes("--no-dark");
+const cookieArg = arg("--cookie");
+const clickSelector = arg("--click");
+const waitAfter = Number(arg("--wait") ?? 0);
+const requested = (arg("--viewports") ?? DEFAULT_VIEWPORTS.join(",")).split(",").map((v) => v.trim());
+// The tenant-guard pages answer 404/403/503 BY CONTRACT (M47 FR-47.07/08).
+// `--expect-status` asserts the DOCUMENT status; `--allow-status` only tolerates the
+// browser logging that status as a failed resource (the guard's own RSC data request
+// carries it, and a failed fetch is always logged as a console error).
+const expectStatus = Number(arg("--expect-status") ?? 0);
+const allowStatus = Number(arg("--allow-status") ?? 0);
+
+const VIEWPORTS = ALL_VIEWPORTS.filter((vp) => requested.includes(vp.name));
+if (VIEWPORTS.length === 0) {
+  console.error(`Unknown --viewports value. Known: ${ALL_VIEWPORTS.map((v) => v.name).join(", ")}`);
+  process.exit(2);
+}
 
 if (!slug || !url) {
-  console.error("Usage: visual-check --slug <NN-slug> --url <http://…> [--no-dark] [--name <suffix>]");
+  console.error(
+    "Usage: visual-check --slug <NN-slug> --url <url> [--no-dark] [--name <suffix>] " +
+      "[--viewports a,b] [--cookie k=v] [--click <selector>] [--wait <ms>] [--expect-status <code>] [--allow-status <code>]",
+  );
   process.exit(2);
 }
 
@@ -87,21 +117,51 @@ async function checkViewport(browser: Browser, vp: Viewport): Promise<Failure[]>
     hasTouch: vp.width < 768,
     isMobile: vp.width < 768,
   });
+  if (cookieArg) {
+    const [name, ...rest] = cookieArg.split("=");
+    const target = new URL(url!);
+    await context.addCookies([
+      { name: name!, value: rest.join("="), domain: target.hostname, path: "/" },
+    ]);
+  }
   const page = await context.newPage();
 
   const consoleIssues: string[] = [];
+  // A page whose contract IS an error status (the tenant guard) makes the browser log its
+  // own document load as a failed resource. That one line is the expected behaviour, not a
+  // defect; every other console error still fails the check.
+  const tolerated = allowStatus || expectStatus;
+  const expectedResourceError =
+    tolerated > 0 ? `the server responded with a status of ${tolerated}` : null;
   page.on("console", (msg: ConsoleMessage) => {
     const text = msg.text();
+    if (expectedResourceError && text.includes(expectedResourceError)) return;
     if (msg.type() === "error") consoleIssues.push(`error: ${text}`);
     else if (msg.type() === "warning" && /hydrat/i.test(text)) consoleIssues.push(`hydration: ${text}`);
   });
   page.on("pageerror", (err) => consoleIssues.push(`pageerror: ${err.message}`));
 
   const response = await page.goto(url!, { waitUntil: "networkidle" });
-  if (response && response.status() >= 400) {
-    failures.push({ viewport: vp.name, kind: "http", detail: `status ${response.status()}` });
+  const status = response?.status() ?? 0;
+  if (expectStatus > 0) {
+    if (status !== expectStatus) {
+      failures.push({ viewport: vp.name, kind: "http", detail: `expected ${expectStatus}, got ${status}` });
+    }
+  } else if (status >= 400) {
+    failures.push({ viewport: vp.name, kind: "http", detail: `status ${status}` });
   }
   await page.evaluate(() => document.fonts.ready);
+
+  if (clickSelector) {
+    const target = page.locator(clickSelector).first();
+    if ((await target.count()) > 0 && (await target.isVisible())) {
+      await target.click();
+      await page.waitForTimeout(350);
+    } else {
+      console.log(`· ${vp.name.padEnd(13)} skipped --click (not visible)`);
+    }
+  }
+  if (waitAfter > 0) await page.waitForTimeout(waitAfter);
 
   // `fullPage` captures the whole document, but `whileInView` reveals only fire
   // for sections that have actually entered the viewport. Walk the page to the
@@ -145,7 +205,7 @@ async function checkViewport(browser: Browser, vp: Viewport): Promise<Failure[]>
   if (metrics.horizontalOverflow > 0) {
     failures.push({ viewport: vp.name, kind: "overflow-x", detail: `${metrics.horizontalOverflow}px` });
   }
-  if (vp.name === "mobile" && metrics.smallTargets.length > 0) {
+  if (vp.width < 768 && metrics.smallTargets.length > 0) {
     failures.push({ viewport: vp.name, kind: "touch-target<44", detail: metrics.smallTargets.join(" | ") });
   }
   for (const issue of consoleIssues) {

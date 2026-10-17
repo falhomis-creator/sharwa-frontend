@@ -8,6 +8,25 @@ import {
 } from "@/lib/tenant";
 
 /**
+ * Tenant error routes. A store-origin layout cannot set an arbitrary HTTP status from a
+ * Server Component (React has no API for it), so a non-`ok` probe redirects to
+ * `/_tenant/<outcome>` on the same host and the proxy rewrites that to the `(onboarding)`
+ * error page WITH the status the contract requires — 403, and 503 + `Retry-After: 10`
+ * (M47 FR-47.07/08, US-47.2, US-47.3). The visible URL stays on the store's own host and
+ * carries no tenant identifier (SC-47.6).
+ */
+const TENANT_ERROR_ROUTES: Record<string, { pathname: string; init: ResponseInit }> = {
+  "not-found": { pathname: "/_errors/store-not-found", init: { status: 404 } },
+  inactive: { pathname: "/_errors/store-inactive", init: { status: 403 } },
+  provisioning: {
+    pathname: "/_errors/store-provisioning",
+    init: { status: 503, headers: { "retry-after": "10" } },
+  },
+};
+
+const TENANT_ERROR_PREFIX = "/_tenant/";
+
+/**
  * Tenant-aware request proxy (Next 16 `proxy.ts`; constitution VIII, M47, research R-03).
  * Pure: no I/O, no cookies, no query strings. Rewrites by Host only and passes the
  * resolved store as the internal request header `x-sharwa-store`.
@@ -27,6 +46,8 @@ export function proxy(request: NextRequest) {
 
   switch (tenant.kind) {
     case "platform":
+      // `/_tenant/*` only exists on a store origin; on the platform it is not a route.
+      if (pathname.startsWith(TENANT_ERROR_PREFIX)) return blocked(request);
       return NextResponse.next({ request: { headers } });
 
     case "reserved": {
@@ -47,6 +68,11 @@ export function proxy(request: NextRequest) {
     case "subdomain":
     case "custom_domain": {
       const store = tenant.store as string;
+      if (pathname.startsWith(TENANT_ERROR_PREFIX)) {
+        const route = TENANT_ERROR_ROUTES[pathname.slice(TENANT_ERROR_PREFIX.length)];
+        if (!route) return blocked(request);
+        return rewrite(request, route.pathname, search, headers, route.init);
+      }
       const group = groupForStorePath(pathname);
       const prefix = INTERNAL_PREFIX[group];
       return rewrite(request, `/${prefix}/${store}${pathname}`, search, headers);
@@ -54,11 +80,17 @@ export function proxy(request: NextRequest) {
   }
 }
 
-function rewrite(request: NextRequest, pathname: string, search: string, headers: Headers) {
+function rewrite(
+  request: NextRequest,
+  pathname: string,
+  search: string,
+  headers: Headers,
+  init: ResponseInit = {},
+) {
   const url = request.nextUrl.clone();
   url.pathname = pathname;
   url.search = search;
-  return NextResponse.rewrite(url, { request: { headers } });
+  return NextResponse.rewrite(url, { ...init, request: { headers } });
 }
 
 /** Renders the root `not-found.tsx` with a 404 status without exposing any internal path. */

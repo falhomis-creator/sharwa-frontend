@@ -65,7 +65,10 @@ function SheetContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-3 end-3"
+                /* 44px touch target below the desktop breakpoint (constitution:
+                   "أهداف اللمس ≥ 44px"); the primitive ships 28px, which fails the
+                   visual gate on every sheet opened on a phone or tablet. */
+                className="absolute top-3 end-3 size-11 lg:size-7"
                 size="icon-sm"
               />
             }
