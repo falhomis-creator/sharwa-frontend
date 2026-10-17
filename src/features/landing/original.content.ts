@@ -1,6 +1,6 @@
 /**
  * A verbatim port of the platform's own landing page,
- * `sharwa_saas/tenants/templates/tenants/home.html` (owner direction
+ * `C:/sharwa_saas/tenants/templates/tenants/home.html` (owner direction
  * 2026-10-17: "clone the original interface exactly").
  *
  * This is a SEPARATE module from `landing.content.ts` on purpose. That file

@@ -54,8 +54,6 @@ docs/visual-checks/**/*.tmp.png
 # playwright mcp artifacts
 .playwright-mcp/
 
-# local read-only copy of the Django backend (never committed to the frontend repo)
-/sharwa_saas/
 
 # Hero background video — a 3MB binary that does not belong in git history.
 # See public/README.md for the file it expects and how to produce it.

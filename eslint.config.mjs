@@ -17,8 +17,6 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   globalIgnores([
-    // Local read-only copy of the Django backend; not frontend source.
-    "sharwa_saas/**",
     ".next/**",
     "out/**",
     "build/**",
