@@ -76,7 +76,7 @@ export function FeatureCarousel() {
   const offset = reduced ? 0 : 48 * direction;
 
   const arrowClass =
-    "flex size-11 items-center justify-center rounded-full border border-white/25 bg-white/10 text-white backdrop-blur-sm transition-colors hover:bg-white/20";
+    "flex size-11 items-center justify-center rounded-full border border-white/30 bg-transparent text-white transition-colors hover:bg-white/10";
 
   return (
     <LazyMotion features={domAnimation} strict>
@@ -93,15 +93,15 @@ export function FeatureCarousel() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: offset }}
               transition={{ duration: reduced ? 0.25 : 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="absolute inset-0 flex flex-col justify-center rounded-2xl border border-zinc-200/60 bg-white p-7 shadow-sm sm:p-9"
+              className="absolute inset-0 flex flex-col justify-center rounded-[1.5rem] border border-white/10 bg-white/5 p-7 backdrop-blur-xl sm:p-9"
             >
-              <span className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-emerald-600/8">
-                <Icon className="size-7 text-emerald-600" aria-hidden />
+              <span className="mb-5 flex size-16 items-center justify-center rounded-2xl bg-orange-500">
+                <Icon className="size-7 text-white" aria-hidden />
               </span>
-              <h2 className="sharwa-ink text-xl font-extrabold sm:text-[1.4rem]">
+              <h2 className="text-xl font-extrabold text-white sm:text-[1.4rem]">
                 {feature.title}
               </h2>
-              <p className="mt-3 text-sm leading-[1.75] text-zinc-500 sm:text-base">
+              <p className="mt-3 text-sm leading-[1.75] text-zinc-400 sm:text-base">
                 {feature.body}
               </p>
             </m.article>
@@ -143,8 +143,8 @@ export function FeatureCarousel() {
                   aria-hidden
                   className={
                     i === index
-                      ? "block h-1.5 w-6 rounded-full bg-emerald-500 transition-all duration-200"
-                      : "block size-1.5 rounded-full bg-white/45 transition-all duration-200"
+                      ? "block h-1.5 w-6 rounded-full bg-orange-500 transition-all duration-200"
+                      : "block size-1.5 rounded-full bg-white/30 transition-all duration-200"
                   }
                 />
               </button>

@@ -47,7 +47,7 @@ export function Hero() {
       <div className="relative z-10 mx-auto w-full max-w-7xl px-6 sm:px-8">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-14 xl:gap-20">
           <div className="flex flex-col items-start text-start">
-            <span className="inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-400/15 px-[18px] py-1.5 text-[13px] font-extrabold text-emerald-200 backdrop-blur-sm">
+            <span className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/10 px-[18px] py-1.5 text-[13px] font-extrabold text-emerald-200 backdrop-blur-sm">
               {hero.badge}
             </span>
 
@@ -55,17 +55,17 @@ export function Hero() {
               {hero.titleLine1}
               <br />
               {hero.titleLine2Before}
-              <span className="text-blue-400">{hero.titleAccent}</span>
+              <span className="text-orange-500">{hero.titleAccent}</span>
               {hero.titleLine2After}
             </h1>
 
-            <p className="mt-5 max-w-xl text-[15px] leading-[1.8] text-white sm:text-[17px]">
+            <p className="mt-5 max-w-xl text-[15px] leading-[1.8] text-zinc-300 sm:text-[17px]">
               {hero.subtitle}
             </p>
 
             <Link
               href="/register"
-              className="mt-9 inline-flex min-h-[3.4rem] w-full items-center justify-center gap-2.5 rounded-[14px] bg-emerald-600 px-9 text-[17px] font-extrabold text-white shadow-lg shadow-emerald-600/30 transition-all hover:bg-emerald-500 hover:shadow-xl hover:shadow-emerald-500/40 sm:w-auto"
+              className="mt-9 inline-flex min-h-[3.4rem] w-full items-center justify-center gap-2.5 rounded-[14px] bg-orange-500 px-9 text-[17px] font-extrabold text-white shadow-lg shadow-orange-500/40 transition-all hover:bg-orange-600 hover:shadow-xl hover:shadow-orange-500/50 sm:w-auto"
             >
               <span>{hero.cta}</span>
               {/* The template's own arrow. It points along the reading direction,
