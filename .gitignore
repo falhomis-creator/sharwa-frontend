@@ -53,3 +53,6 @@ docs/visual-checks/**/*.tmp.png
 
 # playwright mcp artifacts
 .playwright-mcp/
+
+# local read-only copy of the Django backend (never committed to the frontend repo)
+/sharwa_saas/
