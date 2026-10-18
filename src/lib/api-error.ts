@@ -10,6 +10,8 @@ export class ApiError extends Error {
   readonly retryAfter?: number;
   readonly isMock: boolean;
   readonly isCsrf: boolean;
+  /** The parsed JSON body, for contracts that carry structured data with an error (a 409's conflicts). */
+  readonly body?: unknown;
 
   constructor(init: {
     status: number;
@@ -17,6 +19,7 @@ export class ApiError extends Error {
     fields?: FieldErrors;
     retryAfter?: number;
     isMock?: boolean;
+    body?: unknown;
   }) {
     super(init.detail ?? defaultMessage(init.status));
     this.name = "ApiError";
@@ -26,6 +29,7 @@ export class ApiError extends Error {
     this.retryAfter = init.retryAfter;
     this.isMock = init.isMock ?? false;
     this.isCsrf = init.status === 403 && /csrf/i.test(init.detail ?? "");
+    this.body = init.body;
   }
 
   /** First field message, for inline display when no `detail` exists. */
@@ -74,16 +78,19 @@ type DrfBody = { detail?: unknown } & Record<string, unknown>;
 export async function parseApiError(res: Response): Promise<ApiError> {
   let detail: string | undefined;
   let fields: FieldErrors | undefined;
+  let raw: unknown;
   const contentType = res.headers.get("content-type") ?? "";
   if (contentType.includes("application/json")) {
     try {
       const body = (await res.json()) as DrfBody;
+      raw = body;
       if (typeof body.detail === "string") detail = body.detail;
       const entries = Object.entries(body).filter(([k]) => k !== "detail");
       if (entries.length > 0) {
         fields = {};
         for (const [k, v] of entries) {
-          if (Array.isArray(v)) fields[k] = v.map(String);
+          // Field messages are strings; arrays of objects are structured data, not messages.
+          if (Array.isArray(v) && v.every((x) => typeof x === "string")) fields[k] = v as string[];
           else if (typeof v === "string") fields[k] = [v];
         }
         if (Object.keys(fields).length === 0) fields = undefined;
@@ -100,6 +107,7 @@ export async function parseApiError(res: Response): Promise<ApiError> {
     fields,
     retryAfter,
     isMock: res.headers.get("x-sharwa-mock") === "1",
+    body: raw,
   });
 }
 

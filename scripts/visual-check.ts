@@ -190,8 +190,9 @@ async function checkViewport(browser: Browser, vp: Viewport): Promise<Failure[]>
       const style = getComputedStyle(el);
       if (rect.width === 0 || rect.height === 0 || style.visibility === "hidden") continue;
       // Visually-hidden affordances (the sr-only skip link) are collapsed to 1px
-      // on purpose and only grow on focus — they are not touch targets.
-      if (style.position === "absolute" && rect.width <= 1 && rect.height <= 1) continue;
+      // on purpose and only grow on focus — they are not touch targets. Base UI's form
+      // inputs behind its Checkbox/Switch are `position: fixed` 1px proxies of the same kind.
+      if ((style.position === "absolute" || style.position === "fixed") && rect.width <= 1 && rect.height <= 1) continue;
       // inline links inside running text are exempt (prose)
       if (el.tagName === "A" && el.closest("p, li, td")) continue;
       if (rect.height < 44) {

@@ -4,8 +4,11 @@ import {
   type OverviewOrderRow,
   type TodayMetrics,
 } from "@/features/dashboard-shell/schemas";
-import { displayMoney, fullName, int, isoDaysAgo, phone, pick, seeded } from "@/mocks/_fixtures";
-import { registeredStore } from "@/mocks/public/register";
+import { displayMoney, int, isoDaysAgo, seeded } from "@/mocks/_fixtures";
+import { newestNewOrders } from "@/mocks/orders/state";
+import { productSummary } from "@/mocks/catalog/products";
+import { catalog } from "@/mocks/catalog/state";
+import { isEmptyStore } from "@/mocks/empty-store";
 
 /**
  * `GET /api/v1/dashboard/overview/` fixture (M03 §7 — `[NEEDS BACKEND]`), built from
@@ -15,15 +18,6 @@ import { registeredStore } from "@/mocks/public/register";
  * a working store (`noor`) and a brand-new store with nothing in it (`shop`, US-03.4.3).
  * The PRNG is seeded from the store slug, so a capture is stable.
  */
-const FULFILLMENT_STATES = [
-  { id: 1, name: "قيد الانتظار", color: "#f59e0b" },
-  { id: 2, name: "قيد التجهيز", color: "#3b82f6" },
-  { id: 3, name: "قيد التوصيل", color: "#8b5cf6" },
-] as const;
-
-const PAYMENT_MIX = ["unpaid", "pending", "paid"] as const;
-const CHANNEL_MIX = ["online", "online", "online", "pos", "phone"] as const;
-
 const EMPTY_TODAY: TodayMetrics = {
   orders_count: 0,
   completed_orders_count: 0,
@@ -41,24 +35,24 @@ function seedOf(store: string | null): number {
   return s || 7;
 }
 
-/** A store with no orders at all - the empty-overview state. */
-export function isEmptyStore(store: string | null): boolean {
-  // A store the mocked onboarding wizard just created has nothing in it yet (M02 → M03).
-  return store === "shop" || Boolean(registeredStore(store));
-}
+/** A store with no orders at all - the empty-overview state (now shared: `@/mocks/empty-store`). */
+export { isEmptyStore };
 
+/**
+ * The «طلبات جديدة» block reads the M06 order fixture (newest `status=new` first), so a row
+ * here opens the very order the list shows and the sidebar counter agrees (one source).
+ */
 function newOrders(store: string, count: number): OverviewOrderRow[] {
-  const rnd = seeded(seedOf(store));
-  return Array.from({ length: count }, (_, i) => ({
-    id: 10_480 - i * 3,
-    customer_name: fullName(rnd),
-    customer_phone: phone(rnd),
-    display_total: displayMoney(int(rnd, 85, 2_400) + 0.5),
-    status: "new" as const,
-    payment_status: pick(rnd, PAYMENT_MIX),
-    fulfillment_status: { ...pick(rnd, FULFILLMENT_STATES) },
-    sales_channel: pick(rnd, CHANNEL_MIX),
-    created_at: isoDaysAgo(0, 20 - i),
+  return newestNewOrders(store, count).map((o) => ({
+    id: o.id,
+    customer_name: o.customer_name,
+    customer_phone: o.customer_phone,
+    display_total: o.display_total,
+    status: o.status,
+    payment_status: o.payment_status,
+    fulfillment_status: o.fulfillment_status,
+    sales_channel: o.sales_channel,
+    created_at: o.created_at,
   }));
 }
 
@@ -101,7 +95,8 @@ export function overviewMock(store: string | null, refreshedAt?: string): Overvi
     attention: {
       pending_approvals: 3,
       unread_behavior_alerts: { warning: 2, critical: 1 },
-      low_stock_products: 7,
+      // M04: the same number the products list strip shows.
+      low_stock_products: productSummary(catalog(slug)).low_stock,
       // Zero on purpose: the row must disappear rather than render a 0 (US-03.5.3).
       unread_conversations: 0,
     },

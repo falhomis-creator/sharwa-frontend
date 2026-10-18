@@ -65,14 +65,15 @@ function DialogContent({
             render={
               <Button
                 variant="ghost"
-                className="absolute top-2 end-2"
+                /* 44px below lg, same rule as the sheet (touch targets ≥ 44px). */
+                className="absolute top-2 end-2 size-11 lg:size-7"
                 size="icon-sm"
               />
             }
           >
             <XIcon
             />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">إغلاق</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Popup>
@@ -110,7 +111,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close render={<Button variant="outline" />}>
-          Close
+          إغلاق
         </DialogPrimitive.Close>
       )}
     </div>

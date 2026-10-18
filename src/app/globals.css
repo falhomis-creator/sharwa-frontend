@@ -815,3 +815,28 @@
     }
   }
 }
+
+/* M34 — settings hub: the unsaved-changes bar nudges when navigation is held. */
+@keyframes sharwa-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  30% {
+    transform: translateX(-4px);
+  }
+  60% {
+    transform: translateX(4px);
+  }
+}
+
+/* Announcement bar marquee (storefront component, previewed in M34). Two copies of the
+   text scroll by half the track; RTL flips the direction through --marquee-dir. */
+@keyframes sharwa-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(var(--marquee-dir, -1) * 50%));
+  }
+}

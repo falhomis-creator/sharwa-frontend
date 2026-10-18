@@ -1,5 +1,6 @@
 import type { StoreConfig } from "@/lib/schemas/store-config";
 import { registeredStatus, registeredStore } from "@/mocks/public/register";
+import { settingsOverlay } from "@/mocks/settings/overlay";
 
 /**
  * Tenant probe fixtures for `GET /api/v1/config/` (M47 T049).
@@ -101,6 +102,14 @@ export const TENANT_FIXTURES: Record<string, TenantFixture> = {
  * the status endpoint does — so the probe never races the wait page.
  */
 export function tenantFixture(store: string | null): TenantFixture | undefined {
+  const fixture = baseFixture(store);
+  if (!fixture?.config) return fixture;
+  // Fields saved from the settings hub (M34) win over the static fixture.
+  const overlay = settingsOverlay(store);
+  return Object.keys(overlay).length ? { ...fixture, config: { ...fixture.config, ...overlay } } : fixture;
+}
+
+function baseFixture(store: string | null): TenantFixture | undefined {
   if (!store) return undefined;
   const fixed = TENANT_FIXTURES[store];
   if (fixed) return fixed;

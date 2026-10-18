@@ -28,7 +28,7 @@ export function ErrorState({
         </p>
       ) : null}
       {onRetry ? (
-        <Button variant="outline" size="lg" onClick={onRetry}>
+        <Button variant="outline" size="lg" className="h-11 lg:h-9" onClick={onRetry}>
           إعادة المحاولة
         </Button>
       ) : null}

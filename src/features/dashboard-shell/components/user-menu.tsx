@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { apiFetch } from "@/lib/api-client";
 import { z } from "zod";
 import { useSession } from "@/features/dashboard-shell/components/session-context";
+import { useStore } from "@/features/dashboard-shell/components/store-context";
+import { clearRecents } from "@/features/command-palette/recents";
 import { SETTINGS_ITEM } from "@/features/dashboard-shell/navigation";
 import { useShellStore } from "@/stores/shell";
 
@@ -19,6 +21,7 @@ import { useShellStore } from "@/stores/shell";
  */
 export function UserMenu({ storeUrl }: { storeUrl: string }) {
   const session = useSession();
+  const store = useStore();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
   const setShortcuts = useShellStore((s) => s.setShortcuts);
@@ -27,6 +30,7 @@ export function UserMenu({ storeUrl }: { storeUrl: string }) {
   const role = session.kind === "staff" ? (session.staff?.roles.join(" · ") || "موظف") : session.store_name;
 
   async function logout() {
+    clearRecents(store);
     try {
       await apiFetch("/api/bff/auth/logout", z.undefined(), { method: "POST" });
     } catch {

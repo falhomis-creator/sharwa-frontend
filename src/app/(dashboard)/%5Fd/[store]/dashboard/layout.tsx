@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { connection } from "next/server";
 import { ApiClientProvider } from "@/components/providers/api-client-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { MockIndicator } from "@/components/shared/mock-indicator";
@@ -38,6 +39,10 @@ export default function DashboardGroupLayout({ children }: { children: ReactNode
  * (M47 FR-47.06 — `csrftoken` is HttpOnly, so `document.cookie` is not an option).
  */
 async function CsrfBootstrap() {
+  // Request-time only: without this the dev prerender validation runs the upstream fetch
+  // below inside the static-shell pass and flags `Date.now()` from the fetch instrumentation
+  // whenever Django answers fast (or is down) — a console error on every dashboard page.
+  await connection();
   const identity = await requestIdentity();
   const token = await getCsrfToken(identity.storeHost);
   return <ApiClientProvider csrfToken={token}>{null}</ApiClientProvider>;

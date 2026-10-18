@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getOverview } from "@/features/dashboard-shell/api/overview";
 import { getSession } from "@/features/dashboard-shell/api/session";
 import { requestIdentity } from "@/features/tenant/request";
@@ -8,6 +9,9 @@ import { AttentionBlock } from "@/features/dashboard-shell/components/overview/a
 import { TopProductsBlock } from "@/features/dashboard-shell/components/overview/top-products-block";
 import { TrafficSourcesBlock } from "@/features/dashboard-shell/components/overview/traffic-sources-block";
 import { RetryBlock } from "@/features/dashboard-shell/components/overview/retry-block";
+
+/** Blocks on its data by design (see below) — the same opt-out the shell layout declares. */
+export const instant = false;
 
 export const metadata: Metadata = { title: "النظرة العامة", robots: { index: false, follow: false } };
 
@@ -23,6 +27,8 @@ export const metadata: Metadata = { title: "النظرة العامة", robots: 
  * a client-side redirect. Without one, the gate produces a real 307 to the login screen.
  */
 export default async function DashboardOverviewPage() {
+  // Request-time: the overview (and its mock, which reads the clock) is session data.
+  await connection();
   const [identity, session] = await Promise.all([requestIdentity(), getSession()]);
   const { data } = await getOverview(identity.store, identity.storeHost);
 

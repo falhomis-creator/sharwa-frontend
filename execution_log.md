@@ -1,3 +1,238 @@
+# Execution log — Phase 3E · M34 Store settings hub (T082–T085)
+
+**Date:** 2026-10-18 · **Branch:** `main` · **Base:** the 3D tree (see «Delivery» below) · **Status:** T083–T084 done; T085 gates pass — `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `scripts/settings-check.ts` **22/22** ✅ · `scripts/catalog-orders-check.ts` (3D regression) **21/21** ✅ · visual check **41 screenshots**, 0 console errors, 0 horizontal scroll, every mobile target ≥ 44px. Backend untouched. Mocks only (`x-sharwa-mock: 1`).
+
+## Delivery (read first)
+
+- Your commit `feat(phase-3d)…` exists, but the 3D **source was not in the working tree**: `src/features/` held only `dashboard-shell`, `landing`, `onboarding`, `tenant`, and `execution_log.md` was the 3C one. The `.handoff` patches had been committed as files, not applied. `origin` (GitHub) was still empty.
+- This session has no shell on your machine, and attaching the repository for push was refused, so the `git add / commit / push` step of the new linear workflow is yours. Per the new rule, **no `.handoff`**: every 3D and 3E file was written straight into the project folder.
+- T082's tag `rp/08-settings-before` was not created (no git here; the new workflow has no tags).
+
+## T083 — Schemas, mocks, BFF
+
+- `src/features/settings/schemas.ts`: the `StoreSetting` read model, with the fields of the seven Django forms only (FR-34.02). No `admin_password`, and no logo, colours or fonts (those belong to M08). FX defaults are `usd_to_sar 3.75`, `sar_to_yer_old 140` and `sar_to_yer_new 520`. `timezone` defaults to `Asia/Aden`, and `week_start_day` is `sunday|monday`. It also defines one Zod input schema per form and `SECTION_META`, which gives each of the nine sections its feature key, auto/explicit mode, owner-only flag, endpoint, and the fields ⌘K can search.
+- `src/mocks/settings/state.ts`: a per-store row on `globalThis`, with validation that mirrors the forms and returns DRF `{field:[msg]}` 400s. It computes `display_*` and `fx_preview` itself (the UI never converts currency). `multi-location` returns a readable **409** `{detail, conflicts:[{location, products_with_stock}]}` when turning it off would merge stock, unless `merge: true` is sent.
+- `src/mocks/settings/overlay.ts`: holds the saved store name, WhatsApp number and announcement fields. `tenantFixture()` merges them, so the shell (session) and `/api/v1/config/` reflect a save immediately, with no import cycle.
+- BFF: `GET /api/bff/settings`; `PATCH /api/bff/settings/{identity,contact,policies,shipping,currency,seo,announcement,payments}`; `POST /api/bff/settings/multi-location`. A single factory (`src/mocks/settings/routes.ts`) gives a 403 unless the caller is the owner (shipping, currency, payments, multi-location) or the owner/«مدير المتجر/الفرع» (the text sections).
+
+```
+GET    settings                       → 200 (whole row)
+PATCH  settings/currency {usd_to_sar:"0"} → 400 {"usd_to_sar":["يجب أن يكون أكبر من صفر."]}
+POST   settings/multi-location {enabled:false} → 409 {"detail":"يوجد مخزون في أكثر من موقع…","conflicts":[{"location":"فرع الرياض","products_with_stock":14}]}
+PATCH  settings/identity (cashier) → 403 {"detail":"تعديل الإعدادات مقصور على المالك ومدير المتجر."}
+```
+
+## T084 — Hub UI
+
+- **Frame** (`settings-shell.tsx`, `settings/layout.tsx`): a sticky 220px vertical nav at the start with a 1px end border, and content capped at 720px. Below `md` the nav becomes a sticky select. Sections whose feature is off are absent, and opening one by URL redirects to «الهوية» with a notice (FR-34.11). A red dot marks the money/structure sections.
+- **Index** `/dashboard/settings`: text rows in two groups, each showing the section's current value («العرض بريال سعودي · 1 USD = 3.75 SAR»). The «المال والبنية» group sits behind a thin red rule. No equal cards and no icon tiles.
+- **Auto-save** (identity, contact, policies, SEO, announcement — `useAutoSave`): fires 800ms after the last edit, or immediately on blur. Only the changed fields are sent, after Zod validation. The indicator shows «يُحفظ…» then «تم الحفظ hh:mm» in Mono. On a network error it shows «لم يُحفظ — إعادة المحاولة» and retries once after 5s. A pending save is flushed when the section unmounts, so switching sections never loses an edit. Server field errors go under their field and the first one gets focus. A store-name save calls `router.refresh()` so the shell updates at once (US-34.2.2).
+- **Explicit save** (shipping, currency, payments, multi-location — `useExplicitSection`): nothing auto-saves. «حفظ التغييرات» stays disabled until something changes, and every save goes through a confirmation that says what will happen. While a section is dirty, the sticky «لديك تغييرات غير محفوظة» bar holds navigation to other sections; «حفظ» opens the confirmation and «تجاهل» resets, and either way the held navigation then continues. `⌘S` opens the confirmation, `beforeunload` warns, and these sections sit in a thin red frame with no fill.
+- **Sections:**
+  - Identity: name counter, about-us counter, a searchable IANA time-zone picker built on `Intl.supportedValuesOf('timeZone')` that shows the current time there in Mono, and a segmented week start with the «يؤثر على التقارير الأسبوعية…» hint.
+  - Contact: WhatsApp is normalised and previewed, with «زر واتساب سيُخفى» when it's empty. Email, then `custom_domain` read-only with a link to M19, then 4 social URLs in LTR.
+  - Policies: a text format of `##` headings, `-` lists and blank-line paragraphs, with a toolbar. The «كما يراها المشتري» preview renders through the shared `src/components/ui/rich-text.tsx` as React elements, not HTML.
+  - Shipping: amounts labelled «ريال يمني (عدن) YER_NEW»; the server's `display_*` preview; a warning when the free-shipping threshold is below the fee.
+  - Currency: display currency, 3 Mono rates, and the server's `fx_preview` table for 100 SAR; the confirmation says «الطلبات السابقة لا تتأثر».
+  - SEO: counters for 70, 160 and 255 characters, an OG image with an extension check, and a text-only search-result preview.
+  - Announcement: a live preview using the shared `src/components/ui/announcement-bar.tsx` (marquee scrolling toward the reading direction, frozen under `prefers-reduced-motion`), hex inputs with a swatch, «تباين أقل من AA», three speeds and four placements.
+  - Payments: two switches; «لن يستطيع المشترون الدفع إلا عند الاستلام» when both are off; «الطلبات الجارية لا تتأثر» when turning off Sharwa Pay with pending orders.
+  - Locations: a switch and a confirmation that explains the stock move. A 409 lists the conflicting location and offers «دمج الكميات وإيقاف».
+- **⌘K:** each searchable field is indexed as «إعداد: …» → `/dashboard/settings/<section>#<field>`, and the section focuses it on arrival (US-34.1.3).
+- **Staff:** a cashier sees «الهوية» and «الدفع» only, both read-only («للقراءة فقط — تحتاج صلاحية مالك المتجر»).
+
+## Shared changes
+
+- `src/lib/api-error.ts`: `ApiError.body` keeps the parsed JSON. That is how the 409's conflict list reaches the UI. Arrays of objects no longer go into `fields`, which hold messages only.
+- `navigation.ts`: «معلومات التواصل», «الصفحات الإضافية», «أسعار الصرف» and «إعدادات SEO» now open the hub sections. The sidebar groups keep their names and places.
+- `globals.css`: two keyframes (`sharwa-nudge`, `sharwa-marquee`).
+- `badges-tab.tsx` (3D): the contrast ratio is wrapped in `dir="ltr"` so it reads «17.7:1» and not «1:17.7».
+- `scripts/visual-check.ts` (3D): Base UI's hidden switch/checkbox proxies are exempt from the 44px check.
+
+## T085 — Gates
+
+```
+$ npm run lint      → (no output)
+$ npx tsc --noEmit  → exit 0
+$ SHARWA_CHROMIUM=… npx tsx scripts/settings-check.ts 3300
+✓ no save before the 800ms debounce
+✓ «تم الحفظ hh:mm» after the auto-save
+✓ the new store name reaches the shell without a reload
+✓ an edit followed at once by a section switch is saved
+✓ server 400 is shown under its field
+✓ low contrast between the two bar colours → «تباين أقل من AA»
+✓ «حفظ التغييرات» is disabled until something changes
+✓ a zero rate is refused locally
+✓ the explicit section did not auto-save
+✓ dirty → section navigation is held by the unsaved bar
+✓ the confirmation says previous orders are not affected
+✓ saved after confirming; the held navigation continued; fx_preview recomputed by the server
+✓ ⌘S/Ctrl+S opens the confirmation
+✓ «تجاهل» drops the change and continues the held navigation
+✓ 409 is readable: the conflicting location is listed
+✓ «دمج الكميات وإيقاف» completes the change
+✓ ⌘K «المنطقة الزمنية» opens identity with the field focused
+✓ a section whose feature is off redirects to «الهوية»
+✓ a cashier sees identity read-only
+✓ payments: read-only, no save button for staff
+✓ phones: the section nav is a select
+✓ phones: choosing a section in the select navigates
+✓ Phase 3E functional check passed
+$ … scripts/catalog-orders-check.ts 3300   → ✓ Phase 3D functional check passed (regression)
+```
+
+`docs/visual-checks/34-settings/` (41): the index on 4 viewports; each of the nine sections on desktop, mobile and dark; staff index and payments (read-only); the auto-saved state, unsaved bar, currency confirmation, contrast warning and 409 panel.
+
+Fixed during the gates:
+- Inline links inside setting descriptions were 18px tall on mobile. Descriptions are now `<p>` (prose), matching the checker's existing rule.
+- Monospace on Arabic policy text broke the letter joining; the font is removed.
+- Base UI puts a field's `id` on its hidden input, so ⌘K focus now moves to the visible `role="switch"`.
+
+## Deviations
+
+These are listed under 3E in `tasks.md`:
+- No T082 tag.
+- An index page instead of a redirect.
+- `locations` page vs the `multi-location` route.
+- Sidebar links point at the hub.
+- Owner-only money sections (shipping included).
+- The light policy format.
+- Config cache revalidation lands with the storefront's cached reads (Phase 4).
+- No cross-tab `version`.
+- The OG image is sent as a data URL until the multipart endpoint exists.
+
+---
+
+# Execution log — Phase 3D · M04 Products · M05 Organization · M06 Orders · M48 Command palette · M49 Notifications (T068–T081)
+
+**Date:** 2026-10-18 · **Branch:** `master` · **Base:** device working tree after 3C (HEAD `57a5da8` + uncommitted M02) · **Restore point:** `rp/14-next-phase-before` (owner-run, see T068)
+**Status:** T069–T080 done. T081 gates pass: `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `scripts/catalog-orders-check.ts` **21/21** ✅ · visual check **74 screenshots**, 0 console errors, 0 horizontal scroll, every mobile target ≥ 44px. **No commit and no `*-after` tag** — held for owner review. Backend (`C:\sharwa_saas`) untouched.
+
+---
+
+## T068 — Restore point (owner)
+
+Running git on the owner's machine from this session was refused by the security policy, so the two commands are the owner's:
+
+```
+git add -A -- . ':!.handoff'        # -am alone would miss M02's NEW (untracked) files
+git commit -m "feat(m02): complete onboarding wizard"
+git tag -a rp/14-next-phase-before -m "Before starting tasks from T068"
+```
+
+Checked on the device before delivery: `.git/refs/tags/rp/` ends at `13-onboarding-before`, and `.git/logs/HEAD`'s last entry is `feat(tenant,dashboard): M47 tenant guard + M03 …`. Phase 3D was first delivered as patches under `.handoff/phase-3d/`; **superseded in 3E** — the patches were committed but never applied, so 3E wrote every 3D file straight into the tree (see 3E «Delivery»). Logged in `.specify/memory/restore-points.md`.
+
+## T069 — Shared data table
+
+`src/components/shared/data-table/*`: TanStack Table 8, 44px rows (36px compact), sticky header, horizontal hairlines only, numeric columns `text-end font-mono`, density toggle; page/page_size/ordering/density in the URL (`useTableUrlState`, nuqs); `J/K` row focus, `Enter/Space` open; multi-select → bulk bar → `BulkActionDialog` (preview by count → run → «N نجحت، M مرفوضة» with reasons; `confirmDisabled` added in 3D for required targets); states: skeleton · empty · no-results · error · forbidden; `renderMobileCard` below `md`. `FilterBar` (inline ≥ md, bottom drawer below), `SearchBox` (300ms debounce), `StatStrip` (text number strip, each entry a filter — no KPI cards).
+
+## T070–T073 — M04 Products & variants
+
+- Schemas: `src/features/products/schemas/{enums,product,variants,templates}.ts` (Product with every data-model §4 enum verbatim).
+- Mocks: `src/mocks/catalog/{seed,state,products,dictionary,import}.ts` — `noor` full (60 products), `shop` empty; per-store state on `globalThis`.
+- BFF: `src/app/api/bff/products/**` through `mockRoute` (see BFF README).
+- Screens: list (StatStrip · filters in URL · inline price/stock edit with block reasons · bulk publish/archive/category/tag/delete), quick add (`?quick=true`, 4 required fields, `Q`), full editor (conditional sections, local draft autosave via `useSyncExternalStore`, leave guard, `⌘S`, dnd gallery with 5s undo, variant generator + matrix with paste, change log tab), variants dictionary, templates (apply/sector), CSV import (3 stages).
+- Decisions: `@dnd-kit/utilities` is transitive → local `src/lib/dnd.ts`; ES2017 target → `BigInt(…)` constants in `src/lib/decimal.ts`; list image from the gallery only + `ProductThumb` `onError` fallback (a broken external `image_url` logged a console error); `instant = false` on `[id]` pages; `await connection()` first in `CsrfBootstrap`, the shell layout and the overview page (dev prerender flagged `Date.now()` from fetch instrumentation); overview/counters mocks now read the real catalog/orders fixtures.
+
+## T074 — M05 Organization
+
+`src/features/organization/*` + `src/app/api/bff/{categories,brands,tags,collections,badges}/**`.
+
+- **Category tree** (`category-tree.tsx`, `tree-utils.ts`, Zustand `src/stores/category-tree.ts`): flattened dnd-kit tree; the dragged node's subtree is removed while dragging (no cycles; the mock rejects one with 400 too); projection by horizontal offset with the **RTL sign** (deeper = towards the left); 1px `foreground` drop line at the projected depth; one `POST categories/reorder {moves}` with only the changed rows, optimistic + rollback toast; keyboard: Space lift · ↑/↓ move · ←/→ depth · Space drop · Esc, announced in Arabic via `aria-live`; mobile/no-drag «نقل إلى…» dialog; collapse; depth > 3 warning; `N` new category; delete dialog with «نقل المنتجات إلى…/إبقاؤها بلا تصنيف» (`reassign_to`) and children → grandparent/root; an empty leaf deletes with a 5s «تراجع».
+- **Brands**: table with 32px logo (`next/image` via `ProductThumb`), add row on top saved by Enter, slug auto + editable, server field errors under the field.
+- **Tags**: create by typing + Enter (60-char counter), rename in place (Enter/Esc), merge dialog, «غير مستخدم» after 30 days with no products.
+- **Collections**: list + create dialog → editor page `products/organization/collections/[id]`: product search (name/SKU, 250ms) with «في المجموعة», drag reorder (optimistic), remove, «مؤرشف» badge + suggestion, copyable `?collection=<slug>` link, bottom drawer for search on mobile.
+- **Badges**: hex + 16px swatch, mini product-card preview, «تباين ضعيف» warning (WCAG 4.5) without blocking save, the three dynamic badges read-only.
+- Shared delete flow: `undo-delete.ts` (row leaves the cache at once, the request is sent only when the 5s window closes; failure restores it) and `ConfirmDelete` for entities with products.
+- Staff without catalog rights: tree read-only (no handles, no buttons), verified in the functional check.
+
+## T075–T078 — M06 Orders
+
+`src/features/orders/*` + `src/app/api/bff/{orders,order-statuses}/**` (120 mock orders).
+
+- **List** (`orders-table.tsx`, `orders-screen.tsx`): StatStrip from `orders/counters` (جديد · بانتظار تأكيد الدفع · يتطلب مراجعة دفع · each fulfilment status), tooltip saying the counters ignore the filters; columns #, customer (+phone Mono), total (`display_total`), payment, **financial status (zinc text badge)** and **fulfilment (6px dot in `OrderStatus.color` + name)** — never merged; filters status/payment/fulfilment/channel/source/location/from/to/q in the URL; inline fulfilment menu with `version`; bulk change = one versioned call per order with a per-order report; mobile cards → full page; empty «لا طلبات بعد — شارك رابط متجرك» + copy link; `?order=<id>` side sheet.
+- **Detail** (`order-detail.tsx`, one component for sheet + `orders/[id]`): both axes in the header, items (snapshot, «محذوف»), invoice rows from `display_*` incl. «مدفوع مقدماً/المستحق عند الاستلام», fulfilment cards per location + «قيد التنفيذ الجزئي (x من y)», payments, refunds, merged timeline with source labels, customer + COD trust, gift recipient apart from the buyer. `E` opens the fulfilment menu, `P` prints.
+- **Actions** (`order-actions.tsx`): financial status with legal targets only (others disabled with a hint, `refunded` → «استخدم مسار الاسترجاع»), confirm dialog for stock effects (cancel / re-activate «سيُخصم المخزون مجدداً»); payment confirm/approve/reject with the receipt diff in a semantic colour + zoom; refund form (≤ refundable, method, reason); convert to pickup; gift note; print.
+- **409** (`use-order-write.ts`, `conflict-panel.tsx`): a stale `version` parks the write, shows «حُدِّث الطلب #… من مستخدم آخر» inline, reloads the order; «تحديث ثم إعادة المحاولة» re-sends the SAME write with the fresh version.
+- **Print**: `(print)` route group with its own `requireSession()` layout and no shell chrome; A4 RTL waybill; gift orders print without prices.
+- **Statuses** (`orders/statuses`): drag order (optimistic), create/edit dialog (name 60, colour, default / releases_stock / marks_completed — mutually exclusive), the default cannot be deleted (button visible + disabled + reason), delete moves orders to the default.
+- **Manual order** (`orders/new`): product search, variant per line, quantity stepper, phone normalised (05… → 966, else 967), delivery/pickup, `sales_channel: phone`; «مسودة جملة» only with `orders.create_b2b` → approval id in the toast. No client-side totals.
+- Found and fixed while testing: Base UI `MenuGroupLabel` must sit inside `Menu.Group` (runtime error on opening a status menu).
+
+## T079 — M48 Command palette
+
+`src/features/command-palette/*`, Zustand `src/stores/palette.ts`, mounted once in `(shell)/layout.tsx`; the topbar search button is live.
+
+- Opens with Ctrl/⌘+K by **`event.code === "KeyK"`** (works on an Arabic layout), skipped inside `[data-no-palette]`; Dialog 640px at 12vh, top drawer below 768px.
+- Index from `navigation.ts` filtered by features/permissions **before** display (blocked = absent; «قريباً» disabled); ranking by the shared `matchScore` normaliser (word start > substring > fuzzy, article stripping) — «الطلبت» → «كل الطلبات» first.
+- Query shape (FR-48.06): `#`/digits → orders first · phone → customers · `SHW-` → products · `>` → actions only.
+- Server search: ≥ 2 chars, 150ms debounce, abandoned keys aborted, `limit=5`, `types` trimmed by permission, 2-row skeleton per group, «لا طلبات أو منتجات أو عملاء تطابق…», thin bar on network error / 429.
+- Recents: `sharwa:recent:<store>:<member>` (≤ 10, 5 shown), blocked destinations dropped silently, cleared on logout (user menu and palette).
+- Contextual: Tab on a selected order (or on an order page) → fulfilment statuses (disabled with the reason without permission), print, copy tracking link; 409 → Sonner «تحديث ثم إعادة»; other failures → «إعادة» reopens the palette on the same page. Backspace on an empty query goes back; Ctrl+1..9 runs the n-th item; store switcher page for owners with > 1 store.
+
+## T080 — M49 Notifications
+
+`src/features/notifications/{api.ts,components/notification-bell.tsx}`; the topbar bell is live.
+
+- Summary polled every 30s **only while visible** + on focus; Mono count with `99+`, a red dot only for unread critical, nothing at 0, `aria-live` count.
+- Panel: 400px sheet from the start side (full width on phones), «الكل · غير المقروء» + kind filters with counts (filters this member never receives are hidden), `?kind=` in the URL, rows grouped by the server's `group_key` with expand, severity dot (warning/critical only), only `/dashboard…` links followed (FR-49.04), optimistic read / read-all with rollback, `E` / `Shift+E`, Esc returns focus to the bell, «الإشعارات غير متاحة حالياً» when the backend is absent.
+
+## T081 — Gates
+
+```
+$ npm run lint      → (no output)
+$ npx tsc --noEmit  → exit 0
+$ SHARWA_CHROMIUM=… npx tsx scripts/catalog-orders-check.ts 3300
+✓ product #2004 has 2 generated variants (S, M)
+✓ phone order #10483 created and opened
+✓ order lists the variant product
+✓ new order appears in the orders list
+✓ financial axis followed «مكتمل» (status=completed)
+✓ 409 → conflict panel «حُدِّث الطلب من مستخدم آخر»
+✓ retry re-applied the change on the fresh version (now «قيد التوصيل»)
+✓ drag shows the 1px drop indicator
+✓ dragging «ديكور» towards the indent nests it one level
+✓ keyboard Space/↑/Space moves «نسائي»
+✓ the drop is announced in Arabic through aria-live
+✓ Ctrl+K opens the palette by event.code (Arabic layout)
+✓ `#id` → Enter opens the order
+✓ Tab on an order page → contextual fulfilment commands
+✓ Backspace on an empty query goes back to the root
+✓ Esc closes the palette
+✓ kind filter lives in the URL (?kind=payment_review)
+✓ read-all (payment_review) updates the count optimistically (5 → 3)
+✓ Esc returns focus to the bell
+✓ staff (cashier) sees the tree read-only
+✓ cashier with orders.view sees the orders list
+✓ Phase 3D functional check passed
+```
+
+Visual checks (`npm run visual-check`, `--cookie sharwa_mock_session=merchant`), all ✓:
+
+| Folder | Screens |
+|---|---|
+| `04-products/` (17) | list ×4 viewports, editor, quick add, variants, templates, import, empty store |
+| `05-organization/` (22) | categories ×4, brands, tags, collections, badges, collection editor, empty tree, row actions, tree while dragging, staff read-only |
+| `06-orders/` (24) | list ×4, sheet (+dark), detail, payment review (+mobile, dark), no results, empty store, statuses, new (+filled), print, 409 panel, completed order |
+| `48-command-palette/` (6) | empty desktop/mobile/dark, `#id` results, order commands, no results |
+| `49-notifications/` (5) | panel desktop/mobile/dark, staff, interactive |
+
+Fixes the gates forced: `ErrorState` retry button and the quick-add «خيارات إضافية» toggle were < 44px on mobile; collection editor / order detail / new order grids overflowed 48px at 390px (`grid-cols-[minmax(0,1fr)]`); the mobile notification sheet kept the default 75% width; `MockIndicator` is now `print:hidden`. `scripts/visual-check.ts` now also exempts Base UI's `position: fixed` 1px form proxies (like the existing skip-link exemption).
+
+Also fixed: the sidebar marked both «جميع المنتجات» and «التنظيم والاكتشاف» active — only the most specific item is active now.
+
+## Deviations
+
+The full table is under 3D in `specs/001-sharwa-frontend-platform/tasks.md`. Summary: tag `rp/14` (owner-run) + patch delivery; one organization screen with `?tab=`; `form-options` carries `locations` (M22, `[NEEDS BACKEND]`); bulk = per-order versioned calls; «حفظ كعرض» not built; `E`/`P` in the detail only; manual order gated by `orders.update_status`; the 42 reports not indexed (M25); bell poll 30s (task text) and no `N` shortcut (conflicts with M04/M05 `N`); sidebar counters still from `dashboard/counters`; notifications full page / Web Push (P2) not in T080.
+
+## Owner decisions still open
+
+1. The 3C PPR question (global `cacheComponents: false` or accept the measured deviation) — unchanged by 3D.
+2. `«حفظ كعرض»` (saved views) for M06 — build in a later phase or drop.
+3. Unify sidebar counters on `notifications/summary` (FR-49.11) when M49's backend exists.
+
+---
+
 # Execution log — Phase 3C · M02 Onboarding Wizard (T061–T067)
 
 **Date:** 2026-10-18 · **Branch:** `master` · **Base:** `57a5da8` · **Restore point:** `rp/13-onboarding-before`

@@ -206,6 +206,11 @@ function SidebarGroupRow({
   const count = counterValue(counters, group.counter);
   const items = group.items.filter((item) => canFeature(item.feature));
   const groupActive = items.some((item) => isActive(item.path)) || (group.path ? isActive(group.path) : false);
+  // Only the most specific match is marked (`/products/organization` must not also light up
+  // «جميع المنتجات» at `/products`).
+  const activeItemPath = items
+    .filter((item) => isActive(item.path))
+    .reduce<string | null>((best, item) => (best === null || item.path.length > best.length ? item.path : best), null);
   // Open when the merchant opened it, or when the current screen lives inside it.
   const open = expanded || groupActive;
 
@@ -257,7 +262,7 @@ function SidebarGroupRow({
                   <NavEntry
                     title={item.title}
                     href={item.path}
-                    active={isActive(item.path)}
+                    active={item.path === activeItemPath}
                     count={counterValue(counters, item.counter)}
                     disabledReason={canPermission(item.permission) ? undefined : NO_PERMISSION}
                     comingSoon={item.comingSoon}
@@ -303,7 +308,7 @@ function SidebarGroupRow({
               <NavEntry
                 title={item.title}
                 href={item.path}
-                active={isActive(item.path)}
+                active={item.path === activeItemPath}
                 count={counterValue(counters, item.counter)}
                 disabledReason={canPermission(item.permission) ? undefined : NO_PERMISSION}
                 comingSoon={item.comingSoon}

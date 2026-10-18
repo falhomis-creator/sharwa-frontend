@@ -341,14 +341,14 @@ export const NAVIGATION: NavGroup[] = [
       {
         key: "storefront.contact",
         title: "معلومات التواصل",
-        path: "/dashboard/storefront/contact",
+        path: "/dashboard/settings/contact",
         keywords: ["واتساب", "عنوان", "contact_info"],
         feature: "contact_info",
       },
       {
         key: "storefront.policies",
         title: "الصفحات الإضافية (سياسة الاسترجاع)",
-        path: "/dashboard/storefront/policies",
+        path: "/dashboard/settings/policies",
         keywords: ["سياسة", "شروط", "store_policies"],
         feature: "store_policies",
       },
@@ -637,14 +637,14 @@ export const NAVIGATION: NavGroup[] = [
       {
         key: "tools.currency",
         title: "أسعار الصرف",
-        path: "/dashboard/tools/currency",
+        path: "/dashboard/settings/currency",
         keywords: ["عملة", "صرف", "currency_settings"],
         feature: "currency_settings",
       },
       {
         key: "tools.seo",
         title: "إعدادات SEO",
-        path: "/dashboard/tools/seo",
+        path: "/dashboard/settings/seo",
         keywords: ["SEO", "وصف", "seo_settings"],
         feature: "seo_settings",
       },

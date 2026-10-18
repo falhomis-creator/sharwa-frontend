@@ -26,7 +26,7 @@ export function MockIndicator({ initial = false }: { initial?: boolean }) {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex justify-center"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex justify-center print:hidden"
     >
       <span className="h-px w-full bg-warning" />
       <span className="absolute top-0 rounded-b-md bg-warning px-2 py-0.5 font-mono text-[11px] leading-4 text-warning-foreground">

@@ -22,6 +22,19 @@ Contract: `specs/001-sharwa-frontend-platform/contracts/bff-cross-cutting.md` §
 | `auth/setup-password`, `auth/forgot-password`, `auth/reset-password` | target → mock | M03 |
 | `dashboard/me`, `dashboard/overview`, `dashboard/overview/refresh`, `dashboard/counters` | mock | M03 |
 | `account/stores` | mock | M03, M43 |
+| `products`, `products/[id]`, `products/quick`, `products/bulk`, `products/export.csv`, `products/[id]/{stock,images,variants/generate,variants/bulk,changes}`, `products/variant-attributes/**`, `products/templates/**`, `products/global-templates`, `products/import/**` | mock (`[NEEDS BACKEND]` — M04 §7) | M04 |
+| `categories/**` (incl. `reorder`, `DELETE ?reassign_to&children`), `brands/**`, `tags/**` (incl. `merge`), `collections/**` (incl. `products`, `products/[pid]`, `products/reorder`), `badges/**` | mock (`[NEEDS BACKEND]` — M05 §7) | M05 |
+| `orders` (GET list · POST manual/B2B), `orders/[id]` (GET · PATCH pickup/gift), `orders/[id]/{fulfillment-status,status,payment/[action],refunds}` (versioned, 409 on stale `version`), `orders/counters`, `orders/form-options` | mock (`[NEEDS BACKEND]` — M06 §7) | M06 |
+| `order-statuses/**` (incl. `reorder`) | mock (`[NEEDS BACKEND]`) | M06 |
+| `search` (`?q&types&limit`, groups trimmed by permission) | mock (`[NEEDS BACKEND]` — M48 §7) | M48 |
+| `notifications`, `notifications/summary`, `notifications/[id]/read`, `notifications/read-all` | mock (`[NEEDS BACKEND]` — M49 §7) | M49 |
+| `settings` (GET the whole `StoreSetting` row, no secrets), `settings/{identity,contact,policies,shipping,currency,seo,announcement,payments}` (PATCH → full row), `settings/multi-location` (POST `{enabled, merge?}` → 200 / readable 409) | mock (`[NEEDS BACKEND]` — M34 §7); shipping/currency/payments/multi-location owner-only | M34 |
+
+All Phase 3D adapters go through `src/lib/bff/mock-route.ts` (`mockRoute`): 401 without a
+session → 501 when mocks are off (no fabricated data against a real backend) → 403 when
+the member lacks the row's permission → the per-store fixture (`globalThis`, so route
+handlers and Server Components share one state). The Ready rows (`/api/v1/returns/*`,
+`/api/v1/orders/b2b-draft*`, `/api/v1/catalog/*`) keep using the transparent passthrough.
 
 **Why the auth adapters are `target` and not `legacy`.** All seven auth rows are
 `[NEEDS BACKEND]`. Django exposes only HTML form POSTs (`/dashboard/login/` and friends),

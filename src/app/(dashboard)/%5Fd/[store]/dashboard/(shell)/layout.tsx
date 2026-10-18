@@ -1,14 +1,17 @@
 import type { ReactNode } from "react";
+import { connection } from "next/server";
 import { SkipLink } from "@/components/shared/visually-hidden";
 import { requireSession } from "@/features/dashboard-shell/api/session";
 import { requestIdentity } from "@/features/tenant/request";
 import { SessionProvider } from "@/features/dashboard-shell/components/session-context";
+import { StoreProvider } from "@/features/dashboard-shell/components/store-context";
 import { ShellHydrator } from "@/features/dashboard-shell/components/shell-hydrator";
 import { ShellShortcuts } from "@/features/dashboard-shell/components/shell-shortcuts";
 import { ShortcutsDialog } from "@/features/dashboard-shell/components/shortcuts-dialog";
 import { Sidebar } from "@/features/dashboard-shell/components/sidebar";
 import { Topbar } from "@/features/dashboard-shell/components/topbar";
 import { MobileBottomNav, MobileDrawer } from "@/features/dashboard-shell/components/mobile-nav";
+import { CommandPalette } from "@/features/command-palette/command-palette";
 
 /**
  * The shell every dashboard module renders inside (M03 FR-03.01, §6):
@@ -37,32 +40,39 @@ import { MobileBottomNav, MobileDrawer } from "@/features/dashboard-shell/compon
 export const instant = false;
 
 export default async function DashboardShellLayout({ children }: { children: ReactNode }) {
+  // Request-time only (session-scoped anyway): keeps the upstream session/CSRF fetches out of
+  // the dev static-shell validation, which otherwise flags `Date.now()` from the fetch
+  // instrumentation whenever Django answers quickly.
+  await connection();
   const [session, identity] = await Promise.all([requireSession(), requestIdentity()]);
 
   return (
     <SessionProvider session={session}>
-      <ShellHydrator />
-      <ShellShortcuts />
-      <SkipLink />
-      <div className="flex min-h-dvh flex-1">
-        <div className="hidden lg:block">
-          <Sidebar store={identity.store} storeName={session.store_name} />
+      <StoreProvider store={identity.store} storeOrigin={identity.storeOrigin}>
+        <ShellHydrator />
+        <ShellShortcuts />
+        <SkipLink />
+        <div className="flex min-h-dvh flex-1">
+          <div className="hidden lg:block">
+            <Sidebar store={identity.store} storeName={session.store_name} />
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Topbar
+              store={identity.store}
+              storeUrl={identity.storeOrigin}
+              protocol={identity.protocol}
+              port={identity.port}
+            />
+            <main id="main" className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 lg:px-6">
+              {children}
+            </main>
+            <MobileBottomNav />
+          </div>
         </div>
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Topbar
-            store={identity.store}
-            storeUrl={identity.storeOrigin}
-            protocol={identity.protocol}
-            port={identity.port}
-          />
-          <main id="main" className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 lg:px-6">
-            {children}
-          </main>
-          <MobileBottomNav />
-        </div>
-      </div>
-      <MobileDrawer store={identity.store} storeName={session.store_name} />
-      <ShortcutsDialog />
+        <MobileDrawer store={identity.store} storeName={session.store_name} />
+        <ShortcutsDialog />
+        <CommandPalette />
+      </StoreProvider>
     </SessionProvider>
   );
 }
