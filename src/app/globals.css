@@ -871,9 +871,13 @@
 }
 
 @layer components {
+  /* Headings are bold by default (Preflight makes them inherit 400): the heading face is
+     shipped at weight 700 only, so a normal-weight heading — even an `sr-only` one — would
+     fetch a second ~100 KB file for nothing (T095). Utilities still override. */
   [data-store-theme] :is(h1, h2, h3),
   [data-store-theme] .store-heading {
     font-family: var(--store-font-heading);
+    font-weight: 700;
   }
   /* The merchant colour as text, lifted to AA by the theme layer. */
   .store-link {

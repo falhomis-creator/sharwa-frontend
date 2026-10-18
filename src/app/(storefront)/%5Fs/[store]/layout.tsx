@@ -15,14 +15,13 @@ import { getStoreConfig } from "@/features/storefront/api/config";
 import { asCurrency } from "@/features/storefront/api/context";
 import { CURRENCY_COOKIE } from "@/features/storefront/currency";
 import { StoreThemeRoot } from "@/features/storefront/theme/apply-theme";
+import { PreviewBridge } from "@/features/storefront/theme/preview-bridge";
 import { buildStoreTheme } from "@/features/storefront/theme/tokens";
 import { StoreAnnouncement } from "@/features/storefront/components/store-announcement";
 import { StoreFooter } from "@/features/storefront/components/store-footer";
 import { StoreHeader } from "@/features/storefront/components/store-header";
 import { StorefrontChrome } from "@/features/storefront/components/storefront-chrome";
 import { StorefrontProvider } from "@/features/storefront/components/storefront-provider";
-import { InstallPrompt } from "@/features/pwa/components/install-prompt";
-import { ServiceWorkerRegister } from "@/features/pwa/components/sw-register";
 
 /**
  * Storefront group root — the single place a store-origin page is admitted (M47 T052) and,
@@ -127,6 +126,7 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
       >
         <StoreThemeRoot config={config} store={store}>
           <SkipLink />
+          <PreviewBridge />
           {config.enable_announcement_bar && config.announcement_text ? (
             <StoreAnnouncement
               config={{
@@ -155,10 +155,7 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
               platformUrl: platformOrigin(),
             }}
           />
-          <StorefrontChrome categories={categories} whatsapp={config.whatsapp_number ?? null}>
-            <InstallPrompt storeName={config.store_name} />
-            <ServiceWorkerRegister />
-          </StorefrontChrome>
+          <StorefrontChrome categories={categories} whatsapp={config.whatsapp_number ?? null} storeName={config.store_name} />
           {process.env.NODE_ENV === "production" ? null : <MockIndicator initial={probe.isMock} />}
         </StoreThemeRoot>
       </StorefrontProvider>

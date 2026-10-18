@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { WishlistView } from "@/features/storefront/components/wishlist-view";
 
-/** `/wishlist` — the local wishlist (M09 §10, M10 US-10.7.2; server sync waits for E-42). */
+/** `/wishlist` — the shopper's saved list, server-side by phone (M42 US-42.2, FR-42.04). */
 export const metadata: Metadata = { title: "المفضلة", robots: { index: false } };
 
 /** Blocks on the store guard in the layout (no static shell before the 404/403/503 status). */

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { ChevronDown, ZoomIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
@@ -248,7 +249,11 @@ export function RefundDialog({ order, write, open, onOpenChange }: { order: Orde
       <DialogContent className="sm:max-w-md" data-testid="refund-dialog">
         <DialogTitle>استرجاع مبلغ — #{order.id}</DialogTitle>
         <DialogDescription>
-          القابل للاسترجاع: <Money value={order.refundable_amount} /> · المسار المالي فقط؛ إرجاع البضاعة من «المرتجعات».
+          القابل للاسترجاع: <Money value={order.refundable_amount} /> · المسار المالي فقط؛ إرجاع البضاعة من{" "}
+          <Link href={`/dashboard/returns/new?order=${order.id}`} className="text-foreground underline underline-offset-4" data-testid="refund-return-link">
+            «المرتجعات»
+          </Link>
+          .
         </DialogDescription>
         <form
           id="refund-form"

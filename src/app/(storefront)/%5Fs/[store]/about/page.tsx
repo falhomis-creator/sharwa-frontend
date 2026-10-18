@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { RichText } from "@/components/ui/rich-text";
+import { StoreReviewBlock } from "@/features/engagement/components/store-review-block";
 import { getStorefront } from "@/features/storefront/api/context";
 
-/** `/about` — `about_us` and the return policy, when Django exports them (M09 §6, §7 `[NEEDS BACKEND]`). */
+/**
+ * `/about` — `about_us` and the return policy, when Django exports them (M09 §6, §7
+ * `[NEEDS BACKEND]`), then the store reviews block (M42 US-42.6).
+ */
 export async function generateMetadata(): Promise<Metadata> {
   const { config } = await getStorefront();
   return { title: "من نحن", description: config.about_us ?? undefined };
@@ -29,6 +33,7 @@ export default async function AboutPage() {
           <RichText source={config.return_policy} className="text-sm leading-7" />
         </section>
       ) : null}
+      <StoreReviewBlock />
     </main>
   );
 }

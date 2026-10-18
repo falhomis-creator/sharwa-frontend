@@ -286,9 +286,9 @@ description: "Task list — Sharwa Frontend Platform (001)"
 - [X] T092 [US2] الدفع `src/app/(storefront)/_s/[store]/checkout/page.tsx` + `src/features/checkout/*`: صفحة واحدة (معلومات → توصيل/استلام → دفع → مراجعة) بـ RHF/Zod `CheckoutDraft`, `delivery-options`/`payment-options`/`quote` (mocks)، فاتورة `display_*` حيّة، COD OTP وOTP محفظة/شروة باي كـ Dialog 6 خانات، الهدية، الحجز `start_datetime`, إرسال `POST /api/bff/checkout` → `next_action` (none/redirect_gateway/show_transfer_instructions) → `checkout/success/[public_uuid]/page.tsx` برقم الطلب ورابط التتبع وإرفاق إيصال
 - [X] T093 [P] [US2] M41 التتبع `src/app/(storefront)/_s/[store]/track/[uuid]/page.tsx` (`/api/bff/orders/track/<uuid>` mock): الحالتان، خط زمني للشحنات، كود الاستلام، زر واتساب التاجر، استطلاع 60s؛ `noindex`
 - [X] T094 [P] [US2] M44 PWA: `manifest.webmanifest/route.ts` من `/config/` (الاسم، `theme_color` من `primary_color`، أيقونات مولَّدة `icon/route.tsx` 192/512 بـ `ImageResponse`), `sw.js/route.ts` بالسياسة المقررة (R-16), تسجيل SW في layout المتجر فقط بعد `ready`, `install-prompt.tsx` (`beforeinstallprompt` + تلميح iOS) يرسل `POST /api/v1/pwa/install-event/` بـ `source:'nextjs_app'`, اشتراك Push اختياري (`/api/v1/push/*` Ready)
-- [ ] T095 [US2] فحص Playwright `docs/visual-checks/{09-storefront-home,10-pdp,11-cart,12-checkout,41-tracking,44-pwa}/` + Lighthouse mobile للرئيسية وPDP (≥ 90/95) + اختبار السلة عبر إعادة التحميل + تبديل العملة؛ lint + tsc؛ commit + `rp/07-storefront-after`
+- [X] T095 [US2] فحص Playwright `docs/visual-checks/{09-storefront-home,10-pdp,11-cart,12-checkout,41-tracking,44-pwa}/` + Lighthouse mobile للرئيسية وPDP (≥ 90/95) + اختبار السلة عبر إعادة التحميل + تبديل العملة؛ lint + tsc؛ commit + `rp/07-storefront-after`
 
-> **تعديل الخطة — المرحلة 4 (2026-10-18).** نُفِّذت T087–T094. بوابات T095: lint ✅ · tsc ✅ · `scripts/storefront-check.ts` **41/41** ✅ · الفحص البصري **72 لقطة** في الأقسام الستة (0 أخطاء console، 0 تمرير أفقي، كل هدف جوال ≥ 44px) ✅ · تراجعات 3C/3D/3E (`tenant-shell` 9 · `settings` 23 · `catalog-orders` 22) ✅. يبقى في T095: Lighthouse الأداء (الوسيط 81–86 في الحاوية، الهدف 90) والـ commit بيد المالك؛ لذلك T095 غير معلَّمة. التفصيل في `execution_log.md`.
+> **تعديل الخطة — المرحلة 4 (2026-10-18).** نُفِّذت T087–T094. بوابات T095: lint ✅ · tsc ✅ · `scripts/storefront-check.ts` **41/41** ✅ · الفحص البصري **72 لقطة** في الأقسام الستة (0 أخطاء console، 0 تمرير أفقي، كل هدف جوال ≥ 44px) ✅ · تراجعات 3C/3D/3E (`tenant-shell` 9 · `settings` 23 · `catalog-orders` 22) ✅. T095 أُغلقت بعد تحسين الأداء (التقسيم الكسول — الجدول أدناه)؛ الـ commit بيد المالك. التفصيل في `execution_log.md`.
 >
 > | المهمة | الانحراف | السبب |
 > |---|---|---|
@@ -306,7 +306,7 @@ description: "Task list — Sharwa Frontend Platform (001)"
 > | T092 | `customers/otp/send` endpoint **مقترح** | OTP المشتري خارج الدفع (تقييم، تنبيه التوفر) غير موجود في العقد. |
 > | T093 | المسار `/track/[uuid]` (نص المهمة) لا `/orders/track/...` (M41) | M06 يربط `tracking_url` بهذا المسار منذ 3D. |
 > | T094 | «إشعار تجريبي» للتاجر (US-44.5) غير مبني | يتبع لوحة M44 في الداشبورد (مرحلة لاحقة). |
-> | T095 | Lighthouse mobile: الرئيسية 84 (77–97)، PDP 86/81، القسم 85؛ إمكانية الوصول 100 للرئيسية وPDP، 98 للقسم (`heading-order`، أُصلح بعد القياس بـ h2 مخفي) | الأداء محاكى (Lantern) ومتذبذب على CPU الحاوية؛ LCP المرصود 0.25–0.5s وCLS ≤ 0.04. يلزم قياس على جهاز المالك (`next build && next start` ثم `npx lighthouse`). |
+> | T095 | Lighthouse mobile بعد التقسيم الكسول (`next/dynamic` + مراقبة الظهور): PDP وسيط **91** (91–94)، الرئيسية 89 (82–92)، منتج ثانٍ 86، القسم 84؛ إمكانية الوصول/أفضل الممارسات/SEO 100 | القياس محاكى (Lantern) على CPU الحاوية بتذبذب ±8؛ LCP المرصود 0.25–0.5s. الطابق الثابت: React + Next ≈ 113KB gz، zod ≈ 31KB؛ خط Amiri 98KB بقرار التاجر. التفصيل والقياس على جهاز المالك في `execution_log.md`. |
 > | — | `await connection()` في layout المتجر و`getTracking` | fetch غير مكاش (الـ probe) كان يُبلَّغ في dev كـ `Date.now()` أثناء مرحلة prefetch؛ نفس نمط مجموعتي الداشبورد والتسجيل. |
 > | — | غلاف `ThemeProvider` في الجذر يجعل سكربت next-themes data block عند الرسم في المتصفح | `notFound()` قبل الـ shell يرسل وثيقة خطأ تُرسم كاملة في المتصفح فيحذّر React «Encountered a script tag». |
 > | — | `scripts/visual-check.ts`: input داخل `<label>` ارتفاعه ≥ 44px مُعفى | الـ label هو منطقة اللمس. |
@@ -323,45 +323,125 @@ description: "Task list — Sharwa Frontend Platform (001)"
 
 لكل وحدة أدناه ثلاث مهام ثابتة: (أ) شِيمات + mocks + handlers لكل صفوف §7؛ (ب) الشاشات والمكوّنات حسب §6 بالحالات الخمس (FR-011)؛ (ج) فحص بصري + lint/tsc + وسم `*-after`. الوسم قبل البدء `rp/NN-<slug>-before` ضمن (أ).
 
-- [ ] T096 [P] [US3] M07 العملاء (أ): `src/features/customers/schemas.ts` (Customer من data-model §4)، mocks، `src/app/api/bff/customers/**` (قائمة، ملف، طلبات، محفظة، نقاط، أمنيات، تقييمات، ملاحظات، COD، تصدير، شرائح) · وسم `rp/09-customers-before`
-- [ ] T097 [US3] M07 (ب): `dashboard/customers/page.tsx` (جدول مشتق بفلاتر الشرائح/الثقة/الإنفاق) + `customers/[phone]/page.tsx` (ملف: ثقة منصة/متجر، طلبات، محفظة، نقاط، أمنيات، تقييمات، ملاحظات، إيقاف COD بصلاحية `customers.edit_profile`, تصدير مع 429 عند `critical`)
-- [ ] T098 [US3] M07 (ج): `docs/visual-checks/07-customers/` + `rp/09-customers-after`
-- [ ] T099 [P] [US3] M08 مخصّص الثيم (أ): شِيمات (`StorefrontDesignForm`, presets, sections Ready), mocks لـ `store/theme`, `store/theme/presets`, `store/announcement`; passthrough `/api/v1/admin/sections/*` (Ready، تحفّظ المصادقة موثَّق) · وسم `rp/10-theme-before`
-- [ ] T100 [US3] M08 (ب): `dashboard/design/page.tsx` بلوحة تحكم بداية (presets كبطاقات حدود 1px بعينة ألوان، 5 ألوان، خطّان، `design_style`, شعار، شريط الإعلان) ومعاينة حيّة نهاية في `iframe` لصفحة المتجر مع تطبيق المتغيرات فوراً عبر `postMessage`؛ بناء الأقسام بالسحب (`@dnd-kit`) مع `reorder`/إضافة/حذف/تحرير `settings`/`content_data` لكل `section_type`؛ «نشر» منفصل عن المعاينة
-- [ ] T101 [US3] M08 (ج): `docs/visual-checks/08-theme/` + `rp/10-theme-after`
-- [ ] T102 [P] [US3] M13 التسويق (أ): شِيمات Coupon/PromotionalOffer/AbandonedCart/Campaign/MarketingEvent/Loyalty/Gift (enums حرفياً)، mocks، `src/app/api/bff/marketing/**` · وسم `rp/11-marketing-before`
-- [ ] T103 [US3] M13 (ب): `dashboard/marketing/page.tsx` (ملخص Bento) + `marketing/{coupons,offers,abandoned-carts,campaigns,timeline,loyalty,gifting}/**` (قوائم بجدول مشترك، نماذج، معاينة الحملة بعدد المستلمين، تقويم الجدول الزمني بألوان دلالية فقط)
-- [ ] T104 [US3] M13 (ج): `docs/visual-checks/13-marketing/` + `rp/11-marketing-after`
-- [ ] T105 [P] [US3] M14 الدفع والمحافظ (أ): شِيمات Gateway/PayoutAccount/MerchantWallet/Withdrawal/Dues، mocks، `src/app/api/bff/{payments,wallet,store/payments}/**` · وسم `rp/12-payments-before`
-- [ ] T106 [US3] M14 (ب): `dashboard/payments/{gateways,payout-accounts,wallet,withdrawals,dues}/page.tsx` (اعتمادات سرّية بحقول «اترك فارغاً للإبقاء»، مفاتيح Sharwa Pay/التحويل اليدوي، أرصدة 4 عملات بلا جمع، حركات بمرجع، طلب سحب بحساب)
-- [ ] T107 [US3] M14 (ج): `docs/visual-checks/14-payments/` + `rp/12-payments-after`
-- [ ] T108 [P] [US3] M15 الشحن (أ): شِيمات DeliveryMethod/PickupLocation/ShippingProvider/Carrier/Zones/Packaging/EdgeCases، mocks، `src/app/api/bff/shipping/**` · وسم `rp/13-shipping-before`
-- [ ] T109 [US3] M15 (ب): `dashboard/shipping/{settings,delivery-methods,pickup-locations,providers,carriers,zones,packaging,zone-review,edge-cases}/**` + إجراءات الشحنة (تحديث عنوان أثناء النقل، تحويل إلى استلام بـ `version`)
-- [ ] T110 [US3] M15 (ج): `docs/visual-checks/15-shipping/` + `rp/13-shipping-after`
-- [ ] T111 [P] [US3] M18 الموظفون والصلاحيات (أ): شِيمات StaffMember/Role/Permission/Assignments/Overrides/Sessions/Approvals/AuditLog/BehaviorAlert، mocks، `src/app/api/bff/{staff,roles,permissions,approvals,audit-log,behavior-alerts}/**` · وسم `rp/14-staff-before`
-- [ ] T112 [US3] M18 (ب): `dashboard/staff/**` (قائمة، تفاصيل، إنهاء/إبطال الجلسات، تعيينات موقع×دور، استثناءات مع «الصلاحيات الفعلية»), `staff/roles` (مصفوفة 35 صلاحية × أدوار، النظامية للقراءة), `staff/approvals` (حسم بـ `version`), `staff/audit-log` (+ تحقق السلسلة), `staff/behavior-alerts`؛ تطبيق إخفاء/تعطيل في الشريط ولوحة الأوامر وفق `permissions[]`
-- [ ] T113 [US3] M18 (ج): `docs/visual-checks/18-staff/` + اختبار موظف `orders.view` فقط + `rp/14-staff-after`
-- [ ] T114 [P] [US3] M19 النطاقات والربط (أ): شِيمات Domain/Tracking/WebhookEndpoint/Delivery/IntegrationStatus، mocks (كلها Absent)، `src/app/api/bff/{domains,store/tracking,webhooks,integrations}/**` · وسم `rp/15-domains-before`
-- [ ] T115 [US3] M19 (ب): `dashboard/settings/{domains,tracking,webhooks,integrations}/**` (سجلات DNS بـ `<Mono dir=ltr>` ونسخ، تحقق/أساسي/حذف، البكسلات العشرة مع `has_*` للأسرار، نقاط Webhook بسرّ يُعرض مرة، سجل التسليم وإعادة الإرسال)
-- [ ] T116 [US3] M19 (ج): `docs/visual-checks/19-domains/` + `rp/15-domains-after`
-- [ ] T117 [P] [US3] M21 المخزون (أ): شِيمات (StockMovement reasons، InventoryItem، Reservation)، mocks، `src/app/api/bff/inventory/**` · وسم `rp/16-inventory-before`
-- [ ] T118 [US3] M21 (ب): `dashboard/inventory/{page,movements,items,reservations}.tsx` (جدول مخزون بتعديل في مكانه `delta|new_quantity` + سبب، دفتر حركات بمرجع، طلب إعدام عبر الموافقات، عدّادات منخفض/نافد)
-- [ ] T119 [US3] M21 (ج): `docs/visual-checks/21-inventory/` + `rp/16-inventory-after`
-- [ ] T120 [P] [US3] M22 المواقع (أ): شِيمات Location (8 أعلام، 4 ملكيات، تفاصيل شرطية)، mocks، `src/app/api/bff/locations/**` · وسم `rp/17-locations-before`
-- [ ] T121 [US3] M22 (ب): `dashboard/locations/**` (تبديل الوضع، قائمة بـ `display_type`, نموذج بأقسام شرطية حسب الأعلام، مخزون الموقع، موظفو الموقع، قواعد التوجيه بالسحب، تحذير التعطيل بالأثر)
-- [ ] T122 [US3] M22 (ج): `docs/visual-checks/22-locations/` + `rp/17-locations-after`
-- [ ] T123 [P] [US3] M24 المرتجعات (أ): شِيمات ReturnRequest/RMA (Ready معظمها)، passthrough `/api/v1/returns/*`, `/warehouse/returns/*`, mocks لقائمة RMA وسجل الاسترجاعات والموثوقية · وسم `rp/18-returns-before`
-- [ ] T124 [US3] M24 (ب): `dashboard/returns/{page,new,[id],rma,rma/[id],refunds}.tsx` (إنشاء من طلب بعناصر قابلة للإرجاع، اعتماد/رفض بـ `version` و409 و`CashLiquidityError` مقروء، RMA: مسح استلام وقرار QA)
-- [ ] T125 [US3] M24 (ج): `docs/visual-checks/24-returns/` + `rp/18-returns-after`
-- [ ] T126 [P] [US3] M25 التقارير (أ): شِيمات Registry (42/10 فئات حرفياً)/ReportData/ExportJob/Schedule، mocks، `src/app/api/bff/reports/**` · وسم `rp/19-reports-before`
-- [ ] T127 [US3] M25 (ب): `dashboard/reports/page.tsx` (فهرس 10 فئات، «قريباً» للمعلَّمة `*`), `reports/[code]/page.tsx` (ملخص Mono مع مقارنة، Recharts أحادي، جدول مرقّم، فترة/مقارنة/موقع في الرابط، تصدير csv/xlsx بمهمة واستطلاع), `reports/exports`, `reports/schedules`; شجرة التقارير في الشريط من `registry`
-- [ ] T128 [US3] M25 (ج): `docs/visual-checks/25-reports/` + `rp/19-reports-after`
-- [ ] T129 [P] [US3] M35 محافظ العملاء والولاء (أ): شِيمات، mocks، `src/app/api/bff/{customers/wallets,loyalty}/**` · وسم `rp/20-wallets-before`
-- [ ] T130 [US3] M35 (ب): `dashboard/customers/wallets/**` (قائمة بمجاميع، إنشاء، تفاصيل، تعبئة/تسوية بـ `idempotency_key`, حركات) + `dashboard/customers/points/**` + قراءة برنامج الولاء
-- [ ] T131 [US3] M35 (ج): `docs/visual-checks/35-wallets/` + `rp/20-wallets-after`
-- [ ] T132 [P] [US3] M42 الأمنيات والتقييمات (متجر) (أ): شِيمات، mocks، `src/app/api/bff/{shopper/phone,wishlist,catalog/products/[id]/{reviews,back-in-stock},store-reviews}/**` · وسم `rp/21-engagement-before`
-- [ ] T133 [US3] M42 (ب): `src/features/engagement/*` (قلب الأمنيات على البطاقة وPDP بهاتف الجلسة، صفحة `/wishlist`, نموذج تقييم بـ OTP، «أعلمني عند التوفر», تقييم المتجر في التذييل) + إشعار التوفر
-- [ ] T134 [US3] M42 (ج): `docs/visual-checks/42-engagement/` + `rp/21-engagement-after`
+- [X] T096 [P] [US3] M07 العملاء (أ): `src/features/customers/schemas.ts` (Customer من data-model §4)، mocks، `src/app/api/bff/customers/**` (قائمة، ملف، طلبات، محفظة، نقاط، أمنيات، تقييمات، ملاحظات، COD، تصدير، شرائح) · وسم `rp/09-customers-before`
+- [X] T097 [US3] M07 (ب): `dashboard/customers/page.tsx` (جدول مشتق بفلاتر الشرائح/الثقة/الإنفاق) + `customers/[phone]/page.tsx` (ملف: ثقة منصة/متجر، طلبات، محفظة، نقاط، أمنيات، تقييمات، ملاحظات، إيقاف COD بصلاحية `customers.edit_profile`, تصدير مع 429 عند `critical`)
+- [X] T098 [US3] M07 (ج): `docs/visual-checks/07-customers/` + `rp/09-customers-after`
+- [X] T099 [P] [US3] M08 مخصّص الثيم (أ): شِيمات (`StorefrontDesignForm`, presets, sections Ready), mocks لـ `store/theme`, `store/theme/presets`, `store/announcement`; passthrough `/api/v1/admin/sections/*` (Ready، تحفّظ المصادقة موثَّق) · وسم `rp/10-theme-before`
+- [X] T100 [US3] M08 (ب): `dashboard/design/page.tsx` بلوحة تحكم بداية (presets كبطاقات حدود 1px بعينة ألوان، 5 ألوان، خطّان، `design_style`, شعار، شريط الإعلان) ومعاينة حيّة نهاية في `iframe` لصفحة المتجر مع تطبيق المتغيرات فوراً عبر `postMessage`؛ بناء الأقسام بالسحب (`@dnd-kit`) مع `reorder`/إضافة/حذف/تحرير `settings`/`content_data` لكل `section_type`؛ «نشر» منفصل عن المعاينة
+- [X] T101 [US3] M08 (ج): `docs/visual-checks/08-theme/` + `rp/10-theme-after`
+- [X] T102 [P] [US3] M13 التسويق (أ): شِيمات Coupon/PromotionalOffer/AbandonedCart/Campaign/MarketingEvent/Loyalty/Gift (enums حرفياً)، mocks، `src/app/api/bff/marketing/**` · وسم `rp/11-marketing-before`
+- [X] T103 [US3] M13 (ب): `dashboard/marketing/page.tsx` (ملخص Bento) + `marketing/{coupons,offers,abandoned-carts,campaigns,timeline,loyalty,gifting}/**` (قوائم بجدول مشترك، نماذج، معاينة الحملة بعدد المستلمين، تقويم الجدول الزمني بألوان دلالية فقط)
+- [X] T104 [US3] M13 (ج): `docs/visual-checks/13-marketing/` + `rp/11-marketing-after`
+- [X] T105 [P] [US3] M14 الدفع والمحافظ (أ): شِيمات Gateway/PayoutAccount/MerchantWallet/Withdrawal/Dues، mocks، `src/app/api/bff/{payments,wallet,store/payments}/**` · وسم `rp/12-payments-before`
+- [X] T106 [US3] M14 (ب): `dashboard/payments/{gateways,payout-accounts,wallet,withdrawals,dues}/page.tsx` (اعتمادات سرّية بحقول «اترك فارغاً للإبقاء»، مفاتيح Sharwa Pay/التحويل اليدوي، أرصدة 4 عملات بلا جمع، حركات بمرجع، طلب سحب بحساب)
+- [X] T107 [US3] M14 (ج): `docs/visual-checks/14-payments/` + `rp/12-payments-after`
+- [X] T108 [P] [US3] M15 الشحن (أ): شِيمات DeliveryMethod/PickupLocation/ShippingProvider/Carrier/Zones/Packaging/EdgeCases، mocks، `src/app/api/bff/shipping/**` · وسم `rp/13-shipping-before`
+- [X] T109 [US3] M15 (ب): `dashboard/shipping/{settings,delivery-methods,pickup-locations,providers,carriers,zones,packaging,zone-review,edge-cases}/**` + إجراءات الشحنة (تحديث عنوان أثناء النقل، تحويل إلى استلام بـ `version`)
+- [X] T110 [US3] M15 (ج): `docs/visual-checks/15-shipping/` + `rp/13-shipping-after`
+- [X] T111 [P] [US3] M18 الموظفون والصلاحيات (أ): شِيمات StaffMember/Role/Permission/Assignments/Overrides/Sessions/Approvals/AuditLog/BehaviorAlert، mocks، `src/app/api/bff/{staff,roles,permissions,approvals,audit-log,behavior-alerts}/**` · وسم `rp/14-staff-before`
+- [X] T112 [US3] M18 (ب): `dashboard/staff/**` (قائمة، تفاصيل، إنهاء/إبطال الجلسات، تعيينات موقع×دور، استثناءات مع «الصلاحيات الفعلية»), `staff/roles` (مصفوفة 35 صلاحية × أدوار، النظامية للقراءة), `staff/approvals` (حسم بـ `version`), `staff/audit-log` (+ تحقق السلسلة), `staff/behavior-alerts`؛ تطبيق إخفاء/تعطيل في الشريط ولوحة الأوامر وفق `permissions[]`
+- [X] T113 [US3] M18 (ج): `docs/visual-checks/18-staff/` + اختبار موظف `orders.view` فقط + `rp/14-staff-after`
+- [X] T114 [P] [US3] M19 النطاقات والربط (أ): شِيمات Domain/Tracking/WebhookEndpoint/Delivery/IntegrationStatus، mocks (كلها Absent)، `src/app/api/bff/{domains,store/tracking,webhooks,integrations}/**` · وسم `rp/15-domains-before`
+- [X] T115 [US3] M19 (ب): `dashboard/settings/{domains,tracking,webhooks,integrations}/**` (سجلات DNS بـ `<Mono dir=ltr>` ونسخ، تحقق/أساسي/حذف، البكسلات العشرة مع `has_*` للأسرار، نقاط Webhook بسرّ يُعرض مرة، سجل التسليم وإعادة الإرسال)
+- [X] T116 [US3] M19 (ج): `docs/visual-checks/19-domains/` + `rp/15-domains-after`
+- [X] T117 [P] [US3] M21 المخزون (أ): شِيمات (StockMovement reasons، InventoryItem، Reservation)، mocks، `src/app/api/bff/inventory/**` · وسم `rp/16-inventory-before`
+- [X] T118 [US3] M21 (ب): `dashboard/inventory/{page,movements,items,reservations}.tsx` (جدول مخزون بتعديل في مكانه `delta|new_quantity` + سبب، دفتر حركات بمرجع، طلب إعدام عبر الموافقات، عدّادات منخفض/نافد)
+- [X] T119 [US3] M21 (ج): `docs/visual-checks/21-inventory/` + `rp/16-inventory-after`
+- [X] T120 [P] [US3] M22 المواقع (أ): شِيمات Location (8 أعلام، 4 ملكيات، تفاصيل شرطية)، mocks، `src/app/api/bff/locations/**` · وسم `rp/17-locations-before`
+- [X] T121 [US3] M22 (ب): `dashboard/locations/**` (تبديل الوضع، قائمة بـ `display_type`, نموذج بأقسام شرطية حسب الأعلام، مخزون الموقع، موظفو الموقع، قواعد التوجيه بالسحب، تحذير التعطيل بالأثر)
+- [X] T122 [US3] M22 (ج): `docs/visual-checks/22-locations/` + `rp/17-locations-after`
+- [X] T123 [P] [US3] M24 المرتجعات (أ): شِيمات ReturnRequest/RMA (Ready معظمها)، passthrough `/api/v1/returns/*`, `/warehouse/returns/*`, mocks لقائمة RMA وسجل الاسترجاعات والموثوقية · وسم `rp/18-returns-before`
+- [X] T124 [US3] M24 (ب): `dashboard/returns/{page,new,[id],rma,rma/[id],refunds}.tsx` (إنشاء من طلب بعناصر قابلة للإرجاع، اعتماد/رفض بـ `version` و409 و`CashLiquidityError` مقروء، RMA: مسح استلام وقرار QA)
+- [X] T125 [US3] M24 (ج): `docs/visual-checks/24-returns/` + `rp/18-returns-after`
+- [X] T126 [P] [US3] M25 التقارير (أ): شِيمات Registry (42/10 فئات حرفياً)/ReportData/ExportJob/Schedule، mocks، `src/app/api/bff/reports/**` · وسم `rp/19-reports-before`
+- [X] T127 [US3] M25 (ب): `dashboard/reports/page.tsx` (فهرس 10 فئات، «قريباً» للمعلَّمة `*`), `reports/[code]/page.tsx` (ملخص Mono مع مقارنة، Recharts أحادي، جدول مرقّم، فترة/مقارنة/موقع في الرابط، تصدير csv/xlsx بمهمة واستطلاع), `reports/exports`, `reports/schedules`; شجرة التقارير في الشريط من `registry`
+- [X] T128 [US3] M25 (ج): `docs/visual-checks/25-reports/` + `rp/19-reports-after`
+- [X] T129 [P] [US3] M35 محافظ العملاء والولاء (أ): شِيمات، mocks، `src/app/api/bff/{customers/wallets,loyalty}/**` · وسم `rp/20-wallets-before`
+- [X] T130 [US3] M35 (ب): `dashboard/customers/wallets/**` (قائمة بمجاميع، إنشاء، تفاصيل، تعبئة/تسوية بـ `idempotency_key`, حركات) + `dashboard/customers/points/**` + قراءة برنامج الولاء
+- [X] T131 [US3] M35 (ج): `docs/visual-checks/35-wallets/` + `rp/20-wallets-after`
+- [X] T132 [P] [US3] M42 الأمنيات والتقييمات (متجر) (أ): شِيمات، mocks، `src/app/api/bff/{shopper/phone,wishlist,catalog/products/[id]/{reviews,back-in-stock},store-reviews}/**` · وسم `rp/21-engagement-before`
+- [X] T133 [US3] M42 (ب): `src/features/engagement/*` (قلب الأمنيات على البطاقة وPDP بهاتف الجلسة، صفحة `/wishlist`, نموذج تقييم بـ OTP، «أعلمني عند التوفر», تقييم المتجر في التذييل) + إشعار التوفر
+- [X] T134 [US3] M42 (ج): `docs/visual-checks/42-engagement/` + `rp/21-engagement-after`
+
+> **تعديل الخطة — المرحلة 5 (2026-10-18).** نُفِّذت T096–T134 بالـ mocks (13 وحدة). بوابات: lint ✅ (0 أخطاء، 0 تحذيرات) · tsc ✅ · فحوص الوحدات الوظيفية (تشغيل متتالٍ واحد على خادم أُعيد تشغيله): M07 27 · M08 26 · M13 30 · M14 40 · M15 29 · M18 22 · M19 34 · M21 27 · M22 25 · M24 30 · M25 41 · M35 26 · M42 28 ✅ · لقطات بصرية في 13 مجلداً تحت `docs/visual-checks/` ✅ · تراجعات المراحل السابقة (`tenant-shell` 9 · `catalog-orders` 22 · `settings` 23 · `onboarding` 33 · `storefront` 41، 0 أخطاء console) ✅. الـ commit بيد المالك. التفصيل في `execution_log.md`.
+>
+> | المهمة | الانحراف | السبب |
+> |---|---|---|
+> | T096 | بيانات العملاء = طلبات M06 (120) + سجل مجمّع لطلبات أقدم يصل إلى نحو 2000 عميل | بدونه تبقى شريحة «خامل» فارغة ولا يتحقق اختبار الـ2000 |
+> | T097 | تبويب الطلبات يعرض طلبات M06 فقط مع سطر «يظهر هنا N من أصل M؛ الأقدم مؤرشفة» | السجل التاريخي مجمّع بلا صفوف |
+> | T097 | المستوى السلوكي من `session.behavior`؛ الـ429 في الوهمي بـ`?simulate=critical` | لا موظف وهمي بمستوى critical |
+> | T097 | الملاحظات تحتاج `customers.view`؛ الرد على التقييم وإيقاف/تفعيل COD يحتاجان `customers.edit_profile` | المواصفة لا تحدد |
+> | T097 | ربط التقييم بالعميل في جدول خاص بـM07 | صفوف التقييمات لا تحمل هاتفاً |
+> | T097 | بحث المنتج بـ`?q=` لا `?search=` | اسم المعامل الفعلي في M04 |
+> | T097 | الهاتف المقنَّع = عميل كل طلباته من amazon/noon (`traffic_source`) | الحقل المميز لطلبات الأسواق في M06 |
+> | T098 | لا لقطة لحالة «بلا صلاحية» أو «الميزة معطّلة» | الكاشير يملك `customers.view` و`customer_report` |
+> | T100 | ترتيب/إخفاء الأقسام في المعاينة بورقة CSS لا بنقل عقد DOM؛ القسم الجديد وتعديل المحتوى يظهران بعد النشر | تجنّب أخطاء hydration؛ الهوية والشريط والترتيب والظهور حيّة |
+> | T100 | مكوّن الربط في المتجر أُضيف بسطرين (import + عنصر) | لا يمكن تصيير المكوّن دون استيراده |
+> | T100 | محررات الأقسام والهوية مربوطة بمسودة Zustand مع تحقق Zod يدوي لا react-hook-form | كل ضغطة تحدّث المعاينة فوراً (FR-08.01) |
+> | T100 | `hero` يحرَّر بـ {title, subtitle, cta_text, link} | الحقول هي ما يقرؤه M09 |
+> | T100 | تغيير `design_style` يحوّل `theme_preset` إلى `custom` | القالب = القيم الثماني مجتمعة |
+> | T100 | القسم المفرد معطّل في «إضافة قسم» فقط إن وُجد | قاعدة المفرد = فريد |
+> | T100 | صور السلايدر تُرسل data URL داخل JSON في الـ mock | لا عقد رفع صور للأقسام |
+> | T100 | معاينة الخطوط بوجوه `next/font/local` تُحمَّل عند فتح القائمة فقط | US-08.2.1 |
+> | T104 | `/marketing/bar` يعيد التوجيه إلى `/dashboard/settings/announcement`، والمركز يضع رابطاً نصياً | الشريط إعداد واحد يملكه M34 |
+> | T103 | `?segment=&product_id=` في `/campaigns/new` تُقرأ في المتصفح (nuqs) | إعادة كتابة المستأجر لا تمرّر الاستعلام إلى صفحة الخادم |
+> | T102 | كود كوبون المؤثر `readOnly` لا `disabled` | سلوك `disabled` في react-hook-form |
+> | T104 | شريط الحدث لا يقل عن 5 أيام عرضاً، والتواريخ الحقيقية في التلميح والـSheet | حدث اليوم الواحد لا يُقرأ عنوانه |
+> | T103 | «آخر حملة» في المركز هي الأحدث إرسالاً أو إنشاءً ولو مسودة | المواصفة لا تحدد |
+> | T106 | المسارات `/dashboard/payments` و`/payments/gateways/[code]` و`/payments/payout-accounts` و`/wallet` و`/wallet/withdrawals(/new)` و`/wallet/dues`، مع صفحات تحويل للمسارات القديمة | المحفظة مجموعة مستقلة في الشريط |
+> | T105 | `GET /wallet/` يعيد زيادة: `available` و`display_reserved` و`pending_withdrawals` | FR-14.04 تحقق محلي «≤ المتاح» وتحذير المحجوز |
+> | T105 | `GET /wallet/dues/` يعيد زيادة: `commission_enabled` و`counts` | ملاحظة «العمولات غير مفعّلة» وعدد البنود |
+> | T105 | وصف حقول البوابة يحمل `value` للحقول غير السرّية فقط | US-14.1.2 |
+> | T105 | `GET /store/payments/` يُضاف ويحمل `active_payout_accounts` | تحذير US-14.2.1 |
+> | T105 | حركة المحفظة تحمل `currency` و`amount` الموقّع | YER_OLD وYER_NEW بالرمز نفسه |
+> | T107 | لم يُنشأ وسما `rp/12-payments-before/after` | git ممنوع على المنفّذ |
+> | T109 | الإعدادات على `/dashboard/shipping` نفسها، و`/delivery-methods` صفحة مستقلة بنفس المكوّن | حسب موجز الوحدة |
+> | T108 | طرق التوصيل ونقاط الاستلام بحالة خاصة بكل متجر بُذرت من ثوابت M06، لكن mock الدفع (`storefront/checkout.ts`) ما زال يقرأ ثوابته | يلزم توحيدهما لاحقاً |
+> | T108 | الأسعار المبذورة بـ YER_NEW | US-15.1 |
+> | T109 | الخريطة مخطط SVG تجريدي بلا بلاطات | FR-15.08 |
+> | T109 | تحرير النطاق المحظور بإدخال الإحداثيات مع معاينة SVG | لا خريطة أساس |
+> | T109 | «تُدار من المنصة» ملاحظة داخل الصفحة | لا مسار دعم للتاجر |
+> | T109 | شريط الأرقام في الحالات الحدّية هو التبويبات | تجنّب التكرار |
+> | T109 | التحويل إلى استلام يغيّر الشحنة في mock الوحدة ولا يغيّر طلب M06 | `orders/state.ts` مشترك |
+> | T109 | صفوف الحالات الحدّية تفتح `/dashboard/orders?order=<id>` | صفحة الشحنة في M39 لاحقاً |
+> | T112 | العدّاد يعرض «n من 34» لا 35 | `PERMISSION_KEYS` فيها 34 مفتاحاً؛ المواصفة تمنع اختراع الناقص |
+> | T112 | مصفوفة التعيينات والجدول الأسبوعي صفوف مكدّسة على الجوال | منع التمرير الأفقي على 390px |
+> | T113 | منع الموافقة الذاتية يُثبت في فحص الوحدة عبر استدعاء mock مباشر | جلسة الكاشير بلا `staff.view`؛ والمالك ليس صفّ موظف |
+> | T113 | لقطة forbidden بجلسة الكاشير تعرض «الميزة غير متاحة» | خطة الجلسة بلا `staff_rbac`؛ بوابة الميزة تسبق الصلاحية |
+> | T112 | حذف دور مستخدم يعيد 403 مع قائمة الموظفين | المواصفة لا تحدّد الرمز |
+> | T115 | أدوات التتبع على `/dashboard/marketing/tracking` لا `settings/tracking` | المواصفة §6 والشريط الحالي |
+> | T115 | النطاقات قائمة و Sheet (`?domain=<id>`) بلا صفحة `/domains/[id]` | القائمة لا تتجاوز 6 صفوف |
+> | T115 | تفاصيل نقطة النهاية صفحة كاملة `/webhooks/[id]` بلا Sheet | سجل التسليم بفلاتر وترقيم |
+> | T114 | أُضيف إلى IntegrationStatus الحقول `group` و`available` و`detail` | FR-19.08 |
+> | T114 | حدث `webhook.test` إضافي في سجل التسليم | نتيجة الحدث التجريبي تظهر في السجل |
+> | T114 | المحجوز (`www, api, admin, app`) يُرفض كأول جزء في النطاق المخصص | تطبيق حرفي للموجز — بانتظار قرار المالك بشأن `www` |
+> | T114 | `PATCH` للرمز بقيمة `null` يحذفه | الرمز للكتابة فقط |
+> | T121 | صفحتا «موقع جديد» وتعديل الموقع مقصورتان على مالك المتجر (`session.kind === "merchant"`) لا على مفتاح صلاحية | لا يوجد مفتاح `locations.*` بين المفاتيح الـ35؛ الـBFF يطبّق القيد نفسه (403) |
+> | T121 | المخزون على الجوال بطاقات بدل جدول | الجدول يتجاوز عرض 390px |
+> | T121 | تعديل الكمية عبر `POST /api/bff/locations/[id]/inventory/adjust` لا عبر `inventory/adjustments` | ليبقى M22 مستقلاً عن M21 |
+> | T122 | ترتيب القواعد بالسحب وبزرّي ↑↓، والحفظ فوري مع إعادة القائمة عند الفشل | الوصول بلوحة المفاتيح؛ الخادم يعيد ترقيم الأولويات |
+> | T121 | أيام ساعات العمل تُعرض حسب `week_start_day` وتُرسل بترقيم 0 = الأحد | يطابق عقد الخادم |
+> | T126 | علامة `*` في §5 على 6 أكواد والاختبار يطلب 7 معطّلة؛ جُعل `whatsapp_costs` بحالة `coming_soon` | تناقض في المواصفة |
+> | T126 | خريطة §5 تجعل تقارير `core` تتطلب مفتاح فئة، فـ`reports.view` وحدها لا تُظهر `core` | طُبّقت الخريطة حرفياً |
+> | T126 | فحص «reports.view فقط» على الدالة `canOpenReport` لا عبر الواجهة | لا ملف موظف بميزة `reports` |
+> | T127 | الجدول على الجوال بطاقات مع قائمة ترتيب 44px | رؤوس `DataTable` 32px |
+> | T127 | «اليوم» = يوم UTC على الخادم والعميل | تفادي اختلاف hydration |
+> | T127 | اختصار ⌘K «تقرير: <عنوان>» لم يُبنَ | يتبع M48 |
+> | T128 | انتهاء صلاحية الملف في الـMock بعد 3 قراءات للحالة لا 24 ساعة | ليصل إليه سكربت الفحص |
+> | T132 | قائمة الأمنيات صارت على الخادم مرتبطة برقم الهاتف بدل القائمة المحلية؛ مخزن Zustand نسخة عاكسة فقط | FR-42.01/03؛ أُبقيت `useWishlistIds`/`hydrateWishlist` |
+> | T133 | إرسال تقييم المنتج يبقى عبر OTP (`customers/otp/send`) مع تعبئة الرقم؛ لوحة الرقم بلا OTP للأمنيات فقط | قرار المالك 2026-10-18 |
+> | T132 | لوحة «رقم هاتفك» تُركَّب داخل الزر بدل غلاف المتجر | `storefront-chrome.tsx` خارج ملكية الوحدة |
+> | T134 | تقييم المتجر يُنشر فوراً في المحاكاة دون OTP | لا عقد إشراف بعد — `[NEEDS BACKEND]` |
+> | T132 | إزالة منتج غير منشور من القائمة مسموحة، وحفظه يُرفض بـ404 | ليحذف المشتري «لم يعد متاحاً» |
+> | T117–T118 | التراجع عن التعديل في المكان يتم بإبطال الاستعلام لا بنسخة محلية؛ بلا عمود هامش (التكلفة فقط)؛ صفحة الإعدام تعرض كل الطلبات وتقرأ من طابور الموافقات المشترك | الخادم مصدر الأرقام؛ الهامش غير موجود في العقد؛ الإعدام موافقة M18 |
+> | T129–T130 | أرقام 966 المحلية تُطبَّع إلى 967 (اليمن)؛ الصف يُفتح بـ Enter أو زر «فتح» فقط؛ لقطة «بلا صلاحية» تعرض «الميزة معطّلة» | سوق المنصة يمني؛ الصف يحمل إجراءات؛ ملف الكاشير بلا `customer_wallets` |
+> | T123–T125 | الجدول الزمني للإرجاع مكوّن محلي بشكل جدول M06، والقرارات تُكتب في `timeline` الطلب أيضاً؛ الرفض يرسل `note`؛ المسح وقرار QA يقبلان `inventory.adjust` أيضاً؛ `returns/options` لقائمة المواقع؛ عدّادات الشريط بخمسة طلبات `?status=`؛ ⌘K «إرجاع: #» غير منفذ | M06 لا يصدّر الجدول؛ US-24.3؛ الفاعل «أمين المخزن»؛ قائمة M22 للمالك فقط؛ DRF بلا عدّادات؛ M48 |
+> | T096–T134 | لم تُنشأ وسوم `rp/09…21-*-before/after` | سياسة المالك خطية (commit + push في نهاية المرحلة) بلا وسوم، ولا git من الجلسة |
+> | — | دمج: عدّادا الشريط `pending_approvals`/`unread_behavior_alerts` صارا حيّين من طابور M18 وتنبيهاته (كانا ثابتين 3 و2+1) | الشارة والكتلة والشاشات لا تختلف |
+> | — | دمج: عدد جمهور الحملة (M13) = عدد شريحة العملاء (M07)؛ ⌘K للعميل يفتح `/dashboard/customers/<phone>` | كان M13 يعدّ هواتف طلبات M06 فقط |
+> | — | دمج: روابط أمر الشراء من الموافقات والحركات → `/dashboard/suppliers/purchase-orders/<id>` (لم تُبنَ بعد) | مسار واحد لوحدة الموردين اللاحقة |
+> | — | دمج: إعدادات «الربط والتكاملات» (النطاقات، Webhooks، التكاملات، التتبع) مجموعة في `SettingsShell` تُخفى بنودها المقصورة على المالك عن الموظف | ليست أقسام M34 (بلا حفظ صريح) |
+> | — | دمج: `CheckoutScreen` يعرض الهيكل حتى اكتمال الإماهة | السلة قد تُحلّ عبر مشترك آخر قبل إماهة حدّ Suspense فيختلف HTML الخادم والعميل |
 
 **Checkpoint US3**: كل وحدة P2 تُفحص وحدها؛ تقرير التسليم يذكر صفوف `[NEEDS BACKEND]` المستهلكة.
 

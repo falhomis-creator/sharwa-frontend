@@ -9,6 +9,7 @@ import { isMocksOn } from "@/mocks/runtime";
 import { passthroughMock } from "@/mocks/passthrough";
 // Registers the storefront fixtures (catalog, cart, PWA/push) on the passthrough registry.
 import "@/mocks/storefront/passthrough";
+import "@/mocks/returns/passthrough";
 
 /**
  * Same-origin passthrough for the real `/api/v1/*` contract (contracts/bff-cross-cutting.md §2.1).

@@ -52,7 +52,7 @@ export function attentionRows(attention: Overview["attention"]) {
       key: "alerts",
       label: "تنبيهات سلوكية غير مقروءة",
       count: alerts.warning + alerts.critical,
-      href: "/dashboard/staff/behavior-alerts",
+      href: "/dashboard/staff/alerts",
       critical: alerts.critical > 0,
     },
     { key: "stock", label: "منتجات منخفضة المخزون", count: attention.low_stock_products, href: "/dashboard/inventory" },

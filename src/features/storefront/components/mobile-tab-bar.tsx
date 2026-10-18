@@ -7,9 +7,13 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { CartButton } from "@/features/cart/components/cart-button";
 import type { CategoryNode } from "@/features/storefront/schemas/catalog";
-import { CategoriesDrawer } from "@/features/storefront/components/categories-nav";
+import dynamic from "next/dynamic";
 import { visiblePath, useStorefront } from "@/features/storefront/components/storefront-provider";
 import { useWishlistIds } from "@/stores/wishlist";
+
+// The categories drawer (Base UI dialog + the tree) is loaded on the first tap, not with the
+// page (T095): the bar itself is five links.
+const CategoriesDrawer = dynamic(() => import("@/features/storefront/components/categories-drawer").then((m) => m.CategoriesDrawer), { ssr: false });
 
 /**
  * The phone's bottom bar (M09 US-09.3.3, FR-09.13): الرئيسية · الأقسام · البحث · السلة ·
@@ -21,6 +25,8 @@ export function MobileTabBar({ categories }: { categories: CategoryNode[] }) {
   const { store } = useStorefront();
   const wishlist = useWishlistIds(store);
   const [catsOpen, setCatsOpen] = useState(false);
+  const [catsMounted, setCatsMounted] = useState(false);
+  if (catsOpen && !catsMounted) setCatsMounted(true);
   if (path.startsWith("/checkout")) return null;
 
   const item = "flex h-14 w-full flex-col items-center justify-center gap-0.5 text-[11px] outline-none focus-visible:ring-2 focus-visible:ring-ring";
@@ -70,7 +76,7 @@ export function MobileTabBar({ categories }: { categories: CategoryNode[] }) {
           </li>
         </ul>
       </nav>
-      <CategoriesDrawer categories={categories} open={catsOpen} onOpenChange={setCatsOpen} />
+      {catsMounted ? <CategoriesDrawer categories={categories} open={catsOpen} onOpenChange={setCatsOpen} /> : null}
     </>
   );
 }

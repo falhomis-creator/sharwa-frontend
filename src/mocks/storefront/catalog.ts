@@ -407,9 +407,9 @@ export function reviewsSummary(store: string | null, productId: number) {
   return { average_rating: Math.round(avg * 10) / 10, count: rows.length, rating_distribution: distribution };
 }
 
-export function listReviews(store: string | null, productId: number, page: number) {
+export function listReviews(store: string | null, productId: number, page: number, rating: number | null = null) {
   const rows = reviewState(store)
-    .filter((r) => r.product_id === productId && r.approved)
+    .filter((r) => r.product_id === productId && r.approved && (rating === null || r.rating === rating))
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
   const size = 5;
   const slice = rows.slice((page - 1) * size, page * size);

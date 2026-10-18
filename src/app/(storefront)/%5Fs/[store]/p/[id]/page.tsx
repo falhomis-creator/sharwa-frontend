@@ -4,11 +4,10 @@ import { getProduct } from "@/features/storefront/api/catalog";
 import { getStorefront } from "@/features/storefront/api/context";
 import { cardImage, type ProductDetail } from "@/features/storefront/schemas/catalog";
 import { JsonLd } from "@/features/storefront/components/json-ld";
-import { Breadcrumb } from "@/features/storefront/components/listing/product-listing";
+import { Breadcrumb } from "@/features/storefront/components/breadcrumb";
 import { BuyBox } from "@/features/pdp/components/buy-box";
 import { Gallery } from "@/features/pdp/components/gallery";
-import { RelatedRows } from "@/features/pdp/components/related-rows";
-import { Reviews } from "@/features/pdp/components/reviews";
+import { BelowTheFold } from "@/features/pdp/components/below-the-fold";
 
 /**
  * Product page (M10, T090): server-rendered from `GET /api/v1/catalog/products/<id>/?currency=`
@@ -128,8 +127,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
             </div>
             <div className="mt-10 space-y-10">
               {description}
-              <Reviews productId={product.id} summary={product.reviews_summary} />
-              <RelatedRows related={product.related} />
+              <BelowTheFold productId={product.id} summary={product.reviews_summary} related={product.related} />
             </div>
           </>
         )}

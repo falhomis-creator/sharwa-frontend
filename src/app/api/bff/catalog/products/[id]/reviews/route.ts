@@ -4,7 +4,7 @@ import { addReview, findVisible, listReviews } from "@/mocks/storefront/catalog"
 import { verifyOtp } from "@/mocks/storefront/otp";
 
 /**
- * `[NEEDS BACKEND]` reviews (M10 §7): `GET …/reviews/?page` → summary + page;
+ * `[NEEDS BACKEND]` reviews (M10 §7, M42 §7): `GET …/reviews/?page&rating` → summary + page;
  * `POST …/reviews/` `{rating, comment, phone, otp}` → stored for moderation (US-10.6.2).
  */
 export async function GET(request: Request, { params }: RouteContext<"/api/bff/catalog/products/[id]/reviews">) {
@@ -12,7 +12,8 @@ export async function GET(request: Request, { params }: RouteContext<"/api/bff/c
   return storefrontAdapter(request, `/api/v1/catalog/products/${id}/reviews/`, ({ store, url }) => {
     if (!findVisible(store, Number(id))) return mockJson({ detail: "المنتج غير موجود." }, { status: 404 });
     const page = Math.max(1, Number(url.searchParams.get("page") ?? 1) || 1);
-    return mockJson(listReviews(store, Number(id), page), { delay: 140 });
+    const rating = Number(url.searchParams.get("rating"));
+    return mockJson(listReviews(store, Number(id), page, Number.isInteger(rating) && rating >= 1 && rating <= 5 ? rating : null), { delay: 140 });
   });
 }
 

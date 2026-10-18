@@ -16,7 +16,9 @@ import { PublicOrderSchema, type PublicOrder } from "@/features/checkout/schemas
 import { LAST_PHONE } from "@/features/checkout/components/checkout-screen";
 import { FileField } from "@/features/storefront/components/file-field";
 import { useStorefront } from "@/features/storefront/components/storefront-provider";
-import { PushSubscribe } from "@/features/pwa/components/push-subscribe";
+import dynamic from "next/dynamic";
+
+const PushSubscribe = dynamic(() => import("@/features/pwa/components/push-subscribe").then((m) => m.PushSubscribe), { ssr: false });
 
 /**
  * Order success / gateway return (M12 US-12.6.3, US-12.3.3, FR-12.10): the order number in

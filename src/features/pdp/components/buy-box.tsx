@@ -1,6 +1,6 @@
 "use client";
 
-import { HeartIcon, Share2Icon } from "lucide-react";
+import { Share2Icon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { parseAsInteger, useQueryStates } from "nuqs";
 import { useEffect, useRef, useState } from "react";
@@ -17,15 +17,24 @@ import { useCartAction } from "@/features/cart/api";
 import { cardImage, type ProductDetail } from "@/features/storefront/schemas/catalog";
 import { lineKey } from "@/features/storefront/schemas/cart";
 import { useStorefront } from "@/features/storefront/components/storefront-provider";
-import { AuctionPanel } from "@/features/pdp/components/auction-panel";
-import { BookingPicker } from "@/features/pdp/components/booking-picker";
+import dynamic from "next/dynamic";
 import { QuantityStepper } from "@/features/pdp/components/quantity-stepper";
-import { BundleParts, FormulaQuote, PersonalizationFields, TierTable } from "@/features/pdp/components/special-pricing";
 import { VariantPicker } from "@/features/pdp/components/variant-picker";
 import { activeTier, resolveVariant, selectionFromVariant, variantLabel } from "@/features/pdp/variants";
 import { useCartUi } from "@/stores/cart-ui";
 import { usePdp } from "@/stores/pdp";
-import { useWishlist, useWishlistIds } from "@/stores/wishlist";
+import { useShopperPhone } from "@/features/engagement/api";
+import { WishlistButton } from "@/features/engagement/components/wishlist-button";
+
+// Below-the-fold / conditional blocks are split into their own chunks (T095): most products
+// have none of them, so the PDP's first paint pays for neither their code nor their deps.
+const block = () => <div className="h-24 animate-pulse rounded-lg bg-muted" aria-hidden />;
+const AuctionPanel = dynamic(() => import("@/features/pdp/components/auction-panel").then((m) => m.AuctionPanel), { loading: block });
+const BookingPicker = dynamic(() => import("@/features/pdp/components/booking-picker").then((m) => m.BookingPicker), { loading: block });
+const TierTable = dynamic(() => import("@/features/pdp/components/special-pricing").then((m) => m.TierTable));
+const FormulaQuote = dynamic(() => import("@/features/pdp/components/special-pricing").then((m) => m.FormulaQuote), { loading: block });
+const BundleParts = dynamic(() => import("@/features/pdp/components/special-pricing").then((m) => m.BundleParts));
+const PersonalizationFields = dynamic(() => import("@/features/pdp/components/special-pricing").then((m) => m.PersonalizationFields));
 
 /**
  * The buy box (M10 US-10.1…US-10.7): name, price of the CURRENT choice (variant → tier →
@@ -57,6 +66,7 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
   const addButton = useRef<HTMLButtonElement>(null);
   const [offscreen, setOffscreen] = useState(false);
   const [notify, setNotify] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
 
   const variant = resolveVariant(variants, attributes, pdp.selected);
   const tiers = product.tier_prices ?? [];
@@ -188,10 +198,10 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
       </div>
 
       <VariantPicker product={product} />
-      <TierTable product={product} />
+      {product.tier_prices?.length ? <TierTable product={product} /> : null}
       {product.pricing_type === "formula" ? <FormulaQuote product={product} /> : null}
-      <BundleParts product={product} />
-      <PersonalizationFields product={product} />
+      {product.is_bundle && product.bundle?.components.length ? <BundleParts product={product} /> : null}
+      {product.is_personalizable && product.personalization_fields?.length ? <PersonalizationFields product={product} /> : null}
       {product.is_bookable ? <BookingPicker productId={product.id} durationMinutes={product.booking_duration_minutes ?? null} missing={pdp.missing.includes("booking")} /> : null}
 
       {product.is_auction ? (
@@ -201,9 +211,15 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
           {product.pricing_type !== "formula" && !out ? <QuantityStepper product={product} stock={stock} /> : null}
           <div className="space-y-2">
             {out ? (
-              <Button ref={addButton} className="h-12 w-full text-base" onClick={() => setNotify(true)} data-testid="notify-me">
-                أعلمني عند التوفر
-              </Button>
+              subscribed ? (
+                <Button ref={addButton} className="h-12 w-full text-base" disabled data-testid="notify-me" aria-disabled>
+                  سنُنبّهك عبر واتساب
+                </Button>
+              ) : (
+                <Button ref={addButton} className="h-12 w-full text-base" onClick={() => setNotify(true)} data-testid="notify-me">
+                  أعلمني عند التوفر
+                </Button>
+              )
             ) : (
               <Button ref={addButton} className="h-12 w-full text-base" onClick={(e) => add(e.currentTarget)} data-testid="add-to-cart">
                 أضف إلى السلة
@@ -215,12 +231,20 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
               </Button>
             ) : null}
           </div>
-          {notify ? <BackInStock productId={product.id} onDone={() => setNotify(false)} /> : null}
+          {notify && !subscribed ? (
+            <BackInStock
+              productId={product.id}
+              onDone={() => {
+                setNotify(false);
+                setSubscribed(true);
+              }}
+            />
+          ) : null}
         </>
       )}
 
       <div className="flex items-center gap-1">
-        <WishlistToggle productId={product.id} />
+        <WishlistButton productId={product.id} variant="pdp" />
         <ShareButton name={product.name} />
       </div>
 
@@ -274,31 +298,6 @@ function DeliveryInfo({ product }: { product: ProductDetail }) {
   );
 }
 
-function WishlistToggle({ productId }: { productId: number }) {
-  const { store } = useStorefront();
-  const ids = useWishlistIds(store);
-  const toggle = useWishlist((s) => s.toggle);
-  const phone = useWishlist((s) => s.phone);
-  const on = ids.includes(productId);
-  return (
-    <Button
-      variant="ghost"
-      className="h-11 gap-2"
-      aria-pressed={on}
-      data-testid="wishlist-toggle"
-      onClick={() => {
-        const added = toggle(store, productId);
-        toast(added ? "أُضيف إلى المفضلة" : "أُزيل من المفضلة");
-        // Server sync only once a phone is known (M10 US-10.7.2); otherwise it stays local.
-        if (phone) void apiFetch("/api/bff/wishlist/toggle", z.unknown(), { method: "POST", json: { product_id: productId, phone } }).catch(() => undefined);
-      }}
-    >
-      <HeartIcon aria-hidden className={cn(on && "fill-current")} />
-      {on ? "في المفضلة" : "المفضلة"}
-    </Button>
-  );
-}
-
 /** FR-10.12 — Web Share where available, otherwise copy the link + WhatsApp. */
 function ShareButton({ name }: { name: string }) {
   const [fallback, setFallback] = useState(false);
@@ -336,7 +335,10 @@ function ShareButton({ name }: { name: string }) {
 }
 
 function BackInStock({ productId, onDone }: { productId: number; onDone: () => void }) {
-  const [phone, setPhone] = useState("");
+  const { store } = useStorefront();
+  const known = useShopperPhone(store).data?.phone_normalized ?? null;
+  // Prefilled from the session's phone when it is known (M42 US-42.5): one tap instead of typing.
+  const [phone, setPhone] = useState(known ?? "");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   return (
@@ -348,7 +350,7 @@ function BackInStock({ productId, onDone }: { productId: number; onDone: () => v
         setError(null);
         try {
           await apiFetch(`/api/bff/catalog/products/${productId}/back-in-stock`, z.unknown(), { method: "POST", json: { phone: normalizePhone(phone) } });
-          toast.success("سنرسل لك رسالة واتساب عند توفّر المنتج.");
+          toast.success("سنُنبّهك عبر واتساب عند توفّر المنتج.");
           onDone();
         } catch (err) {
           setError(isApiError(err) ? err.userMessage : "تعذّر الاشتراك.");

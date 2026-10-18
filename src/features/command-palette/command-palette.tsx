@@ -266,7 +266,7 @@ function PaletteBody({
         <CommandItem
           key={c.phone}
           value={`customer:${c.phone}`}
-          onSelect={() => go(`/dashboard/orders?q=${c.phone}`, { key: `customer:${c.phone}`, title: c.name, path: `/dashboard/orders?q=${c.phone}`, hint: prettyPhone(c.phone) })}
+          onSelect={() => go(`/dashboard/customers/${c.phone}`, { key: `customer:${c.phone}`, title: c.name, path: `/dashboard/customers/${c.phone}`, hint: prettyPhone(c.phone) })}
           data-testid="palette-customer"
         >
           <User className="text-muted-foreground" aria-hidden />

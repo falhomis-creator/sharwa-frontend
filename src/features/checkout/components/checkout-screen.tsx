@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckIcon, CopyIcon, MapPinIcon, MessageCircleIcon, XIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { Controller, useForm, useWatch, type FieldPath } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -86,11 +86,14 @@ const FIELD_ORDER: Array<FieldPath<CheckoutDraft>> = [
 
 const ACCEPT = ".jpg,.jpeg,.png,.webp,.pdf";
 
+const noopSubscribe = () => () => {};
+
 export function CheckoutScreen() {
   const { store, storeName, whatsapp, giftingEnabled, loyaltyEnabled, timezone } = useStorefront();
   const router = useRouter();
   const sp = useSearchParams();
   const client = useQueryClient();
+  const hydrated = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const buyNow = sp.get("mode") === "buy_now" && Boolean(sp.get("product"));
   const cart = useCart(store);
   const cartVersion = cart.data ? `${cart.data.count}|${cart.data.display_subtotal}|${cart.data.coupon_code ?? ""}|${cart.data.currency}` : "-";
@@ -344,7 +347,9 @@ export function CheckoutScreen() {
     }));
   }, [buyNow, buyNowProduct.data, cart.data, sp]);
 
-  if (cart.isPending) return <CheckoutSkeleton />;
+  // The first client render must equal the server's (skeleton): the cart query can resolve
+  // through another subscriber before this Suspense boundary hydrates.
+  if (cart.isPending || !hydrated) return <CheckoutSkeleton />;
   if (!hasLines) {
     return (
       <div className="mx-auto w-full max-w-xl space-y-4 px-4 py-16 md:px-6" data-testid="checkout-empty">

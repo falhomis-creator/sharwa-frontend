@@ -12,7 +12,8 @@ import { cn } from "@/lib/utils";
  * one falls back to the missing-image tile instead of a broken icon.
  *
  * Missing image (M09 §6): a 1px-bordered muted square with the product's name — no generic
- * icon (constitution I).
+ * icon (constitution I). It is set in the BODY font on purpose: the heading face is loaded
+ * at weight 700 only (its 400 file would be fetched just for these tiles — T095).
  */
 export function ProductImage({
   src,
@@ -61,8 +62,8 @@ export function ProductImage({
         <div
           aria-hidden
           className={cn(
-            "store-heading absolute inset-0 flex items-center justify-center p-4 text-center text-sm leading-relaxed text-muted-foreground md:text-base",
-            dimmed && "opacity-60",
+            // Dimming is NOT applied to the fallback text: at 60% it would fall under AA contrast.
+            "absolute inset-0 flex items-center justify-center p-4 text-center text-sm leading-relaxed text-muted-foreground md:text-base",
             thumb && "p-1",
           )}
         >

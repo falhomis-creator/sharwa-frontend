@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
-import { useAccess } from "@/features/dashboard-shell/components/session-context";
+import { useAccess, useSession } from "@/features/dashboard-shell/components/session-context";
 import { SECTION_META, SETTINGS_SECTIONS, type SettingsSection } from "@/features/settings/schemas";
 import { useSettingsStore } from "@/stores/settings";
 
@@ -19,6 +19,18 @@ import { useSettingsStore } from "@/stores/settings";
  * dirty, moving to another section is held until «حفظ» (its confirmation) or «تجاهل».
  */
 const SETTINGS_ROOT = "/dashboard/settings";
+
+/**
+ * «الربط والتكاملات» (M19, Phase 5): its own screens, rendered inside this frame but not
+ * M34 sections (no explicit-save form, no unsaved guard). Domains and webhooks are
+ * owner-only; tracking lives under marketing (M19 §6) and is linked from here.
+ */
+const LINK_ITEMS: Array<{ key: string; title: string; href: string; ownerOnly?: boolean; feature?: "tracking_tools" }> = [
+  { key: "domains", title: "النطاقات", href: `${SETTINGS_ROOT}/domains`, ownerOnly: true },
+  { key: "webhooks", title: "Webhooks", href: `${SETTINGS_ROOT}/webhooks`, ownerOnly: true },
+  { key: "integrations", title: "التكاملات", href: `${SETTINGS_ROOT}/integrations` },
+  { key: "tracking", title: "أدوات التتبع", href: "/dashboard/marketing/tracking", ownerOnly: true, feature: "tracking_tools" },
+];
 
 function sectionOf(pathname: string): SettingsSection | null {
   const seg = pathname.slice(SETTINGS_ROOT.length + 1).split("/")[0];
@@ -33,6 +45,8 @@ export function SettingsShell({ children }: { children: ReactNode }) {
   const explicit = useSettingsStore((s) => s.explicit);
   const holdNavigation = useSettingsStore((s) => s.holdNavigation);
   const sections = SETTINGS_SECTIONS.filter((k) => canFeature(SECTION_META[k].feature));
+  const isOwner = useSession().kind === "merchant";
+  const links = LINK_ITEMS.filter((l) => (!l.ownerOnly || isOwner) && (!l.feature || canFeature(l.feature)));
 
   function guard(e: MouseEvent | null, href: string): boolean {
     if (explicit && href !== `${SETTINGS_ROOT}/${explicit.section}`) {
@@ -49,7 +63,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
         <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">الإعدادات</h1>
         <p className="max-w-prose text-sm text-muted-foreground md:text-base">
           كل ما يعرّف متجرك في مكان واحد. الشعار والألوان والخطوط في{" "}
-          <Link href="/dashboard/storefront/design" className="text-foreground underline underline-offset-4">
+          <Link href="/dashboard/design" className="text-foreground underline underline-offset-4">
             تصميم المتجر
           </Link>
           .
@@ -61,9 +75,10 @@ export function SettingsShell({ children }: { children: ReactNode }) {
         <div className="sticky top-0 z-20 -mx-4 border-b border-border bg-background px-4 py-2 md:hidden">
           <NativeSelect
             aria-label="قسم الإعدادات"
-            value={current ?? ""}
+            value={current ?? linkSegment(pathname) ?? ""}
             onChange={(e) => {
-              const href = e.target.value ? `${SETTINGS_ROOT}/${e.target.value}` : SETTINGS_ROOT;
+              const v = e.target.value;
+              const href = v.startsWith("/") ? v : v ? `${SETTINGS_ROOT}/${v}` : SETTINGS_ROOT;
               if (guard(null, href)) router.push(href);
             }}
             className="h-11"
@@ -75,6 +90,15 @@ export function SettingsShell({ children }: { children: ReactNode }) {
                 {SECTION_META[k].title}
               </option>
             ))}
+            {links.length ? (
+              <optgroup label="الربط والتكاملات">
+                {links.map((l) => (
+                  <option key={l.key} value={l.href.startsWith(SETTINGS_ROOT) ? l.href.slice(SETTINGS_ROOT.length + 1) : l.href}>
+                    {l.title}
+                  </option>
+                ))}
+              </optgroup>
+            ) : null}
           </NativeSelect>
         </div>
 
@@ -114,6 +138,32 @@ export function SettingsShell({ children }: { children: ReactNode }) {
                 </li>
               );
             })}
+            {links.length ? (
+              <li className="mt-4 border-t border-border pt-3">
+                <p className="px-3 pb-1 text-xs font-medium text-muted-foreground">الربط والتكاملات</p>
+                <ul className="flex flex-col">
+                  {links.map((l) => {
+                    const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
+                    return (
+                      <li key={l.key}>
+                        <Link
+                          href={l.href}
+                          onClick={(e) => guard(e, l.href)}
+                          aria-current={active ? "page" : undefined}
+                          className={cn(
+                            "flex h-9 items-center rounded-md px-3 text-sm transition-colors hover:bg-muted",
+                            active ? "bg-muted font-medium text-foreground" : "text-muted-foreground",
+                          )}
+                          data-testid={`settings-nav-${l.key}`}
+                        >
+                          {l.title}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </li>
+            ) : null}
           </ul>
         </nav>
 
@@ -156,4 +206,10 @@ function UnsavedBar() {
       </div>
     </div>
   );
+}
+
+/** The select's value for a «الربط والتكاملات» screen under /settings (e.g. `webhooks/7` → `webhooks`). */
+function linkSegment(pathname: string): string | null {
+  const seg = pathname.slice(SETTINGS_ROOT.length + 1).split("/")[0] ?? "";
+  return LINK_ITEMS.some((l) => l.href === `${SETTINGS_ROOT}/${seg}`) ? seg : null;
 }

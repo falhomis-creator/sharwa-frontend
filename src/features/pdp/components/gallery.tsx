@@ -1,14 +1,16 @@
 "use client";
 
 import { ChevronLeftIcon, ChevronRightIcon, PlayIcon } from "lucide-react";
-import Image from "next/image";
+import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import type { ProductVariant, VariantAttribute } from "@/features/storefront/schemas/catalog";
 import { ProductImage } from "@/features/storefront/components/product-image";
 import { resolveVariant } from "@/features/pdp/variants";
 import { usePdp } from "@/stores/pdp";
+
+// The zoom dialog (Base UI Dialog) is loaded on the first zoom, not with the page (T095).
+const GalleryZoom = dynamic(() => import("@/features/pdp/components/gallery-zoom").then((m) => m.GalleryZoom), { ssr: false });
 
 /**
  * Product gallery (M10 US-10.1): one main picture with thumbnails on desktop, a full-width
@@ -42,6 +44,8 @@ export function Gallery({
   const list = focusUrl && !base.some((i) => i.url === focusUrl) ? [{ url: focusUrl, alt: name }, ...base] : base;
   const [index, setIndex] = useState(0);
   const [zoom, setZoom] = useState(false);
+  const [zoomMounted, setZoomMounted] = useState(false);
+  if (zoom && !zoomMounted) setZoomMounted(true);
   const rail = useRef<HTMLUListElement>(null);
 
   // A variant with its own image jumps the gallery to it (state adjusted during render,
@@ -132,18 +136,7 @@ export function Gallery({
           شاهد فيديو المنتج
         </a>
       ) : null}
-      <Dialog open={zoom} onOpenChange={setZoom}>
-        <DialogContent className="max-w-[min(56rem,calc(100%-2rem))] p-2 sm:max-w-[min(56rem,calc(100%-2rem))]">
-          <DialogTitle className="sr-only">{name}</DialogTitle>
-          {list[index]!.url ? (
-            <div className="relative aspect-square w-full">
-              <Image src={list[index]!.url} alt={list[index]!.alt} fill sizes="90vw" unoptimized={!list[index]!.url.startsWith("/")} className="object-contain" />
-            </div>
-          ) : (
-            <ProductImage src={null} alt={name} />
-          )}
-        </DialogContent>
-      </Dialog>
+      {zoomMounted ? <GalleryZoom open={zoom} onOpenChange={setZoom} name={name} image={list[index]!} /> : null}
     </div>
   );
 }

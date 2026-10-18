@@ -1,27 +1,18 @@
-import { storefrontAdapter } from "@/lib/bff/storefront-adapter";
+import { respondMock, storefrontAdapter } from "@/lib/bff/storefront-adapter";
 import { mockJson } from "@/mocks/runtime";
-import { findVisible } from "@/mocks/storefront/catalog";
+import { shopperPhone, toggleWishlist } from "@/mocks/engagement/state";
 import { normalizeBuyerPhone } from "@/mocks/storefront/otp";
-import { storeState } from "@/mocks/store-state";
 
 /**
- * `[NEEDS BACKEND]` (E-42) `POST /api/v1/wishlist/toggle/` `{product_id, phone}` → `{in_wishlist}`.
- * The storefront keeps the list locally first (M09/M10 assumption) and syncs a toggle here
- * once the buyer has given a phone.
+ * `[NEEDS BACKEND]` (M42 §7) `POST /api/v1/wishlist/toggle/` `{product_id}` → `{saved}`.
+ * The phone is the session's (`POST /shopper/phone/` first); a `phone` in the body is accepted
+ * as a fallback for callers that already know it (the Phase 4 contract). 409 when neither.
  */
 export function POST(request: Request) {
-  return storefrontAdapter(request, "/api/v1/wishlist/toggle/", async ({ store, body }) => {
+  return storefrontAdapter(request, "/api/v1/wishlist/toggle/", async ({ store, cartId, body }) => {
     const { fields } = await body();
-    const phone = normalizeBuyerPhone(fields.phone);
-    const productId = Number(fields.product_id);
-    if (!phone) return mockJson({ phone: ["رقم واتساب غير صحيح."] }, { status: 400 });
-    if (!findVisible(store, productId)) return mockJson({ detail: "المنتج غير موجود." }, { status: 404 });
-    const lists = storeState(store, "storefront:wishlists", () => new Map<string, Set<number>>());
-    const set = lists.get(phone) ?? new Set<number>();
-    const inWishlist = !set.has(productId);
-    if (inWishlist) set.add(productId);
-    else set.delete(productId);
-    lists.set(phone, set);
-    return mockJson({ in_wishlist: inWishlist });
+    const phone = shopperPhone(store, cartId) ?? normalizeBuyerPhone(fields.phone);
+    if (!phone) return mockJson({ detail: "أدخل رقم هاتفك أولاً لحفظ قائمتك." }, { status: 409 });
+    return respondMock(toggleWishlist(store, phone, Number(fields.product_id)), 140);
   });
 }

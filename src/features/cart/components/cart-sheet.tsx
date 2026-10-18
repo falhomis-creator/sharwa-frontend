@@ -50,7 +50,7 @@ export function CartSheet() {
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="left" data-testid="cart-sheet" className="w-full gap-0 p-0 sm:max-w-[420px]">
           <SheetHeader className="border-b border-border px-5 py-4">
-            <SheetTitle className="store-heading text-lg">{title}</SheetTitle>
+            <SheetTitle className="store-heading text-lg font-bold">{title}</SheetTitle>
           </SheetHeader>
           <CartPanel variant="sheet" onNavigate={close} />
         </SheetContent>
@@ -61,7 +61,7 @@ export function CartSheet() {
     <Drawer open={open} onOpenChange={onOpenChange} showSwipeHandle>
       <DrawerContent data-testid="cart-sheet" className="[--drawer-height:92dvh] [--drawer-content-max-height:92dvh]">
         <DrawerHeader className="border-b border-border px-5 py-3 text-start">
-          <DrawerTitle className="store-heading text-lg">{title}</DrawerTitle>
+          <DrawerTitle className="store-heading text-lg font-bold">{title}</DrawerTitle>
         </DrawerHeader>
         <CartPanel variant="sheet" onNavigate={close} />
       </DrawerContent>

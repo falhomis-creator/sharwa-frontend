@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { PAYMENT_POLICY_LABELS } from "@/features/products/schemas/enums";
 import { cardImage, categoryLabel, type ProductCard as Card } from "@/features/storefront/schemas/catalog";
 import { ProductImage } from "@/features/storefront/components/product-image";
+import { WishlistButton } from "@/features/engagement/components/wishlist-button";
 
 /**
  * THE product card (FR-09.08): one component for every section, listing, search result and
@@ -14,7 +15,7 @@ import { ProductImage } from "@/features/storefront/components/product-image";
  * Until Django exports `badges` on list items, «نفدت الكمية» and «تخفيض» are derived here
  * from `stock` and `display_old_price` (M09 §7); merchant badges show when present.
  */
-export function ProductCard({ product, priority = false, className }: { product: Card; priority?: boolean; className?: string }) {
+export function ProductCard({ product, priority = false, className, saveable = true }: { product: Card; priority?: boolean; className?: string; saveable?: boolean }) {
   const out = product.stock <= 0;
   const onSale = Boolean(product.display_old_price);
   const category = categoryLabel(product.category);
@@ -28,6 +29,8 @@ export function ProductCard({ product, priority = false, className }: { product:
         className,
       )}
     >
+      {/* The save button sits over the image, outside the link (M42 US-42.1, 44px — FR-42.09). */}
+      {saveable ? <WishlistButton productId={product.id} /> : null}
       <Link href={`/p/${product.id}`} className="flex h-full flex-col focus-visible:outline-none" prefetch={false}>
         <ProductImage src={cardImage(product)} alt={product.name} priority={priority} dimmed={out} />
         <div className="flex flex-1 flex-col gap-1.5 p-3 md:p-4">
@@ -44,7 +47,7 @@ export function ProductCard({ product, priority = false, className }: { product:
               ))}
             </ul>
           )}
-          <h3 className="line-clamp-2 text-sm font-medium leading-6 text-foreground md:text-[0.95rem]">{product.name}</h3>
+          <h3 className="line-clamp-2 text-sm font-semibold leading-6 text-foreground md:text-[0.95rem]">{product.name}</h3>
           {category ? <p className="text-xs text-muted-foreground">{category}</p> : null}
           <div className="mt-auto flex flex-wrap items-baseline gap-x-2 gap-y-0.5 pt-1">
             {onSale ? (

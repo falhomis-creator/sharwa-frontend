@@ -22,7 +22,7 @@ export function CategoryStripSection({ view, categories }: { view: SectionView; 
               <Link href={`/c/${c.id}`} className="store-frame group block overflow-hidden rounded-lg border-border transition-colors hover:border-foreground/30">
                 {c.image ? <ProductImage src={c.image} alt={c.name} sizes="176px" /> : null}
                 <span className="flex min-h-14 items-center justify-between gap-2 px-3 py-3 text-sm font-medium">
-                  <span className="store-heading truncate">{c.name}</span>
+                  <span className="truncate">{c.name}</span>
                   {c.subcategories.length > 0 ? (
                     <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{c.subcategories.length}</span>
                   ) : null}

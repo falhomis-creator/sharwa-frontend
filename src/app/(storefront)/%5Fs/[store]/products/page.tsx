@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { getCategories } from "@/features/storefront/api/catalog";
 import { getStorefront } from "@/features/storefront/api/context";
-import { Breadcrumb, ProductListing } from "@/features/storefront/components/listing/product-listing";
+import { Breadcrumb } from "@/features/storefront/components/breadcrumb";
+import { ProductListing } from "@/features/storefront/components/listing/product-listing";
 
 /** `/products` — every product with the same filters and pagination (M09 §6). */
 type Props = { searchParams: Promise<Record<string, string | string[] | undefined>> };

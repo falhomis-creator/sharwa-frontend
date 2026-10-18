@@ -9,6 +9,8 @@ import { newestNewOrders } from "@/mocks/orders/state";
 import { productSummary } from "@/mocks/catalog/products";
 import { catalog } from "@/mocks/catalog/state";
 import { isEmptyStore } from "@/mocks/empty-store";
+import { pendingApprovalsCount } from "@/mocks/approvals/state";
+import { listAlerts } from "@/mocks/staff/state";
 
 /**
  * `GET /api/v1/dashboard/overview/` fixture (M03 §7 — `[NEEDS BACKEND]`), built from
@@ -93,8 +95,10 @@ export function overviewMock(store: string | null, refreshedAt?: string): Overvi
     },
     new_orders: newOrders(slug, 8),
     attention: {
-      pending_approvals: 3,
-      unread_behavior_alerts: { warning: 2, critical: 1 },
+      // Phase 5: live from the M18 approvals queue and behaviour alerts, so the badge,
+      // this block and the screens always agree.
+      pending_approvals: pendingApprovalsCount(slug),
+      unread_behavior_alerts: unreadAlertLevels(slug),
       // M04: the same number the products list strip shows.
       low_stock_products: productSummary(catalog(slug)).low_stock,
       // Zero on purpose: the row must disappear rather than render a 0 (US-03.5.3).
@@ -117,5 +121,13 @@ export function overviewMock(store: string | null, refreshedAt?: string): Overvi
       noon: 0,
       direct: 97,
     },
+  };
+}
+
+function unreadAlertLevels(store: string | null): { warning: number; critical: number } {
+  const unread = listAlerts(store, new URLSearchParams({ unread: "true" })).results;
+  return {
+    warning: unread.filter((a) => a.level === "warning").length,
+    critical: unread.filter((a) => a.level === "critical").length,
   };
 }

@@ -1,0 +1,6 @@
+import { redirect } from "next/navigation";
+
+/** `/dashboard/payments/bank-transfers` → `/dashboard/payments/payout-accounts?tab=bank` (the pre-M14 nav path). */
+export default function Page() {
+  redirect("/dashboard/payments/payout-accounts?tab=bank");
+}

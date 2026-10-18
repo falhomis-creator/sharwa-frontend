@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getCategories } from "@/features/storefront/api/catalog";
 import { getStorefront } from "@/features/storefront/api/context";
 import { findCategory } from "@/features/storefront/category-tree";
-import { Breadcrumb, ProductListing } from "@/features/storefront/components/listing/product-listing";
+import { Breadcrumb } from "@/features/storefront/components/breadcrumb";
+import { ProductListing } from "@/features/storefront/components/listing/product-listing";
 
 /**
  * `/c/[categoryId]` (M09 US-09.4): the category by its numeric id (Category has no slug —
