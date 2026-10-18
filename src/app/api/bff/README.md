@@ -28,6 +28,16 @@ Contract: `specs/001-sharwa-frontend-platform/contracts/bff-cross-cutting.md` §
 | `order-statuses/**` (incl. `reorder`) | mock (`[NEEDS BACKEND]`) | M06 |
 | `search` (`?q&types&limit`, groups trimmed by permission) | mock (`[NEEDS BACKEND]` — M48 §7) | M48 |
 | `notifications`, `notifications/summary`, `notifications/[id]/read`, `notifications/read-all` | mock (`[NEEDS BACKEND]` — M49 §7) | M49 |
+| `catalog/facets`, `catalog/offers` | target (`/api/v1/catalog/{facets,offers}/`) → mock | M09 |
+| `catalog/products/[id]/{reviews,auction,auction/bids,available-slots,quote,back-in-stock}` | target → mock (`[NEEDS BACKEND]` — M10 §7) | M10 |
+| `wishlist/toggle` | target → mock (the list itself is local until a buyer session exists) | M10 |
+| `cart/coupon` (POST · DELETE), `cart/contact`, `cart/restore` | target → mock; the cart is the passthrough `/api/v1/cart/*` (Ready) | M11 |
+| `checkout` (POST multipart, idempotent on `client_uuid`, invalidates the store tag), `checkout/{delivery-options,payment-options,quote}`, `checkout/cod-otp/{send,verify}`, `checkout/sharwa-pay/otp/send` | target → mock (`[NEEDS BACKEND]` — M12 §7) | M12 |
+| `wallet/{balance-preview,otp/send}`, `loyalty/{balance,otp/send,redeem}` | target → mock | M12 |
+| `customers/otp/send` | target → mock — **proposed** endpoint (buyer OTP outside checkout: reviews, back-in-stock) | M10, M12 |
+| `orders/public/[uuid]`, `orders/public/[uuid]/receipt` (multipart) | target → mock | M12 |
+| `orders/track/[uuid]` | target (`/api/v1/orders/track/<uuid>/`) → mock; another store's UUID = 404 | M41 |
+| `storefront/currency` | local (sets the display-preference cookie `sharwa_currency`; the cart currency is pinned through `/api/v1/cart/?currency=`) | M09, M11 |
 | `settings` (GET the whole `StoreSetting` row, no secrets), `settings/{identity,contact,policies,shipping,currency,seo,announcement,payments}` (PATCH → full row), `settings/multi-location` (POST `{enabled, merge?}` → 200 / readable 409) | mock (`[NEEDS BACKEND]` — M34 §7); shipping/currency/payments/multi-location owner-only | M34 |
 
 All Phase 3D adapters go through `src/lib/bff/mock-route.ts` (`mockRoute`): 401 without a
@@ -35,6 +45,14 @@ session → 501 when mocks are off (no fabricated data against a real backend) �
 the member lacks the row's permission → the per-store fixture (`globalThis`, so route
 handlers and Server Components share one state). The Ready rows (`/api/v1/returns/*`,
 `/api/v1/orders/b2b-draft*`, `/api/v1/catalog/*`) keep using the transparent passthrough.
+
+**Storefront adapters (Phase 4).** Every storefront row goes through `storefrontAdapter()`
+(`src/lib/bff/storefront-adapter.ts`): it calls the documented `/api/v1/...` target first
+with the browser's cookies and `X-Store-Domain`, and answers from `src/mocks/storefront/*`
+only while that target is 404/405/501 or unreachable (`x-sharwa-mock: 1`); with mocks off it
+returns 501. The mock cart identity is the dev-only cookie `sharwa_mock_cart`, standing in for
+Django's session cart. Writes that change what a cached storefront read returns (an order
+decrements stock) call `revalidateTag(storeTag(store), { expire: 0 })`.
 
 **Why the auth adapters are `target` and not `legacy`.** All seven auth rows are
 `[NEEDS BACKEND]`. Django exposes only HTML form POSTs (`/dashboard/login/` and friends),

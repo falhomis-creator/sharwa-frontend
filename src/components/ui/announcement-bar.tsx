@@ -12,24 +12,37 @@ export function AnnouncementBar({
   background,
   color,
   seconds,
+  animate = true,
   className,
 }: {
   text: string;
   background: string;
   color: string;
   seconds: number;
+  /** `false` renders the line static and centred (it fits — M09 US-09.6.1 moves it only when it overflows). */
+  animate?: boolean;
   className?: string;
 }) {
+  if (!animate) {
+    return (
+      <div
+        className={cn("relative flex h-9 items-center justify-center overflow-hidden px-4 text-[13px] font-medium", className)}
+        style={{ backgroundColor: background, color }}
+      >
+        <p className="truncate">{text}</p>
+      </div>
+    );
+  }
   return (
     <div
-      className={cn("relative flex h-9 items-center overflow-hidden text-[13px] font-medium", className)}
+      className={cn("group/marquee relative flex h-9 items-center overflow-hidden text-[13px] font-medium", className)}
       style={{ backgroundColor: background, color }}
       role="marquee"
       aria-label={text}
     >
       <div
         aria-hidden
-        className="flex w-max shrink-0 whitespace-nowrap [--marquee-dir:-1] rtl:[--marquee-dir:1] motion-safe:animate-[sharwa-marquee_var(--marquee-seconds)_linear_infinite] motion-reduce:w-full motion-reduce:justify-center"
+        className="flex w-max shrink-0 whitespace-nowrap [--marquee-dir:-1] rtl:[--marquee-dir:1] motion-safe:animate-[sharwa-marquee_var(--marquee-seconds)_linear_infinite] group-hover/marquee:[animation-play-state:paused] motion-reduce:w-full motion-reduce:justify-center"
         style={{ ["--marquee-seconds" as string]: `${seconds}s` }}
       >
         <span className="px-8">{text}</span>

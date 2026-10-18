@@ -51,7 +51,7 @@ export const DELIVERY_METHODS = [
   { id: 2, name: "مندوب المتجر", display_price: displayMoney(15), estimated_time: "خلال اليوم" },
 ];
 
-interface MockLine {
+export interface MockLine {
   id: number;
   product_id: number | null;
   product_name: string;
@@ -62,7 +62,7 @@ interface MockLine {
   location_id: number;
 }
 
-interface MockOrder {
+export interface MockOrder {
   id: number;
   public_uuid: string;
   customer_name: string;
@@ -98,6 +98,16 @@ interface MockOrder {
   is_backordered: boolean;
   fraud_score: number | null;
   pending_approval: { id: number; status: "pending" | "approved" | "rejected" } | null;
+  // ── Storefront-placed orders (M12, Phase 4) — optional so the M06 seed is untouched ──
+  /** The buyer's currency at checkout and the SAR→currency rate locked with it. */
+  display_currency?: "SAR" | "USD" | "YER_OLD" | "YER_NEW";
+  fx_from_sar?: number;
+  /** The checkout method code (M12 §5); `payment_method` keeps the M06 projection. */
+  checkout_method?: "manual" | "sharwa_pay" | "jeeb" | "kuraimi" | "cod";
+  client_uuid?: string;
+  deposit_upfront?: string | null;
+  customer_latitude?: string | null;
+  customer_longitude?: string | null;
 }
 
 interface OrdersState {
@@ -856,3 +866,48 @@ export function searchOrders(store: string | null, q: string, limit: number) {
 }
 
 export const ORDER_LOCATIONS = LOCATIONS;
+
+// ── Storefront (Phase 4: M12 checkout · M41 tracking) ─────────────────────────────────
+/** A storefront order by its public UUID (the only key the buyer ever holds). */
+export function orderByUuid(store: string | null, uuid: string): MockOrder | undefined {
+  return ordersState(store).orders.find((o) => o.public_uuid === uuid);
+}
+
+/** The order a client UUID already created — checkout idempotency (FR-12.04). */
+export function orderByClientUuid(store: string | null, clientUuid: string): MockOrder | undefined {
+  return ordersState(store).orders.find((o) => o.client_uuid === clientUuid);
+}
+
+export function fulfillmentStatusRef(store: string | null, id: number | null) {
+  return fulfillmentRef(ordersState(store), id);
+}
+
+/** Insert an order the storefront checkout built; returns it with its id and public UUID set. */
+export function insertStorefrontOrder(
+  store: string | null,
+  build: (ids: { id: number; public_uuid: string; nextLineId: () => number; defaultStatusId: number | null; now: string }) => MockOrder,
+): MockOrder {
+  const state = ordersState(store);
+  state.ids.order += 1;
+  const id = state.ids.order;
+  const order = build({
+    id,
+    public_uuid: `${((id * 2654435761) >>> 0).toString(16).padStart(8, "0")}-trk`,
+    nextLineId: () => state.ids.line++,
+    defaultStatusId: state.statuses.find((s) => s.is_default)?.id ?? null,
+    now: now(),
+  });
+  order.timeline = [
+    { id: state.ids.event++, at: order.created_at, kind: "created", source: "system", text: "أُنشئ الطلب من المتجر.", actor: null },
+    ...order.timeline,
+  ];
+  state.orders.unshift(order);
+  return order;
+}
+
+/** Append a buyer-side event (receipt attached, gateway result) to an order's timeline. */
+export function storefrontEvent(store: string | null, o: MockOrder, kind: TimelineEvent["kind"], text: string) {
+  const state = ordersState(store);
+  o.timeline.unshift({ id: state.ids.event++, at: now(), kind, source: "system", text, actor: null });
+  o.version += 1;
+}

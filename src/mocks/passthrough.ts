@@ -1,5 +1,6 @@
 import type { UpstreamContext } from "@/lib/bff/upstream";
 import { mockJson } from "@/mocks/runtime";
+import { storefrontConfig } from "@/mocks/storefront/config";
 import { tenantFixture } from "@/mocks/tenant/config";
 
 /**
@@ -9,7 +10,7 @@ import { tenantFixture } from "@/mocks/tenant/config";
  * Keys are the path after `/api/v1/` with a trailing slash. Entries are added per module
  * (T049 adds `config/`, Phase 4 adds `catalog/*` and `cart*`).
  */
-type Handler = (request: Request, ctx: UpstreamContext, url: URL) => Promise<Response> | Response | undefined;
+type Handler = (request: Request, ctx: UpstreamContext, url: URL) => Promise<Response | undefined> | Response | undefined;
 
 const registry: Array<{ test: (path: string) => boolean; handle: Handler }> = [];
 
@@ -49,7 +50,8 @@ registerPassthroughMock("config/", (_req, ctx) => {
   if (!fixture) return mockJson({ detail: "المتجر غير موجود." }, { status: 404 });
   switch (fixture.outcome) {
     case "ok":
-      return mockJson(fixture.config);
+      // The storefront's view: identity + theme + sections + the exported `StoreSetting` fields.
+      return mockJson(storefrontConfig(ctx.store, ctx.storeHost ?? ctx.host) ?? fixture.config);
     case "provisioning":
       return mockJson({ detail: "المتجر قيد التجهيز." }, { status: 503, headers: { "retry-after": "10" } });
     case "inactive":

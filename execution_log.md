@@ -1,3 +1,238 @@
+# Execution log — Phase 4 · US2 storefront: M09 · M10 · M11 · M12 · M41 · M44 (T086–T095)
+
+**Date:** 2026-10-18 · **Branch:** `main` · **Base:** the 3E commit · **Status:** T087–T094 done. T095 gates: `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `scripts/storefront-check.ts` **41/41** ✅ · visual check **72 screenshots** across the six folders (0 console errors, 0 horizontal scroll, every mobile target ≥ 44px) ✅ · regressions `tenant-shell-check` 9 ✅ · `settings-check` 23 ✅ · `catalog-orders-check` 22 ✅ · `next build` ✅. **Open:** Lighthouse performance is below the 90 target in this container (see T095). Backend untouched (`C:\sharwa_saas` was read only, for `theme_presets.py`, `cart.py` and `constants.py`). Mocks only (`x-sharwa-mock: 1`).
+
+## Delivery (read first)
+
+- Per the linear workflow, every file is written straight into the project. There are no `.handoff` patches and no git from this session. The commit commands are at the end of the hand-off message.
+- T086 (`rp/07-storefront-before`) was not created, because the workflow has no tags.
+- **Restart `next dev` once** after pulling. The mock catalogue seed changed (see T090), and the in-memory mock state only reseeds on start.
+
+## T087 — Ready schemas, cached reads, passthrough mocks
+
+- Schemas live in `src/features/storefront/schemas/{config,catalog,cart}.ts` (ready-api-v1 #1–#7), with the extensions marked optional:
+  - `readSection()` normalises the 8 section types. An unknown type is dropped with a `console.warn`, so a new Django section never breaks the home page.
+  - `lineKey()` mirrors Django `_get_key`.
+- Cached server reads are in `src/features/storefront/api/{config,catalog}.ts`. Each one is `'use cache'` + `cacheLife('minutes')` + `cacheTag(storeTag(store))`, with `store` as the first argument and no cookies. They throw on upstream failure, so a failure is never cached. A page past the end comes back as a 404 *result*, so the listing can redirect to the last page.
+- Passthrough fixtures are in `src/mocks/storefront/passthrough.ts`: `config/`, `catalog/{categories,products,products/<id>}/`, `cart/` (+ `?currency=`), `cart/actions/`, `pwa/install-event/` (30/min) and `push/{vapid-public-key,subscribe,unsubscribe}/`. The mock cart is keyed by the dev-only cookie `sharwa_mock_cart`.
+- `storefrontAdapter()` (`src/lib/bff/storefront-adapter.ts`) serves every new `/api/bff/*` storefront row. It tries the documented `/api/v1` target first, falls back to the mock only on 404/405/501 or when the target is unreachable, and returns 501 when mocks are off. The dashboard `mockRoute` now calls `revalidateTag(storeTag(store), {expire: 0})` after a successful write.
+
+## T088 — Theme engine
+
+- `presets.ts`: the 9 presets copied from Django `theme_presets.py` (keys, Arabic names, hex values, fonts, `design_style`), plus `STORE_FONTS` (11) and `DESIGN_STYLES`.
+- `tokens.ts` `buildStoreTheme()`:
+  - It derives `--background … --ring`, `--brand-50…900`, `--store-link`, semantic colours, `--radius`, `--store-bw` and density.
+  - Ink is `#09090B` or `#FAFAFA`, chosen by contrast. `--muted-foreground` is lifted to AA against `--muted`, the stricter of the two surfaces it sits on.
+  - An invalid colour or an incomplete `brand_shades` falls back to zinc.
+- `apply-theme.tsx`: the variables go inline on the `[data-store-theme]` root and in a hoisted `<style precedence>` on `body`, so portals (sheet, dialog, drawer) inherit them. The `dark:` variant is excluded on store pages.
+- `fonts.ts`: 10 `next/font/local` families (Arabic subset, 400/700, `preload: false`). The eleventh is the platform's IBM Plex. A store fetches only what its theme names: `storefront-check` sees `cairo, amiri` on noor.
+
+## T089 — Home, chrome, listings
+
+- **Home** renders the merchant's sections by `order`: hero, category strip, featured, latest, slider, banner grid, product grid and offers. The inactive section leaves no gap, and `show_on_mobile=false` is `hidden md:block`. An empty store gets a notice, and the page carries Store JSON-LD.
+- **Chrome:**
+  - An announcement line, with speeds, a static mode and pause on hover, shown according to the page-kind flags.
+  - A header with logo or name, search, currency, wishlist and cart.
+  - On phones, a 5-item bottom bar (≥ 44px each) that steps aside on checkout.
+  - A footer and a WhatsApp button.
+- **Search:** header suggestions with an AbortController and a `/` shortcut. Zero-result searches are logged locally.
+- **Listings** (`c/[id]`, `products`, `search`):
+  - nuqs facets with `shallow:false`, so the URL is the shareable state.
+  - Server pagination; a page past the end redirects to the last page.
+  - On phones, a filters drawer with a live «عرض N منتجاً» count.
+  - A breadcrumb and a hidden `h2` so the cards' `h3` keep the heading order.
+
+## T090 — PDP
+
+- **Gallery:** `next/image` at fixed ratios; the first image is `priority`. Choosing a variant brings its image into view.
+- **Buy box:**
+  - **Options:**
+    - `sizes_list`/`colors_list` (Ready), then `attributes`/`variants` from the mock.
+    - Unavailable options stay visible: struck through and `aria-disabled`.
+    - A missing required option focuses its group and shows «اختر المقاس أولاً.».
+  - **Price and quantity:**
+    - Quantity is clamped to stock.
+    - The `?v=&qty=` URL state is shareable.
+    - Deposit products show «المطلوب الآن / المستحق عند الاستلام».
+  - **Actions:**
+    - «أضف إلى السلة» opens the cart.
+    - «اشترِ الآن» goes to `/checkout?mode=buy_now…`.
+    - A sticky bar on phones.
+  - **Extras:** delivery info, wishlist, share, and «نبّهني عند التوفر».
+- Each special block renders only when its data exists, with the server's amounts:
+  - tier table
+  - formula quote
+  - bundle parts
+  - 9 personalization field types
+  - auction (server-clock skew, anti-sniping)
+  - booking days and slots
+- Reviews (pending moderation after posting) and related rows.
+- Product and BreadcrumbList JSON-LD, plus `generateMetadata`. An unknown or unsold product shows «هذا المنتج غير متاح» (404).
+- **Seed tweaks** (`src/mocks/catalog/seed.ts`): «خاتم فضة» is now published (personalization), and «دهن عود كمبودي» is a `landing_page` template with a 100 deposit.
+
+## T091 — Cart
+
+- One TanStack key, `['store', store, 'cart']`. Updates are optimistic, run in series through a mutation scope, roll back on error, and offer a retry toast.
+- On desktop the cart is a `Sheet` at the start side (RTL); on phones it is a 92dvh drawer. There is also a full `/cart` page.
+- The panel shows lines with `display_*`, + / − / remove, and «إفراغ».
+- **Coupons:** the server's error text is shown as is (`OLD20` → «انتهت صلاحية هذا الكوبون»; `WELCOME10` applies).
+- **Offers and shipping:** «البخور 3 بـ 2», and a free-shipping progress bar.
+- **Abandoned cart:** one phone capture per store (`cart/contact`), and `?restore=` links.
+
+## T092 — Checkout
+
+- One page, built on RHF + Zod `CheckoutDraft`:
+  - **Contact:** contact details.
+  - **Fulfilment:** delivery or pickup tabs, address with geolocation, delivery methods.
+  - **Payment:** manual transfer with receipt, Sharwa Pay, Jeeb and COD.
+  - **Extras:** wallet, loyalty, gift.
+  - **Invoice:** a live invoice from `checkout/quote`, with `keepPreviousData`.
+- COD, wallet, Sharwa Pay and loyalty each confirm through a 6-digit OTP dialog. The mock code is `123456`, resend waits 60 s, and 5 wrong tries lock it.
+- **Submit:**
+  - The submit is `POST /api/bff/checkout` as multipart.
+  - It is idempotent on `client_uuid`.
+  - A 409 shows what changed and reloads the cart and invoice.
+  - Field errors focus their field.
+  - `next_action` decides where the buyer goes next: success, the gateway (`/checkout/result?order=`, which polls until the mock gateway settles), or transfer instructions.
+- The success page shows the order number, a tracking link, receipt upload and an optional push subscription.
+- Orders are stored in SAR with a locked `fx_from_sar` and shown in the display currency. The new order appears in the merchant's `/api/bff/orders`.
+
+## T093 — Tracking (M41)
+
+- `/track/[uuid]` is `noindex`. It shows the rollup, per-fulfilment shipments with an event timeline, pickup codes, a masked phone, the merchant's WhatsApp, a return-policy excerpt, and a 60 s poll while a shipment moves.
+- A gift order shows no amounts. An unknown UUID, or another store's, gets the same «لم نجد هذا الطلب» with a 404 status.
+
+## T094 — PWA (M44)
+
+- **Generated assets:** `manifest.webmanifest` comes from the config (`theme_color` = primary, `#D4AF37` on noor). `icon` is generated by `ImageResponse` with local Cairo WOFF.
+- **Service worker:** `sw.js` is network-only for cart, config and BFF, network-first for the API, and cache-first for media. It has an offline page and push handlers. `SKIP_WAITING` is deferred while on checkout. It is registered on the store origin only, after `load` + idle.
+- **Install prompt:**
+  - It never shows on the first visit or on checkout; it needs a second visit or a non-empty cart.
+  - Chrome/Android uses `beforeinstallprompt`; iOS gets a one-time steps drawer.
+  - A dismissal is respected for 14 days.
+  - Events go to `POST /api/v1/pwa/install-event/` with `source: 'nextjs_app'`.
+
+## Fixes made while verifying
+
+- **Currency re-pin race:** the switcher's sync effect re-fetched the cart in the *old* currency while the refresh was still in flight, so the cart flipped back. The effect now waits while a switch is pending.
+- **Dev `Date.now()` report:** the layout's uncached probe fetch finished (undici stamps `Date.now()`) inside Next's dev prefetch stage, and Next reported it as sync IO in the route. The storefront layout and `getTracking` now `await connection()`, the same as the dashboard and onboarding groups.
+- **`<html id="__next_error__">` on `notFound()`:** React rendered that document on the client and warned «Encountered a script tag» for next-themes' script. A root `ThemeProvider` wrapper (`src/components/providers/theme-provider.tsx`) now makes that script a data block when it is created in the browser.
+- **Mobile layout:**
+  - `grid-cols-1` on the PDP and checkout grids. The implicit `auto` track grew to the booking rail's content (122px of horizontal scroll).
+  - `min-w-0` on storefront fieldsets.
+- **Touch targets:** 44px for the header name link, the rating link, «سياسة الاسترجاع» and the checkout fulfilment tabs.
+- **File inputs:** a `FileField` replaces the native file input («Choose File · No file chosen» in the browser's locale) on receipts and personalization.
+- **Accessible name:** the currency switcher's name now starts with its visible text.
+- **`scripts/visual-check.ts`:** a radio or checkbox inside a `<label>` that is ≥ 44px tall is exempt, because the label is the hit area.
+- **Turbopack dev cache:** after a temporary debug edit in `node_modules` (reverted), the dev cache caused a reload loop («HMR hash mismatch»). Clearing `.next/dev` fixed it. This is noted only in case it happens on your machine.
+
+## T095 — Gates
+
+```
+$ npm run lint      → (no output)
+$ npx tsc --noEmit  → exit 0   (rm -rf .next/types first while `next dev` runs)
+$ SHARWA_CHROMIUM=… npx tsx scripts/storefront-check.ts 3300
+— 1. home
+✓ home renders the active sections (37,38,39,40,41,42,43,44,45)
+✓ sections follow `order` even though the API lists them out of order
+✓ the inactive section (46) is absent
+✓ show_on_mobile=false section is visible on desktop
+✓ at most two store font families fetched (cairo, amiri)
+✓ noor carries its preset (luxury_boutique)
+✓ show_on_mobile=false section is hidden under md
+✓ mobile tab bar visible under md
+✓ shop keeps its own tokens (modern_trust: #4F46E5 ≠ #D4AF37)
+✓ dashboard stays zinc (no store theme root, --primary #09090b)
+— 2. listing & search
+✓ facet writes the URL (brand=2) and narrows (16 منتجاً → 5 منتجاً)
+✓ the shared URL reproduces the same result
+✓ the facet is checked after reload
+✓ page past the end redirects to the last page (page=1)
+✓ an impossible search shows the empty state
+✓ header search suggests products (3)
+— 3. PDP · 4. cart
+✓ missing required option blocks the add with «اختر المقاس أولاً.»
+✓ nothing reached the cart
+✓ the out-of-stock size (M) is disabled
+✓ a valid add opens the cart with the line
+✓ the cart survives a reload (cookie)
+✓ OLD20 shows the server's expiry message
+✓ WELCOME10 applies
+✓ currency → USD re-prices the cart (207.00 ر.س → 55.20 $)
+✓ and back to SAR restores the amount
+— 5. checkout
+✓ COD + OTP places order #10481
+✓ the cart is empty after the order
+✓ manual transfer → receipt uploaded on the success page
+✓ jeeb redirects to the gateway return URL
+✓ the result page reads the settled status from the server («جديد»)
+✓ re-POSTing client_uuid returns the same order (#10484 / #10484)
+— 6. dashboard · 7. tracking
+✓ order #10481 is visible in the merchant's orders
+✓ unknown tracking uuid → 404 page
+✓ gift order tracking renders
+✓ the gift order shows no amounts
+— 8. PWA
+✓ manifest theme_color = #D4AF37
+✓ sw.js served as application/javascript; charset=utf-8
+✓ no install hint on the first visit
+✓ the iOS hint appears on the second visit
+✓ install events sent with source nextjs_app (ios_hint_shown)
+✓ never on checkout
+storefront-check: all passed
+$ … tenant-shell-check 3300   → ✓ 9   · settings-check → ✓ 23 · catalog-orders-check → ✓ 22
+$ npx next build               → ✓ (stop `next dev` and remove `.next/dev` first: its types clash with `.next/types`)
+```
+
+**Visual checks** (`npm run visual-check`, all passing):
+
+| Folder | Shots |
+|---|---|
+| `docs/visual-checks/09-storefront-home/` | home (desktop · tablet · mobile · mobile-dark), shop (isolation), category (4 sizes), empty search, filters drawer, categories drawer, about |
+| `docs/visual-checks/10-pdp/` | variants PDP (4 sizes), required-missing, bundle, personalization, auction, booking, landing, formula, sold-out, not-found (404) |
+| `docs/visual-checks/11-cart/` | full cart (4 sizes), empty, sheet (desktop sheet / phone drawer) |
+| `docs/visual-checks/12-checkout/` | checkout (4 sizes), empty, validation, COD OTP dialog, success with manual transfer (4 sizes) |
+| `docs/visual-checks/41-tracking/` | tracking (4 sizes), gift, not-found (404) |
+| `docs/visual-checks/44-pwa/` | offline, icon, install hint, iOS steps |
+
+Cart states use `--cookie sharwa_mock_cart=<id>` from a cart built with `POST /api/v1/cart/actions/`.
+
+**Lighthouse** (mobile, production build, `next start`, 3 runs each, Lighthouse 12.6):
+
+| Page | Performance | Accessibility | Best practices | SEO |
+|---|---|---|---|---|
+| `/` | 77 · 84 · 91 (one earlier run 97) | 100 | 100 | 100 |
+| `/p/1001` | 69 · 87 · 86 (one run 94) | 100 | 100 | 100 |
+| `/p/1019` | 72 · 87 · 81 | 100 | 100 | 100 |
+| `/c/1` | 81 · 85 · 85 | 98 → `heading-order`, fixed after the run | 100 | 100 |
+
+The **performance target (≥ 90) is not met here**. The scores are Lantern simulations and they swing ±15 on this container's CPU. The *observed* LCP is 0.25–0.5 s and CLS is ≤ 0.04. The simulated LCP (2.9–3.6 s) counts every script that ran before the first paint. The lever is less client JS on the PDP. Please measure on your machine (`npx next build && npx next start`, then `npx lighthouse http://<store>.localhost:3000/p/<id> --form-factor=mobile`) before deciding.
+
+## Deviations
+
+See the Phase 4 table in `tasks.md`. In short:
+
+- T086 has no tag.
+- Fonts are vendored (R-07).
+- No dark mode on store pages.
+- The currency preference is a cookie plus `?currency=` when it is present.
+- The wishlist is local.
+- The seed was tweaked.
+- Orders are stored in SAR with a locked rate.
+- Geolocation only, no map.
+- `customers/otp/send` is a proposed endpoint.
+- Tracking is at `/track/[uuid]`.
+- There is no merchant test push.
+- The Lighthouse performance target is open.
+
+## Owner decisions still open
+
+1. **PDP performance:** is it acceptable to split the PDP's below-the-fold client parts (reviews form, related rows, share) into `next/dynamic` chunks? That is the next step toward 90.
+2. **`customers/otp/send`:** confirm this as the buyer-OTP endpoint for reviews and back-in-stock, or name the Django route.
+3. **Currency in the URL:** should `?currency=` be appended to every storefront link, which is the literal reading of T089's «sticky»? Today the cookie carries it and the URL is honoured when it is present.
+
+---
+
 # Execution log — Phase 3E · M34 Store settings hub (T082–T085)
 
 **Date:** 2026-10-18 · **Branch:** `main` · **Base:** the 3D tree (see «Delivery» below) · **Status:** T083–T084 done; T085 gates pass — `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `scripts/settings-check.ts` **22/22** ✅ · `scripts/catalog-orders-check.ts` (3D regression) **21/21** ✅ · visual check **41 screenshots**, 0 console errors, 0 horizontal scroll, every mobile target ≥ 44px. Backend untouched. Mocks only (`x-sharwa-mock: 1`).

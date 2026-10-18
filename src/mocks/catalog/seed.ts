@@ -568,7 +568,7 @@ export function seedProducts(): { products: MockProduct[]; variants: MockVariant
   const byName = (name: string) => products.find((p) => p.name === name)!;
 
   // Lifecycle mix (FR-04.02): drafts, scheduled, archived.
-  for (const n of ["جاكيت جلد", "خاتم فضة", "حامل جوال للسيارة", "معمول تمر", "ساعة حائط", "دفتر ملاحظات جلد"]) {
+  for (const n of ["جاكيت جلد", "حامل جوال للسيارة", "معمول تمر", "ساعة حائط", "دفتر ملاحظات جلد"]) {
     byName(n).is_available = false;
   }
   byName("عباية مطرزة").published_at = isoFromNow(3);
@@ -615,8 +615,17 @@ export function seedProducts(): { products: MockProduct[]; variants: MockVariant
   const beads = byName("مسبحة كهرمان");
   Object.assign(beads, { is_auction: true, auction_status: "active", stock: "1.000", is_available: true } satisfies Partial<MockProduct>);
 
+  // Published (Phase 4) so the storefront has one personalizable product to show (M10 US-10.3.4).
   const ring = byName("خاتم فضة");
   Object.assign(ring, { is_personalizable: true } satisfies Partial<MockProduct>);
+
+  // One product on the single-column landing template (M10 US-10.7.3).
+  // …sold with a deposit, so a VISIBLE product exercises «المطلوب الآن / عند الاستلام» (M12 US-12.6.1).
+  Object.assign(byName("دهن عود كمبودي"), {
+    product_template: "landing_page",
+    payment_policy: "deposit",
+    deposit_required: "100.00",
+  } satisfies Partial<MockProduct>);
 
   const workshop = byName("ورشة تغليف هدايا");
   Object.assign(workshop, {

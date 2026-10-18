@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
-import { ThemeProvider } from "next-themes";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import { TOKENS } from "@/lib/tokens";
 import "./globals.css";
 

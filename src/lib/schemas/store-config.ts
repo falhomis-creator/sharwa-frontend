@@ -44,7 +44,20 @@ export const storeConfigSchema = z.object({
   whatsapp_number: z.string().nullable().optional(),
   announcement_text: z.string().nullable().optional(),
   enable_announcement_bar: z.boolean().optional().default(false),
-  sections: z.array(storeSectionSchema).optional().default([]),
+  // An unknown `section_type` (a newer Django) is dropped with a console warning instead of
+  // failing the whole config — FR-09.02. The probe must never 404 a store over one section.
+  sections: z
+    .array(z.unknown())
+    .optional()
+    .default([])
+    .transform((rows) =>
+      rows.flatMap((row) => {
+        const parsed = storeSectionSchema.safeParse(row);
+        if (parsed.success) return [parsed.data];
+        console.warn("[storefront] ignoring a section that does not match the contract", row);
+        return [];
+      }),
+    ),
   // [NEEDS BACKEND] extensions (M09/M11/M12/M19/M26)
   card_border_color: z.string().optional(),
   announcement_bg_color: z.string().optional(),
@@ -66,6 +79,7 @@ export const storeConfigSchema = z.object({
   tiktok_link: z.string().nullable().optional(),
   snapchat_link: z.string().nullable().optional(),
   about_us: z.string().nullable().optional(),
+  return_policy: z.string().nullable().optional(),
   timezone: z.string().optional(),
   week_start_day: z.enum(["sunday", "monday"]).optional(),
   gifting_enabled: z.boolean().optional(),

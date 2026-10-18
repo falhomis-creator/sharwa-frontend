@@ -2,7 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* `dark:` never applies on a storefront page (the store root and the dialogs portaled next to
+ * it): a store is painted in its merchant's palette whatever the visitor's system theme is
+ * (research R-09, M09 US-09.2). */
+@custom-variant dark (&:is(.dark *):not(:is(body:has([data-store-theme]), body:has([data-store-theme]) *)));
 
 /*
  * Sharwa design tokens — the ONLY place where raw color/radius values live
@@ -838,5 +841,65 @@
   }
   to {
     transform: translateX(calc(var(--marquee-dir, -1) * 50%));
+  }
+}
+
+/* ===========================================================================
+ * Storefront (T088 — M09 US-09.2). No colour literal here: every colour comes from
+ * the merchant tokens `StoreThemeRoot` writes inline. These rules only map the flat
+ * design-style tokens (radius/border width/density) and the two merchant fonts.
+ * ======================================================================== */
+[data-store-theme] {
+  --store-section-y: 2.5rem;
+  --store-grid-gap: 1rem;
+}
+[data-store-theme][data-density="compact"] {
+  --store-section-y: 2rem;
+  --store-grid-gap: 0.75rem;
+}
+[data-store-theme][data-density="roomy"] {
+  --store-section-y: 3.5rem;
+  --store-grid-gap: 1.5rem;
+}
+@media (min-width: 768px) {
+  [data-store-theme] {
+    --store-section-y: 3.5rem;
+  }
+  [data-store-theme][data-density="roomy"] {
+    --store-section-y: 5rem;
+  }
+}
+
+@layer components {
+  [data-store-theme] :is(h1, h2, h3),
+  [data-store-theme] .store-heading {
+    font-family: var(--store-font-heading);
+  }
+  /* The merchant colour as text, lifted to AA by the theme layer. */
+  .store-link {
+    color: var(--store-link);
+  }
+  /* Border width follows `design_style` (1px, or 2px for neo_brutalism). */
+  .store-frame {
+    border-style: solid;
+    border-width: var(--store-bw, 1px);
+  }
+  /* Horizontal rails (category strip, related rows, slider): snap, no visible scrollbar. */
+  .store-rail {
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+  }
+  .store-rail::-webkit-scrollbar {
+    display: none;
+  }
+  .store-rail > * {
+    scroll-snap-align: start;
+  }
+  /* aurora_glass: ONE translucent layer, on the header only (M09 US-09.2.3). */
+  [data-store-theme][data-style="aurora_glass"] .store-header {
+    background-color: color-mix(in srgb, var(--background) 82%, transparent);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
   }
 }

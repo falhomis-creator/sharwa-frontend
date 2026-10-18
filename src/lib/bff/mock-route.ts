@@ -1,5 +1,7 @@
 import "server-only";
+import { revalidateTag } from "next/cache";
 import { contextFromRequest, jsonResponse } from "@/lib/bff/upstream";
+import { storeTag } from "@/lib/cache";
 import { sessionFromRequest, storeHostFor } from "@/features/dashboard-shell/api/session";
 import type { Session } from "@/features/dashboard-shell/schemas";
 import { hasPermission, type PermissionKey } from "@/lib/access";
@@ -37,7 +39,13 @@ export async function mockRoute(
   ) {
     return mockJson({ detail: "ليست لديك صلاحية لهذا الإجراء." }, { status: 403 });
   }
-  return handler({ store: upstream.store, storeHost, session, url: new URL(request.url) });
+  const res = await handler({ store: upstream.store, storeHost, session, url: new URL(request.url) });
+  // A successful dashboard write (product, category, settings…) may change what the store
+  // shows: drop this store's cached storefront reads so the next visit is fresh (M09 SC-09.2).
+  if (upstream.store && request.method !== "GET" && request.method !== "HEAD" && res.ok) {
+    revalidateTag(storeTag(upstream.store), { expire: 0 });
+  }
+  return res;
 }
 
 /** A mock result → response: `{ok:true,data}` → 200 (or `status`), `{ok:false}` → DRF error body. */

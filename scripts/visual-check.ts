@@ -195,6 +195,9 @@ async function checkViewport(browser: Browser, vp: Viewport): Promise<Failure[]>
       if ((style.position === "absolute" || style.position === "fixed") && rect.width <= 1 && rect.height <= 1) continue;
       // inline links inside running text are exempt (prose)
       if (el.tagName === "A" && el.closest("p, li, td")) continue;
+      // A native radio/checkbox wrapped in its <label>: the label is the hit area.
+      const wrapper = el.tagName === "INPUT" ? el.closest("label") : null;
+      if (wrapper && wrapper.getBoundingClientRect().height >= 44) continue;
       if (rect.height < 44) {
         const label = (el.getAttribute("aria-label") ?? el.textContent ?? "").trim().slice(0, 40);
         smallTargets.push(`${el.tagName.toLowerCase()} "${label}" h=${Math.round(rect.height)}px`);

@@ -7,6 +7,8 @@ import {
 } from "@/lib/bff/upstream";
 import { isMocksOn } from "@/mocks/runtime";
 import { passthroughMock } from "@/mocks/passthrough";
+// Registers the storefront fixtures (catalog, cart, PWA/push) on the passthrough registry.
+import "@/mocks/storefront/passthrough";
 
 /**
  * Same-origin passthrough for the real `/api/v1/*` contract (contracts/bff-cross-cutting.md §2.1).
@@ -23,17 +25,19 @@ async function handle(request: Request, { params }: RouteContext<"/api/v1/[...pa
   const targetPath = `/api/v1/${segments}${segments.endsWith("/") ? "" : "/"}${url.search}`;
   const mockPath = `${segments.replace(/\/$/, "")}/`;
   const ctx = contextFromRequest(request);
+  // The upstream call consumes the body stream; a fixture that must read it gets a copy.
+  const forMock = isMocksOn() && request.body ? request.clone() : request;
 
   try {
     const res = await upstreamFetch(request, targetPath, ctx);
     if (res.status === 404 && isMocksOn()) {
-      const mocked = await passthroughMock(request, mockPath, ctx);
+      const mocked = await passthroughMock(forMock, mockPath, ctx);
       if (mocked) return stripBodyForHead(request, mocked);
     }
     return stripBodyForHead(request, forwardResponse(res));
   } catch (err) {
     if (err instanceof UpstreamUnavailableError && isMocksOn()) {
-      const mocked = await passthroughMock(request, mockPath, ctx);
+      const mocked = await passthroughMock(forMock, mockPath, ctx);
       if (mocked) return stripBodyForHead(request, mocked);
     }
     return stripBodyForHead(request, unavailableResponse());
