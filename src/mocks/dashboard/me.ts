@@ -1,6 +1,6 @@
 import { FEATURE_KEYS } from "@/lib/access";
 import type { Session } from "@/features/dashboard-shell/schemas";
-import { TENANT_FIXTURES } from "@/mocks/tenant/config";
+import { tenantFixture } from "@/mocks/tenant/config";
 
 /**
  * `GET /api/v1/auth/me/` fixture (M03 §7 — `[NEEDS BACKEND]`).
@@ -24,7 +24,7 @@ export const MOCK_STAFF_PERMISSIONS = [
 ] as const;
 
 export function storeNameFor(store: string | null): string {
-  const fixture = store ? TENANT_FIXTURES[store] : undefined;
+  const fixture = tenantFixture(store);
   return fixture?.config?.store_name ?? (store ? `متجر ${store}` : "متجري");
 }
 

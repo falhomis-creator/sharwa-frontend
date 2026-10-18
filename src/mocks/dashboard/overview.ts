@@ -5,6 +5,7 @@ import {
   type TodayMetrics,
 } from "@/features/dashboard-shell/schemas";
 import { displayMoney, fullName, int, isoDaysAgo, phone, pick, seeded } from "@/mocks/_fixtures";
+import { registeredStore } from "@/mocks/public/register";
 
 /**
  * `GET /api/v1/dashboard/overview/` fixture (M03 §7 — `[NEEDS BACKEND]`), built from
@@ -42,7 +43,8 @@ function seedOf(store: string | null): number {
 
 /** A store with no orders at all - the empty-overview state. */
 export function isEmptyStore(store: string | null): boolean {
-  return store === "shop";
+  // A store the mocked onboarding wizard just created has nothing in it yet (M02 → M03).
+  return store === "shop" || Boolean(registeredStore(store));
 }
 
 function newOrders(store: string, count: number): OverviewOrderRow[] {

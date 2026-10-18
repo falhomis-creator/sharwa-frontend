@@ -1,4 +1,5 @@
 import type { StoreConfig } from "@/lib/schemas/store-config";
+import { registeredStatus, registeredStore } from "@/mocks/public/register";
 
 /**
  * Tenant probe fixtures for `GET /api/v1/config/` (M47 T049).
@@ -91,10 +92,27 @@ export const TENANT_FIXTURES: Record<string, TenantFixture> = {
   closed: { outcome: "inactive" },
 };
 
-/** Fixture for a store slug (subdomain) — `undefined` when the slug is not a fixture. */
+/**
+ * Fixture for a store slug (subdomain) — `undefined` when the slug is not a fixture.
+ *
+ * Stores created through the mocked onboarding wizard (M02) resolve here too: 503 with
+ * their status token while the poll count says pending/provisioning, then a fresh
+ * zinc-default store once it says ready. Reading does not advance the poll count — only
+ * the status endpoint does — so the probe never races the wait page.
+ */
 export function tenantFixture(store: string | null): TenantFixture | undefined {
   if (!store) return undefined;
-  return TENANT_FIXTURES[store];
+  const fixed = TENANT_FIXTURES[store];
+  if (fixed) return fixed;
+  const registered = registeredStore(store);
+  if (!registered) return undefined;
+  if (registeredStatus(registered.polls) !== "ready") {
+    return { outcome: "provisioning", token: registered.status_token };
+  }
+  return {
+    outcome: "ok",
+    config: baseConfig({ store_name: registered.store_name, whatsapp_number: registered.merchant_phone }),
+  };
 }
 
 export const FIXTURE_STORES = Object.keys(TENANT_FIXTURES);

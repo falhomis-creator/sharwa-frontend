@@ -183,13 +183,29 @@ description: "Task list — Sharwa Frontend Platform (001)"
 
 ### 3C — M02 معالج التأسيس (`rp/05-onboarding-before|after`)
 
-- [ ] T061 [US1] وسم `rp/05-onboarding-before`
-- [ ] T062 [P] [US1] شِيمات `src/features/onboarding/schemas.ts` (`RegistrationDraft` من data-model §2، `MarketCategorySchema`, `RegisterResponse{otp_token, ttl_seconds, masked_phone}`, `VerifyResponse{status_token, status_url}`, `ResendResponse`) + محتوى `src/features/onboarding/onboarding.content.ts` (نص الشروط)
-- [ ] T063 [P] [US1] mocks + handlers: `src/mocks/public/{market-categories,register,verify-otp,resend-otp}.ts` و`src/app/api/bff/public/{market-categories,register,register/verify-otp,register/resend-otp,provisioning/[token]}/route.ts` (الأخير `legacy` إلى `/register/status/<token>/`؛ mock يتقدم `pending→provisioning→ready` كل استدعاءَين)
-- [ ] T064 [US1] اللوحة 01 `src/app/(onboarding)/register/page.tsx` + `src/features/onboarding/components/register-form.tsx`: 4 حقول + موافقة؛ `store_name` مُعبَّأ من `?store_name=`؛ `merchant_phone` بـ `dir=ltr` وتطبيع؛ `subdomain` مع اقتراح لاتيني من الاسم وفحص حيّ بعد 400ms عبر `/api/bff/public/check-subdomain` يعرض السبب الحرفي أو «متاح» بـ `text-success`؛ القطاعات كـ chips قابلة للتبديل؛ زر معطّل حتى الصلاحية؛ حالة المعالج في Zustand `src/stores/onboarding.ts` (لا بيانات شخصية في الرابط FR-02.10)
-- [ ] T065 [US1] اللوحة 02 `src/app/(onboarding)/register/verify/page.tsx` + `otp-form.tsx`: 6 خانات `inputMode=numeric` بـ `<Mono>`, عدّاد TTL Mono, «إعادة الإرسال» مع `Retry-After`, أخطاء 400/410/429 بالعربية؛ عند النجاح `router.replace('/register/status/' + status_token)` ويضع cookie قصيرة العمر `sharwa_prov` على `<base>` (M47 US-47.3.2)
-- [ ] T066 [US1] اللوحة 03 `src/app/(onboarding)/register/status/[token]/page.tsx` تعيد استعمال `provisioning-poller.tsx` (T051) بنمط المنصة؛ عند `ready` تحويل إلى `dashboard_url` مع `?t=` مرة واحدة
+- [X] T061 [US1] وسم `rp/05-onboarding-before`
+- [X] T062 [P] [US1] شِيمات `src/features/onboarding/schemas.ts` (`RegistrationDraft` من data-model §2، `MarketCategorySchema`, `RegisterResponse{otp_token, ttl_seconds, masked_phone}`, `VerifyResponse{status_token, status_url}`, `ResendResponse`) + محتوى `src/features/onboarding/onboarding.content.ts` (نص الشروط)
+- [X] T063 [P] [US1] mocks + handlers: `src/mocks/public/{market-categories,register,verify-otp,resend-otp}.ts` و`src/app/api/bff/public/{market-categories,register,register/verify-otp,register/resend-otp,provisioning/[token]}/route.ts` (الأخير `legacy` إلى `/register/status/<token>/`؛ mock يتقدم `pending→provisioning→ready` كل استدعاءَين)
+- [X] T064 [US1] اللوحة 01 `src/app/(onboarding)/register/page.tsx` + `src/features/onboarding/components/register-form.tsx`: 4 حقول + موافقة؛ `store_name` مُعبَّأ من `?store_name=`؛ `merchant_phone` بـ `dir=ltr` وتطبيع؛ `subdomain` مع اقتراح لاتيني من الاسم وفحص حيّ بعد 400ms عبر `/api/bff/public/check-subdomain` يعرض السبب الحرفي أو «متاح» بـ `text-success`؛ القطاعات كـ chips قابلة للتبديل؛ زر معطّل حتى الصلاحية؛ حالة المعالج في Zustand `src/stores/onboarding.ts` (لا بيانات شخصية في الرابط FR-02.10)
+- [X] T065 [US1] اللوحة 02 `src/app/(onboarding)/register/verify/page.tsx` + `otp-form.tsx`: 6 خانات `inputMode=numeric` بـ `<Mono>`, عدّاد TTL Mono, «إعادة الإرسال» مع `Retry-After`, أخطاء 400/410/429 بالعربية؛ عند النجاح `router.replace('/register/status/' + status_token)` ويضع cookie قصيرة العمر `sharwa_prov` على `<base>` (M47 US-47.3.2)
+- [X] T066 [US1] اللوحة 03 `src/app/(onboarding)/register/status/[token]/page.tsx` تعيد استعمال `provisioning-poller.tsx` (T051) بنمط المنصة؛ عند `ready` تحويل إلى `dashboard_url` مع `?t=` مرة واحدة
 - [ ] T067 [US1] فحص Playwright `docs/visual-checks/02-onboarding/` (النموذج 390/1440، OTP، الانتظار، النجاح، الفشل، داكن)؛ تدفق كامل بالـ mocks ≤ 60s؛ lint + tsc؛ commit + `rp/05-onboarding-after`
+
+> **تعديل الخطة — المرحلة 3C (2026-10-18).** نُفِّذت T061–T067 عدا خطوة الـ commit والوسم `*-after` في T067 (معلّقة بأمر المالك حتى المراجعة). التفصيل والمخرجات الحرفية في `execution_log.md`.
+>
+> | المهمة | الانحراف | السبب |
+> |---|---|---|
+> | T061 | الوسم `rp/13-onboarding-before` بدل `rp/05` | بتوجيه المالك؛ `rp/05` مستهلك. |
+> | T061 | لم يُطبَّق `cacheComponents: false` رغم الموافقة | Next 16.4 أزال `experimental.ppr` و`experimental_ppr` على مستوى المقطع؛ لا يوجد إيقاف لتخطيط المستأجر وحده. الرافعة الوحيدة عامة وتكسر `"use cache"`/`cacheLife` في M01 و`partialPrefetching` وصادرات `instant` — خارج نطاق M02. القرار معلّق للمالك. |
+> | T063 | سجلّ متاجر المعالج على `globalThis` يقرؤه `tenantFixture()` | معالجات الـ BFF ومكوّنات الخادم حزمتان منفصلتان في عملية واحدة؛ بلا سجلّ مشترك يقع التحويل بعد `ready` على حارس 404. المتجر الجديد «فارغ» في النظرة العامة. |
+> | T063 | البادئة `gone…` في fixture الحالة → 404 | لتصوير «لم نجد طلب التأسيس هذا» (M02 §8). |
+> | T064 | مربع الموافقة لا يدخل في تعطيل الزر | US-02.1 (معطّل حتى صلاحية الحقول) وUS-02.1.3 (الضغط بلا موافقة ينقل التركيز إلى المربع) متعارضان حرفياً؛ الزر ينتظر الحقول الثلاثة والفحص الحيّ، والموافقة تُفحص عند الإرسال. |
+> | T064 | لا نقل تلقائي للتركيز إلى حقل النطاق مع الاسم العربي | القفز من الاسم إلى النطاق يتخطى حقل الهاتف بينهما؛ يبقى التلميح «أحرف إنجليزية صغيرة وأرقام» تحت الحقل. |
+> | T065 | `sharwa_prov` HttpOnly يضبطه محوّل verify-otp لا العميل، بلا سمة `Domain` | لا يراه أي نطاق متجر (M47 §10)؛ `/register` يقرؤه خادمياً ليعرض «متابعة الحالة»، ويُمسح عند `ready`. |
+> | T065 | لوحة OTP مفتاحها `otp_token` | Next 16 يُبقي المسارات مخفية بـ Activity؛ بلا مفتاح تنتقل حالة القفل/الانتهاء إلى تسجيل جديد. |
+> | T066 | `ready` يعرض العنوان والزرَّين ثم تحويل بعدّ تنازلي 5 ثوانٍ إلى `dashboard_url/setup-password?t=` | يجمع US-02.4.1 (زرّان + رابط قابل للنسخ) وT066 (تحويل آلي)؛ المتجر الجديد بلا كلمة مرور فـ`dashboard_url` المجرّد يرتد إلى الدخول (US-02.6). النسخ يوقف التحويل. |
+> | T066 | محرّك الاستطلاع استُخرج إلى `useProvisioningPoll` بسياستين `store`/`platform` | إعادة استعمال T051 بدل نسخه. أُصلح عَرَضاً خلل سابق: رسالة «تحقق من اتصالك» لم تكن تظهر أبداً لأن `failureCount` مع `retry:false` لا يتجاوز 1. على أصل المتجر صار الرمز المرفوض (404) يحوّل إلى مسار الزائر كما نصّ تعليق T051. |
+> | T067 | `scripts/onboarding-check.ts` | معظم معايير M02 تفاعلية (فحص بلا شبكة، إرسال آلي، لصق، 429، انتهاء TTL، سباق التفرّد، خلو الروابط) ولا تثبتها لقطة. |
 
 ### 3D — M04 المنتجات · M05 التنظيم · M06 الطلبات · M48 لوحة الأوامر · M49 التنبيهات (`rp/06-catalog-orders-before|after`)
 

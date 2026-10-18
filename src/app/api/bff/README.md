@@ -13,7 +13,9 @@ Contract: `specs/001-sharwa-frontend-platform/contracts/bff-cross-cutting.md` §
 |---|---|---|
 | `public/check-subdomain` | legacy → mock fallback | M01, M02 |
 | `public/plans`, `public/stats` | target → mock fallback | M01 |
-| `public/provisioning/[token]` | legacy (`/register/status/<token>/`) → mock | M47, M02 |
+| `public/provisioning/[token]` | legacy (`/register/status/<token>/`) → mock; unknown token → 404; clears `sharwa_prov` on `ready` | M47, M02 |
+| `public/market-categories` | target (`/api/v1/public/market-categories/`) → mock | M02 |
+| `public/register`, `public/register/verify-otp`, `public/register/resend-otp` | target (`/api/v1/public/register/…`) → mock; verify sets `sharwa_prov` | M02 |
 | `public/reset-store-session` | local (expires a foreign `sessionid`) | M47 US-47.2.3 |
 | `auth/csrf` | legacy (`Set-Cookie: csrftoken` of `GET /dashboard/login/`) → mock | M47, M03 |
 | `auth/merchant/login`, `auth/staff/login`, `auth/logout` | target → mock | M03 |
