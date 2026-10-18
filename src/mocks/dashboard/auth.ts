@@ -17,11 +17,14 @@ export const MOCK_CSRF_TOKEN = "mock-csrf-token-for-local-dev";
 
 export const MOCK_MERCHANT_PASSWORD = "sharwa-local-demo";
 export const MOCK_STAFF_PHONE = "967770000001";
+/** «مدير المتجر» fixture (decision 2026-10-19): منى القحطاني (staff #4 in the M18/M22 seeds). */
+export const MOCK_MANAGER_PHONE = "967770000004";
 export const MOCK_STAFF_INACTIVE_PHONE = "967770000009";
 export const MOCK_OTP_CODE = "123456";
 export const MOCK_OTP_TOKEN = "otp-local-demo";
 
-export type MockSessionKind = "merchant" | "staff";
+/** `manager` is a staff session too (`kind: "staff"`); only the fixture behind it differs. */
+export type MockSessionKind = "merchant" | "staff" | "manager";
 
 export function mockSessionCookie(kind: MockSessionKind): string {
   return `${MOCK_SESSION_COOKIE}=${kind}; Path=/; HttpOnly; SameSite=Lax`;
@@ -32,7 +35,7 @@ export function clearedMockSessionCookie(): string {
 }
 
 export function parseMockSessionKind(value: string | undefined | null): MockSessionKind | null {
-  return value === "merchant" || value === "staff" ? value : null;
+  return value === "merchant" || value === "staff" || value === "manager" ? value : null;
 }
 
 export type MockAuthResult =
@@ -55,10 +58,11 @@ export function staffLoginMock(phone: unknown, password: unknown): MockAuthResul
   if (normalized === MOCK_STAFF_INACTIVE_PHONE) {
     return { ok: false, status: 403, body: { detail: "هذا الحساب غير مفعّل، تواصل مع مدير المتجر." } };
   }
-  if (normalized !== MOCK_STAFF_PHONE || password !== MOCK_MERCHANT_PASSWORD) {
+  const known = normalized === MOCK_STAFF_PHONE || normalized === MOCK_MANAGER_PHONE;
+  if (!known || password !== MOCK_MERCHANT_PASSWORD) {
     return { ok: false, status: 400, body: { detail: "رقم الهاتف أو كلمة المرور غير صحيحة." } };
   }
-  return { ok: true, kind: "staff" };
+  return { ok: true, kind: normalized === MOCK_MANAGER_PHONE ? "manager" : "staff" };
 }
 
 export function forgotPasswordMock(storePhone = "967770000011") {

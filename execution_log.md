@@ -1,3 +1,45 @@
+# Execution log — Phase 5 · owner decisions (2026-10-19)
+
+**Date:** 2026-10-19 · **Branch:** `main` · **Base:** the Phase 5 working tree (not yet committed) · **Status:** the seven open Phase 5 items are decided (the owner delegated all of them) and applied on mocks. Gates: `npm run lint` ✅ (0 problems) · `npx next typegen && npx tsc --noEmit` ✅ · new `scripts/phase5-decisions-check.ts` 24 ✓ (two runs in a row, 0 console errors) · passthrough replace-by-key unit check ✅ · regressions `tenant-shell` 9 · `settings` 23 · `catalog-orders` 22 · `storefront` 41 · `onboarding` 33 ✅. Backend untouched. No git run from the session.
+
+## Decisions
+
+| # | Item | Decision | Why |
+|---|---|---|---|
+| 1 | Owner-only screens without a permission key | **Stay owner-only. No new keys in `src/lib/access.ts`.** Sidebar and ⌘K **hide** them for staff (not disabled). The BFF keeps answering 403. One helper `isStoreOwner()` + `ownerOnly` on 25 nav items. | The 35 keys are Django's. A key the backend never grants can only ever say no. A disabled entry with «اطلب الصلاحية» is a dead end when no manager can grant it. When Django adds a key such as `settings.manage`, only the `ownerOnly` flags change. |
+| 2 | Demo fixtures | **Added a «مدير المتجر» session** (`sharwa_mock_session=manager`, login phone `967770000004`, staff #4 منى القحطاني, location 3). It has the full plan (39 features) and 27 manager keys. It does not have `orders.delete`, `staff.manage_roles`, `support.takeover_session` or `suppliers.approve`. The cashier stays as it was. | Plan features are store-wide, so staff screenshots can now show «forbidden» and «owner-only» rather than «feature off». Using an existing seeded member keeps self-approval and audit actors consistent. |
+| 3 | M19 `www.` | **Allowed.** Any label is now accepted on the merchant's own domain. The platform namespace `*.<base>` stays refused. `www.` gets a CNAME and the apex an A record (unchanged). | The reserved labels (www/api/admin/app) protect the platform's subdomains. `www.brand.com` is the most common storefront address. |
+| 4 | M25 contradictions | **No code change.** (a) 6 `not_yet_available` + `whatsapp_costs` as `coming_soon` = 7 disabled. Both counts hold, and «قريباً» differs from «غير متاح بعد». (b) Category keys are kept on top of `reports.view`. | Least privilege: sales, profit, inventory, customers and staff performance are separate keys in the backend exactly so a member can open the module without seeing margins. The manager fixture shows it: sales 200, profit 403. |
+| 5 | Two editing surfaces for Sharwa Pay / manual | **One: `/dashboard/payments`.** Settings → الدفع is now a read-only summary with «إدارة وسائل الدفع». ⌘K «إعداد: شروة باي / الدفع اليدوي» opens `/dashboard/payments` (new `managedAt` on `SectionMeta`). Staff no longer get those ⌘K entries. | The toggles depend on gateways and payout accounts, and «manual on with no active account» can only be caught there. Two forms on one row invite conflicting edits. `PATCH /settings/payments/` is now unused (README). |
+| 6 | Checkout delivery methods | **The M15 shipping state is the single source.** Checkout options, quote and order creation (M12), the tracking pickup (M41), M06 order detail, «تحويل إلى استلام» and the manual-order form options all read `checkoutDeliveryMethods` / `checkoutPickups` / `findPickup`. Prices are YER_NEW decimals, converted server-side. `METHOD_FEE_SAR` is gone. | A method the merchant adds or disables shows, or disappears, at checkout immediately. Inactive pickups are not offered but still name old orders. |
+| 7 | Passthrough registry | **Replace by key.** A `Map` keyed by exact path or `/source/flags`, with the first registration's position kept as the match order. | A hot-reloaded `/api/v1` fixture replaces its handler instead of hiding behind the stale one. |
+
+## Files
+
+- `src/lib/access.ts` — `isStoreOwner()` + the owner-only policy note.
+- `src/features/dashboard-shell/{navigation.ts,components/session-context.tsx,components/sidebar.tsx}` — `ownerOnly` on `NavItem`, `canOwnerOnly()`, hidden for staff.
+- `src/features/command-palette/{palette-index.ts,command-palette.tsx}` — same filter; `managedAt` paths.
+- `src/mocks/dashboard/{auth.ts,me.ts}` — `manager` session kind and fixture.
+- `src/features/integrations/schemas.ts` — reserved-label rule removed from `domainFormatError` (`RESERVED_LABELS` deleted, it had no other user).
+- `src/features/settings/{schemas.ts,components/explicit-sections.tsx}` — `managedAt`; `PaymentsSummary` replaces `PaymentsForm`.
+- `src/mocks/shipping/state.ts` — the read model (`checkoutDeliveryMethods`, `checkoutPickups`, `findPickup`).
+- `src/mocks/storefront/{checkout.ts,tracking.ts}`, `src/mocks/orders/state.ts`, `src/app/api/bff/orders/form-options/route.ts` — read the read model.
+- `src/mocks/passthrough.ts` — keyed registry.
+- `scripts/phase5-decisions-check.ts` (new), `src/app/api/bff/README.md`, `specs/001-sharwa-frontend-platform/tasks.md`.
+
+## Verification notes
+
+- This session's shell on the device was down, so the work ran on a copy: the GitHub Phase 4 tree with every Phase 5 file overlaid. The device file bridge cannot reach files more than 7 folders deep, which covers 81 dashboard `page.tsx`/`layout.tsx` wrappers and 23 deep BFF routes (e.g. `shipping/carriers/[code]/test`). None of them were edited. Thin stand-in pages were used only inside the copy for the browser runs and were not written back.
+- For that reason `shipping`, `payments` and `domains` were run here only up to the first deep route they call: everything before it passed, and the stop is a missing file in the copy. **Run the full Phase 5 suite once on your machine** (commands in the hand-off message). `staff`, `customers`, `theme`, `marketing`, `inventory`, `locations`, `returns`, `reports`, `wallets` and `engagement` were not touched by these decisions.
+- Fees seen at checkout now follow M15 prices (2500 / 1500 YER_NEW converted at the store's rate) instead of the old 25 / 15 SAR constants. Totals change accordingly; no check asserted the old amounts.
+
+## Backend notes (for `C:\sharwa_saas`, read-only from here)
+
+- Owner-only areas: if staff delegation is wanted later, add keys such as `settings.manage`, `payments.manage`, `shipping.manage` and `storefront.design` to the permission catalog. The frontend then swaps `ownerOnly` for `permission`.
+- Payments: keep ONE write endpoint for `enable_sharwa_pay` / `enable_manual_payment` (proposed `PATCH /store/payments/`); drop the M34 `PATCH /settings/payments/` proposal.
+
+---
+
 # Execution log — Phase 5 · US3 daily management: M07 · M08 · M13 · M14 · M15 · M18 · M19 · M21 · M22 · M24 · M25 · M35 · M42 (T096–T134)
 
 **Date:** 2026-10-18 · **Branch:** `main` · **Base:** the Phase 4 commit · **Status:** T096–T134 done on mocks (`x-sharwa-mock: 1`). Gates: `npm run lint` ✅ (0 errors, 0 warnings) · `npx tsc --noEmit` ✅ · 13 module functional checks ✅ · visual checks in 13 folders ✅ · regressions `tenant-shell` 9 · `catalog-orders` 22 · `settings` 23 · `onboarding` 33 · `storefront` 41 ✅. Backend untouched (`C:\sharwa_saas` not opened this phase). No git run from the session.
@@ -62,6 +104,8 @@ Note: the mocks keep state in the dev server's memory; check runs add rows (test
 See the Phase 5 table in `tasks.md`.
 
 ## Owner decisions still open
+
+All seven answered on 2026-10-19 (delegated by the owner) — see «Phase 5 · owner decisions» at the top. Original wording kept below for the record.
 
 1. **Owner-only screens without a permission key** (locations, design, domains, webhooks, payments, shipping settings): the BFF enforces `kind === "merchant"`. Should staff managers get keys (a change to `src/lib/access.ts`), and should the sidebar hide these entries for staff?
 2. **Demo fixtures:** the cashier's plan lacks `multi_location`, `staff_rbac`, `reports` and `customer_wallets`, so staff screenshots show "feature off" rather than "forbidden". Add a manager fixture with these features?

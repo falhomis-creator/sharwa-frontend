@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import { hasFeature, hasPermission, type FeatureKey, type PermissionKey } from "@/lib/access";
+import { hasFeature, hasPermission, isStoreOwner, type FeatureKey, type PermissionKey } from "@/lib/access";
 import type { Session } from "@/features/dashboard-shell/schemas";
 
 /**
@@ -29,5 +29,7 @@ export function useAccess() {
     canFeature: (key?: FeatureKey) => (key ? hasFeature(session, key) : true),
     canPermission: (key?: PermissionKey) =>
       key ? hasPermission({ kind: session.kind, features: session.features, permissions: session.staff?.permissions }, key) : true,
+    /** Owner-only destinations (see `isStoreOwner`): `false`/absent → always allowed. */
+    canOwnerOnly: (ownerOnly?: boolean) => !ownerOnly || isStoreOwner(session),
   };
 }

@@ -42,7 +42,7 @@ export function Sidebar({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const { canFeature, canPermission } = useAccess();
+  const { canFeature, canPermission, canOwnerOnly } = useAccess();
   const sidebar = useShellStore((s) => s.sidebar);
   const expandedGroups = useShellStore((s) => s.expandedGroups);
   const toggleGroup = useShellStore((s) => s.toggleGroup);
@@ -61,10 +61,11 @@ export function Sidebar({
   // for a cashier). A group with a MIX still renders, with the denied items disabled and
   // explained by a tooltip (T056). Groups the backend does not gate at all stay visible:
   // inventing a permission key for them would be a field that no discovery supports.
+  // Owner-only items are dropped for staff like a feature that is off — nothing to request.
   const visibleGroups = NAVIGATION.filter((group) => {
     if (!canFeature(group.feature)) return false;
     if (group.items.length === 0) return canPermission(group.permission);
-    const withFeature = group.items.filter((item) => canFeature(item.feature));
+    const withFeature = group.items.filter((item) => canFeature(item.feature) && canOwnerOnly(item.ownerOnly));
     if (withFeature.length === 0) return false;
     return withFeature.some((item) => canPermission(item.permission));
   });
@@ -124,6 +125,7 @@ export function Sidebar({
                 counters={counters}
                 canFeature={canFeature}
                 canPermission={canPermission}
+                canOwnerOnly={canOwnerOnly}
                 onNavigate={onNavigate}
               />
             </li>
@@ -190,6 +192,7 @@ function SidebarGroupRow({
   counters,
   canFeature,
   canPermission,
+  canOwnerOnly,
   onNavigate,
 }: {
   group: NavGroup;
@@ -200,11 +203,12 @@ function SidebarGroupRow({
   counters: Counters | undefined;
   canFeature: (key?: NavGroup["feature"]) => boolean;
   canPermission: (key?: NavGroup["permission"]) => boolean;
+  canOwnerOnly: (ownerOnly?: boolean) => boolean;
   onNavigate?: () => void;
 }) {
   const groupAllowed = canPermission(group.permission);
   const count = counterValue(counters, group.counter);
-  const items = group.items.filter((item) => canFeature(item.feature));
+  const items = group.items.filter((item) => canFeature(item.feature) && canOwnerOnly(item.ownerOnly));
   const groupActive = items.some((item) => isActive(item.path)) || (group.path ? isActive(group.path) : false);
   // Only the most specific match is marked (`/products/organization` must not also light up
   // «جميع المنتجات» at `/products`).

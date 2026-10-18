@@ -12,8 +12,10 @@ import { FIXTURE_NOW, nextId, storeState } from "@/mocks/store-state";
  * M15 — الشحن والمناطق والمندوبون (T108). Every row is `[NEEDS BACKEND]` (M15 §7): one
  * per-store bag on `globalThis` like the other dashboard fixtures. Delivery methods and
  * pickup locations are seeded from the M06 constants (`DELIVERY_METHODS`,
- * `PICKUP_LOCATIONS` — same ids and names) so the orders screens stay coherent; the
- * storefront checkout mock still reads its own constants (follow-up to unify).
+ * `PICKUP_LOCATIONS` — same ids and names) so the orders screens stay coherent. From then
+ * on THIS state is the one source: the storefront checkout (M12), the tracking page (M41)
+ * and the M06 order detail read methods and pickups through `checkoutDeliveryMethods`,
+ * `checkoutPickups` and `findPickup` below (decision 2026-10-19, Phase 5 open item 6).
  * The fee fields are NOT duplicated: they live in the M34 settings mock.
  * Money is formatted here (`display_*`, explicit currency) — the UI never formats it.
  */
@@ -275,6 +277,25 @@ function seed(store: string | null): ShippingState {
 
 export function shippingState(store: string | null): ShippingState {
   return storeState(store, "shipping", () => seed(store));
+}
+
+// ── read model for the storefront and the orders screens ────────────────────────────
+/** Active methods in the order M15 lists them; `price` is a YER_NEW decimal string. */
+export function checkoutDeliveryMethods(store: string | null): MockDeliveryMethod[] {
+  return shippingState(store).methods.filter((m) => m.is_active);
+}
+
+/** Active pickup points, in the merchant's `sort_order`. */
+export function checkoutPickups(store: string | null): MockPickup[] {
+  return shippingState(store)
+    .pickups.filter((p) => p.is_active)
+    .sort((a, b) => a.sort_order - b.sort_order);
+}
+
+/** Any pickup by id, active or not — an order placed before it was disabled still names it. */
+export function findPickup(store: string | null, id: number | null | undefined): MockPickup | undefined {
+  if (id === null || id === undefined) return undefined;
+  return shippingState(store).pickups.find((p) => p.id === id);
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────────────

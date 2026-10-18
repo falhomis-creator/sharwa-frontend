@@ -48,6 +48,11 @@ export interface NavItem {
   shortcut?: string;
   /** Rendered disabled with a «قريباً» tag instead of hidden. */
   comingSoon?: boolean;
+  /**
+   * Store structure/money with no backend permission key → the owner's alone
+   * (`isStoreOwner` in `src/lib/access.ts`). HIDDEN for staff, never shown disabled.
+   */
+  ownerOnly?: boolean;
 }
 
 export interface NavGroup {
@@ -194,6 +199,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "products.locations",
+        ownerOnly: true,
         title: "المواقع",
         path: "/dashboard/locations",
         keywords: ["فرع", "مستودع", "location_list"],
@@ -240,6 +246,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "marketing.abandoned",
+        ownerOnly: true,
         title: "السلات المتروكة والاسترداد الآلي",
         path: "/dashboard/marketing/abandoned-carts",
         keywords: ["سلة متروكة", "abandoned_carts", "تذكير"],
@@ -247,6 +254,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "marketing.tracking",
+        ownerOnly: true,
         title: "أدوات التتبع",
         path: "/dashboard/marketing/tracking",
         keywords: ["بكسل", "ميتا", "تيك توك", "tracking_tools"],
@@ -268,6 +276,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "marketing.campaigns",
+        ownerOnly: true,
         title: "الحملات التسويقية",
         path: "/dashboard/marketing/campaigns",
         keywords: ["حملة", "رسائل", "campaigns_list"],
@@ -275,6 +284,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "marketing.timeline",
+        ownerOnly: true,
         title: "الجدول الزمني",
         path: "/dashboard/marketing/timeline",
         keywords: ["مناسبات", "timeline_list"],
@@ -289,6 +299,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "marketing.loyalty",
+        ownerOnly: true,
         title: "برنامج الولاء",
         path: "/dashboard/marketing/loyalty",
         keywords: ["نقاط", "ولاء", "loyalty_settings"],
@@ -296,6 +307,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "marketing.gifting",
+        ownerOnly: true,
         title: "الإهداء",
         path: "/dashboard/marketing/gifting",
         keywords: ["هدية", "gift_settings"],
@@ -333,6 +345,7 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       {
         key: "storefront.design",
+        ownerOnly: true,
         title: "تصميم المتجر",
         path: "/dashboard/design",
         keywords: ["ثيم", "ألوان", "خطوط", "شعار", "قالب", "storefront_design"],
@@ -340,6 +353,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "storefront.sections",
+        ownerOnly: true,
         title: "ترتيب الأقسام",
         path: "/dashboard/design?tab=sections",
         keywords: ["أقسام", "بانر", "سلايدر", "save_store_sections"],
@@ -539,6 +553,7 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       {
         key: "shipping.fees",
+        ownerOnly: true,
         title: "رسوم التوصيل",
         path: "/dashboard/shipping",
         keywords: ["رسوم", "طرق التوصيل", "إعدادات الشحن", "shipping_settings"],
@@ -546,6 +561,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "shipping.pickup",
+        ownerOnly: true,
         title: "نقاط الاستلام",
         path: "/dashboard/shipping/pickup-locations",
         keywords: ["استلام", "pickup_locations"],
@@ -553,6 +569,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "shipping.companies",
+        ownerOnly: true,
         title: "شركات الشحن",
         path: "/dashboard/shipping/providers?tab=companies",
         keywords: ["شركة شحن", "أرامكس", "سمسا", "shipping_companies"],
@@ -560,6 +577,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "shipping.providers",
+        ownerOnly: true,
         title: "مندوبو الشحن",
         path: "/dashboard/shipping/providers?tab=agents",
         keywords: ["مندوب", "shipping_providers"],
@@ -567,6 +585,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "shipping.sharwa",
+        ownerOnly: true,
         title: "شروة شيب",
         path: "/dashboard/shipping/zones",
         keywords: ["مناطق شروة شيب", "بوليصة", "sharwa_ship"],
@@ -574,12 +593,14 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "shipping.packaging",
+        ownerOnly: true,
         title: "ملفات التغليف",
         path: "/dashboard/shipping/packaging",
         keywords: ["تغليف", "packaging_profiles"],
       },
       {
         key: "shipping.zones",
+        ownerOnly: true,
         title: "مراجعة المناطق",
         path: "/dashboard/shipping/zone-review",
         keywords: ["منطقة", "خريطة", "نطاق محظور", "SLA", "zone_review"],
@@ -592,6 +613,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "shipping.carriers",
+        ownerOnly: true,
         title: "شركات الشحن الخارجية",
         path: "/dashboard/shipping/carriers",
         keywords: ["أرامكس", "سمسا", "webhook", "carrier_settings"],
@@ -627,6 +649,7 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       {
         key: "payments.gateways",
+        ownerOnly: true,
         title: "ربط بوابات الدفع",
         path: "/dashboard/payments",
         keywords: ["بوابة", "دفع", "جيب", "الكريمي", "شروة باي", "payment_gateways"],
@@ -634,6 +657,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "payments.wallets",
+        ownerOnly: true,
         title: "المحافظ المحلية",
         path: "/dashboard/payments/payout-accounts?tab=wallet",
         keywords: ["محفظة محلية", "حساب استلام", "local_wallets"],
@@ -641,6 +665,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "payments.bank",
+        ownerOnly: true,
         title: "التحويل البنكي",
         path: "/dashboard/payments/payout-accounts?tab=bank",
         keywords: ["تحويل بنكي", "حساب بنكي", "آيبان", "bank_transfers"],
@@ -669,12 +694,14 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "tools.domains",
+        ownerOnly: true,
         title: "النطاقات",
         path: "/dashboard/settings/domains",
         keywords: ["نطاق", "دومين", "DNS", "ربط نطاق", "domain"],
       },
       {
         key: "tools.webhooks",
+        ownerOnly: true,
         title: "Webhooks",
         path: "/dashboard/settings/webhooks",
         keywords: ["webhook", "ويب هوك", "نقطة نهاية", "تكامل صادر"],
@@ -696,6 +723,7 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       {
         key: "wallet.merchant",
+        ownerOnly: true,
         title: "محفظة المتجر",
         path: "/dashboard/wallet",
         keywords: ["رصيد", "سحب", "merchant_wallet"],
@@ -703,6 +731,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "wallet.withdrawals",
+        ownerOnly: true,
         title: "طلبات السحب",
         path: "/dashboard/wallet/withdrawals",
         keywords: ["سحب", "طلب سحب", "withdrawal"],
@@ -710,6 +739,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "wallet.dues",
+        ownerOnly: true,
         title: "المستحقات للمنصة",
         path: "/dashboard/wallet/dues",
         keywords: ["عمولة", "رسوم التطبيقات", "مستحقات", "dues"],

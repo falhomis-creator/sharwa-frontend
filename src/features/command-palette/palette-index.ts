@@ -19,7 +19,11 @@ export interface PageEntry {
   shortcut?: string;
 }
 
-export function buildPageIndex(canFeature: (k?: FeatureKey) => boolean, canPermission: (k?: PermissionKey) => boolean): PageEntry[] {
+export function buildPageIndex(
+  canFeature: (k?: FeatureKey) => boolean,
+  canPermission: (k?: PermissionKey) => boolean,
+  canOwnerOnly: (ownerOnly?: boolean) => boolean = () => true,
+): PageEntry[] {
   const out: PageEntry[] = [
     { key: OVERVIEW_ITEM.key, title: OVERVIEW_ITEM.title, path: OVERVIEW_ITEM.path, group: "اللوحة", keywords: OVERVIEW_ITEM.keywords, comingSoon: false },
   ];
@@ -31,7 +35,7 @@ export function buildPageIndex(canFeature: (k?: FeatureKey) => boolean, canPermi
       continue;
     }
     for (const item of g.items) {
-      if (!canFeature(item.feature) || !canPermission(item.permission ?? g.permission)) continue;
+      if (!canFeature(item.feature) || !canPermission(item.permission ?? g.permission) || !canOwnerOnly(item.ownerOnly)) continue;
       out.push({
         key: item.key,
         title: item.title,
@@ -48,11 +52,13 @@ export function buildPageIndex(canFeature: (k?: FeatureKey) => boolean, canPermi
   for (const key of SETTINGS_SECTIONS) {
     const meta = SECTION_META[key];
     if (!canFeature(meta.feature)) continue;
+    // A field edited on another screen (payments → M14) opens THAT screen; staff cannot.
+    if (meta.managedAt && !canOwnerOnly(meta.ownerOnly)) continue;
     for (const f of meta.fields) {
       out.push({
         key: `settings.${key}.${f.id}`,
         title: `إعداد: ${f.label}`,
-        path: `/dashboard/settings/${key}#${f.id}`,
+        path: meta.managedAt ?? `/dashboard/settings/${key}#${f.id}`,
         group: `الإعدادات › ${meta.title}`,
         keywords: [f.label, meta.title, ...(f.keywords ?? [])],
         comingSoon: false,

@@ -12,10 +12,20 @@ import { tenantFixture } from "@/mocks/tenant/config";
  */
 type Handler = (request: Request, ctx: UpstreamContext, url: URL) => Promise<Response | undefined> | Response | undefined;
 
-const registry: Array<{ test: (path: string) => boolean; handle: Handler }> = [];
+/**
+ * Keyed by the matcher itself (the exact path, or the RegExp's `/source/flags`), so a module
+ * that registers again — a hot reload in dev — REPLACES its handler in place instead of
+ * appending a second one behind the stale first (decision 2026-10-19, Phase 5 open item 7).
+ * A `Map` keeps first-registration order, which is the match order.
+ */
+const registry = new Map<string, { test: (path: string) => boolean; handle: Handler }>();
+
+function registryKey(test: string | RegExp): string {
+  return typeof test === "string" ? `path:${test}` : `re:${test.source}/${test.flags}`;
+}
 
 export function registerPassthroughMock(test: string | RegExp, handle: Handler) {
-  registry.push({
+  registry.set(registryKey(test), {
     test: typeof test === "string" ? (p) => p === test : (p) => test.test(p),
     handle,
   });
@@ -23,7 +33,7 @@ export function registerPassthroughMock(test: string | RegExp, handle: Handler) 
 
 export async function passthroughMock(request: Request, path: string, ctx: UpstreamContext) {
   const url = new URL(request.url);
-  for (const entry of registry) {
+  for (const entry of registry.values()) {
     if (entry.test(path)) {
       const res = await entry.handle(request, ctx, url);
       if (res) return res;

@@ -1,6 +1,7 @@
 import { FULFILLMENT_STATE_LABELS, type FulfillmentState } from "@/features/orders/schemas";
 import { catalog } from "@/mocks/catalog/state";
-import { PICKUP_LOCATIONS, fulfillmentStatusRef, orderByUuid, type MockOrder } from "@/mocks/orders/state";
+import { fulfillmentStatusRef, orderByUuid, type MockOrder } from "@/mocks/orders/state";
+import { findPickup } from "@/mocks/shipping/state";
 import { readSettings } from "@/mocks/settings/state";
 import { ORDER_STATUS_LABELS_AR, orderMoney, orderTotalSar, publicOrder } from "@/mocks/storefront/checkout";
 
@@ -100,7 +101,7 @@ export function trackOrder(store: string | null, uuid: string) {
           : "قيد التنفيذ";
   const total = orderTotalSar(o);
   const upfront = o.deposit_upfront ? Number(o.deposit_upfront) : null;
-  const pickup = PICKUP_LOCATIONS.find((p) => p.id === o.pickup_location_id);
+  const pickup = findPickup(store, o.pickup_location_id);
   const policy = readSettings(store, "").return_policy;
   const excerpt = policy
     .split(/\n\s*\n/)
@@ -127,7 +128,7 @@ export function trackOrder(store: string | null, uuid: string) {
     customer_name: gift ? null : o.customer_name,
     customer_phone_masked: gift ? null : masked(o.customer_phone),
     address_text: o.address || null,
-    pickup_location: pickup ? { name: pickup.name, address: pickup.address, phone: "967770000033" } : null,
+    pickup_location: pickup ? { name: pickup.name, address: pickup.address, phone: pickup.phone } : null,
     items: o.lines.map((l) => ({ product_name: l.product_name, variant_label: l.variant_label, quantity: Number(l.quantity), image: imageOf(l.product_id) })),
     fulfillments,
     return_policy_excerpt: excerpt,

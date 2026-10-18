@@ -100,3 +100,22 @@ export function hasPermission(subject: AccessSubject, key: PermissionKey): boole
   if (subject.kind === "merchant") return true;
   return (subject.permissions ?? []).includes(key);
 }
+
+/**
+ * Owner-only areas (decision 2026-10-19, Phase 5 open item 1).
+ *
+ * Store structure and money — locations & routing, theme & sections, domains, webhooks,
+ * tracking pixels, payment gateways & payout accounts, the merchant wallet, shipping
+ * configuration and the owner-only marketing tools — have NO key among the backend's
+ * permissions, so they are the owner's alone. The frontend does not invent keys for them:
+ * a key Django never grants would be a gate that can only ever say no.
+ *
+ * Consequences, applied everywhere through this one helper:
+ * - the BFF answers 403 to staff (the server stays the final word);
+ * - the sidebar and ⌘K HIDE these entries for staff instead of showing them disabled —
+ *   unlike a missing permission, there is nothing a manager could grant;
+ * - when Django adds e.g. `settings.manage`, only `ownerOnly` flags flip to a permission.
+ */
+export function isStoreOwner(subject: Pick<AccessSubject, "kind">): boolean {
+  return subject.kind === "merchant";
+}

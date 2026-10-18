@@ -17,9 +17,6 @@ export const DOMAIN_STATUS_LABELS: Record<DomainStatus, string> = {
 };
 export const DOMAIN_KINDS = ["subdomain", "custom"] as const;
 
-/** Reserved subdomain labels (discovery 01 §1) — never accepted as a custom domain either. */
-export const RESERVED_LABELS = ["www", "api", "admin", "app"] as const;
-
 export const dnsRecordSchema = z.object({ type: z.string(), name: z.string(), value: z.string() });
 export type DnsRecord = z.infer<typeof dnsRecordSchema>;
 
@@ -66,7 +63,11 @@ export function domainFormatError(raw: string, baseDomain: string): string | nul
   if (!/^[a-z]{2,}$/.test(labels[labels.length - 1]!)) return "امتداد النطاق غير صحيح.";
   const base = baseDomain.toLowerCase();
   if (v === base || v.endsWith(`.${base}`)) return `لا يمكن ربط نطاق تحت ${base} — هذا نطاق المنصة.`;
-  if ((RESERVED_LABELS as readonly string[]).includes(labels[0]!) && labels.length > 2) return `«${labels[0]}» اسم محجوز، استخدم اسماً آخر للنطاق الفرعي.`;
+  // Decision 2026-10-19 (Phase 5 open item 3): `www.` — and any other label — is allowed on
+  // the merchant's OWN domain. The reserved labels of discovery 01 §1 (www/api/admin/app)
+  // protect the platform's `*.<base>` namespace, which the check above already refuses
+  // whole; `www.example.com` is the most common storefront address there is. A `www.`
+  // host gets a CNAME, the apex an A record (`recordsFor` in the mock).
   return null;
 }
 

@@ -121,14 +121,14 @@ function PaletteBody({
   const store = useStore();
   const origin = useStoreOrigin();
   const session = useSession();
-  const { canFeature, canPermission } = useAccess();
+  const { canFeature, canPermission, canOwnerOnly } = useAccess();
   const { resolvedTheme, setTheme } = useTheme();
   const member = session.kind === "merchant" ? "owner" : (session.staff?.full_name ?? "staff");
   const rKey = recentsKey(store, member);
   const recentsRaw = useRecentsRaw(rKey);
   const [selected, setSelected] = useState("");
 
-  const index = useMemo(() => buildPageIndex(canFeature, canPermission), [canFeature, canPermission]);
+  const index = useMemo(() => buildPageIndex(canFeature, canPermission, canOwnerOnly), [canFeature, canPermission, canOwnerOnly]);
   const allowedPaths = useMemo(() => new Set(index.map((e) => e.path)), [index]);
   // A recent destination that became blocked is dropped silently (M48 §8).
   const recents = useMemo(

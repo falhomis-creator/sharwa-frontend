@@ -2,8 +2,6 @@ import type { Currency } from "@/lib/schemas/money";
 import { normalizePhone } from "@/lib/format";
 import { catalog } from "@/mocks/catalog/state";
 import {
-  DELIVERY_METHODS,
-  PICKUP_LOCATIONS,
   insertStorefrontOrder,
   orderByClientUuid,
   orderByUuid,
@@ -12,6 +10,7 @@ import {
   type MockOrder,
 } from "@/mocks/orders/state";
 import { readSettings } from "@/mocks/settings/state";
+import { checkoutDeliveryMethods, checkoutPickups } from "@/mocks/shipping/state";
 import { storeState } from "@/mocks/store-state";
 import { findVisible, nowMs, unitPrice } from "@/mocks/storefront/catalog";
 import { cartTotals, getCart, priceLines, type MockCart } from "@/mocks/storefront/cart";
@@ -56,12 +55,14 @@ function payoutAccounts(store: string | null) {
 }
 
 // ── Delivery options ──────────────────────────────────────────────────────────────────
+/**
+ * Read from the M15 shipping state (one source — Phase 5 open item 6): a method the
+ * merchant adds or disables in «طرق التوصيل», or a pickup point, shows at checkout at once.
+ * Method prices are YER_NEW decimals, converted here like `default_delivery_fee`.
+ */
 function methodsFor(store: string | null) {
-  if (store !== "noor") return { methods: [] as typeof DELIVERY_METHODS, pickups: [] as typeof PICKUP_LOCATIONS };
-  return { methods: DELIVERY_METHODS, pickups: PICKUP_LOCATIONS };
+  return { methods: checkoutDeliveryMethods(store), pickups: checkoutPickups(store) };
 }
-
-const METHOD_FEE_SAR: Record<number, number> = { 1: 25, 2: 15 };
 
 export function deliveryOptions(store: string | null, cartId: string) {
   const cart = getCart(store, cartId);
@@ -73,11 +74,11 @@ export function deliveryOptions(store: string | null, cartId: string) {
     delivery_methods: methods.map((m) => ({
       id: m.id,
       name: m.name,
-      display_price: fmt(convert(METHOD_FEE_SAR[m.id] ?? 0, "SAR", cart.currency, rates), cart.currency),
+      display_price: fmt(convert(Number(m.price), "YER_NEW", cart.currency, rates), cart.currency),
       estimated_time: m.estimated_time,
-      is_sharwa_official: m.id === 1,
+      is_sharwa_official: m.is_sharwa_official,
     })),
-    pickup_locations: pickups.map((p) => ({ id: p.id, name: p.name, address: p.address, phone: "967770000033" })),
+    pickup_locations: pickups.map((p) => ({ id: p.id, name: p.name, address: p.address, phone: p.phone })),
     display_default_delivery_fee: fmt(convert(Number(s.default_delivery_fee), "YER_NEW", cart.currency, rates), cart.currency),
     free_shipping_applies: totals.freeShippingApplies,
     currency: cart.currency,
@@ -178,7 +179,7 @@ function buildInvoice(store: string | null, cart: MockCart, input: QuoteInput, r
   } else if (input.delivery_method_id) {
     const m = methods.find((x) => x.id === Number(input.delivery_method_id));
     if (!m) errors.delivery_method_id = ["طريقة التوصيل لم تعد متاحة، اختر غيرها."];
-    else delivery = convert(METHOD_FEE_SAR[m.id] ?? 0, "SAR", currency, rates);
+    else delivery = convert(Number(m.price), "YER_NEW", currency, rates);
   } else {
     delivery = convert(Number(s.default_delivery_fee), "YER_NEW", currency, rates);
   }
@@ -437,7 +438,7 @@ export function placeOrder(store: string | null, cartId: string, f: CheckoutFiel
     const prepaid = method === "sharwa_pay";
     const status: MockOrder["status"] = method === "manual" ? "awaiting_payment" : method === "jeeb" || method === "kuraimi" ? "pending_payment" : "new";
     const pickup = pickupId ? Number(pickupId) : null;
-    const deliveryMethod = DELIVERY_METHODS.find((d) => d.id === Number(f.delivery_method_id));
+    const deliveryMethod = methodsFor(store).methods.find((d) => d.id === Number(f.delivery_method_id));
     return {
       id,
       public_uuid,

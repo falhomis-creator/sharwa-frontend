@@ -5,6 +5,9 @@ import { displayMoney, fullName, int, phone, pick, seeded } from "@/mocks/_fixtu
 import { isEmptyStore } from "@/mocks/empty-store";
 import { FIXTURE_NOW, seedOf, storeState } from "@/mocks/store-state";
 import { catalog } from "@/mocks/catalog/state";
+// Live binding, read only inside functions: `shipping/state` seeds from the constants below.
+import { checkoutDeliveryMethods, checkoutPickups, findPickup } from "@/mocks/shipping/state";
+import { storeRates, toSar, round2 } from "@/mocks/storefront/money";
 import { effectivePrice } from "@/mocks/catalog/products";
 import {
   DEFAULT_FULFILLMENT_STATUSES,
@@ -354,7 +357,10 @@ export function toDetail(store: string | null, o: MockOrder): OrderDetail {
     },
     refundable_amount: compareDecimal(remaining, "0") > 0 ? remaining : "0.00",
     delivery_method_name: o.delivery_method_name,
-    pickup_location: PICKUP_LOCATIONS.find((p) => p.id === o.pickup_location_id) ?? null,
+    pickup_location: (() => {
+      const p = findPickup(store, o.pickup_location_id);
+      return p ? { id: p.id, name: p.name, address: p.address } : null;
+    })(),
     tracking_number: o.tracking_number,
     items: o.lines.map((l) => {
       const product = l.product_id === null ? undefined : cat.products.find((p) => p.id === l.product_id);
@@ -643,7 +649,7 @@ export function patchOrder(store: string | null, id: number, body: Body, actor: 
   if (error) return error;
   const order = o!;
   if ("pickup_location_id" in body) {
-    const loc = PICKUP_LOCATIONS.find((p) => p.id === Number(body.pickup_location_id));
+    const loc = checkoutPickups(store).find((p) => p.id === Number(body.pickup_location_id));
     if (!loc) return { ok: false, status: 400, body: { pickup_location_id: ["اختر نقطة الاستلام."] } };
     order.pickup_location_id = loc.id;
     order.delivery_method_name = null;
@@ -675,7 +681,7 @@ export function createOrder(store: string | null, body: Body, actor: string, can
   if (channel === "b2b_draft" && !canB2b) return { ok: false, status: 403, body: { detail: "ليست لديك صلاحية إنشاء مسودات الجملة." } };
   const delivery = body.delivery === "pickup" ? "pickup" : "delivery";
   if (delivery === "delivery" && !String(body.address ?? "").trim()) e.address = ["أدخل عنوان التوصيل."];
-  if (delivery === "pickup" && !PICKUP_LOCATIONS.some((p) => p.id === Number(body.pickup_location_id))) e.pickup_location_id = ["اختر نقطة الاستلام."];
+  if (delivery === "pickup" && !checkoutPickups(store).some((p) => p.id === Number(body.pickup_location_id))) e.pickup_location_id = ["اختر نقطة الاستلام."];
   const lines: MockLine[] = [];
   items.forEach((it, idx) => {
     const p = cat.products.find((x) => x.id === Number(it.product_id));
@@ -714,7 +720,10 @@ export function createOrder(store: string | null, body: Body, actor: string, can
   if (Object.keys(e).length) return { ok: false, status: 400, body: e };
   state.ids.order += 1;
   const id = state.ids.order;
-  const method = DELIVERY_METHODS.find((d) => d.id === Number(body.delivery_method_id)) ?? DELIVERY_METHODS[0]!;
+  // M15 is the source (Phase 5 open item 6); its prices are YER_NEW, this fixture stores SAR.
+  const activeMethods = checkoutDeliveryMethods(store);
+  const method = activeMethods.find((d) => d.id === Number(body.delivery_method_id)) ?? activeMethods[0] ?? null;
+  const methodFeeSar = method ? round2(toSar(Number(method.price), "YER_NEW", storeRates(store))).toFixed(2) : "0.00";
   const order: MockOrder = {
     id,
     public_uuid: `${(id * 2654435761 >>> 0).toString(16).padStart(8, "0")}-trk`,
@@ -732,7 +741,7 @@ export function createOrder(store: string | null, body: Body, actor: string, can
     lines,
     discount: null,
     coupon_code: null,
-    delivery_fee: delivery === "delivery" ? (method.id === 1 ? "25.00" : "15.00") : "0.00",
+    delivery_fee: delivery === "delivery" ? methodFeeSar : "0.00",
     deposit: null,
     paid: "0.00",
     wallet_used: null,
@@ -741,7 +750,7 @@ export function createOrder(store: string | null, body: Body, actor: string, can
     recipient_name: null,
     recipient_phone: null,
     gift_message: null,
-    delivery_method_name: delivery === "delivery" ? method.name : null,
+    delivery_method_name: delivery === "delivery" ? (method?.name ?? "توصيل المتجر") : null,
     pickup_location_id: delivery === "pickup" ? Number(body.pickup_location_id) : null,
     tracking_number: null,
     fulfillment_states: { 1: "pending" },

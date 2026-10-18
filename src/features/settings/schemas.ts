@@ -205,6 +205,11 @@ export interface SectionMeta {
   ownerOnly: boolean;
   /** The BFF route segment. */
   endpoint: string;
+  /**
+   * The fields are EDITED on another screen; this section only summarises them and links
+   * there, and ⌘K «إعداد: …» opens that screen directly (one editing surface per field).
+   */
+  managedAt?: string;
   /** Searchable field labels for ⌘K «إعداد: …» (US-34.1.3) → `#<field>` anchors. */
   fields: Array<{ id: string; label: string; keywords?: string[] }>;
 }
@@ -306,6 +311,7 @@ export const SECTION_META: Record<SettingsSection, SectionMeta> = {
     mode: "explicit",
     ownerOnly: true,
     endpoint: "payments",
+    managedAt: "/dashboard/payments",
     fields: [
       { id: "enable_manual_payment", label: "الدفع اليدوي", keywords: ["تحويل بنكي"] },
       { id: "enable_sharwa_pay", label: "شروة باي", keywords: ["sharwa pay"] },

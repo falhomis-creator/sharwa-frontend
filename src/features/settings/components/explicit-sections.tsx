@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Controller, useForm, useWatch, type FieldValues, type UseFormReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Switch } from "@/components/ui/switch";
@@ -13,16 +13,15 @@ import { numericInputClass } from "@/components/shared/field";
 import { Money } from "@/components/shared/money";
 import { Mono } from "@/components/shared/mono";
 import { isApiError } from "@/lib/api-error";
+import { cn } from "@/lib/utils";
 import { compareDecimal, isDecimal } from "@/lib/decimal";
 import {
   CURRENCIES,
   CURRENCY_LABELS,
   currencyInputSchema,
   multiLocationConflictSchema,
-  paymentsInputSchema,
   shippingInputSchema,
   type CurrencyInput,
-  type PaymentsInput,
   type SettingsSection,
   type ShippingInput,
   type StoreSettings,
@@ -289,84 +288,51 @@ function CurrencyForm({ settings }: { settings: StoreSettings }) {
 
 // ── Payments ─────────────────────────────────────────────────────────────────────────
 export function PaymentsSection() {
-  return <SectionLoader section="payments">{(s) => <PaymentsForm settings={s} />}</SectionLoader>;
+  return <SectionLoader section="payments">{(s) => <PaymentsSummary settings={s} />}</SectionLoader>;
 }
 
-function PaymentsForm({ settings }: { settings: StoreSettings }) {
-  const { canEdit, readOnlyReason } = useSectionAccess("payments");
-  const save = useSaveSettings();
-  const form = useForm<PaymentsInput>({
-    resolver: zodResolver(paymentsInputSchema),
-    defaultValues: { enable_manual_payment: settings.enable_manual_payment, enable_sharwa_pay: settings.enable_sharwa_pay },
-  });
-  const { confirming, setConfirming, afterSave } = useExplicitForm("payments", form);
-  const [busy, setBusy] = useState(false);
-  const [manual, sharwa] = useWatch({ control: form.control, name: ["enable_manual_payment", "enable_sharwa_pay"] });
-  const codOnly = !manual && !sharwa;
-  const sharwaOff = settings.enable_sharwa_pay && !sharwa;
+/**
+ * Decision 2026-10-19 (Phase 5 open item 5): ONE editing surface for the payment toggles.
+ * They are edited in `/dashboard/payments` (M14), next to the gateways and payout accounts
+ * they depend on — turning manual payment on with no active account is only catchable
+ * there. This section stays in the hub and in ⌘K as a read-only summary that links out,
+ * so a merchant who looks for «الدفع» under الإعدادات still finds it.
+ */
+function PaymentsSummary({ settings }: { settings: StoreSettings }) {
+  const { readOnlyReason } = useSectionAccess("payments");
+  const codOnly = !settings.enable_manual_payment && !settings.enable_sharwa_pay;
   useFocusHash(true);
-
-  async function confirm() {
-    setBusy(true);
-    try {
-      const saved = await save("payments", form.getValues());
-      afterSave({ enable_manual_payment: saved.enable_manual_payment, enable_sharwa_pay: saved.enable_sharwa_pay });
-      toast.success("حُفظت وسائل الدفع");
-      setConfirming(false);
-    } catch (err) {
-      setConfirming(false);
-      toast.error(isApiError(err) ? err.userMessage : "تعذّر الحفظ.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const rows: Array<{ key: keyof PaymentsInput; label: string; description: string }> = [
+  const rows: Array<{ key: "enable_manual_payment" | "enable_sharwa_pay"; label: string; description: string }> = [
     { key: "enable_manual_payment", label: "الدفع اليدوي", description: "تحويل بنكي أو محفظة محلية يرفع المشتري إيصاله وتؤكّده من الطلب." },
     { key: "enable_sharwa_pay", label: "شروة باي", description: "محفظة شروة: دفع فوري يصل إلى رصيد متجرك." },
   ];
 
   return (
-    <form onSubmit={form.handleSubmit(() => setConfirming(true))} data-testid="settings-payments">
+    <section data-testid="settings-payments">
       <SectionHeader section="payments" readOnlyReason={readOnlyReason} />
-      <DangerFrame title="يحدد كيف يدفع المشترون — يُحفظ بعد تأكيد.">
-        <fieldset disabled={!canEdit} className="min-w-0">
-          {rows.map((r) => (
-            <SettingRow key={r.key} label={r.label} description={r.description} htmlFor={r.key}>
-              <Controller
-                control={form.control}
-                name={r.key}
-                render={({ field }) => <Switch id={r.key} checked={field.value} onCheckedChange={field.onChange} disabled={!canEdit} className="self-end" />}
-              />
-            </SettingRow>
-          ))}
-        </fieldset>
-        <p className="py-4 text-xs text-muted-foreground">
-          البوابات وحسابات الاستلام في{" "}
-          <Link href="/dashboard/payments/gateways" className="text-foreground underline underline-offset-4">
-            إعدادات البوابات والحسابات
-          </Link>
-          .
-        </p>
-      </DangerFrame>
+      <div className="rounded-lg border border-border px-4 md:px-5">
+        {rows.map((r) => (
+          <SettingRow key={r.key} label={r.label} description={r.description}>
+            <span id={r.key} className="self-end text-sm" data-testid={`payments-state-${r.key}`}>
+              {settings[r.key] ? "مفعّل" : "متوقف"}
+            </span>
+          </SettingRow>
+        ))}
+        <div className="flex flex-col items-start gap-2 py-4">
+          <p className="text-xs text-muted-foreground">تُدار وسائل الدفع والبوابات وحسابات الاستلام من صفحة واحدة.</p>
+          {readOnlyReason ? null : (
+            <Link href="/dashboard/payments" className={cn(buttonVariants({ variant: "outline" }), "h-11 lg:h-9")} data-testid="manage-payments">
+              إدارة وسائل الدفع
+            </Link>
+          )}
+        </div>
+      </div>
       {codOnly ? (
         <p role="note" className="pt-3 text-sm text-warning" data-testid="cod-only-warning">
           لن يستطيع المشترون الدفع إلا عند الاستلام.
         </p>
       ) : null}
-      {canEdit ? <SaveBar dirty={form.formState.isDirty} disabled={busy} onSave={() => void form.handleSubmit(() => setConfirming(true))()} /> : null}
-      <ConfirmSave open={confirming} onOpenChange={setConfirming} title="تغيير وسائل الدفع" onConfirm={() => void confirm()} busy={busy} destructive={codOnly}>
-        <p>
-          الدفع اليدوي: {manual ? "مفعّل" : "متوقف"} · شروة باي: {sharwa ? "مفعّل" : "متوقف"}.
-        </p>
-        {codOnly ? <p className="text-warning">لن يستطيع المشترون الدفع إلا عند الاستلام.</p> : null}
-        {sharwaOff && settings.pending_payment_orders > 0 ? (
-          <p>
-            الطلبات الجارية (<Mono>{settings.pending_payment_orders}</Mono> بانتظار الدفع) لا تتأثر.
-          </p>
-        ) : null}
-      </ConfirmSave>
-    </form>
+    </section>
   );
 }
 
