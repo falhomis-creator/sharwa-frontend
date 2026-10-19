@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { inputClass, numericInputClass } from "@/components/shared/field";
+import { FilePicker } from "@/components/shared/file-picker";
 import { Mono } from "@/components/shared/mono";
 import { NativeSelect } from "@/components/ui/native-select";
 import { isApiError } from "@/lib/api-error";
@@ -116,11 +117,11 @@ function TopupForm() {
         ملاحظة (اختياري)
         <input name="reference_note" maxLength={200} className={`${inputClass} h-12`} />
       </label>
-      <label className="flex flex-col gap-1.5 text-sm">
-        صورة الإيصال
-        <input name="receipt_image" type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/*" className="text-sm file:me-3 file:h-12 file:rounded-lg file:border file:border-border file:bg-background file:px-4" aria-describedby="receipt_image" data-testid="topup-receipt" />
+      <div className="flex flex-col gap-1.5 text-sm">
+        <label htmlFor="topup-receipt">صورة الإيصال</label>
+        <FilePicker id="topup-receipt" name="receipt_image" accept=".jpg,.jpeg,.png,.webp,.gif,image/*" buttonClassName="h-12" aria-describedby="receipt_image" data-testid="topup-receipt" />
         <span className="text-xs text-muted-foreground">jpg، png، webp أو gif حتى 5 ميغابايت.</span>
-      </label>
+      </div>
       <FieldError id="receipt_image" text={errors.receipt_image} />
       <FieldError id="form" text={errors.form ?? errors.detail} />
       <button type="submit" className={payPrimary} disabled={topup.isPending} data-testid="topup-submit">

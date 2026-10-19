@@ -285,7 +285,7 @@ export function cellKey(planId: number, code: string): string {
   return `${planId}:${code}`;
 }
 
-/** Arabic names of the 39 keys (discovery 01 §7) — the catalogue the server would send. */
+/** Arabic names of the 39 keys (discovery 01 §7) + `pos` (Phase 7 decision 1) — the catalogue the server would send. */
 const FEATURE_NAMES: Record<string, string> = {
   refunds: "الاسترجاعات",
   inventory: "المخزون",
@@ -326,10 +326,11 @@ const FEATURE_NAMES: Record<string, string> = {
   social_channels: "قنوات التواصل",
   marketplaces: "الأسواق",
   dropshipping: "الدروبشيبينغ",
+  pos: "نقطة البيع",
 };
 
 /** Premium keys: `requires_plan=true` — only bite once `subscriptions_enabled` is on. */
-const REQUIRES_PLAN = new Set(["campaigns", "influencers", "affiliates", "customer_wallets", "reports", "multi_location", "staff_rbac", "social_channels", "marketplaces", "dropshipping", "sharwa_ship", "bookings"]);
+const REQUIRES_PLAN = new Set(["campaigns", "influencers", "affiliates", "customer_wallets", "reports", "multi_location", "staff_rbac", "social_channels", "marketplaces", "dropshipping", "sharwa_ship", "bookings", "pos"]);
 
 /** Fixture stores the earlier phases' checks depend on — never touched by the seed's overrides. */
 export const FIXTURE_SCHEMAS = ["noor", "shop", "pending1", "closed"] as const;

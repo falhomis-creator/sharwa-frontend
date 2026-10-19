@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { parseAsString, useQueryStates } from "nuqs";
-import { ChevronLeft } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { AccessGate } from "@/components/shared/access-gate";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
@@ -139,7 +139,7 @@ function ReportLine({ row }: { row: ReportRow }) {
       </span>
       <Mono className="hidden shrink-0 text-xs text-muted-foreground lg:inline">{row.code}</Mono>
       {open ? (
-        <ChevronLeft className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+        <ChevronRight className="size-4 shrink-0 text-muted-foreground rtl:rotate-180" aria-hidden />
       ) : (
         <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
           <span aria-hidden className="size-1.5 rounded-full bg-muted-foreground/50" />

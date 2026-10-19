@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
-import { ArrowLeft, Sparkles, Store } from "lucide-react";
+import { ArrowRight, Sparkles, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Mono } from "@/components/shared/mono";
@@ -116,8 +116,8 @@ export function StartForm({ className }: { className?: string }) {
         >
           <Sparkles className="size-4 text-emerald-100 transition-transform duration-300 group-hover/button:rotate-12" aria-hidden />
           <span>{busy ? "جارٍ التحويل…" : hero.cta}</span>
-          <ArrowLeft
-            className="size-5 transition-transform duration-300 group-hover/button:-translate-x-1"
+          <ArrowRight
+            className="size-5 transition-transform duration-300 rtl:group-hover/button:-translate-x-1 ltr:group-hover/button:translate-x-1 rtl:rotate-180"
             aria-hidden
           />
         </Button>

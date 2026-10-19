@@ -4,7 +4,7 @@ import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { ArrowRight, Moon, Sun, WifiOff } from "lucide-react";
+import { ArrowLeft, Moon, Sun, WifiOff } from "lucide-react";
 import { Mono } from "@/components/shared/mono";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/format";
@@ -60,7 +60,7 @@ export function PosFrame({ children }: { children: ReactNode }) {
       ) : null}
       <header className="flex min-h-14 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-border px-3 py-1.5 lg:px-4">
         <Link href="/dashboard" className="flex size-12 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground" aria-label="العودة إلى لوحة التاجر">
-          <ArrowRight className="size-5" strokeWidth={1.75} aria-hidden />
+          <ArrowLeft className="size-5 rtl:rotate-180" strokeWidth={1.75} aria-hidden />
         </Link>
         <div className="flex min-w-0 flex-col leading-tight">
           <span className="truncate text-sm font-medium">{session.storeName} · نقطة البيع</span>

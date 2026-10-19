@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Mono } from "@/components/shared/mono";
+import { ScrollX } from "@/components/shared/scroll-x";
 import { cn } from "@/lib/utils";
 import { useClients } from "@/features/platform-admin/api/hooks";
 import type { ClientOption } from "@/features/platform-admin/schemas";
@@ -14,14 +15,27 @@ import type { ClientOption } from "@/features/platform-admin/schemas";
  * the constitution: 44px rows, horizontal hairlines only, sticky header, numeric cells
  * end-aligned Mono. Lists here are short (≤ 40 rows), so no server pagination.
  */
-export function Table({ children, caption, testId, className }: { children: ReactNode; caption: string; testId?: string; className?: string }) {
+export function Table({
+  children,
+  caption,
+  testId,
+  className,
+  tableClassName,
+}: {
+  children: ReactNode;
+  caption: string;
+  testId?: string;
+  className?: string;
+  /** e.g. a `min-w-[…]` so a wide table scrolls inside its frame instead of squeezing every column on a phone. */
+  tableClassName?: string;
+}) {
   return (
-    <div className={cn("overflow-x-auto rounded-lg border border-border", className)}>
-      <table data-testid={testId} className="w-full border-collapse text-sm">
+    <ScrollX className={cn("rounded-lg border border-border", className)}>
+      <table data-testid={testId} className={cn("w-full border-collapse text-sm", tableClassName)}>
         <caption className="sr-only">{caption}</caption>
         {children}
       </table>
-    </div>
+    </ScrollX>
   );
 }
 
@@ -35,7 +49,7 @@ export function Th({ children, numeric, className }: { children?: ReactNode; num
 
 export function Td({ children, numeric, className, colSpan }: { children?: ReactNode; numeric?: boolean; className?: string; colSpan?: number }) {
   return (
-    <td colSpan={colSpan} className={cn("h-11 border-b border-border px-3 align-middle [tr:last-child_&]:border-b-0", numeric && "text-end", className)}>
+    <td colSpan={colSpan} className={cn("h-11 border-b border-border px-3 align-middle [tr:last-child_&]:border-b-0", numeric && "whitespace-nowrap text-end", className)}>
       {children}
     </td>
   );

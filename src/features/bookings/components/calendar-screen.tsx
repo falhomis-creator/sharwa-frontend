@@ -12,6 +12,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { ScrollX } from "@/components/shared/scroll-x";
 import { Mono } from "@/components/shared/mono";
 import { PageHeader } from "@/components/shared/page-header";
 import { isApiError } from "@/lib/api-error";
@@ -170,8 +171,8 @@ export function CalendarScreen() {
           {empty ? <EmptyState title="لا حجوزات هذا الأسبوع" description="تظهر هنا المواعيد التي يحجزها عملاؤك من صفحة الخدمة في متجرك." /> : null}
 
           {/* Week grid (md+, unless the day view is chosen) */}
-          <div className={cn("overflow-x-auto rounded-md border border-border", view === "day" ? "hidden" : "hidden md:block")} data-testid="week-grid">
-            <div className="grid min-w-[56rem]" style={{ gridTemplateColumns: "4rem repeat(7, minmax(0, 1fr))" }}>
+          <ScrollX className={cn("rounded-md border border-border", view === "day" ? "hidden" : "hidden md:block")} data-testid="week-grid">
+            <div className="grid min-w-[44rem]" style={{ gridTemplateColumns: "4rem repeat(7, minmax(0, 1fr))" }}>
               <div className="border-b border-border" />
               {days.map((d) => (
                 <div key={d} className={cn("border-b border-s border-border px-2 py-2 text-xs", d === today ? "font-semibold text-foreground" : "text-muted-foreground")} data-testid="day-head">
@@ -184,11 +185,11 @@ export function CalendarScreen() {
                 <DayColumn key={d} slots={byDay.get(d) ?? []} lo={range.lo} hi={range.hi} tz={tz} onOpen={setOpen} />
               ))}
             </div>
-          </div>
+          </ScrollX>
 
           {/* Day view: always on phones, on md+ when chosen */}
           <div className={cn("flex flex-col gap-3", view === "day" ? "" : "md:hidden")} data-testid="day-view">
-            <div className="flex gap-2 overflow-x-auto pb-1" role="radiogroup" aria-label="أيام الأسبوع">
+            <ScrollX scrollerClassName="flex gap-2 pb-1" cueAlign="center" role="radiogroup" aria-label="أيام الأسبوع">
               {days.map((d) => (
                 <button
                   key={d}
@@ -202,7 +203,7 @@ export function CalendarScreen() {
                   <Mono className="text-[11px]">{(byDay.get(d) ?? []).length}</Mono>
                 </button>
               ))}
-            </div>
+            </ScrollX>
             <h2 className="text-sm font-medium">{dayFmt.format(asUtcNoon(anchor))}</h2>
             {(byDay.get(anchor) ?? []).length === 0 ? (
               <p className="rounded-md border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">لا مواعيد في هذا اليوم.</p>
@@ -273,7 +274,7 @@ function SlotBlock({ slot, tz, onOpen, className, style }: { slot: Slot; tz: str
       data-testid="slot-block"
       data-status={slot.status}
       className={cn(
-        "flex min-h-11 flex-col items-start overflow-hidden rounded-sm border bg-background px-1.5 py-1 text-start text-xs hover:bg-muted lg:min-h-0",
+        "flex min-h-11 flex-col items-start overflow-hidden rounded-sm border bg-background px-1.5 py-1 text-start text-xs leading-5 hover:bg-muted lg:min-h-0",
         slot.status === "booked" && "border-solid border-foreground/70",
         slot.status === "held" && "border-dashed border-foreground/60",
         slot.status === "cancelled" && "border-dotted border-border text-muted-foreground line-through",

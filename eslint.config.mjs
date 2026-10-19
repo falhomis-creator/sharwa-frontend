@@ -1,6 +1,7 @@
 import { defineConfig, globalIgnores } from "eslint/config";
 import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
+import sharwa from "./eslint-rules/tenant-cache-key.js";
 
 /**
  * Constitution guards (I, II, VII, VIII, IX).
@@ -8,6 +9,7 @@ import nextTs from "eslint-config-next/typescript";
  *   (`src/components/ui`, reviewed manually per constitution II).
  * - Raw hex / oklch colors are forbidden everywhere except `src/app/globals.css`.
  * - Storefront and dashboard code must not import each other.
+ * - TanStack Query keys on store origins start with `storeKey(` (FR-47.09, T187).
  */
 const PHYSICAL_DIR_RE =
   "/(^|\\s|:)-?(ml|mr|pl|pr|left|right|text-left|text-right|rounded-l|rounded-r|rounded-tl|rounded-tr|rounded-bl|rounded-br|border-l|border-r|scroll-ml|scroll-mr|scroll-pl|scroll-pr|inset-l|inset-r)-/";
@@ -74,6 +76,11 @@ const eslintConfig = defineConfig([
         },
       ],
     },
+  },
+  {
+    files: ["src/app/(storefront)/**/*.{ts,tsx}", "src/app/(dashboard)/**/*.{ts,tsx}", "src/features/**/*.{ts,tsx}"],
+    plugins: { sharwa },
+    rules: { "sharwa/tenant-cache-key": "error" },
   },
   {
     files: ["src/app/(storefront)/**", "src/features/storefront*/**", "src/features/cart/**", "src/features/checkout/**", "src/features/pdp/**"],

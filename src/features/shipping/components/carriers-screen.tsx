@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Copy } from "lucide-react";
+import { ArrowLeft, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { AccessGate } from "@/components/shared/access-gate";
 import { ErrorState } from "@/components/shared/error-state";
@@ -104,7 +104,7 @@ function CarrierBody({ code }: { code: CarrierCode }) {
   const query = useCarrier(code);
   const back = (
     <Link href="/dashboard/shipping/carriers" className="inline-flex min-h-11 w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground lg:min-h-8">
-      <ArrowRight className="size-4" aria-hidden /> كل الناقلين
+      <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden /> كل الناقلين
     </Link>
   );
   if (query.isPending) {

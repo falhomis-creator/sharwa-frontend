@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
@@ -133,7 +133,7 @@ function RoleFormView({ id, permissions, role, clone }: { id: number | null; per
   return (
     <div className="flex flex-col gap-6">
       <Link href="/dashboard/staff/roles" className="inline-flex h-11 items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground lg:h-8">
-        <ArrowRight className="size-4" aria-hidden /> كل الأدوار
+        <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden /> كل الأدوار
       </Link>
       <PageHeader
         eyebrow={role ? `#${role.id}` : undefined}

@@ -14,6 +14,7 @@ import { requestIdentity } from "@/features/tenant/request";
 import { getSession } from "@/features/dashboard-shell/api/session";
 import { PosProvider } from "@/features/pos/components/pos-provider";
 import { PosFrame } from "@/features/pos/components/pos-frame";
+import { PosPlanGate } from "@/features/pos/components/pos-feature-off";
 
 export const metadata: Metadata = { title: { default: "نقطة البيع", template: "%s · نقطة البيع" }, robots: { index: false, follow: false } };
 
@@ -22,8 +23,9 @@ export const metadata: Metadata = { title: { default: "نقطة البيع", tem
  * topbar — on the zinc product tokens. On disk `%5Fp` is the `_p` the proxy rewrites
  * store-host `/pos/*` to (a literal `_folder` is private in Next and never routes).
  *
- * Gate: the same merchant/staff session as the dashboard; none → the staff login with
- * `next=/pos`. `instant = false` for the same reason as the dashboard shell: the redirect
+ * Gates: the same merchant/staff session as the dashboard (none → the staff login with
+ * `next=/pos`), then the plan feature `pos` (Phase 7 decision 1: subscription-gated) —
+ * off → a full-screen «not in your plan» state instead of the till. `instant = false` for the same reason as the dashboard shell: the redirect
  * must be a real 307, not a streamed instruction after a 200 shell.
  */
 export const instant = false;
@@ -38,18 +40,22 @@ export default async function PosLayout({ children }: { children: ReactNode }) {
         <Suspense fallback={null}>
           <CsrfBootstrap storeHost={identity.storeHost} />
         </Suspense>
-        <PosProvider
-          store={identity.store}
-          storeOrigin={identity.storeOrigin}
-          session={{
-            kind: session.kind,
-            fullName: session.kind === "merchant" ? "مالك المتجر" : (session.staff?.full_name ?? "موظف"),
-            storeName: session.store_name,
-            permissions: session.staff?.permissions ?? [],
-          }}
-        >
-          <PosFrame>{children}</PosFrame>
-        </PosProvider>
+        {/* The page segment is still rendered (instant-navigation validation must see it); the
+            client gate shows the plan state INSTEAD of it, so no till query ever runs. */}
+        <PosPlanGate enabled={session.features.includes("pos")} isOwner={session.kind === "merchant"}>
+          <PosProvider
+            store={identity.store}
+            storeOrigin={identity.storeOrigin}
+            session={{
+              kind: session.kind,
+              fullName: session.kind === "merchant" ? "مالك المتجر" : (session.staff?.full_name ?? "موظف"),
+              storeName: session.store_name,
+              permissions: session.staff?.permissions ?? [],
+            }}
+          >
+            <PosFrame>{children}</PosFrame>
+          </PosProvider>
+        </PosPlanGate>
         <Toaster position="bottom-left" />
         {process.env.NODE_ENV === "production" ? null : <MockIndicator />}
       </TooltipProvider>

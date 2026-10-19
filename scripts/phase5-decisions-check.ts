@@ -13,6 +13,7 @@
  */
 import { chromium, type Browser, type Page } from "@playwright/test";
 import { existsSync } from "node:fs";
+import { FEATURE_KEYS } from "../src/lib/access";
 
 const PORT = process.argv[2] ?? "3000";
 const NOOR = `http://noor.localhost:${PORT}`;
@@ -89,7 +90,7 @@ async function main() {
   const me = await api(manager, "GET", "/api/bff/dashboard/me");
   const staff = (me.json.staff ?? {}) as { roles?: string[]; full_name?: string };
   check(me.status === 200 && me.json.kind === "staff" && staff.roles?.includes("مدير المتجر") === true, `manager fixture resolves to a staff session «${staff.full_name}» / مدير المتجر`);
-  check(Array.isArray(me.json.features) && (me.json.features as string[]).length === 39, "manager carries the store's full plan (features are store-wide)");
+  check(Array.isArray(me.json.features) && (me.json.features as string[]).length === FEATURE_KEYS.length, "manager carries the store's full plan (features are store-wide)");
   await openAllGroups(manager);
   const managerLinks = await sidebarHrefs(manager);
   check(OWNER_ONLY_PATHS.every((p) => !managerLinks.some((h) => h.split("?")[0] === p)), "manager: owner-only destinations are hidden (not disabled)");

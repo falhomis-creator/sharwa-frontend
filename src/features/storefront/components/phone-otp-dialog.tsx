@@ -10,7 +10,7 @@ import { formatNumber, normalizePhone, prettyPhone } from "@/lib/format";
 import { OtpInput } from "@/features/storefront/components/otp-input";
 
 /**
- * Phone → WhatsApp OTP for buyer actions outside checkout (review, bid — M10 §10: customers
+ * Phone → WhatsApp OTP for buyer actions outside checkout (review, wishlist — M10 §10; bids use name + phone, M37: customers
  * have no accounts). Sends through `customers/otp/send` with a purpose, then hands the phone
  * and the code to `onVerified`, which performs the real action (the server verifies the code
  * there). Resend after 60 s with a Mono countdown; 429 → «حاول بعد قليل».
@@ -39,7 +39,7 @@ export function PhoneOtpDialog({
   onOpenChange: (open: boolean) => void;
   title: string;
   description: string;
-  purpose: "review" | "auction" | "wishlist";
+  purpose: "review" | "wishlist";
   initialPhone?: string | null;
   confirmLabel: string;
   /** Run the action; throw an `ApiError` to show its message (e.g. a wrong code). */

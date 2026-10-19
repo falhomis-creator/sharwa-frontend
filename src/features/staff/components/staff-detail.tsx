@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { ArrowRight, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/page-header";
@@ -57,7 +57,7 @@ function StaffDetail({ id }: { id: number }) {
   return (
     <div className="flex flex-col gap-6">
       <Link href="/dashboard/staff" className="inline-flex h-11 items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground lg:h-8">
-        <ArrowRight className="size-4 rtl:rotate-0" aria-hidden /> كل الموظفين
+        <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden /> كل الموظفين
       </Link>
       <PageHeader
         eyebrow={`#${staff.id}`}

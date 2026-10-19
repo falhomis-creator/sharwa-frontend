@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Info } from "lucide-react";
+import { ArrowLeft, ImageOff, Info } from "lucide-react";
 import { toast } from "sonner";
 import type { UseMutationResult } from "@tanstack/react-query";
 import { Mono } from "@/components/shared/mono";
@@ -99,7 +99,7 @@ export function Thread({ id, onBack, patch }: { id: number; onBack: () => void; 
       <div className="flex min-w-0 flex-1 flex-col" data-testid="thread" data-id={d.id}>
         <header className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
           <button type="button" onClick={onBack} className="flex size-11 items-center justify-center rounded-md hover:bg-muted lg:hidden" aria-label="رجوع إلى القائمة" data-testid="thread-back">
-            <ArrowRight className="size-5" strokeWidth={1.75} aria-hidden />
+            <ArrowLeft className="size-5 rtl:rotate-180" strokeWidth={1.75} aria-hidden />
           </button>
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-semibold">{d.contact_name}</span>
@@ -247,6 +247,24 @@ function MessageList({
   );
 }
 
+/** An image attachment; if the file cannot load, a neutral chip replaces the browser's broken-image glyph. */
+function MessageImage({ url, onZoom }: { url: string; onZoom: (url: string) => void }) {
+  const [failed, setFailed] = useState(false);
+  if (failed)
+    return (
+      <span className="inline-flex h-11 items-center gap-2 rounded-md border border-border px-3 text-xs text-muted-foreground" data-testid="message-image-missing">
+        <ImageOff className="size-4" strokeWidth={1.75} aria-hidden />
+        صورة غير متاحة
+      </span>
+    );
+  return (
+    <button type="button" onClick={() => onZoom(url)} className="block overflow-hidden rounded-md border border-border" aria-label="تكبير الصورة">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url} alt="" className="h-32 w-44 bg-muted object-cover" onError={() => setFailed(true)} />
+    </button>
+  );
+}
+
 function MessageBubble({ m, onResend, onZoom }: { m: Message; onResend: (m: Message) => void; onZoom: (url: string) => void }) {
   const out = m.direction === "outbound";
   const pending = m.id < 0;
@@ -257,10 +275,7 @@ function MessageBubble({ m, onResend, onZoom }: { m: Message; onResend: (m: Mess
       <div className={cn("flex flex-col gap-2 rounded-lg px-3 py-2 text-sm", out ? "bg-muted" : "border border-border bg-background")}>
         {m.media.map((media) =>
           media.type === "image" ? (
-            <button key={media.url} type="button" onClick={() => onZoom(media.url)} className="block overflow-hidden rounded-md border border-border" aria-label="تكبير الصورة">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={media.url} alt="" className="h-32 w-44 object-cover" />
-            </button>
+            <MessageImage key={media.url} url={media.url} onZoom={onZoom} />
           ) : (
             <a key={media.url} href={media.url} target="_blank" rel="noreferrer" className="rounded-md border border-border px-2 py-1 text-xs underline">
               ملف مرفق

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { ArrowLeft } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Mono } from "@/components/shared/mono";
@@ -99,7 +99,7 @@ export function StoreLoginForm({ baseDomain }: { baseDomain: string }) {
           className="h-11 shrink-0 gap-2 rounded-md px-4 text-sm"
         >
           {isSubmitting ? "جارٍ التحقق…" : "متابعة"}
-          <ArrowLeft className="size-4" aria-hidden />
+          <ArrowRight className="size-4 rtl:rotate-180" aria-hidden />
         </Button>
       </div>
 

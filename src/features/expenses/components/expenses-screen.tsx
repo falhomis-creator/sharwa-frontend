@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Field, inputClass, numericInputClass } from "@/components/shared/field";
 import { Money } from "@/components/shared/money";
+import { ScrollX } from "@/components/shared/scroll-x";
 import { Mono } from "@/components/shared/mono";
 import { PageHeader } from "@/components/shared/page-header";
 import { TablePagination } from "@/components/shared/data-table";
@@ -357,7 +358,10 @@ function Ledger({ months, isLoading, isFetching, error, onRetry, filtered, clear
               ))}
             </span>
           </header>
-          <table className="hidden w-full border-collapse text-sm md:table">
+          {/* The table needs ~36rem; the ledger column is narrower until xl (the sidebar
+              takes its share from lg), so the list layout covers md–lg. */}
+          <ScrollX className="hidden xl:block">
+            <table className="w-full border-collapse text-sm">
             <caption className="sr-only">مصروفات {monthLabel(m.month)}</caption>
             <thead>
               <tr className="border-b border-border text-xs text-muted-foreground">
@@ -389,8 +393,9 @@ function Ledger({ months, isLoading, isFetching, error, onRetry, filtered, clear
                 </tr>
               ))}
             </tbody>
-          </table>
-          <ul className="divide-y divide-border md:hidden">
+            </table>
+          </ScrollX>
+          <ul className="divide-y divide-border xl:hidden">
             {m.rows.map((r) => (
               <li key={r.id} className="flex min-h-11 items-center gap-3 px-3 py-2 text-sm" data-testid="expense-item">
                 <time dateTime={r.expense_date} className="w-14 shrink-0 text-xs text-muted-foreground">

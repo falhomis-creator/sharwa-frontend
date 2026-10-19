@@ -23,7 +23,11 @@ export type SupplierOrderStatus = (typeof SUPPLIER_ORDER_STATUSES)[number];
 export const ATTENTION: readonly SupplierOrderStatus[] = ["held", "rejected", "failed"];
 export const FEED_EXTENSIONS = ["csv", "tsv", "txt", "xlsx"] as const;
 
-/** The 20 mappable columns of `FeedMapping` (discovery 02 §14.C); `required` ones gate step 2. */
+/**
+ * The 20 mappable columns of `FeedMapping` (discovery 02 §14.C); `required` ones gate step 2.
+ * APPROVED by the owner as the contract (decision 2026-10-19, Phase 7 item 5): these 20 keys,
+ * with `sku`, `name`, `cost`, `stock` required — Django's `FeedMapping` must accept exactly these.
+ */
 export const FEED_FIELDS: Array<{ key: string; required: boolean; aliases: string[] }> = [
   { key: "sku", required: true, aliases: ["sku", "code", "item_code", "رمز"] },
   { key: "name", required: true, aliases: ["name", "title", "product_name", "الاسم"] },

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
@@ -240,7 +240,7 @@ function TabBody({ tab, detail }: { tab: Tab; detail: NonNullable<ReturnType<typ
 function BackLink() {
   return (
     <Link href="/stores" className="inline-flex h-11 items-center gap-1.5 self-start text-sm text-muted-foreground hover:text-foreground lg:h-8">
-      <ArrowRight className="size-4" strokeWidth={1.75} aria-hidden />
+      <ArrowLeft className="size-4 rtl:rotate-180" strokeWidth={1.75} aria-hidden />
       كل المتاجر
     </Link>
   );

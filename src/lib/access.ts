@@ -1,6 +1,10 @@
 /**
- * Feature keys (39) and permission keys (35) — verbatim from discovery 01 §7 and 02 §10.
+ * Feature keys (39 + `pos`) and permission keys (35) — verbatim from discovery 01 §7 and 02 §10.
  * The frontend never resolves feature gating itself; it reads the effective lists from the session.
+ *
+ * `pos` is the one key not in discovery 01 §7: the owner made M16 POS a subscription-gated
+ * feature (decision 2026-10-19, Phase 7 item 1). `[NEEDS BACKEND]` — Django must add
+ * `FeatureFlag(code="pos", requires_plan=True)` so `features[]` carries it.
  */
 export const FEATURE_KEYS = [
   "refunds",
@@ -42,6 +46,7 @@ export const FEATURE_KEYS = [
   "social_channels",
   "marketplaces",
   "dropshipping",
+  "pos",
 ] as const;
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
@@ -96,9 +101,41 @@ export function hasFeature(subject: Pick<AccessSubject, "features">, key: Featur
   return subject.features.includes(key);
 }
 
+/** One feature key or a list of alternatives (any-of), like {@link PermissionGate}. */
+export type FeatureGate = FeatureKey | readonly FeatureKey[];
+
+export function passesFeatureGate(subject: Pick<AccessSubject, "features">, gate: FeatureGate): boolean {
+  return typeof gate === "string" ? hasFeature(subject, gate) : gate.some((key) => hasFeature(subject, key));
+}
+
+/**
+ * Courier supervision (M39 US-39.5 screen + agent shifts + emergency reassignment) is about
+ * the store's OWN delivery agents, not Sharwa Ship alone: it opens with Sharwa Ship OR local
+ * delivery (`shipping_providers`, M15 agents). Decision 2026-10-19, Phase 7 item 3.
+ */
+export const COURIER_SUPERVISION_FEATURES = ["sharwa_ship", "shipping_providers"] as const satisfies readonly FeatureKey[];
+
 export function hasPermission(subject: AccessSubject, key: PermissionKey): boolean {
   if (subject.kind === "merchant") return true;
   return (subject.permissions ?? []).includes(key);
+}
+
+/**
+ * A gate is one permission key or a list of alternatives (OR). Lists exist because some
+ * screens are open to more than one role — e.g. «أوامر الشراء» is for whoever manages
+ * suppliers OR approves purchases (M23 FR-23.01; decision 2026-10-19, Phase 7 item 2).
+ */
+export type PermissionGate = PermissionKey | readonly PermissionKey[];
+
+/** True when the subject holds at least one of `keys`. An empty list allows nobody but the owner. */
+export function hasAnyPermission(subject: AccessSubject, keys: readonly PermissionKey[]): boolean {
+  if (subject.kind === "merchant") return true;
+  return keys.some((key) => hasPermission(subject, key));
+}
+
+/** Resolves a {@link PermissionGate}: a single key or any-of a list. */
+export function passesGate(subject: AccessSubject, gate: PermissionGate): boolean {
+  return typeof gate === "string" ? hasPermission(subject, gate) : hasAnyPermission(subject, gate);
 }
 
 /**

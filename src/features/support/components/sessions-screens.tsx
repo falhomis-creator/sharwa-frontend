@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ColumnDef } from "@tanstack/react-table";
 import { parseAsBoolean, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
-import { ArrowRight, ChevronDown, SendHorizontal } from "lucide-react";
+import { ArrowLeft, ChevronDown, SendHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { DataTable, FilterBar, FilterSelect, SearchBox, StatStrip, headerLabel, useTableUrlState } from "@/components/shared/data-table";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -209,7 +209,7 @@ function SessionView({ data, pollError, onRetry }: { data: SessionDetail; pollEr
     <div className="-mx-4 -my-6 flex h-[calc(100dvh-3rem-4rem)] flex-col lg:-mx-6 lg:h-[calc(100dvh-3rem)]" data-testid="session-page" data-id={s.id}>
       <header className="flex flex-wrap items-center gap-2 border-b border-border px-3 py-2">
         <button type="button" onClick={() => router.push("/dashboard/support/sessions")} className="flex size-11 items-center justify-center rounded-md hover:bg-muted lg:size-8" aria-label="رجوع إلى الجلسات">
-          <ArrowRight className="size-5" strokeWidth={1.75} aria-hidden />
+          <ArrowLeft className="size-5 rtl:rotate-180" strokeWidth={1.75} aria-hidden />
         </button>
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="truncate text-sm font-semibold">{s.party.name}</span>

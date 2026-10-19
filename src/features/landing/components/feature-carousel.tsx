@@ -125,7 +125,7 @@ export function FeatureCarousel() {
             aria-label="البطاقة السابقة"
             className={arrowClass}
           >
-            <ChevronRight className="size-5" aria-hidden />
+            <ChevronLeft className="size-5 rtl:rotate-180" aria-hidden />
           </button>
 
           <div role="tablist" aria-label="مزايا المنصة" className="flex items-center">
@@ -157,7 +157,7 @@ export function FeatureCarousel() {
             aria-label="البطاقة التالية"
             className={arrowClass}
           >
-            <ChevronLeft className="size-5" aria-hidden />
+            <ChevronRight className="size-5 rtl:rotate-180" aria-hidden />
           </button>
         </div>
       </div>

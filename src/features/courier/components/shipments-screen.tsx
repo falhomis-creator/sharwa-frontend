@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { ScrollX } from "@/components/shared/scroll-x";
 import { Mono } from "@/components/shared/mono";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ export function ShipmentsScreen() {
   const counts = list.data?.data.counts;
   return (
     <div className="flex flex-col gap-3" data-testid="shipments-screen">
-      <div className="-mx-4 overflow-x-auto px-4" role="tablist" aria-label="حالة الشحنات">
+      <ScrollX className="-mx-4" scrollerClassName="px-4" cueAlign="center" role="tablist" aria-label="حالة الشحنات">
         <div className="flex w-max gap-1 border-b border-border">
           {TABS.map((t) => (
             <button
@@ -60,7 +61,7 @@ export function ShipmentsScreen() {
             </button>
           ))}
         </div>
-      </div>
+      </ScrollX>
       <OfflineNote snap={list.data} />
       {list.isLoading ? (
         <div className="flex flex-col gap-2">

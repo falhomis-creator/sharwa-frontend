@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { connection } from "next/server";
 import { Mono } from "@/components/shared/mono";
 import { SkipLink } from "@/components/shared/visually-hidden";
 import { probeStore } from "@/features/tenant/api/probe";
@@ -24,6 +25,9 @@ export default function DashboardAuthLayout({ children }: { children: ReactNode 
 }
 
 async function StoreBadge() {
+  // Request-time only: the mock probe reads the clock, which must not run while prerendering
+  // (dev «unstable value `Date.now()`» on /dashboard/login and /dashboard/staff/login).
+  await connection();
   const identity = await requestIdentity();
   const probe = await probeStore({ store: identity.store, storeHost: identity.storeHost });
   return (

@@ -107,11 +107,13 @@
   /* semantic (text + dots only) */
   --destructive: #dc2626;
   --destructive-foreground: #fafafa;
-  --success: #059669;
+  /* Text-grade semantic tones: ≥ 4.5:1 on #fff (WCAG AA) — Phase 8 Lighthouse audit
+     (#059669 3.8, #d97706 3.2, #0284c7 4.1 failed as 12–14px status text). */
+  --success: #047857;
   --success-foreground: #fafafa;
-  --warning: #d97706;
-  --warning-foreground: #09090b;
-  --info: #0284c7;
+  --warning: #b45309;
+  --warning-foreground: #fafafa;
+  --info: #0369a1;
   --info-foreground: #fafafa;
   /* lines */
   --border: #e4e4e7;

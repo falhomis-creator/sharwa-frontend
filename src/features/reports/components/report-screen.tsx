@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { parseAsBoolean, parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ChevronLeft, FileDown, RefreshCw, SlidersHorizontal } from "lucide-react";
+import { ChevronRight, FileDown, RefreshCw, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -259,7 +259,7 @@ function ReportBody({ code }: { code: string }) {
 function IndexLink() {
   return (
     <Link href="/dashboard/reports" className="inline-flex h-11 items-center gap-1 rounded-lg border border-border px-3 text-sm hover:bg-muted lg:h-9">
-      فهرس التقارير <ChevronLeft className="size-4" aria-hidden />
+      فهرس التقارير <ChevronRight className="size-4 rtl:rotate-180" aria-hidden />
     </Link>
   );
 }
@@ -626,7 +626,7 @@ function ExportStrip({ code, canExport }: { code: string; canExport: boolean }) 
           تصديراتي
         </h2>
         <Link href="/dashboard/reports/exports" className="inline-flex h-11 items-center gap-1 text-sm text-muted-foreground hover:text-foreground lg:h-8">
-          كل التصديرات <ChevronLeft className="size-4" aria-hidden />
+          كل التصديرات <ChevronRight className="size-4 rtl:rotate-180" aria-hidden />
         </Link>
       </div>
       {exportsQuery.isLoading ? (

@@ -12,7 +12,8 @@ import { effectiveFeatures, findClient } from "@/mocks/platform/state";
  * The staff fixture is the «كاشير» role from M03 US-03.2.2: a narrow feature set and six
  * permissions, so the sidebar's feature gate AND permission gate are both demonstrable.
  */
-export const MOCK_STAFF_FEATURES = ["inventory", "refunds", "customer_report"] as const;
+// `pos` (Phase 7 decision 1): the cashier is the POS user, so the fixture store's plan has it.
+export const MOCK_STAFF_FEATURES = ["inventory", "refunds", "customer_report", "pos"] as const;
 
 export const MOCK_STAFF_PERMISSIONS = [
   "orders.view",

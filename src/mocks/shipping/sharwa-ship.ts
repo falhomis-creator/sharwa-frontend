@@ -703,7 +703,8 @@ function shiftView(store: string | null, sh: Shift | undefined) {
 
 const OPEN: ShipmentStatus[] = ["label_pending", "pending_pickup", "picked_up", "in_transit"];
 
-export function supervisor(store: string | null) {
+/** `sharwaShip=false` → a local-delivery-only store: its agents, shifts and custody, no Sharwa Ship queue. */
+export function supervisor(store: string | null, opts: { sharwaShip: boolean } = { sharwaShip: true }) {
   const s = shipState(store);
   return {
     agents: agents(store).map((a) => ({
@@ -714,7 +715,7 @@ export function supervisor(store: string | null) {
       open_shipments: [...s.ext.values()].filter((e) => e.agent_id === a.id && OPEN.includes(m15Of(store, e.id)!.status)).length,
       display_balance: displayMoney(balanceOf(store, a.id), "SAR"),
     })),
-    unassigned_new_orders: [...s.ext.values()].filter((e) => e.agent_id === null && e.carrier_code === "sharwa_ship" && OPEN.includes(m15Of(store, e.id)!.status) && e.parent_shipment === null).map((e) => shipmentRow(store, e)),
+    unassigned_new_orders: [...s.ext.values()].filter((e) => opts.sharwaShip && e.agent_id === null && e.carrier_code === "sharwa_ship" && OPEN.includes(m15Of(store, e.id)!.status) && e.parent_shipment === null).map((e) => shipmentRow(store, e)),
     reversals: s.custody
       .filter((c) => c.entry_type === "reversed")
       .slice(-100)

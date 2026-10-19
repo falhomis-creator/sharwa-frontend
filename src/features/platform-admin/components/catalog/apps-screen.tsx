@@ -49,7 +49,7 @@ export function AppsScreen() {
       {apps.data && apps.data.length === 0 ? (
         <EmptyState title="لا تطبيقات في الكتالوج" />
       ) : (
-        <Table caption="التطبيقات" testId="apps-table">
+        <Table caption="التطبيقات" testId="apps-table" tableClassName="min-w-[52rem]">
           <thead>
             <tr>
               <Th>التطبيق</Th>
@@ -71,7 +71,7 @@ export function AppsScreen() {
               <tr key={a.code} data-testid="app-row" data-code={a.code}>
                 <Td>
                   <span className="flex flex-col">
-                    <span className="font-medium">{a.name}</span>
+                    <span className="whitespace-nowrap font-medium">{a.name}</span>
                     <span className="line-clamp-1 max-w-64 text-xs text-muted-foreground">{a.description}</span>
                   </span>
                 </Td>
@@ -252,7 +252,7 @@ function AppOverrides({ apps, canWrite }: { apps: App[]; canWrite: boolean }) {
       <h2 id="app-ov-h" className="text-base font-medium">
         استثناءات الفوترة
       </h2>
-      <Table caption="استثناءات فوترة التطبيقات" testId="app-overrides-table">
+      <Table caption="استثناءات فوترة التطبيقات" testId="app-overrides-table" tableClassName="min-w-[40rem]">
         <thead>
           <tr>
             <Th>التطبيق</Th>
@@ -275,8 +275,8 @@ function AppOverrides({ apps, canWrite }: { apps: App[]; canWrite: boolean }) {
           ) : null}
           {list.data?.map((o) => (
             <tr key={o.id} data-testid="app-override-row" data-schema={o.schema_name} data-app={o.app_code}>
-              <Td>{o.app_name}</Td>
-              <Td>
+              <Td className="whitespace-nowrap">{o.app_name}</Td>
+              <Td className="whitespace-nowrap">
                 <Link href={`/stores/${encodeURIComponent(o.schema_name)}`} className="flex flex-col hover:underline">
                   <span>{o.store_name}</span>
                   <Code className="text-muted-foreground">{o.schema_name}</Code>

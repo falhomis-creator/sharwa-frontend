@@ -10,7 +10,7 @@ import { ApiError, isApiError } from "@/lib/api-error";
 import { formatNumber } from "@/lib/format";
 import { storeKey } from "@/lib/query-keys";
 import { AuctionSchema, type Auction } from "@/features/storefront/schemas/catalog";
-import { PhoneOtpDialog } from "@/features/storefront/components/phone-otp-dialog";
+import { BidForm } from "@/features/pdp/components/bid-form";
 import { useStorefront } from "@/features/storefront/components/storefront-provider";
 
 /**
@@ -18,7 +18,7 @@ import { useStorefront } from "@/features/storefront/components/storefront-provi
  * «زايد» with the server's suggested amount (no local addition). The countdown is measured
  * against the SERVER clock (the `Date` header of the auction response), not the device's
  * (M10 §8). A bid in the anti-sniping window extends `end_at` — the new value comes from the
- * server and the notice says so.
+ * server and the notice says so. Bidder identity is name + phone (M37 §10, no OTP).
  */
 async function fetchAuction(productId: number, currency: string): Promise<{ auction: Auction; skew: number }> {
   const res = await fetch(`/api/bff/catalog/products/${productId}/auction?currency=${currency}`, { credentials: "include", cache: "no-store" });
@@ -113,18 +113,16 @@ export function AuctionPanel({ productId, onBuyNow }: { productId: number; onBuy
           ) : null}
         </div>
       )}
-      <PhoneOtpDialog
+      <BidForm
         open={bidOpen}
         onOpenChange={setBidOpen}
-        title="تأكيد المزايدة"
-        description="نؤكد رقمك برمز واتساب قبل تسجيل المزايدة."
-        purpose="auction"
-        confirmLabel="تأكيد المزايدة"
-        onVerified={async (phone, otp) => {
+        amount={a.display_next_bid}
+        onSubmit={async (bidder) => {
           try {
+            // M37 §7 contract: `{bidder_name, bidder_phone, amount}` — no OTP (Phase 7 decision 4).
             const next = await apiFetch(`/api/bff/catalog/products/${productId}/auction/bids`, AuctionSchema, {
               method: "POST",
-              json: { amount: a.next_bid_amount, phone, otp, currency },
+              json: { ...bidder, amount: a.next_bid_amount, currency },
             });
             client.setQueryData(key, { auction: next, skew: q.data.skew });
             toast.success("سُجّلت مزايدتك");

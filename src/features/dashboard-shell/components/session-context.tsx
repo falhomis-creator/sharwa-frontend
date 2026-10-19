@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import { hasFeature, hasPermission, isStoreOwner, type FeatureKey, type PermissionKey } from "@/lib/access";
+import { isStoreOwner, passesFeatureGate, passesGate, type FeatureGate, type PermissionGate } from "@/lib/access";
 import type { Session } from "@/features/dashboard-shell/schemas";
 
 /**
@@ -26,9 +26,11 @@ export function useAccess() {
   return {
     session,
     /** No key → always allowed. */
-    canFeature: (key?: FeatureKey) => (key ? hasFeature(session, key) : true),
-    canPermission: (key?: PermissionKey) =>
-      key ? hasPermission({ kind: session.kind, features: session.features, permissions: session.staff?.permissions }, key) : true,
+    /** No gate → always allowed; a list is any-of. */
+    canFeature: (gate?: FeatureGate) => (gate ? passesFeatureGate(session, gate) : true),
+    /** No gate → always allowed; a list is any-of (`hasAnyPermission`). */
+    canPermission: (gate?: PermissionGate) =>
+      gate ? passesGate({ kind: session.kind, features: session.features, permissions: session.staff?.permissions }, gate) : true,
     /** Owner-only destinations (see `isStoreOwner`): `false`/absent → always allowed. */
     canOwnerOnly: (ownerOnly?: boolean) => !ownerOnly || isStoreOwner(session),
   };

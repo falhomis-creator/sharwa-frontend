@@ -14,12 +14,17 @@ export interface DateFormatOptions {
 export function formatDate(iso: string | Date, opts: DateFormatOptions = {}): string {
   const d = typeof iso === "string" ? new Date(iso) : iso;
   if (Number.isNaN(d.getTime())) return "";
+  // `ar` inserts RLM/LRM/ALM marks between the parts ("13‏/09‏/2026"). Inside an LTR run
+  // (`<Mono dir="ltr">`) they reorder it to «132026/09/» (Phase 8 audit) — strip them: Latin
+  // digits joined by «/» already form one LTR run in RTL text.
   return new Intl.DateTimeFormat(DATE_LOCALE, {
     numberingSystem: "latn",
     timeZone: opts.timeZone,
     dateStyle: opts.dateStyle ?? "medium",
     timeStyle: opts.timeStyle,
-  }).format(d);
+  })
+    .format(d)
+    .replace(/[\u200e\u200f\u061c]/g, "");
 }
 
 export function formatDateTime(iso: string | Date, timeZone?: string): string {

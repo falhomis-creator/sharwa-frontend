@@ -1,3 +1,57 @@
+# Execution log — Phase 7 decisions + Phase 8 · Polish & cross-cutting (T187–T194)
+
+**Date:** 2026-10-19 · **Branch:** `main` · **Base:** `c118f4b` (Phase 7, on GitHub) · **Status:** the five Phase 7 decisions applied; T187–T194 done. Mocks only (`x-sharwa-mock: 1`). Backend untouched. No git run from the session. Built and verified in a cloud clone of `origin/main` (the device shell was unavailable), then the changed files were written into `C:\sharwa_front\sharwa-frontend`.
+
+## Gates
+
+```
+npm run lint                                  → 0 problems (incl. sharwa/tenant-cache-key)
+rm -rf .next/types && npx tsc --noEmit        → exit 0
+npx tsx scripts/rtl-audit.ts                  → 0 findings
+npx tsx scripts/anti-ai-audit.ts              → 0 findings
+npx tsx scripts/needs-backend-inventory.ts --check → current
+rm -rf .next && npm run build                 → ✓ (only an offline Google-font fetch for the OG image fails in the sandbox)
+npx tsx scripts/tenant-isolation-check.ts 3400 (next start) → 10 stores, 160 responses, 0 leaks
+```
+
+Module checks on the updated tree (dev server): `phase7-decisions` 29 ✓ · `sharwa-pay` · `affiliates` · `procurement` · `bookings` · `expenses` · `courier` · `admin-billing` · `admin-stores` · `inbox` · `tenant-shell` · `catalog-orders` · `dropshipping` · `pos` · `bundles` · `sharwa-ship` · `phase5-decisions` · `storefront` — all pass, 0 console errors. On `next start`: `tenant-shell` · `onboarding` · `tenant-isolation` pass; `storefront` 1 ✗ «unknown tracking uuid → 404» = the known Phase 3B deviation (PPR shell answers 200 in production; the not-found UI renders).
+
+Two older checks hard-coded «39 features» (`phase5-decisions`, `admin-billing`, `admin-stores`); they now read `FEATURE_KEYS.length` (40 with `pos`).
+
+## Phase 7 decisions
+
+| # | What changed | Where |
+|---|---|---|
+| 1 POS gated | `pos` feature key (requires_plan); POS layout shows «نقطة البيع غير متاحة في خطتك» (owner → upgrade, staff → ask the owner); `/api/bff/pos/*` 403 `feature_disabled`; cashier fixture keeps `pos`. `2468` / `200.00` unchanged | `src/lib/access.ts`, `(pos)/…/layout.tsx` + pages (`instant=false`), `features/pos/components/pos-feature-off.tsx`, `mocks/pos/router.ts`, `mocks/platform/state.ts`, `mocks/dashboard/me.ts` |
+| 2 any-of permissions | `PermissionGate`, `hasAnyPermission`, `passesGate`; `useAccess().canPermission(gate)`; PO item `[suppliers.manage, suppliers.approve]` | `src/lib/access.ts`, `dashboard-shell/navigation.ts`, `session-context.tsx`, `command-palette/palette-index.ts` |
+| 3 courier supervision | `FeatureGate` + `COURIER_SUPERVISION_FEATURES`; supervisor/agent-shifts/emergency-reassign/assign open with Sharwa Ship OR local delivery; no Sharwa Ship sub-nav without it | `shipping/sharwa-ship/components/ops-screens.tsx`, `mocks/shipping/sharwa-ship{,-router}.ts` |
+| 4 bids | `BidForm` (name + phone, drawer on phones, dialog ≥ sm); BFF validates `{bidder_name, bidder_phone, amount}`, no OTP | `features/pdp/components/{bid-form,auction-panel}.tsx`, `api/bff/catalog/products/[id]/auction/bids/route.ts` |
+| 5 feed fields | the 20 fields marked as the approved contract | `mocks/dropshipping/state.ts` |
+
+## Phase 8
+
+| Task | Result |
+|---|---|
+| T187 | `eslint-rules/tenant-cache-key.js` (`sharwa/tenant-cache-key`): an array-literal `queryKey` / `setQueryData` key must start with `storeKey(` or spread a `*Key(s)` factory. Proven on a probe file (3 violations caught); the codebase had 0 |
+| T188 | 20 directional icons re-authored LTR + `rtl:rotate-180` (back links, «next» chevrons, carousel, sidebar panel toggle, category drawer); `scripts/rtl-audit.ts` guards physical classes in `.ts` too |
+| T189 | `scripts/anti-ai-audit.ts` + screenshot review of all 974 captures → `docs/visual-checks/ANTI-AI-AUDIT.md`. Fixed: RTL-scrambled dates (`formatDate` strips bidi marks), KPI overflow, tables/boards/calendar/expenses clipped at 768/390 (new shared `ScrollX` in `DataTable` + console tables), Arabic `FilePicker`, raw `CashLiquidityError:` prefix, broken inbox image, stray «»» in notifications, blurred dialog backdrops → flat dim, booking-block glyph clipping |
+| T190 | `docs/lighthouse/{landing,store-home,pdp,orders}.json` (mobile, `next start`). **Accessibility 100 on all four** (after raising semantic text tones to AA). **Performance: landing 70 · store 64 · PDP 87 · orders 46** — below 90; see «Open» |
+| T191 | `scripts/tenant-isolation-check.ts`: provisions 8 stores through the M02 wizard + `noor`/`shop`; serial rotation and parallel bursts on `/api/bff/dashboard/me`, then each storefront HTML must carry its own name and none of the other nine |
+| T192 | README gates; `scripts/needs-backend-inventory.ts` regenerates the inventory (453 rows · 69 Ready · 362 `[NEEDS BACKEND]` · 22 local) + an «owner-decision additions» table; `scripts/delivery-report.ts` → `docs/DELIVERY-REPORT.md` |
+| T193 | clean build + `next start` + the checks above |
+| T194 | no tag (linear policy); compliance review I–IX appended to `.specify/memory/restore-points.md` |
+
+Screenshots in `docs/visual-checks/` were **not** regenerated here (Linux fonts differ). Re-run on your machine to refresh: `affiliates procurement bookings dropshipping expenses courier sharwa-pay admin-billing tenant-shell catalog-orders inbox`.
+
+## Open (owner)
+
+1. **Performance budget (IX).** LCP is render delay, not network (TTFB ≤ 40 ms): framework JS (~70 KB chunk) + hydration cost 2–4 s of main thread under the 4× mobile CPU. Options: accept per surface (as for landing v3: 66), or a dedicated pass (fewer client components on the store home/orders, defer non-critical islands, `next/dynamic` for drawers/charts). Which?
+2. **Semantic text tones.** Raised to `#047857 / #b45309 / #0369a1` for AA; the design-system table still lists the 600 shades. Update the table?
+3. Still open from Phase 7: courier handover target (agent list), bundle component choice field, M13 influencer link/`?influencer=`, M06 «جملة» manual order, session resolver location (`src/lib/session/`).
+4. Two stray empty files `git` and `main` sit at the repo root on your machine (from a mistyped command); delete them before committing.
+
+---
+
 # Execution log — Phase 7 · US5 channels and extensions: M16 M17 M23 M26–M33 M36–M40 M43 (T142–T186)
 
 **Date:** 2026-10-19 · **Branch:** `main` · **Base:** your local Phase 6 commit `f02c525` (Phases 5 and 6 are not on GitHub yet: `origin/main` is still `e0a4169`) · **Status:** T142–T186 done on mocks (`x-sharwa-mock: 1`), 17 modules. The `rp/*` tags are skipped (linear history, no tags). Gates: `npm run lint` ✅ (0 problems) · `npx tsc --noEmit` ✅ · 15 Phase 7 checks, 391 ✓, 0 console errors (serial, fresh server) · regressions `admin-shell` 23 · `admin-stores` 35 · `admin-billing` 53 · `admin-money` 58 · `phase5-decisions` 24 · `tenant-shell` 9 · `settings` 23 · `catalog-orders` 22 · `storefront` 41 · `onboarding` 33 · `shipping` 29 · `payments` 40 ✅. Backend untouched. No git run from the session.

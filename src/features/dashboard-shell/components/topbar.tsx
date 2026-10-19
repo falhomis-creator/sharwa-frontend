@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, Menu, PanelRightClose, PanelRightOpen, Search } from "lucide-react";
+import { ExternalLink, Menu, PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
 import { Mono } from "@/components/shared/mono";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
@@ -61,9 +61,9 @@ export function Topbar({
           }
         >
           {sidebar === "expanded" ? (
-            <PanelRightClose className="size-4" strokeWidth={1.75} aria-hidden />
+            <PanelLeftClose className="size-4 rtl:-scale-x-100" strokeWidth={1.75} aria-hidden />
           ) : (
-            <PanelRightOpen className="size-4" strokeWidth={1.75} aria-hidden />
+            <PanelLeftOpen className="size-4 rtl:-scale-x-100" strokeWidth={1.75} aria-hidden />
           )}
         </TooltipTrigger>
         <TooltipContent side="bottom">

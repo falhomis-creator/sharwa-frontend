@@ -10,6 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Money } from "@/components/shared/money";
+import { ScrollX } from "@/components/shared/scroll-x";
 import { Mono } from "@/components/shared/mono";
 import { PageHeader } from "@/components/shared/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -229,9 +230,9 @@ function Board({
         if (e.key === "Enter") router.push(`/dashboard/purchase-orders/${o.id}`);
       }}
     >
-      <span className="flex items-center justify-between gap-2">
-        <Mono className="font-medium">{o.number}</Mono>
-        <Mono className="text-[11px] text-muted-foreground" title={formatDateTime(o.created_at)}>
+      <span className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+        <Mono className="whitespace-nowrap font-medium">{o.number}</Mono>
+        <Mono className="whitespace-nowrap text-[11px] text-muted-foreground" title={formatDateTime(o.created_at)}>
           {formatDate(o.created_at)}
         </Mono>
       </span>
@@ -249,19 +250,19 @@ function Board({
     <>
       {/* Mobile: status tabs + one card list. */}
       <div className="flex flex-col gap-3 md:hidden">
-        <div role="tablist" aria-label="حالات أوامر الشراء" className="-mx-4 flex gap-1 overflow-x-auto border-b border-border px-4">
+        <ScrollX className="-mx-4 border-b border-border" scrollerClassName="flex gap-1 px-4" cueAlign="center" role="tablist" aria-label="حالات أوامر الشراء">
           {PO_STATUSES.map((s) => (
             <button key={s} type="button" role="tab" aria-selected={col === s} onClick={() => onCol(s)} className={cn("flex h-11 shrink-0 items-center gap-1.5 border-b-2 px-2 text-sm", col === s ? "border-foreground font-medium" : "border-transparent text-muted-foreground")}>
               {PO_STATUS_LABELS[s]} <Mono className="text-xs text-muted-foreground">{byStatus.get(s)!.length}</Mono>
             </button>
           ))}
-        </div>
+        </ScrollX>
         <div className="flex flex-col gap-2" role="tabpanel">
           {byStatus.get(col)!.length ? byStatus.get(col)!.map(card) : <p className="py-6 text-center text-sm text-muted-foreground">لا شيء هنا</p>}
         </div>
       </div>
       {/* Desktop: six columns, 1px borders, scroll starts at the start (right) edge. */}
-      <div className="hidden overflow-x-auto md:block" data-testid="po-board">
+      <ScrollX className="hidden md:block" data-testid="po-board">
         <div className="grid min-w-[1080px] grid-cols-6 gap-3">
           {PO_STATUSES.map((s) => (
             <section key={s} aria-label={PO_STATUS_LABELS[s]} className="flex min-h-64 flex-col gap-2 rounded-lg border border-border bg-muted/30 p-2" data-testid="po-column" data-status={s}>
@@ -275,7 +276,7 @@ function Board({
             </section>
           ))}
         </div>
-      </div>
+      </ScrollX>
     </>
   );
 }

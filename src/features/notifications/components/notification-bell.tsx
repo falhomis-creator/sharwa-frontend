@@ -264,8 +264,16 @@ function Panel({ unavailable, onNavigate }: { unavailable: boolean; onNavigate: 
                       </span>
                       <span className="flex min-w-0 flex-1 flex-col gap-0.5">
                         <span className={cn("text-sm", g.unread ? "font-medium" : "text-muted-foreground")}>
-                          {head.title}
-                          {g.items.length > 1 ? <Mono className="ms-1 text-xs text-muted-foreground">×{g.items.length}</Mono> : null}
+                          <bdi>{head.title}</bdi>
+                          {/* Group size as a separate 1px chip — glued «×4» read as part of the order number. */}
+                          {g.items.length > 1 ? (
+                            <>
+                              <Mono aria-hidden className="ms-2 inline-flex h-5 items-center rounded-sm border border-border px-1.5 align-middle text-[11px] font-normal text-muted-foreground">
+                                {g.items.length}
+                              </Mono>
+                              <span className="sr-only">، {g.items.length} إشعارات</span>
+                            </>
+                          ) : null}
                         </span>
                         {head.body ? <span className="line-clamp-2 text-xs text-muted-foreground">{head.body}</span> : null}
                         <span className="text-[11px] text-muted-foreground">

@@ -18,7 +18,7 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
-import type { FeatureKey, PermissionKey } from "@/lib/access";
+import { COURIER_SUPERVISION_FEATURES, type FeatureGate, type PermissionGate } from "@/lib/access";
 
 /**
  * The merchant sidebar — the 15 groups of discovery 01 §4, in that order with those titles.
@@ -41,8 +41,10 @@ export interface NavItem {
   path: string;
   /** Search terms for ⌘K (M48). Arabic first, then the Django view name where useful. */
   keywords: string[];
-  feature?: FeatureKey;
-  permission?: PermissionKey;
+  /** One key, or a list of alternatives — the item shows when ANY of them is on. */
+  feature?: FeatureGate;
+  /** One key, or a list of alternatives — the item shows when ANY of them is held. */
+  permission?: PermissionGate;
   counter?: CounterKey;
   /** `G O` style sequence shortcut (M03 §6). */
   shortcut?: string;
@@ -61,8 +63,8 @@ export interface NavGroup {
   icon: LucideIcon;
   /** Group landing page, when the group itself is a destination. */
   path?: string;
-  feature?: FeatureKey;
-  permission?: PermissionKey;
+  feature?: FeatureGate;
+  permission?: PermissionGate;
   counter?: CounterKey;
   items: NavItem[];
 }
@@ -208,8 +210,9 @@ export const NAVIGATION: NavGroup[] = [
         key: "products.purchase_orders",
         title: "أوامر الشراء",
         path: "/dashboard/purchase-orders",
-        keywords: ["أمر شراء", "PO", "استلام", "purchase_order_list"],
-        permission: "suppliers.manage",
+        keywords: ["أمر شراء", "PO", "استلام", "اعتماد", "purchase_order_list"],
+        // FR-23.01: managers draft/receive, approvers decide — either one opens the list.
+        permission: ["suppliers.manage", "suppliers.approve"],
       },
       {
         key: "products.locations",
@@ -625,8 +628,9 @@ export const NAVIGATION: NavGroup[] = [
         ownerOnly: true,
         title: "مندوبو الشحن (إشراف)",
         path: "/dashboard/shipping/supervisor",
-        keywords: ["إشراف", "courier_supervisor"],
-        feature: "sharwa_ship",
+        keywords: ["إشراف", "courier_supervisor", "توصيل محلي", "مندوب"],
+        // Sharwa Ship OR the store's own local couriers (Phase 7 decision 3).
+        feature: COURIER_SUPERVISION_FEATURES,
       },
       {
         key: "shipping.carriers",
@@ -665,6 +669,7 @@ export const NAVIGATION: NavGroup[] = [
         title: "مناوبات المندوبين",
         path: "/dashboard/shipping/agent-shifts",
         keywords: ["مناوبة", "agent_shift"],
+        feature: COURIER_SUPERVISION_FEATURES,
       },
     ],
   },

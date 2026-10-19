@@ -64,11 +64,11 @@ export const planFeatureListSchema = z.array(planFeatureCellSchema);
 export type PlanFeatureCell = z.infer<typeof planFeatureCellSchema>;
 
 /**
- * Sidebar groups of the 39 keys (M46 §5). The catalogue comes from the server; this map
+ * Sidebar groups of the 39 keys + `pos` (M46 §5). The catalogue comes from the server; this map
  * only orders and labels it — a key it does not know lands in «أخرى» (M46 §8).
  */
 export const MODULE_GROUPS = [
-  { key: "orders", label: "الطلبات", codes: ["refunds"] },
+  { key: "orders", label: "الطلبات", codes: ["refunds", "pos"] },
   { key: "products", label: "المنتجات", codes: ["inventory", "bulk_upload", "multi_location", "product_report"] },
   {
     key: "marketing",

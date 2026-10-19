@@ -1,5 +1,5 @@
 import { NAVIGATION, OVERVIEW_ITEM, SETTINGS_ITEM, type NavGroup } from "@/features/dashboard-shell/navigation";
-import type { FeatureKey, PermissionKey } from "@/lib/access";
+import type { FeatureGate, PermissionGate } from "@/lib/access";
 import { matchScore, normalizeArabic } from "@/lib/i18n/normalize";
 import { SECTION_META, SETTINGS_SECTIONS } from "@/features/settings/schemas";
 
@@ -20,8 +20,8 @@ export interface PageEntry {
 }
 
 export function buildPageIndex(
-  canFeature: (k?: FeatureKey) => boolean,
-  canPermission: (k?: PermissionKey) => boolean,
+  canFeature: (k?: FeatureGate) => boolean,
+  canPermission: (k?: PermissionGate) => boolean,
   canOwnerOnly: (ownerOnly?: boolean) => boolean = () => true,
 ): PageEntry[] {
   const out: PageEntry[] = [

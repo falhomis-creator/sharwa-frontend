@@ -14,6 +14,7 @@ import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { Field, inputClass, numericInputClass } from "@/components/shared/field";
 import { Money } from "@/components/shared/money";
+import { ScrollX } from "@/components/shared/scroll-x";
 import { Mono } from "@/components/shared/mono";
 import { PageHeader } from "@/components/shared/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -162,7 +163,7 @@ function Inner() {
 function RuleSheet({ open, rule, onOpenChange }: { open: boolean; rule: PricingRule | null; onOpenChange: (v: boolean) => void }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="left" className="w-full overflow-y-auto sm:max-w-xl" data-testid="rule-sheet">
+      <SheetContent side="left" className="overflow-y-auto data-[side=left]:w-full data-[side=left]:sm:max-w-xl" data-testid="rule-sheet">
         <div className="flex flex-col gap-1 border-b border-border p-4">
           <SheetTitle>{rule ? `تعديل «${rule.name}»` : "قاعدة تسعير جديدة"}</SheetTitle>
           <SheetDescription>حاكِ القاعدة على عيّنة قبل الحفظ — الأسعار من الخادم.</SheetDescription>
@@ -324,7 +325,7 @@ function SimulationView({ sim }: { sim: Simulation }) {
           تتداخل مع: {sim.overlaps.map((o) => `${o.name} (أولوية ${o.priority})`).join("، ")} — يُطبَّق الأصغر أولوية.
         </p>
       ) : null}
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <ScrollX className="rounded-lg border border-border">
         <table className="w-full min-w-[480px] text-sm">
           <caption className="sr-only">عيّنة المحاكاة</caption>
           <thead className="border-b border-border text-xs text-muted-foreground">
@@ -357,7 +358,7 @@ function SimulationView({ sim }: { sim: Simulation }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollX>
     </section>
   );
 }

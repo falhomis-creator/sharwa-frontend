@@ -1,7 +1,7 @@
 # Backend Gap Inventory — عقود البيانات المجمَّعة من الوحدات الـ 49
 
-> مولَّد آلياً من §7 «عقد البيانات» في كل `modules/M*.md` (2026-10-17). المصدر الحاكم هو ملف الوحدة؛ هذا الملف فهرس تجميعي لـ `/speckit-tasks` ولفريق الباك إند.
-> **Ready** = موجود اليوم على `/api/v1` ويُستهلك مباشرة عبر الـ BFF. **`[NEEDS BACKEND]`** = يُبنى على Mock محلي بنفس العقد تحت `src/mocks/` ويُعلَّم في الواجهة.
+> مولَّد آلياً بـ `scripts/needs-backend-inventory.ts` من §7 «عقد البيانات» في كل `modules/M*.md` (2026-10-19). المصدر الحاكم هو ملف الوحدة؛ هذا الملف فهرس تجميعي لفريق الباك إند. لا تحرّره يدوياً — عدّل الوحدة وأعد التوليد.
+> **Ready** = موجود اليوم على `/api/v1` ويُستهلك مباشرة عبر الـ BFF. **`[NEEDS BACKEND]`** = يُبنى على Mock محلي بنفس العقد تحت `src/mocks/` ويُعلَّم في الواجهة (`x-sharwa-mock: 1`).
 
 ## Summary
 
@@ -11,12 +11,12 @@
 | [M02](../modules/M02-merchant-onboarding.md) | 8 | 2 | 5 | 1 |
 | [M03](../modules/M03-dashboard-shell-overview.md) | 12 | 0 | 12 | 0 |
 | [M04](../modules/M04-products-variants.md) | 15 | 1 | 14 | 0 |
-| [M05](../modules/M05-categories-collections.md) | 9 | 1 | 7 | 1 |
+| [M05](../modules/M05-categories-collections.md) | 9 | 2 | 6 | 1 |
 | [M06](../modules/M06-orders-fulfillment.md) | 11 | 3 | 8 | 0 |
 | [M07](../modules/M07-customers-crm.md) | 12 | 0 | 12 | 0 |
-| [M08](../modules/M08-theme-customizer.md) | 9 | 5 | 4 | 0 |
-| [M09](../modules/M09-storefront-home.md) | 12 | 4 | 8 | 0 |
-| [M10](../modules/M10-product-detail-page.md) | 15 | 1 | 14 | 0 |
+| [M08](../modules/M08-theme-customizer.md) | 9 | 6 | 3 | 0 |
+| [M09](../modules/M09-storefront-home.md) | 12 | 5 | 7 | 0 |
+| [M10](../modules/M10-product-detail-page.md) | 15 | 2 | 13 | 0 |
 | [M11](../modules/M11-cart.md) | 11 | 4 | 7 | 0 |
 | [M12](../modules/M12-checkout.md) | 13 | 0 | 12 | 1 |
 | [M13](../modules/M13-marketing-hub.md) | 11 | 1 | 10 | 0 |
@@ -51,12 +51,27 @@
 | [M42](../modules/M42-wishlist-reviews-engagement.md) | 7 | 1 | 6 | 0 |
 | [M43](../modules/M43-multi-store-rollup.md) | 2 | 0 | 1 | 1 |
 | [M44](../modules/M44-pwa-web-push.md) | 7 | 5 | 2 | 0 |
-| [M45](../modules/M45-platform-dues-console.md) | 4 | 0 | 4 | 0 |
+| [M45](../modules/M45-platform-dues-console.md) | 4 | 0 | 3 | 1 |
 | [M46](../modules/M46-plans-features-admin.md) | 10 | 0 | 9 | 1 |
-| [M47](../modules/M47-tenant-resolution-provisioning.md) | 11 | 7 | 2 | 2 |
+| [M47](../modules/M47-tenant-resolution-provisioning.md) | 11 | 7 | 1 | 3 |
 | [M48](../modules/M48-command-palette-search.md) | 8 | 0 | 5 | 3 |
 | [M49](../modules/M49-notifications-center.md) | 7 | 2 | 4 | 1 |
-| **Total** | **453** | **65** | **368** | **20** |
+| **Total** | **453** | **69** | **362** | **22** |
+
+## Frontend additions after the module specs (owner decisions)
+
+عقود أو بوابات أضافتها الواجهة بقرار المالك بعد كتابة المواصفات؛ كلها `[NEEDS BACKEND]` ما لم يُذكر غير ذلك.
+
+| Module | Need | Contract | Decision |
+|---|---|---|---|
+| M16 · M46 | مفتاح ميزة نقطة البيع | `FeatureFlag(code="pos", requires_plan=True)` يظهر في `features[]` لـ `GET /api/v1/auth/me/` وفي كتالوج M46؛ `/api/v1/pos/*` يجيب 403 `{detail, code:"feature_disabled"}` حين يكون معطّلاً | 2026-10-19 · المرحلة 7 · 1 |
+| M16 | رمز المدير وحد OTP الاسترجاع | يبقيان mock (`2468`، `200.00`) حتى يحدّد الباك إند الآلية (PIN/OTP) والحد | 2026-10-19 · المرحلة 7 · 1 |
+| M03 · M23 | بوابة شريط «أوامر الشراء» | لا عقد جديد — الواجهة تقبل قائمة صلاحيات (أيّها): `suppliers.manage` أو `suppliers.approve`؛ الخادم يقرأ بأيٍّ منهما (FR-23.01) | 2026-10-19 · المرحلة 7 · 2 |
+| M39 · M15 | إشراف المندوبين بلا شروة شيب | `GET /api/v1/shipping/supervisor/`، `GET /api/v1/shipping/agent-shifts/`، `POST /api/v1/shipping/agents/<id>/emergency-reassign/`، `POST /api/v1/shipping/shipments/<id>/assign/` `{agent_id}` تُفتح بـ `sharwa_ship` **أو** `shipping_providers`؛ بلا شروة شيب تعود `unassigned_new_orders` فارغة من شحنات شروة شيب | 2026-10-19 · المرحلة 7 · 3 |
+| M37 · M10 | هوية المزايد | `POST /api/v1/catalog/products/<id>/bids/` `{bidder_name, bidder_phone, amount}` بلا OTP → 200 المزاد / 400 `{bidder_name|bidder_phone|amount:[msg]}` / 409 `{detail, auction}` | 2026-10-19 · المرحلة 7 · 4 |
+| M29 | حقول ربط ملف المورد | `FeedMapping` بالحقول الـ 20 كما في `GET /api/v1/dropshipping/meta/` → `feed_fields`؛ الإلزامية `sku, name, cost, stock` (معتمدة) | 2026-10-19 · المرحلة 7 · 5 |
+| M05/M14/M15/M19/M22 | شاشات المالك فقط | لا مفاتيح صلاحية جديدة؛ تبقى الشاشات بلا مفتاح للمالك وحده و403 للموظفين حتى يضيف Django مفاتيح مثل `settings.manage` | 2026-10-19 · المرحلة 5 · 1 |
+| M18 | دور «مدير المتجر» | مجموعة الصلاحيات الافتراضية كما في `MOCK_MANAGER_PERMISSIONS` (`src/mocks/dashboard/me.ts`) | 2026-10-19 · المرحلة 5 · 2 |
 
 ## Per-module rows
 
@@ -111,7 +126,7 @@
 | توليد وتحرير المتغيرات | ضمن `edit_product` | `[NEEDS BACKEND]` → `POST /api/v1/products/<id>/variants/generate/` `{attribute_ids[], exclude:[[option_ids]]}` → `[{id, options[], sku, extra_price, stock}]`؛ `PATCH /variants/<vid>/`؛ `POST /variants/bulk/` |
 | القوالب (المخططات) | `product_template_*`, `template_attributes_api`, attach/detach | `[NEEDS BACKEND]` → `GET/POST /api/v1/product-templates/`، `PATCH/DELETE /<id>/`، `POST /<id>/apply/` `{product_ids[]}` → `{applied, skipped}` |
 | القطاعات العالمية | `apply_variant_template` (GlobalVariantTemplate) | `[NEEDS BACKEND]` → `GET /api/v1/global-variant-templates/` → `[{id, name, attributes[]}]`؛ `POST /api/v1/product-templates/<id>/apply-global/` `{global_template_id}` |
-| إجراءات جماعية | غير موجود | `[NEEDS BACKEND]` → `POST /api/v1/products/bulk/` `{ids[], action: publish|archive|unarchive|delete|set_category|add_tag|remove_tag, payload?}` → `{succeeded[], failed:[{id, reason}]}` |
+| إجراءات جماعية | غير موجود | `[NEEDS BACKEND]` → `POST /api/v1/products/bulk/` `{ids[], action: publish |
 | تصدير CSV | `export_products_csv` | `[NEEDS BACKEND]` → `GET /api/v1/products/export.csv?<نفس فلاتر القائمة>` |
 | استيراد CSV | `import_products_csv` POST | `[NEEDS BACKEND]` → `POST /api/v1/products/import/` multipart → `{job_id, preview:[…], columns[]}`؛ `POST /import/<job_id>/run/` `{mapping}`؛ `GET /import/<job_id>/` → `{status, done, failed:[{row, msg}]}` |
 | الرفع السريع | `bulk_upload_products` | `[NEEDS BACKEND]` → `POST /api/v1/products/bulk-upload/` multipart صور → `[{id}]` (مسودات) |
@@ -140,7 +155,7 @@
 | تفاصيل الطلب | `order_detail_api` JSON | Ready جزئياً؛ يُوحَّد تحت `GET /api/v1/orders/<id>/` |
 | تغيير حالة التنفيذ | `update_order_fulfillment_status` POST | `[NEEDS BACKEND]` → `POST /api/v1/orders/<id>/fulfillment-status/` `{status_id, version}` → 200/409 |
 | تغيير الحالة المالية | `update_order_status` POST | `[NEEDS BACKEND]` → `POST /api/v1/orders/<id>/status/` `{status, version}` |
-| تأكيد دفع / مراجعة | `confirm_payment_received`, `adjudicate_payment_*` | `[NEEDS BACKEND]` → `POST /api/v1/orders/<id>/payment/{confirm|approve|reject}/` |
+| تأكيد دفع / مراجعة | `confirm_payment_received`, `adjudicate_payment_*` | `[NEEDS BACKEND]` → `POST /api/v1/orders/<id>/payment/{confirm |
 | حالات التنفيذ CRUD | `order_statuses`, add/delete/set_default | `[NEEDS BACKEND]` → `GET/POST /api/v1/order-statuses/`, `PATCH/DELETE /<id>/`, `POST /reorder/` |
 | إنشاء طلب يدوي | `create_order` POST | `[NEEDS BACKEND]` → `POST /api/v1/orders/` |
 | مسودات B2B | `/api/v1/orders/b2b-draft/`, `/b2b-drafts/`, `/<pk>/resolve/` | Ready |
@@ -163,7 +178,7 @@
 | إعادة تفعيل/إيقاف COD | `CustomerReliabilityRecord` (نموذج) | `[NEEDS BACKEND]` → `POST /api/v1/customers/<phone>/cod/` `{cod_disabled: bool, reason}` → 200 (صلاحية `customers.edit_profile`) |
 | التصدير | `staff_export_customers` | `[NEEDS BACKEND]` → `GET /api/v1/customers/export.csv?<نفس الفلاتر>` → CSV / 403 / 429 عند `critical` |
 | عدد الشريحة الحيّ | ضمن `CampaignForm` | `[NEEDS BACKEND]` → `GET /api/v1/customers/segments/count/?segment&product_id` → `{count}` |
-| حالة التنبيهات السلوكية للموظف الحالي | `behavior_alerts` HTML | `[NEEDS BACKEND]` → ضمن `GET /api/v1/auth/me/` (M03) حقل `behavior:{export: none|warning|critical, view: …}` |
+| حالة التنبيهات السلوكية للموظف الحالي | `behavior_alerts` HTML | `[NEEDS BACKEND]` → ضمن `GET /api/v1/auth/me/` (M03) حقل `behavior:{export: none |
 
 ### M08 — مخصِّص ثيم المتجر (Storefront Theme Customizer)
 
@@ -279,7 +294,7 @@
 | أرصدة المحفظة | `merchant_wallet` HTML | `[NEEDS BACKEND]` → `GET /api/v1/wallet/` → `{balances:[{currency, display_balance, display_available}]}` |
 | حركات المحفظة | ضمن `merchant_wallet` | `[NEEDS BACKEND]` → `GET /api/v1/wallet/transactions/?currency&type&from&to&page` → `{count, results:[{id, type, reason, reference:{kind,id}, display_amount, display_balance_after, created_at}]}` |
 | طلبات السحب | `merchant_withdrawal_request` POST | `[NEEDS BACKEND]` → `GET/POST /api/v1/wallet/withdrawals/` `{currency, amount, payout_account_id}` → `{id, status}` |
-| المستحقات للمنصة | Django admin / `master-dashboard/dues` | `[NEEDS BACKEND]` → `GET /api/v1/wallet/dues/?kind=commission|app_charge&status&page` → `{totals:{pending, collected, waived}, results:[...]}` |
+| المستحقات للمنصة | Django admin / `master-dashboard/dues` | `[NEEDS BACKEND]` → `GET /api/v1/wallet/dues/?kind=commission |
 
 ### M15 — إعدادات الشحن والمناطق والمندوبين (Shipping Zones & Couriers)
 
@@ -293,9 +308,9 @@
 | webhook الناقل (وارد) | `POST /api/v1/webhooks/carrier/<carrier_code>/` + `X-Carrier-Signature` | Ready (يُعرض الرابط فقط) |
 | مناطق شروة شيب | `sharwa_ship.SharwaShipZone` (Django admin) | `[NEEDS BACKEND]` → `GET /api/v1/shipping/sharwa-ship/zones/` (قراءة) |
 | ملفات التغليف | `packaging_profiles` | `[NEEDS BACKEND]` → `GET/POST /api/v1/shipping/packaging-profiles/`, `PATCH/DELETE /<id>/` |
-| مراجعة المناطق | `zone_review` | `[NEEDS BACKEND]` → `GET /api/v1/shipping/zone-review/?status&page`, `POST /<order_id>/resolve/` `{action: confirm|convert_pickup|cancel, pickup_location_id?}` |
+| مراجعة المناطق | `zone_review` | `[NEEDS BACKEND]` → `GET /api/v1/shipping/zone-review/?status&page`, `POST /<order_id>/resolve/` `{action: confirm |
 | النطاقات المحظورة / SLA | `zones.py` (نماذج) | `[NEEDS BACKEND]` → `GET/POST/PATCH/DELETE /api/v1/shipping/restricted-zones/`, `/api/v1/shipping/sla-rules/` |
-| الحالات الحدّية | `edge_cases` | `[NEEDS BACKEND]` → `GET /api/v1/shipping/edge-cases/?kind=out_of_order|flagged|rejected|sla_breach&page` |
+| الحالات الحدّية | `edge_cases` | `[NEEDS BACKEND]` → `GET /api/v1/shipping/edge-cases/?kind=out_of_order |
 | تحديث عنوان أثناء النقل | `update_address_in_transit` POST | `[NEEDS BACKEND]` → `POST /api/v1/shipments/<id>/address/` `{address, latitude?, longitude?}` |
 | تحويل إلى استلام | `convert_order_to_pickup` POST | `[NEEDS BACKEND]` → `POST /api/v1/orders/<id>/convert-to-pickup/` `{pickup_location_id, version}` → 200/409 |
 
@@ -339,7 +354,7 @@
 | التعيينات | `staff.manage_assignments` HTML | `[NEEDS BACKEND]` → `GET/PUT /api/v1/staff/<id>/assignments/` `[{location_id, role_id, location_role}]` |
 | الاستثناءات | `PermissionOverride` | `[NEEDS BACKEND]` → `GET/POST/DELETE /api/v1/staff/<id>/overrides/` `{permission_code, allow}`؛ `GET /<id>/effective-permissions/?location_id` |
 | الجلسات/الرموز/الأجهزة/الجدول | `end_staff_session(s)` | `[NEEDS BACKEND]` → `GET/DELETE /api/v1/staff/<id>/sessions/[<sid>/]`, `GET/POST/DELETE /tokens/`, `GET/DELETE /devices/`, `GET/PUT /roster/` |
-| طلبات الموافقة | `approval_requests`, `resolve_approval` POST | `[NEEDS BACKEND]` → `GET /api/v1/approvals/?status&type&page`, `POST /<id>/resolve/` `{decision: approved|rejected, note?, version}` → 200/409 |
+| طلبات الموافقة | `approval_requests`, `resolve_approval` POST | `[NEEDS BACKEND]` → `GET /api/v1/approvals/?status&type&page`, `POST /<id>/resolve/` `{decision: approved |
 | سجل التدقيق | `audit_log`, `verify_audit_chain` | `[NEEDS BACKEND]` → `GET /api/v1/audit-log/?actor&action&from&to&page`, `POST /api/v1/audit-log/verify/` → `{ok, broken_at?}` |
 | التنبيهات السلوكية | `behavior_alerts` | `[NEEDS BACKEND]` → `GET /api/v1/behavior-alerts/?level&unread`, `POST /<id>/read/` |
 | العدّادات | ضمن الشريط الجانبي | `[NEEDS BACKEND]` → `GET /api/v1/staff/counters/` → `{pending_approvals, unread_alerts}` |
@@ -348,7 +363,7 @@
 
 | Need | Backend today | Status |
 |---|---|---|
-| النطاق الفرعي الحالي | `Domain(is_primary)` + `TENANT_BASE_DOMAIN` | `[NEEDS BACKEND]` → `GET /api/v1/domains/` → `{base_domain, results:[{id, domain, is_primary, kind: subdomain|custom, status, dns_records:[{type,name,value}], failure_reason?, verified_at?}]}` |
+| النطاق الفرعي الحالي | `Domain(is_primary)` + `TENANT_BASE_DOMAIN` | `[NEEDS BACKEND]` → `GET /api/v1/domains/` → `{base_domain, results:[{id, domain, is_primary, kind: subdomain |
 | إضافة نطاق مخصص | Absent (admin-only) | `[NEEDS BACKEND]` → `POST /api/v1/domains/` `{domain}` → 201 بالكيان وحالة `pending_dns` |
 | تحقّق / أساسي / حذف | Absent | `[NEEDS BACKEND]` → `POST /api/v1/domains/<id>/verify/`, `POST /<id>/set-primary/`, `DELETE /<id>/` (الأساسي لا يُحذف) |
 | أدوات التتبع | `tracking_tools` HTML (`TrackingSettingsForm`) | `[NEEDS BACKEND]` → `GET/PATCH /api/v1/store/tracking/` → الحقول العشرة مع `has_meta_conversions_api_token`, `has_tiktok_events_api_token` بدل القيم |
@@ -364,15 +379,15 @@
 | النظرة العامة | `platform_master_dashboard` HTML | `[NEEDS BACKEND]` → `GET /api/v1/platform/overview/` → `{total_stores, display_total_sales, total_orders, failed_stores, recent_stores:[...]}` |
 | المتاجر | `ClientAdmin` | `[NEEDS BACKEND]` → `GET /api/v1/platform/stores/?status&plan&is_active&q&page`, `GET /<schema>/` |
 | إعادة التجهيز / شروة شيب | admin actions | `[NEEDS BACKEND]` → `POST /api/v1/platform/stores/reprovision/` `{schemas[]}`, `POST /<schema>/sharwa-ship/` `{active}` |
-| تجاوزات الميزات | `TenantFeatureOverride` admin (bulk) | `[NEEDS BACKEND]` → `GET /api/v1/platform/stores/<schema>/features/` → `[{code, effective, source, override?}]`, `PUT /features/` `{overrides:[{code, is_enabled|null, notes}]}`, `POST /api/v1/platform/features/bulk-override/` `{schemas[], overrides[]}` |
+| تجاوزات الميزات | `TenantFeatureOverride` admin (bulk) | `[NEEDS BACKEND]` → `GET /api/v1/platform/stores/<schema>/features/` → `[{code, effective, source, override?}]`, `PUT /features/` `{overrides:[{code, is_enabled |
 | الخطط / الميزات / المفاتيح | Billing admin | `[NEEDS BACKEND]` → `GET/POST/PATCH /api/v1/platform/plans/`, `/plans/<code>/features/`, `GET/PATCH /api/v1/platform/features/<code>/`, `GET/PATCH /api/v1/platform/billing-settings/` |
-| المستحقات (8 إجراءات) | `platform_dues_dashboard` POST | `[NEEDS BACKEND]` → `GET /api/v1/platform/dues/?kind&status&schema&from&to&page`; `POST /api/v1/platform/dues/commissions/<id>/{collect|waive}/`; `POST /api/v1/platform/dues/charges/<id>/{collect|waive|unwaive}/`; `POST /api/v1/platform/dues/charges/generate/` `{schema, app_code}`; `POST /api/v1/platform/apps/installations/<id>/{suspend|reactivate}/` |
-| Sharwa Pay | SharwaPay admin | `[NEEDS BACKEND]` → `GET /api/v1/platform/sharwa-pay/topups/?status`, `POST /<id>/{approve|reject}/`; `GET /withdrawals/?status`, `POST /<id>/{confirm|reject}/`; `GET /wallets/<phone>/` |
+| المستحقات (8 إجراءات) | `platform_dues_dashboard` POST | `[NEEDS BACKEND]` → `GET /api/v1/platform/dues/?kind&status&schema&from&to&page`; `POST /api/v1/platform/dues/commissions/<id>/{collect |
+| Sharwa Pay | SharwaPay admin | `[NEEDS BACKEND]` → `GET /api/v1/platform/sharwa-pay/topups/?status`, `POST /<id>/{approve |
 | مناطق شروة شيب | SharwaShip admin | `[NEEDS BACKEND]` → `GET/POST/PATCH/DELETE /api/v1/platform/sharwa-ship/zones/` |
 | التطبيقات | Appstore admin | `[NEEDS BACKEND]` → `GET/POST/PATCH /api/v1/platform/apps/`, `/apps/<code>/overrides/` |
 | فئات السوق | `MarketCategory` admin | `[NEEDS BACKEND]` → `GET/POST/PATCH/DELETE /api/v1/platform/market-categories/`, `POST /reorder/` |
-| أحداث Webhook المعلّقة | `PendingWebhookEvent` admin | `[NEEDS BACKEND]` → `GET /api/v1/platform/webhook-events/?status`, `POST /<id>/{retry|discard}/` |
-| دورة حياة التعطيل | `TenantDeactivationRecord` (نموذج فقط) | `[NEEDS BACKEND]` → `GET/POST /api/v1/platform/stores/<schema>/deactivation/` `{action: suspend|deactivate|close, reason?, grace_period_ends_at?}` |
+| أحداث Webhook المعلّقة | `PendingWebhookEvent` admin | `[NEEDS BACKEND]` → `GET /api/v1/platform/webhook-events/?status`, `POST /<id>/{retry |
+| دورة حياة التعطيل | `TenantDeactivationRecord` (نموذج فقط) | `[NEEDS BACKEND]` → `GET/POST /api/v1/platform/stores/<schema>/deactivation/` `{action: suspend |
 | المصادقة | جلسة Django admin | `[NEEDS BACKEND]` → مصادقة جلسة superuser/staff على `/api/v1/platform/*` + CSRF |
 
 ### M21 — مركز المخزون ودفتر الحركات (Inventory Hub & Stock Ledger)
@@ -620,14 +635,14 @@
 | تسليم جزئي | `POST /api/v1/agent/fulfillments/<id>/partial-delivery/` ← `{line_items:[{fulfillment_item_id, delivered_quantity, rejection_reason}], client_generated_uuid, geo_lat?, geo_lng?, geo_accuracy_m?}` → `{collected_amount, currency, delivered, rejected, duplicate}`؛ 400 بلا بنود/بلا uuid/خطأ عهدة؛ 409 `{detail:'رُفض التسليم.', rejection_reason}` | Ready |
 | شحناتي | `agent_shipment_list` HTML | `[NEEDS BACKEND]` → `GET /api/v1/agent/shipments/?status` → `[{id, waybill_number, status, customer_name, address, display_cod_amount, fulfillment_id, items:[{fulfillment_item_id, product_name, quantity}]}]` |
 | تفاصيل شحنة + أحداثها | `agent_shipment_detail` HTML | `[NEEDS BACKEND]` → `GET /api/v1/agent/shipments/<id>/` → الشحنة + `events[]` |
-| المناوبة الحالية + الرصيد | `agent_shift` HTML (`get_courier_balance`) | `[NEEDS BACKEND]` → `GET /api/v1/agent/me/` → `{agent:{id,name}, open_shift:{id, started_at, vehicle_ref}|null, display_balance, currency}` |
+| المناوبة الحالية + الرصيد | `agent_shift` HTML (`get_courier_balance`) | `[NEEDS BACKEND]` → `GET /api/v1/agent/me/` → `{agent:{id,name}, open_shift:{id, started_at, vehicle_ref} |
 | دفتر العهدة | Model فقط | `[NEEDS BACKEND]` → `GET /api/v1/agent/custody/?page` → `[{entry_type, display_amount, currency, related_shipment, related_shift, created_at}]` |
 
 ### M39 — شروة شيب: البوليصات وأحداث الشحن (Sharwa Ship Waybills & Shipment Events)
 
 | Need | Backend today | Status |
 |---|---|---|
-| طلبات بلا بوليصة + معاينة الوزن + المناطق | `waybill_list_view` HTML (`calculate_chargeable_weight`, `split_fulfillment_into_awbs`, `SharwaShipZone.is_active`) | `[NEEDS BACKEND]` → `GET /api/v1/shipping/sharwa-ship/pending-orders/` → `[{order_id, customer_name, fulfillment_id, weight_preview:{actual, volumetric, chargeable}|null, awb_plan_count}]` + `GET /api/v1/shipping/sharwa-ship/zones/` → `[{code, name, display_price, currency}]` |
+| طلبات بلا بوليصة + معاينة الوزن + المناطق | `waybill_list_view` HTML (`calculate_chargeable_weight`, `split_fulfillment_into_awbs`, `SharwaShipZone.is_active`) | `[NEEDS BACKEND]` → `GET /api/v1/shipping/sharwa-ship/pending-orders/` → `[{order_id, customer_name, fulfillment_id, weight_preview:{actual, volumetric, chargeable} |
 | إصدار بوليصة | `issue_waybill_view` POST `{zone_code}` | `[NEEDS BACKEND]` → `POST /api/v1/shipping/sharwa-ship/orders/<order_id>/waybill/` `{zone_code}` → 201 الشحنة؛ 400 `{detail}` |
 | قائمة البوليصات | ضمن `waybill_list_view` | `[NEEDS BACKEND]` → `GET /api/v1/shipping/shipments/?status&billing_status&carrier&q&from&to&page` → `{count, results:[{id, waybill_number, order_id, customer_name, carrier_code, zone_name_snapshot, display_cost, actual_weight_snapshot, status, billing_status, master_waybill_number, created_at}]}` |
 | تفاصيل + أحداث | `shipment_events_view` HTML (ترتيب `-event_time, -id`) | `[NEEDS BACKEND]` → `GET /api/v1/shipping/shipments/<id>/` → الشحنة + `events:[{event_time, received_at, from_status, to_status, source, actor_type, actor_id, is_rejected, rejection_reason, out_of_order, flagged_for_review, geo}]` |
@@ -697,9 +712,9 @@
 
 | Need | Backend today | Status |
 |---|---|---|
-| النظرة العامة | `platform_dues_dashboard` GET → `overview:[{tenant, snapshot, wallet}]` (مرتبة بالإيراد) | `[NEEDS BACKEND]` → `GET /api/v1/admin/dues/overview/?q&period` → `[{schema_name, name, merchant_phone, snapshot:{date, orders_count, display_revenue_sar}|null, wallet:[{currency, display_balance}]|null}]` |
+| النظرة العامة | `platform_dues_dashboard` GET → `overview:[{tenant, snapshot, wallet}]` (مرتبة بالإيراد) | `[NEEDS BACKEND]` → `GET /api/v1/admin/dues/overview/?q&period` → `[{schema_name, name, merchant_phone, snapshot:{date, orders_count, display_revenue_sar} |
 | تفاصيل متجر | GET `?schema=` → `entry{pending_commissions, pending_charges, uninvoiced, waived_charges, has_dues, wallet, snapshot}` | `[NEEDS BACKEND]` → `GET /api/v1/admin/dues/<schema>/` → `{pending_commissions:[{id, order_id, plan_name_snapshot, commission_type, commission_value, display_amount, currency, created_at}], pending_charges:[{id, app_code, app_name_snapshot, period_label, display_price, currency, created_at}], uninvoiced:[{installation_id, app_code, app_name, period_label}], waived_charges:[{id, app_name_snapshot, period_label, display_price}], totals:[{currency, display_commissions, display_charges}], wallet, has_dues}` |
-| الإجراءات (8) | POST `{action, schema, record_id|app_code}` + Django messages | `[NEEDS BACKEND]` → `POST /api/v1/admin/dues/<schema>/actions/` `{action, record_id?, app_code?}` → 200 `{detail, level: success|warning|error, record?}`؛ 409 «تم التعامل معه مسبقاً»؛ 400 «تعذّر التحصيل: …» |
+| الإجراءات (8) | POST `{action, schema, record_id | app_code}` + Django messages |
 | مصادقة الإدمن | جلسة Django admin `/sharwa-secure-gate/` | `[NEEDS BACKEND]` → عقد جلسة إدارية لـ `/api/v1/admin/*` (يُوحَّد مع M20/M46) |
 
 ### M46 — إدارة الباقات والاشتراكات وأعلام الميزات (Plans, Subscriptions & Feature Flags Admin)
@@ -757,4 +772,3 @@
 | مفتاح VAPID | `GET /api/v1/push/vapid-public-key/` → `{publicKey}` | Ready |
 | اشتراك/إلغاء Push | `POST /api/v1/push/subscribe/` `{endpoint, keys:{p256dh, auth}}`, `POST /api/v1/push/unsubscribe/` `{endpoint}` | Ready |
 | مصادر العدّادات القديمة | `approval_requests` count، `behavior_alerts` unread، `channel_inbox_list` unread (HTML context) | تُستبدل بـ `summary` |
-

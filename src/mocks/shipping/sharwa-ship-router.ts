@@ -1,5 +1,5 @@
 import "server-only";
-import { hasPermission, type PermissionKey } from "@/lib/access";
+import { COURIER_SUPERVISION_FEATURES, hasPermission, type PermissionKey } from "@/lib/access";
 import { respond, type MockRouteContext } from "@/lib/bff/mock-route";
 import { mockJson } from "@/mocks/runtime";
 import { listZones } from "@/mocks/shipping/state";
@@ -27,6 +27,8 @@ import {
  *
  * Gates (M39 §2, FR-39.01): feature `sharwa_ship` (403 with the readable sentence), reads
  * under `orders.view`, writes (issue, manual status, retry, assign, reassign) the owner's.
+ * Courier supervision — `supervisor`, `agent-shifts`, `agents/<id>/emergency-reassign`,
+ * `shipments/<id>/assign` — opens with Sharwa Ship OR local delivery (Phase 7 decision 3).
  */
 type Body = Record<string, unknown>;
 
@@ -45,7 +47,12 @@ const notAllowed = (m: string) => mockJson({ detail: `الطريقة «${m}» غ
 
 export async function sharwaShipMock(request: Request, segments: string[], ctx: MockRouteContext): Promise<Response> {
   const { store, session, url } = ctx;
-  if (!session.features.includes("sharwa_ship")) return forbidden("ميزة شروة شيب غير مفعّلة لمتجرك.");
+  const sharwaShip = session.features.includes("sharwa_ship");
+  const [head0, , b0] = segments;
+  const courierRow = head0 === "supervisor" || head0 === "agent-shifts" || head0 === "agents" || (head0 === "shipments" && b0 === "assign");
+  if (courierRow) {
+    if (!COURIER_SUPERVISION_FEATURES.some((f) => session.features.includes(f))) return forbidden("الإشراف على المندوبين يتطلب «شروة شيب» أو التوصيل المحلي.");
+  } else if (!sharwaShip) return forbidden("ميزة شروة شيب غير مفعّلة لمتجرك.");
   const can = (p: PermissionKey) => hasPermission({ kind: session.kind, features: session.features, permissions: session.staff?.permissions }, p);
   if (!can("orders.view")) return forbidden("ليست لديك صلاحية لعرض الشحنات.");
   const owner = session.kind === "merchant";
@@ -95,7 +102,7 @@ export async function sharwaShipMock(request: Request, segments: string[], ctx: 
       return m === "GET" && !a ? mockJson(listRateCards(store), { delay: 120 }) : notFound();
     case "supervisor":
       if (!owner) return ownerOnly();
-      return m === "GET" && !a ? mockJson(supervisor(store), { delay: 160 }) : notFound();
+      return m === "GET" && !a ? mockJson(supervisor(store, { sharwaShip }), { delay: 160 }) : notFound();
     case "agents":
       if (a && b === "emergency-reassign") {
         if (m !== "POST") return notAllowed(m);

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { LazyMotion, domAnimation, m, useReducedMotion } from "motion/react";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { StartForm } from "@/features/landing/components/start-form";
 import { hero } from "@/features/landing/landing.content";
 
@@ -107,8 +107,8 @@ export function HeroIntro() {
               className="group inline-flex items-center gap-1 font-semibold text-foreground underline decoration-emerald-500/40 underline-offset-4 transition-colors hover:text-emerald-700 hover:decoration-emerald-500 dark:hover:text-emerald-300"
             >
               {hero.ctaLogin}
-              <ArrowLeft
-                className="size-3.5 transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-x-0.5"
+              <ArrowRight
+                className="size-3.5 transition-transform duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] rtl:group-hover:-translate-x-0.5 ltr:group-hover:translate-x-0.5 rtl:rotate-180"
                 aria-hidden
               />
             </Link>

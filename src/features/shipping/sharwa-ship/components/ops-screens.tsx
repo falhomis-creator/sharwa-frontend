@@ -15,25 +15,34 @@ import { isApiError } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useAccess } from "@/features/dashboard-shell/components/session-context";
+import { COURIER_SUPERVISION_FEATURES } from "@/lib/access";
 import { ShippingSubnav, dangerButton, outlineButton, primaryButton } from "@/features/shipping/components/bits";
 import { ShipmentStatusText } from "@/features/shipping/components/edge-cases-screen";
 import { useAgentShifts, useAssignShipment, useAwbQueue, useEmergencyReassign, useRateCards, useRetryAwb, useSupervisor } from "@/features/shipping/sharwa-ship/api";
 import { SharwaShipNav } from "@/features/shipping/sharwa-ship/components/shared";
 import { AWB_LABELS, CARRIER_LABELS, CUSTODY_LABELS, type Supervisor } from "@/features/shipping/sharwa-ship/schemas";
 
-function Gate({ children, ownerOnly = false }: { children: React.ReactNode; ownerOnly?: boolean }) {
+/**
+ * `courier` screens (supervisor, agent shifts) open with Sharwa Ship OR local delivery
+ * (`COURIER_SUPERVISION_FEATURES`, Phase 7 decision 3); the AWB/rate-card screens stay Sharwa Ship's.
+ */
+function Gate({ children, ownerOnly = false, courier = false }: { children: React.ReactNode; ownerOnly?: boolean; courier?: boolean }) {
   const { canFeature, session } = useAccess();
-  if (!canFeature("sharwa_ship")) return <FeatureOffState title="الميزة غير مفعَّلة لمتجرك" />;
+  if (courier && !canFeature(COURIER_SUPERVISION_FEATURES))
+    return <FeatureOffState title="الإشراف على المندوبين غير مفعَّل لمتجرك" description="فعّل «شروة شيب» أو التوصيل المحلي بمندوبي المتجر من باقتك." />;
+  if (!courier && !canFeature("sharwa_ship")) return <FeatureOffState title="الميزة غير مفعَّلة لمتجرك" />;
   if (ownerOnly && session.kind !== "merchant") return <ForbiddenState description="الإشراف على المندوبين مقصور على مالك المتجر." />;
   return <AccessGate permission="orders.view">{children}</AccessGate>;
 }
 
 function Frame({ title, description, children, testId }: { title: string; description: string; children: React.ReactNode; testId: string }) {
+  const { canFeature } = useAccess();
   return (
     <div className="flex min-w-0 flex-col gap-6" data-testid={testId}>
       <PageHeader title={title} description={description} />
       <ShippingSubnav />
-      <SharwaShipNav />
+      {/* Local-delivery-only stores reach the supervisor without Sharwa Ship: no dead links. */}
+      {canFeature("sharwa_ship") ? <SharwaShipNav /> : null}
       {children}
     </div>
   );
@@ -194,7 +203,7 @@ function RateCards() {
 // ── supervisor + emergency reassignment (US-39.5) ────────────────────────────────────
 export function SupervisorScreen() {
   return (
-    <Gate ownerOnly>
+    <Gate ownerOnly courier>
       <SupervisorBody />
     </Gate>
   );
@@ -379,7 +388,7 @@ function ReassignDialog({ agent, agents, onClose }: { agent: AgentRow | null; ag
 // ── agent shifts ─────────────────────────────────────────────────────────────────────
 export function AgentShiftsScreen() {
   return (
-    <Gate ownerOnly>
+    <Gate ownerOnly courier>
       <Shifts />
     </Gate>
   );

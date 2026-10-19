@@ -16,8 +16,10 @@ import { todayMetricsSchema, type TodayMetrics } from "@/features/dashboard-shel
  * hairlines, 12px labels underneath. Explicitly NOT four identical KPI cards — that row of
  * cards is the first thing constitution I-ب rules out.
  *
- * 2×3 on mobile, 3 columns on tablet, 6 across on desktop; the hairlines come from a 1px
- * gap over `bg-border`, so there is no shadow and no card chrome.
+ * 2×3 on mobile, 3 columns on tablet and small laptops, 6 across from xl; the hairlines come from a 1px
+ * gap over `bg-border`, so there is no shadow and no card chrome. Money values step their
+ * size down with the cell's own width (container queries) and may wrap — never truncate —
+ * so a long figure such as «1,222,278.75 ر.س» stays whole inside its cell.
  */
 export function TodayBar({ initial, store }: { initial: TodayMetrics; store: string }) {
   const [today, setToday] = useState(initial);
@@ -76,19 +78,22 @@ export function TodayBar({ initial, store }: { initial: TodayMetrics; store: str
         </p>
       ) : null}
 
-      <dl className="grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-3 lg:grid-cols-6">
+      <dl className="grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-3 xl:grid-cols-6">
         {TODAY_FIELDS.map((field) => (
-          <div key={field.key} className="flex flex-col gap-1 bg-background p-4">
+          <div key={field.key} className="@container flex min-w-0 flex-col gap-1 bg-background p-4">
             <dd
               className={cn(
-                "font-mono text-[2rem] leading-none tabular-nums transition-opacity duration-150",
+                "min-w-0 font-mono text-[2rem] leading-none tabular-nums transition-opacity duration-150",
                 refresh.isPending && "opacity-50",
               )}
               data-mono
               dir="ltr"
             >
               {"money" in field && field.money ? (
-                <Money value={today[field.key] as string} className="text-[1.375rem]" />
+                <Money
+                  value={today[field.key] as string}
+                  className="inline-block max-w-full text-base leading-tight [overflow-wrap:anywhere] @[9rem]:text-lg @[11rem]:text-[1.375rem]"
+                />
               ) : (
                 (today[field.key] as number).toLocaleString("en-US")
               )}

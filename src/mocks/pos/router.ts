@@ -22,8 +22,12 @@ import {
 
 /**
  * The mock SERVER for `/api/v1/pos/*` (M16 §7 — every row `[NEEDS BACKEND]`), behind the
- * catch-all `src/app/api/bff/pos/[...path]`. The session gate (401) runs in `mockRoute`
- * first; the POS has no plan feature key, so access is the session + the M22 assignment.
+ * catch-all `src/app/api/bff/pos/[...path]`. Gates in order: the session (401, `mockRoute`),
+ * the plan feature `pos` (403 `feature_disabled` — Phase 7 decision 1, subscription-gated),
+ * then the M22 location assignment.
+ *
+ * Still mock-only and kept as-is until Django ships the rows: the manager code `2468`
+ * (`MOCK_MANAGER_CODE`) and the 200.00 refund OTP threshold (`LARGE_REFUND_THRESHOLD`).
  */
 type Body = Record<string, unknown>;
 type Actor = ReturnType<typeof actorOf>;
@@ -85,7 +89,11 @@ on("GET", "orders/:id", (c) => {
 });
 on("POST", "orders/:id/refund", async (c) => send(refundReceipt(c.route.store, c.actor, id(c), await c.body(), c.key)));
 
+/** Plan gate body — same shape the dashboard modules use for a feature that is off. */
+export const POS_FEATURE_OFF = { detail: "ميزة نقطة البيع غير مفعّلة في خطتك.", code: "feature_disabled" } as const;
+
 export async function posMock(request: Request, path: string[], route: MockRouteContext): Promise<Response> {
+  if (!route.session.features.includes("pos")) return mockJson(POS_FEATURE_OFF, { status: 403, delay: 80 });
   const segs = path.filter(Boolean);
   const actor = actorOf(route.store, route.session);
   let parsed: Body | undefined;

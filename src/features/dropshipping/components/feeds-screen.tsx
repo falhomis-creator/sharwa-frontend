@@ -9,6 +9,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import { EmptyState } from "@/components/shared/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
+import { FilePicker } from "@/components/shared/file-picker";
 import { Field, inputClass } from "@/components/shared/field";
 import { Mono } from "@/components/shared/mono";
 import { PageHeader } from "@/components/shared/page-header";
@@ -168,11 +169,10 @@ function SourceStep({ onCreated }: { onCreated: (id: number) => void }) {
       </div>
       {kind === "file" ? (
         <Field label="الملف" htmlFor={`${id}-f`} error={error ?? undefined} hint={`المسموح: ${FEED_EXTENSIONS.join(", ")}`}>
-          <input
+          <FilePicker
             id={`${id}-f`}
-            type="file"
             accept={FEED_EXTENSIONS.map((e) => `.${e}`).join(",")}
-            className={cn(inputClass, "py-1.5")}
+            aria-invalid={!!error || undefined}
             data-testid="feed-file"
             onChange={(e) => {
               const f = e.target.files?.[0] ?? null;

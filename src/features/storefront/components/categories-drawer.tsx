@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeftIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
@@ -51,7 +51,7 @@ export function CategoriesDrawer({
                         onClick={() => setExpanded((v) => (v === c.id ? null : c.id))}
                         className="flex size-12 items-center justify-center text-muted-foreground"
                       >
-                        <ChevronLeftIcon aria-hidden className={expanded === c.id ? "size-4 -rotate-90 transition-transform" : "size-4 transition-transform rtl:rotate-0"} />
+                        <ChevronRightIcon aria-hidden className={expanded === c.id ? "size-4 rotate-90 transition-transform" : "size-4 transition-transform rtl:rotate-180"} />
                       </button>
                     ) : null}
                   </div>

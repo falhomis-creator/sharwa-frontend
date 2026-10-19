@@ -10,6 +10,7 @@
  * only ever touch non-fixture stores (`glow`, `fit`, `books`) — the merchant session of
  * `noor` keeps all 39 features. Repeatable: run it twice in a row.
  */
+import { FEATURE_KEYS } from "../src/lib/access";
 import { chromium, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -123,7 +124,7 @@ async function main() {
   // ── /plans/matrix ───────────────────────────────────────────────────────────────
   await page.goto(`${BASE}/plans/matrix`, { waitUntil: "networkidle" });
   await page.waitForSelector("[data-testid=matrix-row]");
-  check((await page.locator("[data-testid=matrix-row]").count()) === 39, "matrix: 39 feature rows");
+  check((await page.locator("[data-testid=matrix-row]").count()) === FEATURE_KEYS.length, `matrix: ${FEATURE_KEYS.length} feature rows`);
   check(await page.locator("[data-testid=subscriptions-off-note]").isVisible(), "matrix: «الباقات غير مفعَّلة» note while subscriptions_enabled=false");
   check((await page.locator("[data-testid=matrix-row][data-code=refunds]").textContent())?.includes("متاحة لكل الباقات") === true, "matrix: a requires_plan=false row is muted with its hint");
   const cell = page.locator("[data-testid=cell-basic-campaigns]");
@@ -158,11 +159,11 @@ async function main() {
   const mp = await merchant.newPage();
   await mp.goto(`${NOOR}/dashboard/login`, { waitUntil: "domcontentloaded" });
   const me1 = (await api<{ features: string[] }>(mp, "GET", "/api/bff/dashboard/me")).json;
-  check(!me1.features.includes("timeline") && me1.features.length === 38, "kill switch: the merchant session (noor) drops the killed feature at once");
+  check(!me1.features.includes("timeline") && me1.features.length === FEATURE_KEYS.length - 1, "kill switch: the merchant session (noor) drops the killed feature at once");
   await page.click("[data-testid=kill-timeline]");
   await page.waitForFunction(() => document.querySelector("[data-testid=kill-timeline]")?.getAttribute("aria-checked") === "true");
   const me2 = (await api<{ features: string[] }>(mp, "GET", "/api/bff/dashboard/me")).json;
-  check(me2.features.length === 39, "kill switch: re-enabling needs no dialog and noor is back to 39 features");
+  check(me2.features.length === FEATURE_KEYS.length, "kill switch: re-enabling needs no dialog and noor is back to all features");
   await merchant.close();
 
   await page.click("[data-testid=requires-coupon]");

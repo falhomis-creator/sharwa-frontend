@@ -7,6 +7,7 @@
  *
  *   SHARWA_CHROMIUM=/path/to/chrome npx tsx scripts/admin-stores-check.ts [port]   (default 3000)
  */
+import { FEATURE_KEYS } from "../src/lib/access";
 import { chromium, type Browser, type Page } from "@playwright/test";
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
@@ -127,7 +128,7 @@ async function main() {
   // ── detail: features tab drives the merchant session ───────────────────────────────
   await page.goto(`${CONSOLE}/stores/noor?tab=features`, { waitUntil: "load" });
   await page.waitForSelector("[data-testid=feature-row]");
-  check((await page.locator("[data-testid=feature-row]").count()) === 39, "noor › features lists the 39 keys");
+  check((await page.locator("[data-testid=feature-row]").count()) === FEATURE_KEYS.length, `noor › features lists the ${FEATURE_KEYS.length} keys`);
   check((await page.locator("[data-testid=feature-row][data-code=bookings] [data-testid=feature-source]").innerText()).includes("الخطوة"), "each key shows the resolution step that decided it");
   await shot(page, "store-features-desktop");
   await page.click("[data-testid=ov-bookings-off] >> xpath=..");
@@ -144,14 +145,14 @@ async function main() {
   await merchant.context().addCookies([{ name: "sharwa_mock_session", value: "merchant", domain: "noor.localhost", path: "/" }]);
   await merchant.goto(`http://noor.localhost:${PORT}/api/bff/auth/csrf`, { waitUntil: "domcontentloaded" });
   const me = await api(merchant, "GET", "/api/bff/dashboard/me");
-  check(Array.isArray(me.json.features) && !(me.json.features as string[]).includes("bookings") && (me.json.features as string[]).length === 38, "the merchant session of noor drops bookings at once (one resolution, two screens)");
+  check(Array.isArray(me.json.features) && !(me.json.features as string[]).includes("bookings") && (me.json.features as string[]).length === FEATURE_KEYS.length - 1, "the merchant session of noor drops bookings at once (one resolution, two screens)");
 
   await page.click("[data-testid=ov-bookings-inherit] >> xpath=..");
   await page.click("[data-testid=save-overrides]");
   await page.click("[data-testid=confirm-action]");
   await page.waitForSelector("[data-testid=feature-row][data-code=bookings]:not([data-source=override])");
   const me2 = await api(merchant, "GET", "/api/bff/dashboard/me");
-  check((me2.json.features as string[]).length === 39, "back to «موروثة» → noor has all 39 features again");
+  check((me2.json.features as string[]).length === FEATURE_KEYS.length, "back to «موروثة» → noor has all features again");
 
   // ── domains (atyab) ────────────────────────────────────────────────────────────────
   await page.goto(`${CONSOLE}/stores/atyab?tab=domains`, { waitUntil: "load" });

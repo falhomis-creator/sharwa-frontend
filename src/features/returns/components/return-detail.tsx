@@ -256,7 +256,8 @@ function ReturnBody({
       ) : null}
       {failure?.kind === "liquidity" ? (
         <div role="alert" className="flex flex-col gap-1 rounded-lg border border-destructive/50 p-3 text-sm" data-testid="return-liquidity">
-          <p className="text-destructive">{failure.detail}</p>
+          {/* The server sentence verbatim, minus the exception class it is prefixed with (Phase 8 audit). */}
+          <p className="text-destructive">{failure.detail.replace(/^\s*CashLiquidityError:\s*/i, "")}</p>
           <p className="text-muted-foreground">غيّر الطريقة إلى محفظة العميل أو اختر موقعاً آخر.</p>
         </div>
       ) : null}

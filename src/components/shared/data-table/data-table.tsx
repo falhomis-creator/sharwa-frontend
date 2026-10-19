@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { Mono } from "@/components/shared/mono";
+import { ScrollX } from "@/components/shared/scroll-x";
 import { TablePagination } from "@/components/shared/data-table/table-pagination";
 import { nextOrdering, type Density } from "@/components/shared/data-table/use-table-url-state";
 import { formatNumber } from "@/lib/format";
@@ -247,9 +248,9 @@ export function DataTable<T>({
       ) : (
         <>
           {/* Desktop/tablet table */}
-          <div
+          <ScrollX
             className={cn(
-              "relative overflow-x-auto rounded-lg border border-border",
+              "rounded-lg border border-border",
               renderMobileCard && "hidden md:block",
               isFetching && !isLoading && "opacity-70 transition-opacity",
             )}
@@ -353,7 +354,7 @@ export function DataTable<T>({
                     ))}
               </tbody>
             </table>
-          </div>
+          </ScrollX>
 
           {/* Mobile cards */}
           {renderMobileCard ? (

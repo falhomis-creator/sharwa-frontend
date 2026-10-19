@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useId, useState } from "react";
 import { DndContext, KeyboardSensor, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, arrayMove, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { ArrowDown, ArrowRight, ArrowUp, GripVertical } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowUp, GripVertical } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
@@ -68,7 +68,7 @@ function RoutingBody() {
   return (
     <div className="flex flex-col gap-6" data-testid="routing-screen">
       <Link href="/dashboard/locations" className="inline-flex min-h-11 w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground lg:min-h-8">
-        <ArrowRight className="size-4" aria-hidden /> كل المواقع
+        <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden /> كل المواقع
       </Link>
       <PageHeader
         title="قواعد التوجيه"

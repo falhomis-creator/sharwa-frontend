@@ -557,18 +557,30 @@ description: "Task list — Sharwa Frontend Platform (001)"
 > | T182 | `manifest`/`sw.js` تحت `/sharwa-pay/` بنطاق `/sharwa-pay/`؛ الرابط من نطاق متجر يُحوَّل 308 لأصل المنصة | `/` على أصل المنصة هو الموقع التسويقي |
 > | T185 | لقطات M43 في `docs/visual-checks/43-stores/`؛ المبدّل على الجوال يبقى قائمة منسدلة | — |
 
+> **قرارات المالك على المرحلة 7 (2026-10-19) — مُطبَّقة.** تُغلق صفوف الانحراف المفتوحة أعلاه:
+>
+> | # | القرار | التطبيق |
+> |---|---|---|
+> | 1 | POS ميزة اشتراك | مفتاح `pos` (الأربعون، `requires_plan`) في `FEATURE_KEYS`؛ تخطيط `(pos)` يعرض «نقطة البيع غير متاحة في خطتك» و`/api/bff/pos/*` يجيب 403 `feature_disabled`؛ رمز `2468` وحد 200.00 يبقيان mock — يُغلق صف T143 |
+> | 2 | بوابة بأي صلاحية من قائمة | `PermissionGate = PermissionKey \| PermissionKey[]` + `hasAnyPermission`/`passesGate` في `src/lib/access.ts`؛ «أوامر الشراء» = `[suppliers.manage, suppliers.approve]` — يُغلق صف T149 |
+> | 3 | إشراف المندوبين بلا شروة شيب | `COURIER_SUPERVISION_FEATURES = [sharwa_ship, shipping_providers]`؛ `FeatureGate` بأي ميزة؛ الشاشة والـ BFF للإشراف/المناوبات/الإسناد تُفتح بأيٍّ منهما، وAWB/التسعيرة لشروة شيب وحدها |
+> | 4 | المزايدة = اسم + جوال (M37) | `BidForm` (درج سفلي على الجوال) و`POST …/auction/bids` `{bidder_name, bidder_phone, amount}` بلا OTP |
+> | 5 | حقول الموجز الـ 20 معتمدة | `FEED_FIELDS` موسومة كعقد معتمد — يُغلق صف T161 |
+>
+> الفحص: `scripts/phase7-decisions-check.ts` (29 ✓، 0 أخطاء console).
+
 ---
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T187 [P] قاعدة ESLint مخصصة لمفاتيح الكاش (FR-47.09) في `eslint-rules/tenant-cache-key.js`: ترفض `useQuery({queryKey:[...]})` لا يبدأ بـ `storeKey(` داخل `src/app/(storefront)|(dashboard)` و`src/features/**`
-- [ ] T188 [P] تدقيق RTL شامل: `grep` للفئات الفيزيائية والأيقونات الاتجاهية بلا `rtl:rotate-180` (`ArrowLeft|ArrowRight|ChevronLeft|ChevronRight`) عبر `src/`؛ تصحيح النتائج
-- [ ] T189 [P] تدقيق المبدأ I عبر كل `docs/visual-checks/**` (قائمة الفحص الكاملة) وتوثيق النتيجة في `docs/visual-checks/ANTI-AI-AUDIT.md`
-- [ ] T190 [P] Lighthouse على `/`, المتجر الرئيسي, PDP, الطلبات (mobile preset) → `docs/lighthouse/*.json`؛ معالجة ما دون 90/95
-- [ ] T191 [P] اختبار عزل المستأجرين الآلي `scripts/tenant-isolation-check.ts` (10 متاجر متناوبة في عملية واحدة، مقارنة `store_name` في كل استجابة، SC-009)
-- [ ] T192 تحديث `README.md` و`specs/001-sharwa-frontend-platform/contracts/needs-backend-inventory.md` (إعادة توليد) + تقرير تسليم `docs/DELIVERY-REPORT.md` يسرد لكل وحدة: ما بُني، ما فُحص، الوسم، صفوف `[NEEDS BACKEND]` المستهلكة
-- [ ] T193 تشغيل `quickstart.md` §4 كاملاً من بيئة نظيفة (`rm -rf .next && npm ci && npm run build && npm start`) وتوثيق النتيجة
-- [ ] T194 وسم `rp/99-platform-after` نهائي + مراجعة الامتثال I–IX في `restore-points.md`
+- [X] T187 [P] قاعدة ESLint مخصصة لمفاتيح الكاش (FR-47.09) في `eslint-rules/tenant-cache-key.js`: ترفض `useQuery({queryKey:[...]})` لا يبدأ بـ `storeKey(` داخل `src/app/(storefront)|(dashboard)` و`src/features/**`
+- [X] T188 [P] تدقيق RTL شامل: `grep` للفئات الفيزيائية والأيقونات الاتجاهية بلا `rtl:rotate-180` (`ArrowLeft|ArrowRight|ChevronLeft|ChevronRight`) عبر `src/`؛ تصحيح النتائج
+- [X] T189 [P] تدقيق المبدأ I عبر كل `docs/visual-checks/**` (قائمة الفحص الكاملة) وتوثيق النتيجة في `docs/visual-checks/ANTI-AI-AUDIT.md`
+- [X] T190 [P] Lighthouse على `/`, المتجر الرئيسي, PDP, الطلبات (mobile preset) → `docs/lighthouse/*.json`؛ معالجة ما دون 90/95
+- [X] T191 [P] اختبار عزل المستأجرين الآلي `scripts/tenant-isolation-check.ts` (10 متاجر متناوبة في عملية واحدة، مقارنة `store_name` في كل استجابة، SC-009)
+- [X] T192 تحديث `README.md` و`specs/001-sharwa-frontend-platform/contracts/needs-backend-inventory.md` (إعادة توليد) + تقرير تسليم `docs/DELIVERY-REPORT.md` يسرد لكل وحدة: ما بُني، ما فُحص، الوسم، صفوف `[NEEDS BACKEND]` المستهلكة
+- [X] T193 تشغيل `quickstart.md` §4 كاملاً من بيئة نظيفة (`rm -rf .next && npm ci && npm run build && npm start`) وتوثيق النتيجة
+- [X] T194 وسم `rp/99-platform-after` نهائي + مراجعة الامتثال I–IX في `restore-points.md`
 
 ---
 

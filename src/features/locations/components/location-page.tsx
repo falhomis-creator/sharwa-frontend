@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AccessGate, ForbiddenState } from "@/components/shared/access-gate";
@@ -114,7 +114,7 @@ function OwnerOnly({ children }: { children: React.ReactNode }) {
 function Back() {
   return (
     <Link href="/dashboard/locations" className="inline-flex min-h-11 w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground lg:min-h-8">
-      <ArrowRight className="size-4" aria-hidden /> كل المواقع
+      <ArrowLeft className="size-4 rtl:rotate-180" aria-hidden /> كل المواقع
     </Link>
   );
 }

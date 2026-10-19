@@ -51,7 +51,7 @@ export function FeaturesScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="الميزات والإيقاف الطارئ" description="الـ 39 مفتاحاً كما يرسلها الخادم، مجمَّعة بمجموعات الشريط الجانبي." />
+      <PageHeader title="الميزات والإيقاف الطارئ" description="مفاتيح الميزات كما يرسلها الخادم، مجمَّعة بمجموعات الشريط الجانبي." />
       {!canWrite ? <ReadOnlyNote /> : null}
       {features.error ? <ErrorState error={features.error} onRetry={() => void features.refetch()} /> : null}
       <Table caption="الميزات" testId="features-table">

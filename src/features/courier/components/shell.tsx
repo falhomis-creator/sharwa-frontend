@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -60,7 +60,7 @@ export function CourierShell({ children }: { children: ReactNode }) {
           </p>
         ) : null}
       </header>
-      <main id="main" className="mx-auto flex w-full max-w-[480px] flex-1 flex-col gap-4 px-4 pt-4 pb-40">
+      <main id="main" className="mx-auto flex w-full max-w-[480px] flex-1 flex-col gap-4 px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <Gate query={me}>{children}</Gate>
       </main>
       <nav aria-label="أقسام التطبيق" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
@@ -143,12 +143,28 @@ export function OfflineNote({ snap }: { snap: Snap<unknown> | undefined }) {
   );
 }
 
-/** The fixed bottom action bar, above the tab bar (FR-38.09). */
+/**
+ * The fixed bottom action bar, above the tab bar (FR-38.09). An in-flow spacer of the bar's
+ * measured height sits where the bar is rendered, so the last field or button of the screen
+ * always scrolls clear of it however many rows the bar grows to.
+ */
 export function ActionBar({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(0);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setHeight(el.offsetHeight));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
   return (
-    <div className="fixed inset-x-0 bottom-14 z-20 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]" data-testid="action-bar">
-      <div className="mx-auto flex max-w-[480px] flex-col gap-2 px-4 py-3">{children}</div>
-    </div>
+    <>
+      <div aria-hidden className="shrink-0" style={{ height }} data-testid="action-bar-spacer" />
+      <div ref={ref} className="fixed inset-x-0 bottom-14 z-20 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]" data-testid="action-bar">
+        <div className="mx-auto flex max-w-[480px] flex-col gap-2 px-4 py-3">{children}</div>
+      </div>
+    </>
   );
 }
 
