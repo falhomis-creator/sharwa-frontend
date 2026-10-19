@@ -4,7 +4,7 @@ import { catalog } from "@/mocks/catalog/state";
 import { readSettings } from "@/mocks/settings/state";
 import { storeState } from "@/mocks/store-state";
 import { findVisible, nowMs, unitPrice } from "@/mocks/storefront/catalog";
-import { PERSONALIZATION } from "@/mocks/storefront/extensions";
+import { extras } from "@/mocks/product-extras/state";
 import { convert, fmt, round2, storeDefaultCurrency, storeRates, type Rates } from "@/mocks/storefront/money";
 import { normalizeBuyerPhone } from "@/mocks/storefront/otp";
 
@@ -83,8 +83,8 @@ function variantLabel(store: string | null, variantId: number | null): string | 
 }
 
 /** Personalization surcharges (`PersonalizationField.price_add`) for the values the buyer filled in. */
-function personalizationExtra(name: string, values: Record<string, unknown> | null): number {
-  const fields = PERSONALIZATION[name];
+function personalizationExtra(store: string | null, productId: number, values: Record<string, unknown> | null): number {
+  const fields = extras(store).fields.get(productId);
   if (!fields || !values) return 0;
   let extra = 0;
   for (const f of fields) {
@@ -129,7 +129,7 @@ export function priceLines(store: string | null, cart: MockCart, currency: Curre
       };
     }
     const v = line.variant_id ? state.variants.find((x) => x.id === line.variant_id) : undefined;
-    const unitInProduct = unitPrice(p, line.quantity, v?.extra_price ?? "0") + personalizationExtra(p.name, line.personalization);
+    const unitInProduct = unitPrice(p, line.quantity, v?.extra_price ?? "0", store) + personalizationExtra(store, p.id, line.personalization);
     const unit = convert(unitInProduct, p.currency, currency, rates);
     const deposit = p.payment_policy === "deposit" && p.deposit_required ? Number(p.deposit_required) * line.quantity : 0;
     return {

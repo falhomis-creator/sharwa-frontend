@@ -11,6 +11,7 @@ import { catalog } from "@/mocks/catalog/state";
 import { isEmptyStore } from "@/mocks/empty-store";
 import { pendingApprovalsCount } from "@/mocks/approvals/state";
 import { listAlerts } from "@/mocks/staff/state";
+import { inboxUnread } from "@/mocks/inbox/state";
 
 /**
  * `GET /api/v1/dashboard/overview/` fixture (M03 §7 — `[NEEDS BACKEND]`), built from
@@ -102,7 +103,7 @@ export function overviewMock(store: string | null, refreshedAt?: string): Overvi
       // M04: the same number the products list strip shows.
       low_stock_products: productSummary(catalog(slug)).low_stock,
       // Zero on purpose: the row must disappear rather than render a 0 (US-03.5.3).
-      unread_conversations: 0,
+      unread_conversations: inboxUnread(store),
     },
     top_products: [
       { id: 412, name: "عباية كلاسيك سوداء", image: null, qty: 23, display_revenue: displayMoney(5_290) },

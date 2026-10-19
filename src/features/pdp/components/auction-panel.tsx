@@ -51,16 +51,17 @@ export function AuctionPanel({ productId, onBuyNow }: { productId: number; onBuy
   const { store, currency } = useStorefront();
   const client = useQueryClient();
   const key = storeKey(store, "product", productId, "auction", currency);
-  const q = useQuery({ queryKey: key, queryFn: () => fetchAuction(productId, currency), refetchInterval: 30_000 });
+  const q = useQuery({ queryKey: key, queryFn: () => fetchAuction(productId, currency), refetchInterval: 10_000, refetchOnWindowFocus: true });
   const [bidOpen, setBidOpen] = useState(false);
   const now = useNow(q.data?.skew ?? 0);
 
   if (q.isPending) return <div className="h-40 animate-pulse rounded-lg bg-muted" aria-hidden />;
   if (q.isError) return <p className="text-sm text-muted-foreground">تعذّر تحميل المزاد.</p>;
   const a = q.data.auction;
-  const left = Date.parse(a.end_at) - now;
+  const openEnded = a.end_at === null;
+  const left = openEnded ? Infinity : Date.parse(a.end_at!) - now;
   const ended = a.status === "ended" || left <= 0;
-  const sniping = !ended && left <= a.anti_sniping_seconds * 1000;
+  const sniping = !ended && !openEnded && left <= a.anti_sniping_seconds * 1000;
 
   return (
     <div className="store-frame space-y-4 rounded-lg border-border p-4" data-testid="auction-panel">
@@ -74,7 +75,7 @@ export function AuctionPanel({ productId, onBuyNow }: { productId: number; onBuy
         <div>
           <dt className="text-muted-foreground">ينتهي بعد</dt>
           <dd className="font-mono text-lg tabular-nums" dir="ltr" aria-live="off" data-testid="auction-countdown">
-            {a.status === "draft" ? "—" : remaining(left)}
+            {a.status === "draft" ? "—" : openEnded ? "مفتوح حتى إشعار آخر" : remaining(left)}
           </dd>
         </div>
         <div>
@@ -90,13 +91,16 @@ export function AuctionPanel({ productId, onBuyNow }: { productId: number; onBuy
       </dl>
       {sniping ? <p className="text-sm text-warning">سيُمدَّد المزاد عند أي مزايدة في الثواني الأخيرة.</p> : null}
       {a.status === "draft" ? (
-        <Button disabled className="h-12 w-full text-base">
-          لم يبدأ بعد
-        </Button>
+        <p className="text-sm text-muted-foreground" data-testid="auction-draft">
+          المزاد لم يبدأ.
+        </p>
       ) : ended ? (
-        <Button disabled className="h-12 w-full text-base">
-          انتهى المزاد
-        </Button>
+        <div className="space-y-2" data-testid="auction-ended">
+          <Button disabled className="h-12 w-full text-base">
+            انتهى المزاد
+          </Button>
+          {a.reserve_met === false ? <p className="text-sm text-muted-foreground">انتهى المزاد دون بلوغ السعر الاحتياطي.</p> : null}
+        </div>
       ) : (
         <div className="space-y-2">
           <Button className="h-12 w-full text-base" onClick={() => setBidOpen(true)} data-testid="auction-bid">

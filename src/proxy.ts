@@ -73,6 +73,12 @@ export function proxy(request: NextRequest) {
         if (!route) return blocked(request);
         return rewrite(request, route.pathname, search, headers, route.init);
       }
+      // M40 FR-40.01/§8: the customer wallet lives on the platform origin only.
+      if (pathname === "/sharwa-pay" || pathname.startsWith("/sharwa-pay/")) {
+        const url = request.nextUrl.clone();
+        url.host = `${base}${request.nextUrl.port ? `:${request.nextUrl.port}` : ""}`;
+        return NextResponse.redirect(url, 308);
+      }
       const group = groupForStorePath(pathname);
       const prefix = INTERNAL_PREFIX[group];
       return rewrite(request, `/${prefix}/${store}${pathname}`, search, headers);

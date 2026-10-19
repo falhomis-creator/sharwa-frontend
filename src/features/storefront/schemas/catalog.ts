@@ -135,8 +135,24 @@ export const PersonalizationFieldSchema = z.object({
 });
 export type PersonalizationField = z.infer<typeof PersonalizationFieldSchema>;
 
+export const COMPAT_OPERATORS = ["equals", "not_equals", "in"] as const;
+
+/** M37 compatibility rule between variant attributes of the components (FR-37.03). */
+export const CompatRuleSchema = z.object({
+  id: z.number().int(),
+  attribute_a_id: z.number().int(),
+  attribute_a_name: z.string(),
+  operator: z.enum(COMPAT_OPERATORS),
+  attribute_b_id: z.number().int().nullable(),
+  value: z.string().nullable(),
+});
+export type CompatRule = z.infer<typeof CompatRuleSchema>;
+
 export const BundleSchema = z.object({
   display_build_fee: z.string().nullable().optional(),
+  /** Σ(mandatory × quantity) + build fee — the server's sentence (US-37.1.1). */
+  display_total: z.string().nullable().optional(),
+  unavailable_component: z.string().nullable().optional(),
   components: z.array(
     z.object({
       product_id: z.number().int(),
@@ -144,8 +160,15 @@ export const BundleSchema = z.object({
       image: z.string().nullable().optional(),
       quantity: z.coerce.number(),
       is_optional: z.boolean().optional().default(false),
+      in_stock: z.boolean().optional().default(true),
+      display_price: z.string().nullable().optional(),
+      choice: z
+        .object({ attribute_id: z.number().int(), attribute_name: z.string(), options: z.array(z.object({ id: z.number().int(), value: z.string() })) })
+        .nullable()
+        .optional(),
     }),
   ),
+  rules: z.array(CompatRuleSchema).optional().default([]),
 });
 
 export const FormulaSchema = z.object({
@@ -195,6 +218,7 @@ export const ProductDetailSchema = ProductCardSchema.extend({
   bundle: BundleSchema.nullable().optional(),
   is_personalizable: z.boolean().optional(),
   personalization_fields: z.array(PersonalizationFieldSchema).optional(),
+  refundable_deposit: z.object({ display_amount: z.string(), refund_rule: z.string().nullable(), return_event: z.string().nullable().optional() }).nullable().optional(),
   is_auction: z.boolean().optional(),
   is_bookable: z.boolean().optional(),
   booking_duration_minutes: z.number().int().nullable().optional(),
@@ -270,18 +294,28 @@ export const AuctionSchema = z.object({
   // The next acceptable amount as a decimal string, computed by the server (no local maths).
   next_bid_amount: z.string(),
   display_next_bid: z.string(),
-  end_at: z.string(),
+  /** `null` = open until further notice (M37 §8). */
+  end_at: z.string().nullable(),
   anti_sniping_seconds: z.number().int(),
   bids_count: z.number().int(),
+  /** Only once ended: whether the hidden reserve was reached — never its amount. */
+  reserve_met: z.boolean().nullable().optional(),
+  // FR-37.06: a public response carrying `reserve` is REJECTED, not silently dropped.
+  reserve: z.never().optional(),
 });
 export type Auction = z.infer<typeof AuctionSchema>;
 
 export const SLOT_STATUSES = ["available", "held", "booked", "cancelled"] as const;
 export const SlotsSchema = z.object({
   date: z.string(),
+  timezone: z.string().optional(),
   slots: z.array(z.object({ start_datetime: z.string(), end_datetime: z.string(), status: z.enum(SLOT_STATUSES) })),
   next_available_date: z.string().nullable().optional(),
 });
+
+/** M26 hold: `POST …/slots/hold/` → the server's `held_until` (the buyer only displays it). */
+export const SlotHoldSchema = z.object({ slot_id: z.number().int(), start_datetime: z.string(), held_until: z.string() });
+export type SlotHold = z.infer<typeof SlotHoldSchema>;
 export type Slots = z.infer<typeof SlotsSchema>;
 
 export const QuoteSchema = z.object({ display_price: z.string() });

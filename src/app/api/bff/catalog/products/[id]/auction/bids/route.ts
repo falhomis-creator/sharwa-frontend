@@ -16,6 +16,6 @@ export async function POST(request: Request, { params }: RouteContext<"/api/bff/
     const check = verifyOtp(store, fields.phone, fields.otp, "auction");
     if (!check.ok) return respondMock(check);
     const currency = parseCurrency(url.searchParams.get("currency") ?? fields.currency, storeDefaultCurrency(store));
-    return respondMock(placeBid(store, p, amount, currency), 220);
+    return respondMock(placeBid(store, p, amount, currency, { name: typeof fields.bidder_name === "string" ? fields.bidder_name : undefined, phone: String(fields.phone ?? "") }), 220);
   });
 }

@@ -16,17 +16,10 @@ import { effectivePrice, productStatus } from "@/mocks/catalog/products";
 import type { MockProduct } from "@/mocks/catalog/seed";
 import { catalog, type CatalogState } from "@/mocks/catalog/state";
 import { FIXTURE_NOW, storeState } from "@/mocks/store-state";
-import {
-  AUCTIONS,
-  BUNDLES,
-  LEGACY_OPTIONS,
-  OFFERS,
-  PERSONALIZATION,
-  REVIEW_TEXTS,
-  SERVICE_HOURS,
-  TIER_PRICES,
-} from "@/mocks/storefront/extensions";
+import { LEGACY_OPTIONS, OFFERS, REVIEW_TEXTS } from "@/mocks/storefront/extensions";
+import { auctionRow, bidsOf, extras, pdpBundle, pdpFields } from "@/mocks/product-extras/state";
 import { convert, fmt, storeRates, type Rates } from "@/mocks/storefront/money";
+import { buyerSlots } from "@/mocks/bookings/state";
 
 /**
  * The mock SERVER behind the storefront catalogue (ready-api-v1 #2–#4 and the M09/M10
@@ -73,9 +66,9 @@ function saleActive(p: MockProduct): boolean {
 }
 
 /** Unit price (product currency) for a quantity — the tier table wins (`get_tier_price`). */
-export function unitPrice(p: MockProduct, quantity = 1, variantExtra = "0"): number {
-  const tiers = TIER_PRICES[p.name];
-  if (tiers) {
+export function unitPrice(p: MockProduct, quantity = 1, variantExtra = "0", store: string | null = null): number {
+  const tiers = [...(extras(store).tiers.get(p.id) ?? [])].sort((a, b) => a.min_quantity - b.min_quantity);
+  if (tiers.length) {
     const tier = [...tiers].reverse().find((t) => quantity >= t.min_quantity);
     if (tier) return Number(tier.price) + Number(variantExtra);
   }
@@ -102,7 +95,7 @@ export function cardOf(store: string | null, p: MockProduct, currency: Currency,
     // editor's «رابط» item); the storefront mock does not hand it to buyers.
     image_url: p.image_url && !/\.invalid(\/|$)/.test(new URL(p.image_url, "https://x").hostname + "/") ? p.image_url : null,
     category: categoryName(state, p.category_id),
-    display_price: fmt(convert(unitPrice(p), p.currency, currency, r), currency),
+    display_price: fmt(convert(unitPrice(p, 1, "0", store), p.currency, currency, r), currency),
     display_old_price: saleActive(p) ? fmt(convert(Number(p.old_price), p.currency, currency, r), currency) : null,
     stock: stockOf(state, p),
     is_featured: p.is_featured,
@@ -175,8 +168,8 @@ export function listPublicProducts(store: string | null, params: URLSearchParams
   const rows = filtered(store, params);
   const ordering = params.get("ordering") ?? "-created_at";
   const sorted = [...rows].sort((a, b) => {
-    if (ordering === "price") return unitPrice(a) - unitPrice(b);
-    if (ordering === "-price") return unitPrice(b) - unitPrice(a);
+    if (ordering === "price") return unitPrice(a, 1, "0", store) - unitPrice(b, 1, "0", store);
+    if (ordering === "-price") return unitPrice(b, 1, "0", store) - unitPrice(a, 1, "0", store);
     return b.created_at.localeCompare(a.created_at);
   });
   const size = Math.min(PAGE_SIZE_MAX, Math.max(1, intParam(params, "page_size") ?? PAGE_SIZE_DEFAULT));
@@ -234,9 +227,10 @@ export function productDetail(store: string | null, id: number, currency: Curren
   const parent = category?.parent_id ? state.categories.find((c) => c.id === category.parent_id) : undefined;
   const brand = p.brand_id === null ? undefined : state.brands.find((b) => b.id === p.brand_id);
   const legacy = LEGACY_OPTIONS[p.name];
-  const tiers = TIER_PRICES[p.name];
-  const bundle = p.is_bundle ? BUNDLES[p.name] : undefined;
-  const fields = p.is_personalizable ? PERSONALIZATION[p.name] : undefined;
+  // M36/M37 rows the merchant edits (src/mocks/product-extras) — projected, never recomputed here.
+  const tiers = [...(extras(store).tiers.get(p.id) ?? [])].sort((a, b) => a.min_quantity - b.min_quantity);
+  const bundle = pdpBundle(store, p, (n) => money(n));
+  const fields = pdpFields(store, p, (n) => money(n));
   const summary = reviewsSummary(store, p.id);
   const stock = card.stock;
 
@@ -248,7 +242,7 @@ export function productDetail(store: string | null, id: number, currency: Curren
   const cards = (rows: MockProduct[]) => rows.map((x) => cardOf(store, x, currency, rates));
   const related = {
     related: cards(sameCategory.slice(0, 8)),
-    upsell: cards(sameCategory.filter((x) => unitPrice(x) > unitPrice(p)).slice(0, 4)),
+    upsell: cards(sameCategory.filter((x) => unitPrice(x, 1, "0", store) > unitPrice(p, 1, "0", store)).slice(0, 4)),
     cross_sell: cards(peers.filter((x) => collectionPeers.has(x.id) && x.category_id !== p.category_id).slice(0, 4)),
   };
 
@@ -277,12 +271,12 @@ export function productDetail(store: string | null, id: number, currency: Curren
     variants: vs.map((v) => ({
       id: v.id,
       option_ids: v.option_ids,
-      display_effective_price: fmt(convert(unitPrice(p, 1, v.extra_price), p.currency, currency, rates), currency),
+      display_effective_price: fmt(convert(unitPrice(p, 1, v.extra_price, store), p.currency, currency, rates), currency),
       stock: Number(v.stock),
       sku: v.sku,
       image: v.image,
     })),
-    tier_prices: tiers?.map((t) => ({ min_quantity: t.min_quantity, display_price: money(t.price) })) ?? [],
+    tier_prices: tiers.map((t) => ({ min_quantity: t.min_quantity, display_price: money(t.price) })),
     pricing_type: p.pricing_type,
     formula:
       p.pricing_type === "formula" && p.formula_unit_price && p.formula_coefficient
@@ -294,20 +288,13 @@ export function productDetail(store: string | null, id: number, currency: Curren
           }
         : null,
     is_bundle: p.is_bundle,
-    bundle: bundle
-      ? {
-          display_build_fee: p.bundle_build_fee ? money(p.bundle_build_fee) : null,
-          components: bundle.flatMap((c) => {
-            const comp = state.products.find((x) => x.name === c.name);
-            return comp
-              ? [{ product_id: comp.id, name: comp.name, image: comp.images[0]?.url ?? null, quantity: c.quantity, is_optional: c.is_optional }]
-              : [];
-          }),
-        }
-      : null,
+    bundle,
     is_personalizable: p.is_personalizable,
-    personalization_fields:
-      fields?.map((f) => ({ ...f, display_price_add: f.price_add ? money(f.price_add) : null })) ?? [],
+    personalization_fields: fields,
+    refundable_deposit:
+      p.has_refundable_deposit && p.refundable_deposit_amount
+        ? { display_amount: money(p.refundable_deposit_amount), refund_rule: p.refundable_deposit_refund_rule || null, return_event: p.refundable_deposit_return_event || null }
+        : null,
     is_auction: p.is_auction,
     is_bookable: p.is_bookable,
     booking_duration_minutes: p.booking_duration_minutes,
@@ -318,7 +305,7 @@ export function productDetail(store: string | null, id: number, currency: Curren
     meta_title: p.meta_title || null,
     meta_description: p.meta_description || null,
     structured: {
-      price: convert(unitPrice(p), p.currency, currency, rates).toFixed(2),
+      price: convert(unitPrice(p, 1, "0", store), p.currency, currency, rates).toFixed(2),
       currency: isoCurrency(currency),
       sku: p.sku,
       brand: brand?.name ?? null,
@@ -443,39 +430,27 @@ export function addReview(store: string | null, productId: number, rating: numbe
 }
 
 // ── Auction (`Auction`, `AuctionBid`) ────────────────────────────────────────────────
-interface AuctionState {
-  bids: string[];
-  end_at: number;
-}
-
-function auctionState(store: string | null, p: MockProduct): AuctionState | null {
-  const spec = AUCTIONS[p.name];
-  if (!p.is_auction || !spec) return null;
-  return storeState(store, `storefront:auction:${p.id}`, () => ({
-    bids: [...spec.seed_bids],
-    end_at: Date.now() + spec.hours_left * 3_600_000 + 14 * 60_000,
-  }));
-}
-
+/** The buyer's projection of the merchant's auction row (M37): never carries `reserve` (FR-37.06). */
 export function auctionView(store: string | null, p: MockProduct, currency: Currency) {
-  const spec = AUCTIONS[p.name];
-  const st = auctionState(store, p);
-  if (!spec || !st) return null;
+  const row = auctionRow(store, p);
+  if (!row) return null;
+  const bids = bidsOf(store, p);
   const rates = storeRates(store);
-  const current = st.bids.length ? Number(st.bids[st.bids.length - 1]) : Number(spec.start_bid);
-  const next = st.bids.length ? current + Number(spec.bid_step) : Number(spec.start_bid);
-  const status = p.auction_status === "draft" ? "draft" : st.end_at <= Date.now() ? "ended" : (p.auction_status ?? "active");
+  const current = bids.length ? Number(bids[bids.length - 1]!.amount) : Number(row.start_bid);
+  const next = bids.length ? current + Number(row.bid_step) : Number(row.start_bid);
   const money = (n: number) => fmt(convert(n, p.currency, currency, rates), currency);
   return {
-    status,
+    status: row.status,
     display_current_bid: money(current),
-    display_bid_step: money(Number(spec.bid_step)),
-    display_buy_now: spec.buy_now ? money(Number(spec.buy_now)) : null,
+    display_bid_step: money(Number(row.bid_step)),
+    display_buy_now: row.buy_now ? money(Number(row.buy_now)) : null,
     next_bid_amount: convert(next, p.currency, currency, rates).toFixed(2),
     display_next_bid: money(next),
-    end_at: new Date(st.end_at).toISOString(),
-    anti_sniping_seconds: spec.anti_sniping_seconds,
-    bids_count: st.bids.length,
+    end_at: row.end_at ? new Date(row.end_at).toISOString() : null,
+    anti_sniping_seconds: row.anti_sniping_seconds,
+    bids_count: bids.length,
+    // Only whether it was met, and only once it is over — never the amount.
+    reserve_met: row.status === "ended" && row.reserve ? current >= Number(row.reserve) && bids.length > 0 : null,
   } as const;
 }
 
@@ -483,75 +458,36 @@ export type BidResult =
   | { ok: true; data: NonNullable<ReturnType<typeof auctionView>> }
   | { ok: false; status: number; body: Record<string, unknown> };
 
-export function placeBid(store: string | null, p: MockProduct, amount: string, currency: Currency): BidResult {
-  const spec = AUCTIONS[p.name];
-  const st = auctionState(store, p);
-  if (!spec || !st) return { ok: false, status: 404, body: { detail: "لا يوجد مزاد على هذا المنتج." } };
-  if (st.end_at <= Date.now()) return { ok: false, status: 409, body: { detail: "انتهى المزاد." } };
+export function placeBid(store: string | null, p: MockProduct, amount: string, currency: Currency, bidder: { name?: string; phone?: string } = {}): BidResult {
+  const row = auctionRow(store, p);
+  if (!row) return { ok: false, status: 404, body: { detail: "لا يوجد مزاد على هذا المنتج." } };
+  if (row.status === "draft") return { ok: false, status: 409, body: { detail: "المزاد لم يبدأ بعد." } };
+  if (row.status === "ended") return { ok: false, status: 409, body: { detail: "انتهى المزاد." } };
+  const bids = bidsOf(store, p);
   const rates = storeRates(store);
   const inProductCurrency = convert(Number(amount), currency, p.currency, rates);
-  const current = st.bids.length ? Number(st.bids[st.bids.length - 1]) : 0;
-  const min = st.bids.length ? current + Number(spec.bid_step) : Number(spec.start_bid);
+  const current = bids.length ? Number(bids[bids.length - 1]!.amount) : 0;
+  const min = bids.length ? current + Number(row.bid_step) : Number(row.start_bid);
   if (!(inProductCurrency + 0.005 >= min)) {
     const view = auctionView(store, p, currency)!;
     return {
       ok: false,
       status: 409,
-      body: { detail: `سبقتك مزايدة أخرى؛ أقل مبلغ مقبول الآن ${view.display_next_bid}.`, auction: view },
+      body: { detail: `الحد الأدنى للعطاء ${view.display_next_bid}.`, auction: view },
     };
   }
-  st.bids.push(inProductCurrency.toFixed(2));
-  // Anti-sniping: a bid in the last window extends the end (US-10.4.2).
-  if (st.end_at - Date.now() < spec.anti_sniping_seconds * 1000) st.end_at = Date.now() + spec.anti_sniping_seconds * 1000;
+  bids.push({ bidder_name: bidder.name || "مشترٍ", bidder_phone: bidder.phone ?? "", amount: inProductCurrency.toFixed(2), created_at: Date.now() });
+  // Anti-sniping: a bid in the last window extends the end (US-37.3.2).
+  if (row.end_at !== null && row.end_at - Date.now() < row.anti_sniping_seconds * 1000) row.end_at = Date.now() + row.anti_sniping_seconds * 1000;
+  // A bid at the buy-now price closes the auction for that bidder.
+  if (row.buy_now && inProductCurrency + 0.005 >= Number(row.buy_now)) row.status = "ended";
   return { ok: true, data: auctionView(store, p, currency)! };
 }
 
 // ── Booking slots (`ServiceAvailability`, `BookingSlot`) ─────────────────────────────
-const STORE_OFFSET_HOURS = 3; // Asia/Aden — the fixture timezone (M34 DEFAULT_TIMEZONE)
-
-function isoLocal(date: string, hour: number, minute = 0): string {
-  return `${date}T${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}:00+0${STORE_OFFSET_HOURS}:00`;
-}
-
-/** Django weekday (0 = Monday) of a `YYYY-MM-DD`. */
-function djangoWeekday(date: string): number {
-  const d = new Date(`${date}T12:00:00Z`);
-  return (d.getUTCDay() + 6) % 7;
-}
-
-function addDays(date: string, days: number): string {
-  const d = new Date(`${date}T12:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
+/** Delegates to the M26 mock server, so the merchant's windows and bookings are what buyers see. */
 export function availableSlots(store: string | null, p: MockProduct, date: string) {
-  const hours = SERVICE_HOURS[p.name];
-  if (!p.is_bookable || !hours || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
-  const duration = p.booking_duration_minutes ?? 60;
-  const open = (d: string) => hours.weekdays.includes(djangoWeekday(d));
-  const slots: Array<{ start_datetime: string; end_datetime: string; status: "available" | "held" | "booked" }> = [];
-  if (open(date)) {
-    for (let m = hours.from * 60; m + duration <= hours.to * 60; m += duration) {
-      const h = Math.floor(m / 60);
-      const min = m % 60;
-      const end = m + duration;
-      const seed = Number(date.replaceAll("-", "")) + m;
-      const status = seed % 5 === 0 ? "booked" : seed % 7 === 0 ? "held" : "available";
-      slots.push({ start_datetime: isoLocal(date, h, min), end_datetime: isoLocal(date, Math.floor(end / 60), end % 60), status });
-    }
-  }
-  let next: string | null = null;
-  if (!slots.some((s) => s.status === "available")) {
-    for (let i = 1; i <= 14; i++) {
-      const d = addDays(date, i);
-      if (open(d)) {
-        next = d;
-        break;
-      }
-    }
-  }
-  return { date, slots, next_available_date: next };
+  return buyerSlots(store, p, date);
 }
 
 /** The formula quote (`GET …/quote/?value=`) — price for `value` units, server-side. */

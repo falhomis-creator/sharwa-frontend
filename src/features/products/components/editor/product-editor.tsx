@@ -19,7 +19,7 @@ import { Money } from "@/components/shared/money";
 import { Mono } from "@/components/shared/mono";
 import { ToggleRow } from "@/components/shared/toggle-row";
 import { isApiError } from "@/lib/api-error";
-import { addDecimal, groupDecimal, isDecimal, mulDecimal, percentOf } from "@/lib/decimal";
+import { addDecimal, groupDecimal, isDecimal, percentOf } from "@/lib/decimal";
 import { formatDateTime, formatNumber } from "@/lib/format";
 import { CURRENCY_LABELS } from "@/lib/schemas/money";
 import { cn } from "@/lib/utils";
@@ -49,6 +49,8 @@ import { EMPTY_PRODUCT_FORM, detailToForm, formToPayload } from "@/features/prod
 import { MediaGallery } from "@/features/products/components/editor/media-gallery";
 import { VariantMatrix } from "@/features/products/components/editor/variant-matrix";
 import { ChangeLog } from "@/features/products/components/editor/change-log";
+import { AdvancedPanels } from "@/features/products/components/editor/advanced-panels";
+import { FormulaPreview } from "@/features/products/components/editor/formula-preview";
 import {
   BadgesPicker,
   BrandPicker,
@@ -164,7 +166,7 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
   const save = useSaveProduct(product?.id ?? null);
   const remove = useDeleteProduct();
   const templates = useTemplates().data ?? [];
-  const [tab, setTab] = useQueryState("tab", parseAsStringLiteral(["product", "history"]).withDefault("product"));
+  const [tab, setTab] = useQueryState("tab", parseAsStringLiteral(["product", "advanced", "history"]).withDefault("product"));
   const [formError, setFormError] = useState("");
   const [leaveTo, setLeaveTo] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -292,11 +294,7 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
   const errors = formState.errors;
   const err = (k: keyof ProductFormValues) => errors[k]?.message as string | undefined;
 
-  // Estimates (labelled «تقديرية»): formula result and price incl. tax.
-  const formulaEstimate =
-    v.pricing_type === "formula" && isDecimal(v.formula_unit_price) && isDecimal(v.formula_coefficient)
-      ? addDecimal(mulDecimal(v.formula_unit_price, v.formula_coefficient), isDecimal(v.formula_fixed_extra) ? v.formula_fixed_extra : "0")
-      : null;
+  // Estimate (labelled «تقديري»): price incl. tax. The formula result is ASKED from the server (M37 FR-37.02).
   const taxEstimate = v.is_taxable && isDecimal(v.price) && isDecimal(v.tax_rate) ? addDecimal(v.price, percentOf(v.price, v.tax_rate)) : null;
   const marginEstimate =
     isDecimal(v.price) && isDecimal(v.cost_price) && Number(v.price) > 0
@@ -392,6 +390,7 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
           {(
             [
               ["product", "المنتج"],
+              ["advanced", "الأنماط المتقدمة"],
               ["history", "السجل"],
             ] as const
           ).map(([key, label]) => (
@@ -411,6 +410,8 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
 
       {product && tab === "history" ? (
         <ChangeLog productId={product.id} />
+      ) : product && tab === "advanced" ? (
+        <AdvancedPanels product={product} readOnly={readOnly} />
       ) : (
         <div className="grid grid-cols-1 gap-x-10 lg:grid-cols-12">
           {/* Main column */}
@@ -556,10 +557,7 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
                       <input id="pe-ff" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("formula_fixed_extra")} />
                     </Field>
                   </Grid>
-                  <p className="text-sm text-muted-foreground" data-testid="formula-preview">
-                    السعر الناتج (تقديري):{" "}
-                    <Mono className="text-foreground">{formulaEstimate ? groupDecimal(formulaEstimate) : "—"}</Mono>
-                  </p>
+                  <FormulaPreview unitPrice={v.formula_unit_price ?? ""} coefficient={v.formula_coefficient ?? ""} fixedExtra={v.formula_fixed_extra ?? ""} currency={v.currency} />
                 </ToggleRow>
                 <ToggleRow id="pe-refdep" label="عربون قابل للاسترجاع" description="مبلغ يُدفع مع المنتج ويُرد بشرط (مثل العبوة)." {...bool("has_refundable_deposit")}>
                   <Field label="المبلغ" htmlFor="pe-rda" required error={err("refundable_deposit_amount")} className="sm:max-w-xs">
@@ -821,7 +819,7 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
             <SideBlock title="الأعلام">
               <div className="divide-y divide-border border-y border-border">
                 <ToggleRow id="pe-serial" label="أرقام تسلسلية" description="كل قطعة برقم مستقل (IMEI، رقم الضمان)." {...bool("is_serialized")} />
-                <ToggleRow id="pe-bundle" label="حزمة" description="مكوّنات الحزمة تُدار في تبويب الحزم (M37)." {...bool("is_bundle")}>
+                <ToggleRow id="pe-bundle" label="حزمة" description="مكوّناتها وقواعد توافقها في تبويب «الأنماط المتقدمة»." {...bool("is_bundle")}>
                   <Field label="رسوم التجميع" htmlFor="pe-bfee" error={err("bundle_build_fee")}>
                     <input id="pe-bfee" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("bundle_build_fee")} />
                   </Field>
@@ -829,11 +827,11 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
                 <ToggleRow
                   id="pe-auction"
                   label="مزاد"
-                  description={product?.auction_status === "active" ? "مزاد نشط: السعر والمخزون محجوبان حتى انتهائه." : "قطعة واحدة لأعلى مزايد؛ تفاصيله في M37."}
+                  description={product?.auction_status === "active" ? "مزاد نشط: السعر والمخزون محجوبان حتى انتهائه." : "قطعة واحدة لأعلى مزايد؛ إعداداته في تبويب «الأنماط المتقدمة»."}
                   {...bool("is_auction")}
                   disabled={readOnly || product?.auction_status === "active"}
                 />
-                <ToggleRow id="pe-personal" label="قابل للتخصيص" description="حقول التخصيص (نص، صورة) تُدار في M37." {...bool("is_personalizable")} />
+                <ToggleRow id="pe-personal" label="قابل للتخصيص" description="حقول التخصيص في تبويب «الأنماط المتقدمة»." {...bool("is_personalizable")} />
                 <ToggleRow id="pe-bookable" label="قابل للحجز" description="يُباع كموعد في تقويم الحجوزات (M26)." {...bool("is_bookable")}>
                   <Field label="مدة الحجز (دقيقة)" htmlFor="pe-bdur" required error={err("booking_duration_minutes")}>
                     <input id="pe-bdur" dir="ltr" inputMode="numeric" className={numericInputClass} readOnly={readOnly} {...register("booking_duration_minutes")} />

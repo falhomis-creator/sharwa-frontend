@@ -21,6 +21,7 @@ import dynamic from "next/dynamic";
 import { QuantityStepper } from "@/features/pdp/components/quantity-stepper";
 import { VariantPicker } from "@/features/pdp/components/variant-picker";
 import { activeTier, resolveVariant, selectionFromVariant, variantLabel } from "@/features/pdp/variants";
+import { bundleChoicesOf, firstViolation } from "@/features/pdp/compat";
 import { useCartUi } from "@/stores/cart-ui";
 import { usePdp } from "@/stores/pdp";
 import { useShopperPhone } from "@/features/engagement/api";
@@ -77,6 +78,11 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
   const out = stock <= 0 && !product.allow_backorder;
   const preorder = stock <= 0 && Boolean(product.allow_backorder);
   const physical = (product.product_type ?? "physical") === "physical";
+  // M37: a bundle missing a mandatory component, or a combination a rule forbids, cannot be added.
+  const bundle = product.is_bundle ? product.bundle : null;
+  const bundleChoices = bundle ? bundleChoicesOf(bundle, pdp.bundleChoices) : [];
+  const bundleConflict = bundle ? firstViolation(bundle.rules ?? [], bundleChoices) : null;
+  const bundleBlocked = Boolean(bundle?.unavailable_component) || bundleConflict !== null;
 
   // Mirror the resolved variant and quantity into the URL (shareable — M10 §11 IX).
   useEffect(() => {
@@ -106,7 +112,12 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
       if (f.is_required && empty) missing.push(`field:${f.id}`);
     }
     if (product.is_bookable && !pdp.startDatetime) missing.push("booking");
+    for (const c of bundle?.components ?? []) {
+      const needed = c.choice && (!c.is_optional || pdp.bundleOptional.includes(c.product_id));
+      if (needed && pdp.bundleChoices[c.product_id] === undefined) missing.push(`bundle:${c.product_id}`);
+    }
     pdp.set({ missing });
+    if (bundleBlocked) return false;
     if (missing.length) {
       const first = missing[0]!;
       const target = first.startsWith("attr:")
@@ -133,7 +144,13 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
       variant_id: variant?.id ?? null,
       action_type: "add" as const,
       quantity: pdp.quantity,
-      personalization: Object.keys(pdp.personalization).length ? { ...pdp.personalization, bundle_optional: pdp.bundleOptional } : undefined,
+      personalization:
+        Object.keys(pdp.personalization).length || bundle
+          ? {
+              ...pdp.personalization,
+              ...(bundle ? { bundle_optional: pdp.bundleOptional, bundle_selection: bundleChoices.map((c) => ({ component_id: c.component, option_id: pdp.bundleChoices[c.component] })) } : {}),
+            }
+          : undefined,
       start_datetime: pdp.startDatetime,
     };
     action.mutate({
@@ -195,6 +212,12 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
           </p>
         ) : null}
         <p className="text-sm text-muted-foreground">{policy}</p>
+        {product.refundable_deposit ? (
+          <p className="text-sm" data-testid="refundable-deposit">
+            وديعة قابلة للاسترداد: <Money value={product.refundable_deposit.display_amount} />
+            {product.refundable_deposit.refund_rule ? <span className="block text-muted-foreground">{product.refundable_deposit.refund_rule}</span> : null}
+          </p>
+        ) : null}
       </div>
 
       <VariantPicker product={product} />
@@ -221,12 +244,12 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
                 </Button>
               )
             ) : (
-              <Button ref={addButton} className="h-12 w-full text-base" onClick={(e) => add(e.currentTarget)} data-testid="add-to-cart">
+              <Button ref={addButton} className="h-12 w-full text-base" onClick={(e) => add(e.currentTarget)} disabled={bundleBlocked} data-testid="add-to-cart">
                 أضف إلى السلة
               </Button>
             )}
             {!out ? (
-              <Button variant="outline" className="h-11 w-full" onClick={buyNow} data-testid="buy-now">
+              <Button variant="outline" className="h-11 w-full" onClick={buyNow} disabled={bundleBlocked} data-testid="buy-now">
                 اشترِ الآن
               </Button>
             ) : null}

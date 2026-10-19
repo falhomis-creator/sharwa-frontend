@@ -16,10 +16,10 @@ import { Mono } from "@/components/shared/mono";
 import { apiFetch } from "@/lib/api-client";
 import { isApiError } from "@/lib/api-error";
 import { prettyPhone } from "@/lib/format";
-import { storeKey } from "@/lib/query-keys";
 import { useAccess, useSession } from "@/features/dashboard-shell/components/session-context";
 import { useStore, useStoreOrigin } from "@/features/dashboard-shell/components/store-context";
-import { accountStoresSchema } from "@/features/dashboard-shell/schemas";
+import { useLinkedStores } from "@/features/stores-rollup/api";
+import { NO_DOMAIN } from "@/features/stores-rollup/schemas";
 import { ORDER_STATUS_LABELS, ORDER_STATUSES, orderDetailSchema, type OrderStatus } from "@/features/orders/schemas";
 import { orderKeys, ordersApi, useApplyOrder, useOrderStatuses } from "@/features/orders/api";
 import { ProductThumb } from "@/features/products/components/product-thumb";
@@ -466,35 +466,41 @@ function RowSkeleton() {
 }
 
 function StoresPage({ close }: { close: () => void }) {
-  const store = useStore();
-  const { data, isLoading } = useQuery({
-    queryKey: storeKey(store, "account", "stores"),
-    queryFn: () => apiFetch("/api/bff/account/stores", accountStoresSchema),
-    staleTime: 5 * 60_000,
-    retry: false,
-  });
+  const router = useRouter();
+  // M43 FR-43.05: the same `merchant/stores` contract as the topbar switcher.
+  const { data, isLoading } = useLinkedStores();
   if (isLoading) return <RowSkeleton />;
-  const stores = data ?? [];
+  const stores = data?.has_account ? data.stores : [];
   if (stores.length < 2) return <p className="px-4 py-6 text-sm text-muted-foreground">لديك متجر واحد فقط.</p>;
   return (
     <CommandGroup heading="متاجري">
+      <CommandItem
+        value="store:all"
+        onSelect={() => {
+          close();
+          router.push("/dashboard/stores");
+        }}
+      >
+        <Store className="text-muted-foreground" aria-hidden />
+        <span className="flex-1">كل متاجري — الأداء والمجاميع</span>
+      </CommandItem>
       {stores.map((s) => (
         <CommandItem
-          key={s.host}
-          value={`store:${s.host}`}
-          disabled={s.provisioning_status !== "ready"}
+          key={s.schema}
+          value={`store:${s.schema}`}
+          disabled={!s.is_available || s.domain === NO_DOMAIN}
           onSelect={() => {
             close();
             // Another store is another origin (its own subdomain) — a full navigation, same tab.
-            if (!s.is_current) window.open(`${window.location.protocol}//${s.host}${window.location.port ? `:${window.location.port}` : ""}/dashboard`, "_self");
+            if (s.schema !== data?.current_schema) window.open(`${window.location.protocol}//${s.domain}${window.location.port ? `:${window.location.port}` : ""}/dashboard`, "_self");
           }}
         >
           <Store className="text-muted-foreground" aria-hidden />
           <span className="flex min-w-0 flex-1 flex-col">
             <span className="truncate">{s.name}</span>
-            <Mono className="truncate text-xs text-muted-foreground">{s.host}</Mono>
+            <Mono className="truncate text-xs text-muted-foreground">{s.domain === NO_DOMAIN ? "بلا نطاق" : s.domain}</Mono>
           </span>
-          {s.is_current ? <span className="text-xs text-muted-foreground">الحالي</span> : null}
+          {s.schema === data?.current_schema ? <span className="text-xs text-muted-foreground">الحالي</span> : !s.is_available ? <span className="text-xs text-muted-foreground">غير متاح</span> : null}
         </CommandItem>
       ))}
     </CommandGroup>

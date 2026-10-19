@@ -1,4 +1,5 @@
 import type { Currency } from "@/lib/schemas/money";
+import { bookSlotForOrder } from "@/mocks/bookings/state";
 import { normalizePhone } from "@/lib/format";
 import { catalog } from "@/mocks/catalog/state";
 import {
@@ -430,7 +431,7 @@ export function placeOrder(store: string | null, cartId: string, f: CheckoutFiel
         product_name: p.name,
         variant_label: label,
         sku: v?.sku ?? p.sku,
-        price: convert(unitPrice(p, line.quantity, v?.extra_price ?? "0"), p.currency, "SAR", rates).toFixed(2),
+        price: convert(unitPrice(p, line.quantity, v?.extra_price ?? "0", store), p.currency, "SAR", rates).toFixed(2),
         quantity: String(line.quantity),
         location_id: 1,
       };
@@ -491,6 +492,12 @@ export function placeOrder(store: string | null, cartId: string, f: CheckoutFiel
     const v = line.variant_id ? state.variants.find((x) => x.id === line.variant_id) : undefined;
     if (v) v.stock = Math.max(0, Number(v.stock) - line.quantity).toFixed(3);
     else if (p && !p.is_serialized) p.stock = Math.max(0, Number(p.stock) - line.quantity).toFixed(3);
+  }
+  // A bookable line's hold becomes the order's booking (M26: `held → booked`).
+  for (const line of cart.lines) {
+    const p = state.products.find((x) => x.id === line.product_id);
+    const start = line.start_datetime ?? text(f.start_datetime);
+    if (p?.is_bookable && start) bookSlotForOrder(store, p.id, start, { id: order.id, customer_name: order.customer_name, customer_phone: order.customer_phone });
   }
   if (f.checkout_mode !== "buy_now") {
     const real = getCart(store, cartId);

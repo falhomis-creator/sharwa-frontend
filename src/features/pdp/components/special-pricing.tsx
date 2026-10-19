@@ -13,6 +13,7 @@ import { ProductImage } from "@/features/storefront/components/product-image";
 import { useStorefront } from "@/features/storefront/components/storefront-provider";
 import { activeTier } from "@/features/pdp/variants";
 import { usePdp } from "@/stores/pdp";
+import { bundleChoicesOf, conflictFor, firstViolation, reason } from "@/features/pdp/compat";
 
 /**
  * The special pricing blocks of M10 US-10.3. Each renders ONLY when its data exists
@@ -45,6 +46,11 @@ export function TierTable({ product }: { product: ProductDetail }) {
           ))}
         </tbody>
       </table>
+      {active ? (
+        <p className="text-xs text-muted-foreground" data-testid="tier-active">
+          يُطبَّق سعر <span className="font-mono tabular-nums">{formatNumber(active.min_quantity)}+</span>
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -108,40 +114,129 @@ export function FormulaQuote({ product }: { product: ProductDetail }) {
 }
 
 /** US-10.3.3 — components with their quantities; optional parts are checkboxes. */
+/**
+ * M37 US-37.1 — the bundle builder: vertical steps (component → its option → summary),
+ * the server's total (`display_total`), and the compatibility engine (`compat.ts`):
+ * an option that would break a rule is DISABLED with the reason, never hidden (FR-37.03).
+ */
 export function BundleParts({ product }: { product: ProductDetail }) {
   const optional = usePdp((s) => s.bundleOptional);
+  const picked = usePdp((s) => s.bundleChoices);
+  const missing = usePdp((s) => s.missing);
   const set = usePdp((s) => s.set);
   const b = product.bundle;
   if (!product.is_bundle || !b || b.components.length === 0) return null;
+  const rules = b.rules ?? [];
+  const choices = bundleChoicesOf(b, picked);
+  const conflict = firstViolation(rules, choices);
+  const steps = b.components.filter((c) => c.choice).length;
+  const done = b.components.filter((c) => c.choice && picked[c.product_id] !== undefined).length;
+
   return (
     <div className="space-y-2" data-testid="bundle-parts">
-      <p className="text-sm font-medium">محتويات الحزمة</p>
-      <ul className="store-frame divide-y divide-border rounded-lg border-border">
-        {b.components.map((c) => (
-          <li key={c.product_id} className="flex items-center gap-3 p-3">
-            <div className="w-12 shrink-0 overflow-hidden rounded-md">
-              <ProductImage src={c.image} alt={c.name} sizes="48px" thumb />
-            </div>
-            <span className="flex-1 text-sm">{c.name}</span>
-            <span className="font-mono text-xs text-muted-foreground tabular-nums">×{formatNumber(c.quantity)}</span>
-            {c.is_optional ? (
-              <label className="flex min-h-11 items-center gap-2 text-xs text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={optional.includes(c.product_id)}
-                  onChange={(e) => set({ bundleOptional: e.target.checked ? [...optional, c.product_id] : optional.filter((x) => x !== c.product_id) })}
-                  className="size-4 accent-[var(--foreground)]"
-                />
-                اختياري
-              </label>
-            ) : null}
-          </li>
-        ))}
-      </ul>
+      <p className="flex items-baseline justify-between text-sm font-medium">
+        <span>محتويات الحزمة</span>
+        {steps ? (
+          <span className="text-xs text-muted-foreground" data-testid="bundle-progress">
+            <span className="font-mono tabular-nums">
+              {formatNumber(done)}/{formatNumber(steps)}
+            </span>
+          </span>
+        ) : null}
+      </p>
+      {b.unavailable_component ? (
+        <p className="text-sm font-medium text-destructive" role="alert" data-testid="bundle-unavailable">
+          الحزمة غير متاحة حالياً — ينقصها «{b.unavailable_component}».
+        </p>
+      ) : null}
+      <ol className="store-frame divide-y divide-border rounded-lg border-border">
+        {b.components.map((c) => {
+          const included = !c.is_optional || optional.includes(c.product_id);
+          const err = missing.includes(`bundle:${c.product_id}`);
+          return (
+            <li key={c.product_id} className="space-y-2 p-3" id={`bundle-${c.product_id}`} tabIndex={-1}>
+              <div className="flex items-center gap-3">
+                <div className="w-12 shrink-0 overflow-hidden rounded-md">
+                  <ProductImage src={c.image} alt={c.name} sizes="48px" thumb />
+                </div>
+                <span className="min-w-0 flex-1 text-sm">
+                  {c.name}
+                  {!c.in_stock ? <span className="ms-2 text-xs text-destructive">نفد</span> : null}
+                </span>
+                <span className="font-mono text-xs text-muted-foreground tabular-nums">×{formatNumber(c.quantity)}</span>
+                {c.is_optional ? (
+                  <label className="flex min-h-11 items-center gap-2 text-xs text-muted-foreground">
+                    <input
+                      type="checkbox"
+                      checked={optional.includes(c.product_id)}
+                      onChange={(e) => {
+                        const nextPicked = { ...picked };
+                        if (!e.target.checked) delete nextPicked[c.product_id];
+                        set({ bundleOptional: e.target.checked ? [...optional, c.product_id] : optional.filter((x) => x !== c.product_id), bundleChoices: nextPicked });
+                      }}
+                      className="size-4 accent-[var(--foreground)]"
+                    />
+                    اختياري
+                  </label>
+                ) : null}
+              </div>
+              {c.choice && included ? (
+                <div className="space-y-1" role="radiogroup" aria-label={`${c.choice.attribute_name} — ${c.name}`}>
+                  <p className="text-xs text-muted-foreground">{c.choice.attribute_name}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {c.choice.options.map((o) => {
+                      const on = picked[c.product_id] === o.id;
+                      const blocker = on ? null : conflictFor(rules, choices, { component: c.product_id, attribute: c.choice!.attribute_id, value: o.value });
+                      return (
+                        <button
+                          key={o.id}
+                          type="button"
+                          role="radio"
+                          aria-checked={on}
+                          aria-disabled={blocker ? true : undefined}
+                          title={blocker ? reason(blocker) : undefined}
+                          data-testid="bundle-option"
+                          data-blocked={blocker ? "1" : undefined}
+                          onClick={() => {
+                            if (blocker) return;
+                            const next = { ...picked };
+                            if (on) delete next[c.product_id];
+                            else next[c.product_id] = o.id;
+                            set({ bundleChoices: next, missing: missing.filter((m) => m !== `bundle:${c.product_id}`) });
+                          }}
+                          className={cn(
+                            "store-frame min-h-11 rounded-lg border-border px-3 text-sm",
+                            on && "bg-foreground text-background",
+                            blocker && "cursor-not-allowed text-muted-foreground line-through opacity-60",
+                          )}
+                        >
+                          {o.value}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {err ? <p className="text-xs text-destructive">اختر {c.choice.attribute_name} لهذا المكوّن.</p> : null}
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ol>
+      {conflict ? (
+        <p className="text-sm text-destructive" role="alert" data-testid="bundle-conflict">
+          {reason(conflict)}
+        </p>
+      ) : null}
       {b.display_build_fee ? (
         <p className="flex justify-between text-sm text-muted-foreground">
           <span>رسوم التجميع</span>
           <Money value={b.display_build_fee} />
+        </p>
+      ) : null}
+      {b.display_total ? (
+        <p className="flex justify-between text-sm font-medium" data-testid="bundle-total">
+          <span>إجمالي الحزمة (المكوّنات الأساسية)</span>
+          <Money value={b.display_total} />
         </p>
       ) : null}
     </div>

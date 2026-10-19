@@ -14,6 +14,8 @@ export interface PdpState {
   quantity: number;
   personalization: Record<string, unknown>;
   bundleOptional: number[];
+  /** M37: the option chosen for each bundle component that is picked by a variant attribute. */
+  bundleChoices: Record<number, number>;
   startDatetime: string | null;
   missing: string[];
   reset: (productId: number, init?: Partial<Pick<PdpState, "selected" | "quantity">>) => void;
@@ -29,6 +31,7 @@ export const usePdp = create<PdpState>((set, get) => ({
   quantity: 1,
   personalization: {},
   bundleOptional: [],
+  bundleChoices: {},
   startDatetime: null,
   missing: [],
   reset: (productId, init) =>
@@ -40,6 +43,7 @@ export const usePdp = create<PdpState>((set, get) => ({
       quantity: init?.quantity ?? 1,
       personalization: {},
       bundleOptional: [],
+      bundleChoices: {},
       startDatetime: null,
       missing: [],
     }),

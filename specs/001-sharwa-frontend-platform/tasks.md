@@ -488,51 +488,74 @@ description: "Task list — Sharwa Frontend Platform (001)"
 
 نفس النمط (أ) شِيمات/mocks/handlers + وسم before · (ب) الشاشات · (ج) فحص + وسم after.
 
-- [ ] T142 [P] [US5] M16 POS (أ): شِيمات CashRegister/Shift/Movement/OTPChallenge، mocks، `src/app/api/bff/pos/**` · `rp/23-pos-before`
-- [ ] T143 [US5] M16 (ب): `src/app/(pos)/_p/[store]/pos/**` (تخطيط مستقل بلا شريط اللوحة: فتح وردية بـ `opening_float`, شاشة بيع بعمودين — بحث/باركود + سلة Mono، خصم بحد الدور، دفع نقدي/محفظة، إيصال للطباعة، درج الكاش بالحركات، إغلاق بالفرق والموافقة، 428 OTP step-up)
-- [ ] T144 [US5] M16 (ج): `docs/visual-checks/16-pos/` + `rp/23-pos-after`
-- [ ] T145 [P] [US5] M17 المسوقون والمؤثرون (أ): شِيمات، mocks، `src/app/api/bff/{affiliates,influencers}/**` · `rp/24-affiliates-before`
-- [ ] T146 [US5] M17 (ب): `dashboard/marketing/{affiliates,influencers}/**` (أداء بـ Mono، رابط `?aff_id=` بالـ host، مبيعات بحالة الدفع وتعليم جماعي «مدفوعة»)
-- [ ] T147 [US5] M17 (ج): `docs/visual-checks/17-affiliates/` + `rp/24-affiliates-after`
-- [ ] T148 [P] [US5] M23 الموردون وأوامر الشراء (أ): شِيمات (PO 6 حالات)، mocks، `src/app/api/bff/{suppliers,purchase-orders}/**` · `rp/25-procurement-before`
-- [ ] T149 [US5] M23 (ب): `dashboard/suppliers/**`, `dashboard/purchase-orders/**` (مسودة بسطور، إرسال للموافقة، حسم بـ `version`, استلام جزئي، إلغاء، خط زمني)
-- [ ] T150 [US5] M23 (ج): `docs/visual-checks/23-procurement/` + `rp/25-procurement-after`
-- [ ] T151 [P] [US5] M26 الحجوزات (أ): شِيمات (weekday 0=Monday ⚠)، mocks، `src/app/api/bff/bookings/**` + `catalog/products/[id]/slots/**` · `rp/26-bookings-before`
-- [ ] T152 [US5] M26 (ب): `dashboard/bookings/{page,services,services/[id]/availability}.tsx` (تقويم أسبوعي بحدود 1px، نوافذ توفر، إلغاء) + منتقي الموعد في PDP/الدفع (`hold` → `held_until`)
-- [ ] T153 [US5] M26 (ج): `docs/visual-checks/26-bookings/` + `rp/26-bookings-after`
-- [ ] T154 [P] [US5] M27 الصندوق الموحَّد والقنوات (أ): شِيمات Conversation/Message/Keyword/Template/CatalogSync، mocks، `src/app/api/bff/{channels,inbox}/**` · `rp/27-inbox-before`
-- [ ] T155 [US5] M27 (ب): `dashboard/inbox/**` (ثلاثة أعمدة: محادثات/رسائل/سياق العميل والطلب؛ استطلاع `?after=`؛ ردّ بقالب/منتج؛ إسناد/حالة؛ تحويل إلى طلب) + `dashboard/channels/**` (حالة Meta/TikTok/Telegram، OAuth كتحويل، محفّزات، قوالب، مزامنة الكتالوج، ربط فئات، وصول الموظفين)
-- [ ] T156 [US5] M27 (ج): `docs/visual-checks/27-inbox/` + `rp/27-inbox-after`
-- [ ] T157 [P] [US5] M28 الأسواق (أ): شِيمات Listing/SyncJob/Settings/MarketplaceOrder، mocks، `src/app/api/bff/marketplaces/**` · `rp/28-marketplaces-before`
-- [ ] T158 [US5] M28 (ب): `dashboard/marketplaces/**` (حالة أمازون/نون، إعدادات بمعاينة سعر، قوائم بمعرّفات وتجاوز سعر ودفع جماعي، مهام بالأخطاء CSV، طلبات الأسواق وتأكيد الشحنة)
-- [ ] T159 [US5] M28 (ج): `docs/visual-checks/28-marketplaces/` + `rp/28-marketplaces-after`
-- [ ] T160 [P] [US5] M29 الدروبشيبينغ (أ): شِيمات SupplierConnection/PricingRule/SupplierProduct/Feed/SupplierOrder (10 حالات)، mocks، `src/app/api/bff/dropshipping/**` · `rp/29-dropshipping-before`
-- [ ] T161 [US5] M29 (ب): `dashboard/dropshipping/**` (موردون، قواعد تسعير بمحاكاة، كتالوج المورد واستيراد، معالج الملفات: رفع → ربط أعمدة → معاينة → اعتماد → تشغيل → أخطاء، طلبات الموردين، مهام)
-- [ ] T162 [US5] M29 (ج): `docs/visual-checks/29-dropshipping/` + `rp/29-dropshipping-after`
-- [ ] T163 [P] [US5] M30 متجر التطبيقات + M31 شروة AI + M32 الدعم (أ): شِيمات App/Installation/Usage/Template/SupportSession/SupportTicket، mocks، `src/app/api/bff/{apps,support}/**` · `rp/30-apps-support-before`
-- [ ] T164 [US5] M30/M31/M32 (ب): `dashboard/apps/**` (كتالوج بحالة التثبيت، تثبيت/تفعيل/تعطيل، أحداث، رسوم؛ واتساب: استخدام/قوالب/رابط الربط؛ شروة AI: حالة/إعدادات/رمز SSO), `dashboard/support/{sessions,sessions/[id],tickets,tickets/[id]}/**` (خط زمني رسائل/أدوات، استيلاء/إفراج/إغلاق بـ `version`, تذاكر بعدّادات)
-- [ ] T165 [US5] M30/M31/M32 (ج): `docs/visual-checks/{30-apps,31-ai,32-support}/` + `rp/30-apps-support-after`
-- [ ] T166 [P] [US5] M33 المصروفات (أ): شِيما (4 فئات)، mocks، `src/app/api/bff/expenses/**` · `rp/31-expenses-before`
-- [ ] T167 [US5] M33 (ب): `dashboard/expenses/page.tsx` (مجمَّعة بالشهر بمجاميع لكل عملة بلا جمع عبر العملات، إنشاء، بلا تعديل/حذف حتى توفر العقد)
-- [ ] T168 [US5] M33 (ج): `docs/visual-checks/33-expenses/` + `rp/31-expenses-after`
-- [ ] T169 [P] [US5] M36 الجملة B2B (أ): passthrough Ready `/api/v1/orders/b2b-*` + شِيمات، mocks لأسعار الكميات والمساومة · `rp/32-b2b-before`
-- [ ] T170 [US5] M36 (ب): `dashboard/orders/b2b/**` (مسودة بعميل/أسطر/معتمد/فرع، قائمة المعلّقة، حسم بـ `version` و403 اعتماد ذاتي مقروء) + أسعار الكميات في نموذج المنتج وPDP + مسودات المساومة
-- [ ] T171 [US5] M36 (ج): `docs/visual-checks/36-b2b/` + `rp/32-b2b-after`
-- [ ] T172 [P] [US5] M37 الحزم/التخصيص/المزادات (أ): شِيمات، mocks، `src/app/api/bff/products/[id]/{bundle-components,compatibility-rules,personalization-fields,auction,serials}/**` + `catalog/products/[id]/bids` + `products/formula-preview` · `rp/33-bundles-before`
-- [ ] T173 [US5] M37 (ب): تبويبات في نموذج المنتج (مكوّنات الحزمة، قواعد التوافق، حقول التخصيص بالسحب، إعدادات المزاد، أكواد تسلسلية، معاينة المعادلة) + PDP (محدد الحزمة، نموذج التخصيص الديناميكي، المزايدة بـ 409 مقروء، السعر بالمعادلة)
-- [ ] T174 [US5] M37 (ج): `docs/visual-checks/37-bundles/` + `rp/33-bundles-after`
-- [ ] T175 [P] [US5] M38 تطبيق المندوب (أ): passthrough Ready `/api/v1/agent/*` + شِيمات + mocks لـ `agent/{shipments,me,custody}` · `rp/34-courier-before`
-- [ ] T176 [US5] M38 (ب): `src/app/(courier)/_c/[store]/agent/**` (تخطيط جوال أولاً بأهداف 48px: بدء/إنهاء/تسليم مناوبة، شحناتي بالحالة، تفاصيل بأحداث، مسح باركود بالكاميرا (`BarcodeDetector` مع سقوط لإدخال يدوي), نقل حالة بـ `client_generated_uuid` وجيولوكيشن، تسليم جزئي بتحصيل COD، دفتر العهدة Mono؛ عمل دون اتصال: طابور إجراءات في IndexedDB يُعاد إرساله)
-- [ ] T177 [US5] M38 (ج): `docs/visual-checks/38-courier/` (mobile + mobile-dark أساساً) + `rp/34-courier-after`
-- [ ] T178 [P] [US5] M39 شروة شيب (أ): شِيمات ShipmentOrder/Event/Zone/AWBQueue/RateCard، mocks، `src/app/api/bff/shipping/{sharwa-ship,shipments,awb-queue,rate-cards,supervisor,agents}/**` · `rp/35-sharwa-ship-before`
-- [ ] T179 [US5] M39 (ب): `dashboard/shipping/sharwa-ship/**` (طلبات بلا بوليصة بمعاينة الوزن القابل للتحصيل والمناطق، إصدار بوليصة، قائمة البوليصات بـ `billing_status`, تفاصيل بأحداث مع `out_of_order/flagged`, تعديل يدوي للحالة، طابور AWB، لقطات التسعيرة، إشراف وإعادة إسناد طارئة)
-- [ ] T180 [US5] M39 (ج): `docs/visual-checks/39-sharwa-ship/` + `rp/35-sharwa-ship-after`
-- [ ] T181 [P] [US5] M40 شروة باي (أ): شِيمات SharwaPayWallet/Transaction/Topup/Withdrawal، mocks، `src/app/api/bff/sharwa-pay/**` · `rp/36-sharwa-pay-before`
-- [ ] T182 [US5] M40 (ب): `src/app/(pay)/sharwa-pay/**` (دخول OTP بالهاتف، محفظة 4 عملات بلا جمع، حركات بالمصدر، طلب شحن multipart بإيصال، طلب سحب، طلباتي، خروج؛ `manifest.webmanifest` و`sw.js` مستقلان بسياسة «لا كاش» تحت `/sharwa-pay/`)
-- [ ] T183 [US5] M40 (ج): `docs/visual-checks/40-sharwa-pay/` + `rp/36-sharwa-pay-after`
-- [ ] T184 [P] [US5] M43 تجميع المتاجر (أ): شِيما، mock، `src/app/api/bff/merchant/stores/route.ts` · `rp/37-rollup-before`
-- [ ] T185 [US5] M43 (ب): `dashboard/stores/page.tsx` (جدول المتاجر بالطلبات/المكتمل/المسترد/الإيراد SAR Mono + مجاميع، فلتر تاريخ في الرابط) + مبدّل المتاجر في الشريط العلوي ولوحة الأوامر
-- [ ] T186 [US5] M43 (ج): `docs/visual-checks/43-rollup/` + `rp/37-rollup-after`
+- [X] T142 [P] [US5] M16 POS (أ): شِيمات CashRegister/Shift/Movement/OTPChallenge، mocks، `src/app/api/bff/pos/**` · `rp/23-pos-before`
+- [X] T143 [US5] M16 (ب): `src/app/(pos)/_p/[store]/pos/**` (تخطيط مستقل بلا شريط اللوحة: فتح وردية بـ `opening_float`, شاشة بيع بعمودين — بحث/باركود + سلة Mono، خصم بحد الدور، دفع نقدي/محفظة، إيصال للطباعة، درج الكاش بالحركات، إغلاق بالفرق والموافقة، 428 OTP step-up)
+- [X] T144 [US5] M16 (ج): `docs/visual-checks/16-pos/` + `rp/23-pos-after`
+- [X] T145 [P] [US5] M17 المسوقون والمؤثرون (أ): شِيمات، mocks، `src/app/api/bff/{affiliates,influencers}/**` · `rp/24-affiliates-before`
+- [X] T146 [US5] M17 (ب): `dashboard/marketing/{affiliates,influencers}/**` (أداء بـ Mono، رابط `?aff_id=` بالـ host، مبيعات بحالة الدفع وتعليم جماعي «مدفوعة»)
+- [X] T147 [US5] M17 (ج): `docs/visual-checks/17-affiliates/` + `rp/24-affiliates-after`
+- [X] T148 [P] [US5] M23 الموردون وأوامر الشراء (أ): شِيمات (PO 6 حالات)، mocks، `src/app/api/bff/{suppliers,purchase-orders}/**` · `rp/25-procurement-before`
+- [X] T149 [US5] M23 (ب): `dashboard/suppliers/**`, `dashboard/purchase-orders/**` (مسودة بسطور، إرسال للموافقة، حسم بـ `version`, استلام جزئي، إلغاء، خط زمني)
+- [X] T150 [US5] M23 (ج): `docs/visual-checks/23-procurement/` + `rp/25-procurement-after`
+- [X] T151 [P] [US5] M26 الحجوزات (أ): شِيمات (weekday 0=Monday ⚠)، mocks، `src/app/api/bff/bookings/**` + `catalog/products/[id]/slots/**` · `rp/26-bookings-before`
+- [X] T152 [US5] M26 (ب): `dashboard/bookings/{page,services,services/[id]/availability}.tsx` (تقويم أسبوعي بحدود 1px، نوافذ توفر، إلغاء) + منتقي الموعد في PDP/الدفع (`hold` → `held_until`)
+- [X] T153 [US5] M26 (ج): `docs/visual-checks/26-bookings/` + `rp/26-bookings-after`
+- [X] T154 [P] [US5] M27 الصندوق الموحَّد والقنوات (أ): شِيمات Conversation/Message/Keyword/Template/CatalogSync، mocks، `src/app/api/bff/{channels,inbox}/**` · `rp/27-inbox-before`
+- [X] T155 [US5] M27 (ب): `dashboard/inbox/**` (ثلاثة أعمدة: محادثات/رسائل/سياق العميل والطلب؛ استطلاع `?after=`؛ ردّ بقالب/منتج؛ إسناد/حالة؛ تحويل إلى طلب) + `dashboard/channels/**` (حالة Meta/TikTok/Telegram، OAuth كتحويل، محفّزات، قوالب، مزامنة الكتالوج، ربط فئات، وصول الموظفين)
+- [X] T156 [US5] M27 (ج): `docs/visual-checks/27-inbox/` + `rp/27-inbox-after`
+- [X] T157 [P] [US5] M28 الأسواق (أ): شِيمات Listing/SyncJob/Settings/MarketplaceOrder، mocks، `src/app/api/bff/marketplaces/**` · `rp/28-marketplaces-before`
+- [X] T158 [US5] M28 (ب): `dashboard/marketplaces/**` (حالة أمازون/نون، إعدادات بمعاينة سعر، قوائم بمعرّفات وتجاوز سعر ودفع جماعي، مهام بالأخطاء CSV، طلبات الأسواق وتأكيد الشحنة)
+- [X] T159 [US5] M28 (ج): `docs/visual-checks/28-marketplaces/` + `rp/28-marketplaces-after`
+- [X] T160 [P] [US5] M29 الدروبشيبينغ (أ): شِيمات SupplierConnection/PricingRule/SupplierProduct/Feed/SupplierOrder (10 حالات)، mocks، `src/app/api/bff/dropshipping/**` · `rp/29-dropshipping-before`
+- [X] T161 [US5] M29 (ب): `dashboard/dropshipping/**` (موردون، قواعد تسعير بمحاكاة، كتالوج المورد واستيراد، معالج الملفات: رفع → ربط أعمدة → معاينة → اعتماد → تشغيل → أخطاء، طلبات الموردين، مهام)
+- [X] T162 [US5] M29 (ج): `docs/visual-checks/29-dropshipping/` + `rp/29-dropshipping-after`
+- [X] T163 [P] [US5] M30 متجر التطبيقات + M31 شروة AI + M32 الدعم (أ): شِيمات App/Installation/Usage/Template/SupportSession/SupportTicket، mocks، `src/app/api/bff/{apps,support}/**` · `rp/30-apps-support-before`
+- [X] T164 [US5] M30/M31/M32 (ب): `dashboard/apps/**` (كتالوج بحالة التثبيت، تثبيت/تفعيل/تعطيل، أحداث، رسوم؛ واتساب: استخدام/قوالب/رابط الربط؛ شروة AI: حالة/إعدادات/رمز SSO), `dashboard/support/{sessions,sessions/[id],tickets,tickets/[id]}/**` (خط زمني رسائل/أدوات، استيلاء/إفراج/إغلاق بـ `version`, تذاكر بعدّادات)
+- [X] T165 [US5] M30/M31/M32 (ج): `docs/visual-checks/{30-apps,31-ai,32-support}/` + `rp/30-apps-support-after`
+- [X] T166 [P] [US5] M33 المصروفات (أ): شِيما (4 فئات)، mocks، `src/app/api/bff/expenses/**` · `rp/31-expenses-before`
+- [X] T167 [US5] M33 (ب): `dashboard/expenses/page.tsx` (مجمَّعة بالشهر بمجاميع لكل عملة بلا جمع عبر العملات، إنشاء، بلا تعديل/حذف حتى توفر العقد)
+- [X] T168 [US5] M33 (ج): `docs/visual-checks/33-expenses/` + `rp/31-expenses-after`
+- [X] T169 [P] [US5] M36 الجملة B2B (أ): passthrough Ready `/api/v1/orders/b2b-*` + شِيمات، mocks لأسعار الكميات والمساومة · `rp/32-b2b-before`
+- [X] T170 [US5] M36 (ب): `dashboard/orders/b2b/**` (مسودة بعميل/أسطر/معتمد/فرع، قائمة المعلّقة، حسم بـ `version` و403 اعتماد ذاتي مقروء) + أسعار الكميات في نموذج المنتج وPDP + مسودات المساومة
+- [X] T171 [US5] M36 (ج): `docs/visual-checks/36-b2b/` + `rp/32-b2b-after`
+- [X] T172 [P] [US5] M37 الحزم/التخصيص/المزادات (أ): شِيمات، mocks، `src/app/api/bff/products/[id]/{bundle-components,compatibility-rules,personalization-fields,auction,serials}/**` + `catalog/products/[id]/bids` + `products/formula-preview` · `rp/33-bundles-before`
+- [X] T173 [US5] M37 (ب): تبويبات في نموذج المنتج (مكوّنات الحزمة، قواعد التوافق، حقول التخصيص بالسحب، إعدادات المزاد، أكواد تسلسلية، معاينة المعادلة) + PDP (محدد الحزمة، نموذج التخصيص الديناميكي، المزايدة بـ 409 مقروء، السعر بالمعادلة)
+- [X] T174 [US5] M37 (ج): `docs/visual-checks/37-bundles/` + `rp/33-bundles-after`
+- [X] T175 [P] [US5] M38 تطبيق المندوب (أ): passthrough Ready `/api/v1/agent/*` + شِيمات + mocks لـ `agent/{shipments,me,custody}` · `rp/34-courier-before`
+- [X] T176 [US5] M38 (ب): `src/app/(courier)/_c/[store]/agent/**` (تخطيط جوال أولاً بأهداف 48px: بدء/إنهاء/تسليم مناوبة، شحناتي بالحالة، تفاصيل بأحداث، مسح باركود بالكاميرا (`BarcodeDetector` مع سقوط لإدخال يدوي), نقل حالة بـ `client_generated_uuid` وجيولوكيشن، تسليم جزئي بتحصيل COD، دفتر العهدة Mono؛ عمل دون اتصال: طابور إجراءات في IndexedDB يُعاد إرساله)
+- [X] T177 [US5] M38 (ج): `docs/visual-checks/38-courier/` (mobile + mobile-dark أساساً) + `rp/34-courier-after`
+- [X] T178 [P] [US5] M39 شروة شيب (أ): شِيمات ShipmentOrder/Event/Zone/AWBQueue/RateCard، mocks، `src/app/api/bff/shipping/{sharwa-ship,shipments,awb-queue,rate-cards,supervisor,agents}/**` · `rp/35-sharwa-ship-before`
+- [X] T179 [US5] M39 (ب): `dashboard/shipping/sharwa-ship/**` (طلبات بلا بوليصة بمعاينة الوزن القابل للتحصيل والمناطق، إصدار بوليصة، قائمة البوليصات بـ `billing_status`, تفاصيل بأحداث مع `out_of_order/flagged`, تعديل يدوي للحالة، طابور AWB، لقطات التسعيرة، إشراف وإعادة إسناد طارئة)
+- [X] T180 [US5] M39 (ج): `docs/visual-checks/39-sharwa-ship/` + `rp/35-sharwa-ship-after`
+- [X] T181 [P] [US5] M40 شروة باي (أ): شِيمات SharwaPayWallet/Transaction/Topup/Withdrawal، mocks، `src/app/api/bff/sharwa-pay/**` · `rp/36-sharwa-pay-before`
+- [X] T182 [US5] M40 (ب): `src/app/(pay)/sharwa-pay/**` (دخول OTP بالهاتف، محفظة 4 عملات بلا جمع، حركات بالمصدر، طلب شحن multipart بإيصال، طلب سحب، طلباتي، خروج؛ `manifest.webmanifest` و`sw.js` مستقلان بسياسة «لا كاش» تحت `/sharwa-pay/`)
+- [X] T183 [US5] M40 (ج): `docs/visual-checks/40-sharwa-pay/` + `rp/36-sharwa-pay-after`
+- [X] T184 [P] [US5] M43 تجميع المتاجر (أ): شِيما، mock، `src/app/api/bff/merchant/stores/route.ts` · `rp/37-rollup-before`
+- [X] T185 [US5] M43 (ب): `dashboard/stores/page.tsx` (جدول المتاجر بالطلبات/المكتمل/المسترد/الإيراد SAR Mono + مجاميع، فلتر تاريخ في الرابط) + مبدّل المتاجر في الشريط العلوي ولوحة الأوامر
+- [X] T186 [US5] M43 (ج): `docs/visual-checks/43-rollup/` + `rp/37-rollup-after`
+
+---
+
+> **تعديل الخطة — المرحلة 7 (2026-10-19).** نُفِّذت T142–T186 بالـ mocks (17 وحدة). الوسوم `rp/23…37-*-before|after` لم تُنشأ (سياسة المالك خطية بلا وسوم)، وT144…T186 (ج) تعني الفحص + اللقطات فقط. بوابات: lint ✅ · tsc ✅ · 15 فحص وحدة (391 ✓، 0 أخطاء console) · تراجعات المراحل 2–6 القابلة للتشغيل ✅. التفصيل في `execution_log.md`.
+>
+> | المهمة | الانحراف | السبب |
+> |---|---|---|
+> | كل (أ) | محوِّل BFF واحد catch-all لكل وحدة (`[...path]` أو `[[...path]]`) + راوتر في `src/mocks/<module>/router.ts` | حد عمق جسر الجهاز (7 مجلدات)، ويصير passthrough بملف واحد يوم يُشحن Django |
+> | T143 | `src/app/(pos)/%5Fp/…` ؛ لا مفتاح ميزة POS في الخطط الـ 39 → الدخول = الجلسة + إسناد الفرع (M22) | `_` مجلد خاص في Next؛ الكتالوج بلا ميزة POS |
+> | T146 | كتابات المسوقين/المؤثرين للمالك فقط؛ `mark-paid` يقبل `dry_run` للمعاينة الخادمية | لا مفتاح صلاحية؛ FR-17.05 |
+> | T149 | صفحة «أوامر الشراء» بند مستقل في الشريط بصلاحية `suppliers.manage` وحدها | `NavItem` يقبل صلاحية واحدة (المواصفة: manage أو approve) — قرار مفتوح |
+> | T152 | مسار الحجز `catalog/products/[id]/slots` (POST = hold) بدل `…/slots/hold` | حد العمق |
+> | T155/T158/T161 | القنوات تحت `/dashboard/channels/{social,marketplaces,dropshipping}` لا `/dashboard/{channels,marketplaces,dropshipping}` | مسارات `navigation.ts` هي المرجع |
+> | T158 | إعدادات/قوائم السوق تبويبات `?tab=`، تفاصيل المهمة لوحة جانبية `?job=` | حد العمق |
+> | T161 | حقول الموجز الـ 20 عرّفناها (إلزامية: `sku,name,cost,stock`)؛ أعمدة `.xlsx` ثابتة في الـ mock | غير موصوفة في الـ discovery |
+> | T164 | التذاكر على `/dashboard/wallet/tickets`؛ شاشات جلسات M31 مدمجة في `/dashboard/support/sessions`؛ واتساب = `whatsapp_bot` | مسارات الشريط ورموز كتالوج المنصة |
+> | T167 | المصروفات على `/dashboard/wallet/expenses` (للمالك فقط) | مسار الشريط؛ M33 §10 |
+> | T170 | مسودات المساومة لم تُبنَ | المواصفة تخفيها حتى يتوفر العقد |
+> | T173 | لقطات M37 في `docs/visual-checks/37-advanced-products/` | اسم مواصفة M37 |
+> | T176 | التطبيق على `/agent` لا `/courier`؛ تسليم المناوبة برقم المندوب | `groupForStorePath` + tasks.md؛ لا قائمة مندوبين للمندوب |
+> | T179 | `POST shipments/<id>/assign` امتداد mock | لا صف إسناد في §7 |
+> | T182 | `manifest`/`sw.js` تحت `/sharwa-pay/` بنطاق `/sharwa-pay/`؛ الرابط من نطاق متجر يُحوَّل 308 لأصل المنصة | `/` على أصل المنصة هو الموقع التسويقي |
+> | T185 | لقطات M43 في `docs/visual-checks/43-stores/`؛ المبدّل على الجوال يبقى قائمة منسدلة | — |
 
 ---
 

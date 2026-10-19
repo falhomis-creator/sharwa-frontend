@@ -544,6 +544,7 @@ function seed(): PlatformState {
   // ── apps + installations + overrides ────────────────────────────────────────────────
   state.apps = [
     { code: "whatsapp_bot", name: "بوت واتساب", description: "ردود آلية وتأكيد الطلبات عبر واتساب.", icon: "message-circle", is_listed: true, is_free: false, price: "29.00", currency: "SAR", billing_interval: "monthly", billing_enabled: true },
+    { code: "sharwa_ai", name: "شروة AI", description: "مساعد ذكي يردّ على العملاء والمسوّقين ويصعّد للموظفين.", icon: "bot", is_listed: true, is_free: false, price: "49.00", currency: "SAR", billing_interval: "monthly", billing_enabled: true },
     { code: "invoice_pro", name: "فواتير احترافية", description: "فواتير ضريبية بقوالب.", icon: "file-text", is_listed: true, is_free: false, price: "190.00", currency: "SAR", billing_interval: "yearly", billing_enabled: true },
     { code: "google_shopping", name: "Google Shopping", description: "مزامنة المنتجات مع Google Merchant.", icon: "shopping-bag", is_listed: true, is_free: true, price: "0.00", currency: "SAR", billing_interval: "monthly", billing_enabled: false },
     { code: "loyalty_plus", name: "ولاء بلس", description: "مستويات ولاء ومكافآت.", icon: "award", is_listed: true, is_free: false, price: "5000.00", currency: "YER_NEW", billing_interval: "monthly", billing_enabled: true },
@@ -558,6 +559,7 @@ function seed(): PlatformState {
   const noorBot = install("noor", "whatsapp_bot", 24 * 120);
   const noorInvoice = install("noor", "invoice_pro", 24 * 200, { subscription_expires_at: ahead(24 * 150) });
   install("noor", "google_shopping", 24 * 90, { subscription_expires_at: null });
+  install("noor", "sharwa_ai", 24 * 60, { subscription_expires_at: ahead(24 * 5) });
   const atyabBot = install("atyab", "whatsapp_bot", 24 * 80);
   const zahraLoyalty = install("zahra", "loyalty_plus", 24 * 50, { suspended_by_platform: true, is_active: false });
   install("techy", "sms_gateway", 24 * 40, { subscription_expires_at: at(24 * 3) });

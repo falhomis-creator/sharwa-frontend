@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +27,7 @@ const FIELDS = ["phone", "password"] as const;
 
 export function StaffLoginForm() {
   const router = useRouter();
+  const search = useSearchParams();
   const [formError, setFormError] = useState("");
   const {
     register,
@@ -41,7 +42,9 @@ export function StaffLoginForm() {
       await apiFetch("/api/bff/auth/staff/login", z.undefined(), {
         json: { phone: normalizePhone(values.phone), password: values.password },
       });
-      router.replace("/dashboard");
+      const next = search.get("next");
+      // Same-origin relative paths only (`/agent`, `/pos`, `/dashboard/...`) — never `//host`.
+      router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
       router.refresh();
     } catch (error) {
       setFormError(applyApiError(error, setError, FIELDS));

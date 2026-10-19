@@ -106,6 +106,13 @@ export const NAVIGATION: NavGroup[] = [
         permission: "orders.view",
       },
       {
+        key: "orders.b2b",
+        title: "مسودات الجملة",
+        path: "/dashboard/orders/b2b",
+        keywords: ["جملة", "B2B", "مسودة", "اعتماد", "b2b_drafts"],
+        permission: "orders.view",
+      },
+      {
         key: "orders.statuses",
         title: "حالات الطلب",
         path: "/dashboard/orders/statuses",
@@ -195,6 +202,13 @@ export const NAVIGATION: NavGroup[] = [
         title: "الموردون وأوامر الشراء",
         path: "/dashboard/suppliers",
         keywords: ["مورد", "أمر شراء", "supplier_list"],
+        permission: "suppliers.manage",
+      },
+      {
+        key: "products.purchase_orders",
+        title: "أوامر الشراء",
+        path: "/dashboard/purchase-orders",
+        keywords: ["أمر شراء", "PO", "استلام", "purchase_order_list"],
         permission: "suppliers.manage",
       },
       {
@@ -382,9 +396,10 @@ export const NAVIGATION: NavGroup[] = [
     items: [
       {
         key: "channels.social",
+        ownerOnly: true,
         title: "التواصل الاجتماعي والمحادثات",
         path: "/dashboard/channels/social",
-        keywords: ["انستغرام", "تيك توك", "تلغرام", "social_channels_hub"],
+        keywords: ["انستغرام", "تيك توك", "تلغرام", "social_channels_hub", "قوالب الردود", "محفّز", "مزامنة الكتالوج", "وصول الموظفين"],
         feature: "social_channels",
       },
       {
@@ -607,9 +622,11 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "shipping.supervisor",
+        ownerOnly: true,
         title: "مندوبو الشحن (إشراف)",
         path: "/dashboard/shipping/supervisor",
         keywords: ["إشراف", "courier_supervisor"],
+        feature: "sharwa_ship",
       },
       {
         key: "shipping.carriers",
@@ -635,7 +652,16 @@ export const NAVIGATION: NavGroup[] = [
         permission: "orders.view",
       },
       {
+        key: "shipping.sharwa_ship",
+        title: "بوليصات شروة شيب",
+        path: "/dashboard/shipping/sharwa-ship",
+        keywords: ["بوليصة", "AWB", "SHW", "إصدار بوليصة", "waybill_list", "طابور AWB", "تسعيرة"],
+        feature: "sharwa_ship",
+        permission: "orders.view",
+      },
+      {
         key: "shipping.shifts",
+        ownerOnly: true,
         title: "مناوبات المندوبين",
         path: "/dashboard/shipping/agent-shifts",
         keywords: ["مناوبة", "agent_shift"],
@@ -747,6 +773,7 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "wallet.expenses",
+        ownerOnly: true,
         title: "المصروفات التشغيلية",
         path: "/dashboard/wallet/expenses",
         keywords: ["مصروف", "operating_expenses"],

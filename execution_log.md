@@ -1,3 +1,83 @@
+# Execution log — Phase 7 · US5 channels and extensions: M16 M17 M23 M26–M33 M36–M40 M43 (T142–T186)
+
+**Date:** 2026-10-19 · **Branch:** `main` · **Base:** your local Phase 6 commit `f02c525` (Phases 5 and 6 are not on GitHub yet: `origin/main` is still `e0a4169`) · **Status:** T142–T186 done on mocks (`x-sharwa-mock: 1`), 17 modules. The `rp/*` tags are skipped (linear history, no tags). Gates: `npm run lint` ✅ (0 problems) · `npx tsc --noEmit` ✅ · 15 Phase 7 checks, 391 ✓, 0 console errors (serial, fresh server) · regressions `admin-shell` 23 · `admin-stores` 35 · `admin-billing` 53 · `admin-money` 58 · `phase5-decisions` 24 · `tenant-shell` 9 · `settings` 23 · `catalog-orders` 22 · `storefront` 41 · `onboarding` 33 · `shipping` 29 · `payments` 40 ✅. Backend untouched. No git run from the session.
+
+## What was built
+
+| Module | Visible routes | Notes |
+|---|---|---|
+| M16 POS (T142–T144) | `/pos`, `/pos/sell`, `/pos/drawer`, `/pos/shift/close`, `/pos/receipts`, `/pos/receipts/[id]` (new route group `(pos)/%5Fp`) | Own layout, no sidebar. Open shift with `opening_float`; two-column sale (search/barcode + Mono cart, server `quote` total); discount capped by role, over the cap → approval request; cash / wallet; printable receipt; drawer movements; close with variance → approval when short; refund > 200.00 → 428 OTP step-up. A sale is a real M06 order (`sales_channel=pos`) and takes stock; offline «إتمام» keeps its idempotency key and re-sends once. |
+| M17 affiliates & influencers | `/dashboard/marketing/{affiliates,influencers}` (+ `[id]`) | Performance in Mono, `?aff_id=` link on the store host, sales by payment state, bulk «مدفوعة» with a server-side preview (`dry_run`). Writes owner-only. |
+| M23 suppliers & POs | `/dashboard/suppliers` (+ `[id]`), `/dashboard/purchase-orders` (board / table), `new`, `[id]`, `[id]/receive` | 6 statuses; submit creates the M18 `po_approval`; decide by `version`; partial receive posts `po_received` movements into the M21 ledger; cancel; timeline. |
+| M26 bookings | `/dashboard/bookings` (week/day calendar, 1px grid), `/services`, `/services/[id]/availability` | Weekday 0 = Monday as the backend. PDP picker holds a slot with a `held_until` countdown (survives reload; 409 «لم يعد هذا الموعد متاحاً»); checkout books the hold. |
+| M27 inbox & channels | `/dashboard/inbox` (3 columns, `?after=` polling, templates/products in replies, assign/status, convert to order), `/dashboard/channels/social/{,catalog,tiktok-categories,keywords,templates,staff-access}` | The sidebar «المحادثات» badge and the overview now read the inbox's unread count. OAuth is a server redirect. |
+| M28 marketplaces | `/dashboard/channels/marketplaces`, `/[amazon\|noon]?tab=listings\|settings`, `/jobs?job=`, `/orders` | Price preview, ids + price override + bulk push, job errors as CSV, confirm shipment. |
+| M29 dropshipping | `/dashboard/channels/dropshipping` + `suppliers/[code]`, `pricing-rules` (simulation), `catalog/[code]` (import), `feeds`, `feeds/new?step=1..4` (upload → map → preview → approve/run → errors), `feeds/[id]`, `orders` (10 statuses), `jobs` | |
+| M30/M31/M32 apps, AI, support | `/dashboard/apps` (+ `[code]`), `/apps/whatsapp/{,usage,templates,templates/[id]}`, `/apps/sharwa-ai`, `/dashboard/support/sessions` (+ `[id]`: timeline, takeover/release/close by `version`), `/dashboard/wallet/tickets` (+ `[id]`) | The app catalogue and installations ARE the console's rows: installing here shows in `console.<base>/apps`. «شروة AI» added to the platform catalogue (installed for noor, expires in 5 days to show the notice). |
+| M33 expenses | `/dashboard/wallet/expenses` | Grouped by month with one total per currency (never summed across currencies), create only (no edit/delete until the contract exists), owner-only. |
+| M36 B2B | `/dashboard/orders/b2b`, `/new` + tier prices in the product form and PDP | Ready `/api/v1/orders/b2b-*` fixtures on the passthrough; decide by `version`; self-approval → the server's 403 shown verbatim. |
+| M37 advanced products | Product form tab «الأنماط المتقدمة» (`?tab=advanced`) + PDP | Bundle components, compatibility rules (disabled options with the reason), drag-sorted personalization fields, auction settings (bids poll 10s, 409 readable, reserve hidden), serial codes, server formula preview. |
+| M38 courier app | `/agent`, `/agent/shipments` (+ `[id]`), `/agent/custody`, `/agent/queue` (new route group `(courier)/%5Fc`) | Mobile-first, 48px targets. Shift start/end/handover; scan by camera (`BarcodeDetector`) or by hand; transitions with `client_generated_uuid` + geolocation; partial delivery + COD; custody ledger in Mono; IndexedDB queue replayed on reconnect (a resend answers `duplicate:true`). Staff session; staff login now honours `?next=`. |
+| M39 Sharwa Ship | `/dashboard/shipping/sharwa-ship` (+ `[id]`, `queue`, `rate-cards`), `/shipping/supervisor`, `/shipping/agent-shifts` | Chargeable-weight preview, issue AWB, `billing_status`, events incl. `out_of_order/flagged`, manual status, AWB queue retry, rate-card drift, emergency reassign. Same `ShipmentOrder` rows as M15 and M38; zones still the console's. |
+| M40 Sharwa Pay | `/sharwa-pay`, `/transactions`, `/topup`, `/withdraw`, `/requests`, `/offline` on the platform origin (new route group `(pay)`) | Phone OTP, 4 balances never summed, multipart top-up with receipt, withdrawal, logout. Own `manifest.webmanifest` + `sw.js` (scope `/sharwa-pay/`, caches nothing). Top-ups/withdrawals ARE the console's rows. A store host redirects `/sharwa-pay` to the platform origin (308). |
+| M43 store rollup | `/dashboard/stores` | Orders / completed / refunded / revenue SAR in Mono + totals, date range in the URL. The topbar switcher and ⌘K «متاجري» read the same `merchant/stores` contract; «كل متاجري» link in both. |
+
+## Shared changes merged by the main session
+
+- `src/app/api/v1/[...path]/route.ts`: registers the B2B and courier Ready fixtures.
+- `navigation.ts`: «مسودات الجملة», «أوامر الشراء», «بوليصات شروة شيب»; `ownerOnly` on social channels, expenses, agent shifts and the courier supervisor (+ `feature: sharwa_ship`).
+- `command-palette.tsx`: the stores page on the M43 contract.
+- `staff-login-form.tsx` honours `?next=` (same-origin paths only); its page is wrapped in Suspense.
+- `proxy.ts`: `/sharwa-pay` on a store or custom host → 308 to the platform origin.
+- `mocks/dashboard/overview.ts`: unread conversations from the inbox. `mocks/platform/state.ts`: the `sharwa_ai` app.
+- `api/bff/README.md`: a Phase 7 section with every adapter.
+
+## Build
+
+Six parallel builds (A POS+rollup, B affiliates/expenses/B2B, C procurement/marketplaces/dropshipping, D bookings/advanced products/tier prices, E inbox/apps/support, F courier/Sharwa Ship/Sharwa Pay). They created files in their own folders and handed shared edits to the main session. Every adapter is one catch-all per module: it fits the bridge's 7-folder limit and becomes a single passthrough when Django ships.
+
+Real bugs the checks caught and fixed: the inbox search effect cleared the open conversation in Strict Mode; POS search capped at 24 products (no barcode product reachable) and offline sales were paused instead of failing; procurement showed the stale draft right after «حفظ وإرسال»; job, PO and B2B rows could only be opened by keyboard; the B2B draft path ran the order stock check; Sharwa Pay and courier error bodies carried a `code` key that the client read as a field error; courier pages needed `instant = false`; several pages read `useSearchParams` / `params` outside Suspense.
+
+## Gates
+
+```
+$ npm run lint                        → 0 problems
+$ npx tsc --noEmit                    → exit 0
+$ SHARWA_CHROMIUM=… npx tsx scripts/<name>-check.ts 3300   (serial, fresh server)
+expenses 15 · affiliates 22 · b2b 18 · procurement 25 · marketplaces 19 · dropshipping 27 · bookings 28 · bundles 29
+inbox 33 · apps-support 29 · pos 40 · rollup 18 · courier 35 · sharwa-ship 24 · sharwa-pay 29   → 391 ✓, 0 console errors
+admin-shell 23 · admin-stores 35 · admin-billing 53 · admin-money 58 · phase5-decisions 24 · tenant-shell 9
+settings 23 · catalog-orders 22 · storefront 41 · onboarding 33 · shipping 29 · payments 40 ✓
+```
+
+Not re-run here: `customers`, `domains`, `engagement`, `inventory`, `locations`, `marketing`, `reports`, `returns`, `staff`, `theme`, `wallets`. Their Phase 5 pages are deeper than the bridge can read, so the session's copy never had them. Phase 7 touched none of their files except a one-line link fix in `inventory/components/movements-screen.tsx` (PO link → `/dashboard/purchase-orders/<id>`). Please run them on your machine.
+
+Known flake: a one-off hydration warning on the storefront theme wrapper appeared once during a bookings run and not on any rerun (the same family as the Phase 6 service-worker note). The bookings/bundles checks now log the URL and the full diff if it recurs.
+
+Visual checks: `docs/visual-checks/{16-pos,17-affiliates,23-procurement,26-bookings,27-inbox,28-marketplaces,29-dropshipping,30-apps,31-ai,32-support,33-expenses,36-b2b,37-advanced-products,38-courier,39-sharwa-ship,40-sharwa-pay,43-stores}/` — desktop / mobile 390 / dark, 0 horizontal scroll.
+
+The checks change mock state (they consume seeded queues, add drafts on `glow`, POS sales on `noor`). Most reset or restore what they touch; a dev-server restart resets everything.
+
+## Deviations
+
+See the Phase 7 table in `tasks.md`.
+
+## Owner decisions still open
+
+1. **POS manager code and refund threshold.** The till accepts manager code `2468` and asks an OTP over 200.00 SAR — both mock constants. What is the real mechanism (PIN, manager OTP) and threshold?
+2. **POS plan feature.** None of the 39 features is POS; today access = session + location assignment. Add a `pos` feature?
+3. **Approver-only procurement staff.** The sidebar item needs `suppliers.manage`; an approver-only member reaches the screens by link only. Add `anyPermission` to `NavItem`?
+4. **Courier handover target.** No agents list for the courier, so handover asks for an agent id. Add a list row, or keep it?
+5. **Sharwa Ship supervisor gate.** The in-house agent supervisor is gated by the `sharwa_ship` feature. Should stores without Sharwa Ship still supervise their own agents?
+6. **Bidding OTP.** M37 asks name + phone only; the PDP keeps M10's WhatsApp OTP. Which one?
+7. **Feed fields.** The 20 dropshipping feed fields were defined by us (required `sku,name,cost,stock`). Please confirm against the backend.
+8. **Bundle component choices.** Which attribute each component is chosen by is fixture data; it needs a contract field.
+9. **M13 influencer coupons.** M13 links an influencer to `/dashboard/influencers/<id>` (should be `/dashboard/marketing/influencers/<id>`) and its coupon form ignores `?influencer=`. Not changed (Phase 5 deep files); fix in Phase 8?
+10. **M06 manual order «جملة».** The new-order screen can still create `b2b_draft` orders outside the Ready B2B endpoint. Replace it with a link to `/dashboard/orders/b2b/new`?
+11. **Session resolver location.** The POS and courier layouts import the server session resolver from `dashboard-shell/api/session`. Move it to `src/lib/session/` in Phase 8.
+
+---
+
 # Execution log — Phase 6 · US4 platform-owner console: M20 · M45 · M46 (T135–T141)
 
 **Date:** 2026-10-19 · **Branch:** `main` · **Base:** your local Phase 5 commits (not on GitHub yet; see «Push» below) · **Status:** T136–T141 done on mocks (`x-sharwa-mock: 1`). T135 skipped, like the Phase 5 tags (the owner keeps a linear history with no tags). Gates: `npm run lint` ✅ (0 problems) · `npx tsc --noEmit` ✅ · console checks `admin-shell` 23 · `admin-stores` 35 · `admin-billing` 53 · `admin-money` 58 ✅ (two serial runs on a freshly restarted server, 0 console errors) · regressions phase5-decisions 24 · tenant-shell 9 · settings 23 · catalog-orders 22 · storefront 41 · onboarding 33 ✅. Backend untouched. No git run from the session.

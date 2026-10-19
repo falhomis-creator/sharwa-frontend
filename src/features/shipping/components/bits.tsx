@@ -62,6 +62,8 @@ const LINKS = [
   { href: "/dashboard/shipping/packaging", label: "التغليف" },
   { href: "/dashboard/shipping/zone-review", label: "مراجعة المناطق" },
   { href: "/dashboard/shipping/edge-cases", label: "الحالات الحدّية" },
+  { href: "/dashboard/shipping/sharwa-ship", label: "بوليصات شروة شيب" },
+  { href: "/dashboard/shipping/supervisor", label: "الإشراف" },
 ];
 
 /** A quiet text sub-navigation across the shipping screens (wraps on phones, never scrolls the page). */

@@ -116,3 +116,32 @@ M45/M46 proposed `/api/v1/admin/*` for some rows; they are unified under `platfo
 FR-46.04 order (`resolveFeature`) and the merchant session (`/api/bff/dashboard/me`) reads it, so
 the console and the merchant sidebar cannot disagree (SC-20.4). The Sharwa Ship zones M15 reads
 and the market categories the M02 wizard reads are the console's rows too.
+
+
+## Phase 7 — channels and extensions (M16 M17 M23 M26–M33 M36–M40 M43)
+
+Every row below is `[NEEDS BACKEND]` (mock adapter, 501 with mocks off) unless marked
+**Ready** — those are fixtures on the `/api/v1/*` passthrough registry that answer only while
+Django is down or 404s. Each module is ONE catch-all (`[...path]`, or `[[...path]]` when the bare
+collection root is a row) whose path after the prefix is the proposed upstream path verbatim.
+Gates, in order: session 401 → plan feature 403 → permission / owner-only 403 → the row's own
+400/404/409/428.
+
+| BFF | Upstream (proposed) | Mock | Module |
+|---|---|---|---|
+| `pos/*` | `/api/v1/pos/{context,registers,shifts,shifts/current,shifts/pending,shifts/<id>/{movements,close,resolve-variance},products,quote,discount-approvals,orders,orders/<id>,orders/<id>/refund}` (+ mock-only `__reset`) | `src/mocks/pos` | M16 |
+| `merchant/stores` (`?from&to`) | `/api/v1/merchant/stores/` — owner only | `src/mocks/rollup` | M43 |
+| `affiliates/[[...]]`, `influencers/[[...]]` | `/api/v1/{affiliates,influencers}/*`; writes owner-only; `mark-paid` takes `dry_run` (server preview) | `src/mocks/affiliates` | M17 |
+| `expenses/[[...]]` | `/api/v1/expenses/*`; owner-only; edit/delete 405 | `src/mocks/expenses` | M33 |
+| `b2b/[[...]]` (`options`; mock-only `_test/bump/<id>`) · **Ready** `orders/b2b-draft/`, `orders/b2b-drafts/`, `orders/b2b-draft/<id>/resolve/` | M36 | `src/mocks/b2b` | M36 |
+| `suppliers/[[...]]`, `purchase-orders/[[...]]` (+ mock-only `form-options`, `products`) | `/api/v1/{suppliers,purchase-orders}/*` | `src/mocks/procurement` | M23 |
+| `marketplaces/[[...]]` | `/api/v1/marketplaces/*` | `src/mocks/marketplaces` | M28 |
+| `dropshipping/[[...]]` (+ mock-only `meta`) | `/api/v1/dropshipping/*` | `src/mocks/dropshipping` | M29 |
+| `bookings/*`; `catalog/products/<id>/slots` (GET · POST hold) | `/api/v1/bookings/*`; `/api/v1/catalog/products/<id>/slots/{,hold/}`; slots/availability envelope `{timezone, week_start_day, results}` | `src/mocks/bookings` | M26 |
+| `products/<id>/extras/*`, `products/formula-preview` | `/api/v1/products/<id>/{tier-prices,bundle-components,compatibility-rules,personalization-fields,auction,serials}/`, `/api/v1/products/formula-preview/` | `src/mocks/product-extras` | M36 · M37 |
+| `inbox/*`, `channels/[[...]]` (+ `:code/oauth/start` → 302) | `/api/v1/{inbox,channels}/*` (mock-only `products`, `_mock/*`) | `src/mocks/inbox` | M27 |
+| `apps/[[...]]` | `/api/v1/apps/*` — catalogue + installations ARE the console's rows | `src/mocks/apps` | M30 · M31 |
+| `support/*` | `/api/v1/support/*` (mock-only `assignees`, `_mock/*`) | `src/mocks/support` | M31 · M32 |
+| `agent/*` (`me`, `shipments`, `shipments/<id>`, `custody`) · **Ready** `/api/v1/agent/*` actions | M38 — staff session + shipping-provider profile | `src/mocks/courier` | M38 |
+| `shipping/{sharwa-ship,shipments,awb-queue,rate-cards,supervisor,agents,agent-shifts}/*` | `/api/v1/shipping/*` — the same `ShipmentOrder` rows as M15 and M38 | `src/mocks/shipping/sharwa-ship*.ts` | M39 |
+| `sharwa-pay/*` (`otp/send`, `otp/verify`, `wallet`, `transactions`, `requests`, `topups` multipart, `withdrawals`, `logout`) | `/api/v1/sharwa-pay/*` — platform origin only (404 elsewhere); dev marker `sharwa_mock_pay=<phone>`; wallets/top-ups/withdrawals ARE the console's rows | `src/mocks/sharwa-pay` | M40 |

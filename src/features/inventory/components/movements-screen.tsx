@@ -33,7 +33,7 @@ export function MovementsScreen() {
 function referenceHref(ref: NonNullable<Movement["reference"]>): string | null {
   if (ref.type === "order") return `/dashboard/orders?order=${ref.id}`;
   if (ref.type === "approval") return `/dashboard/staff/approvals?approval=${ref.id}`;
-  if (ref.type === "purchase_order") return `/dashboard/suppliers/purchase-orders/${ref.id}`;
+  if (ref.type === "purchase_order") return `/dashboard/purchase-orders/${ref.id}`;
   return null;
 }
 
