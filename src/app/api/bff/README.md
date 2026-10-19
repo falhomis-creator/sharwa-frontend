@@ -84,7 +84,35 @@ route answers 404/405/501. CSRF is the exception and IS implemented against the 
 because reading `Set-Cookie: csrftoken` needs no field names.
 
 **Local session marker.** While `SHARWA_MOCKS=on` the login adapters set a dev-only cookie
-`sharwa_mock_session=merchant|staff` that stands in for Django's `sessionid`; `getSession()`
+`sharwa_mock_session=merchant|staff|manager` that stands in for Django's `sessionid`; `getSession()`
 reads it and `auth/logout` clears it. The fixture credentials live in
 `src/mocks/dashboard/auth.ts` (one merchant password, one staff phone, one inactive staff
 phone, one OTP code). With mocks off, only a real Django session is consulted.
+
+
+## Platform console — `/api/bff/platform/*` (Phase 6 · M20 / M45 / M46)
+
+ONE catch-all adapter, `platform/[...path]/route.ts`, maps `/api/bff/platform/<path>` to the
+proposed `/api/v1/platform/<path>/` one-to-one; the mock server is `src/mocks/platform/router.ts`.
+It answers on `console.<base>` only (404 on store, custom and marketing hosts — FR-20.01) and
+reads the dev marker `sharwa_mock_admin=superuser|operator` (local users `admin` / `ops`,
+password as the other mocked logins). Gates in order: 401 without a console session → 403
+when `operator` writes anything but dues / Sharwa Pay (FR-20.09) → the row's own 400/404/409.
+M45/M46 proposed `/api/v1/admin/*` for some rows; they are unified under `platform/` here
+(`/api/bff/admin/*` is M08's storefront sections).
+
+| Rows (after `platform/`) | Spec |
+|---|---|
+| `auth/login` (POST), `auth/logout` (POST), `auth/me` | M20 §7 «المصادقة» |
+| `overview` | US-20.1 |
+| `stores` (`?status=pending\|provisioning\|ready\|failed\|stalled&plan&is_active&q&ordering&page`), `stores/<schema>`, `stores/reprovision` (POST `{schemas}` → per-store report), `stores/<schema>/sharwa-ship` (POST `{active}`, async «قيد التفعيل»), `stores/<schema>/domains` (POST) · `domains/<id>` (POST = make primary), `stores/<schema>/deactivation` (GET options with reasons · POST `{action: suspend\|deactivate\|close\|reinstate, reason, grace_period_ends_at}`), `clients?q` | US-20.2, US-20.7 |
+| `stores/<schema>/features` (GET resolved 39 · PUT `{overrides:[{code, is_enabled\|null, notes}]}`), `feature-overrides` (`?feature&schema`) · `bulk` (POST `{feature_code, schema_names, is_enabled\|null, notes}`) · `<id>` (DELETE) | US-20.2 a4, US-46.3 |
+| `plans` · `<id>` (PATCH/DELETE — 409 with the current-subscription count), `plan-features` (GET · PUT one cell), `features` · `<code>` (PATCH kill switch / `requires_plan`) · `<code>/resolve?schema` (`decided_by`), `subscriptions` (`?schema&status&current&q`) · `assign` (POST), `billing-settings` (GET/PATCH) | US-20.3, M46 |
+| `apps` · `<code>`, `app-billing-overrides` · `<id>`, `market-categories` · `<id>` · `reorder`, `sharwa-ship/zones` · `<id>`, `webhook-events` (`?status&source`) · `<id>/retry\|discard` | US-20.6, US-20.7, US-46.5 |
+| `dues/overview` (`?q&period`), `dues/<schema>`, `dues/<schema>/actions` (POST `{action, record_id\|installation_id}` — the 8 FR-45.03 values; 200 `{detail, level, entry}`, 400 «تعذّر التحصيل: …», 409 «… تم التعامل معه مسبقاً») | M45 |
+| `sharwa-pay/topups` · `<id>/approve\|reject`, `sharwa-pay/withdrawals` · `<id>/confirm\|reject`, `sharwa-pay/wallets/<phone>` | US-20.5 |
+
+**One source of truth.** `src/mocks/platform/state.ts` resolves every store's features with the
+FR-46.04 order (`resolveFeature`) and the merchant session (`/api/bff/dashboard/me`) reads it, so
+the console and the merchant sidebar cannot disagree (SC-20.4). The Sharwa Ship zones M15 reads
+and the market categories the M02 wizard reads are the console's rows too.

@@ -7,6 +7,7 @@ import { DELIVERY_METHODS, PICKUP_LOCATIONS, ordersState } from "@/mocks/orders/
 import { patchShipping, readSettings } from "@/mocks/settings/state";
 import { staffState } from "@/mocks/staff/state";
 import { FIXTURE_NOW, nextId, storeState } from "@/mocks/store-state";
+import { platformState } from "@/mocks/platform/state";
 
 /**
  * M15 — الشحن والمناطق والمندوبون (T108). Every row is `[NEEDS BACKEND]` (M15 §7): one
@@ -167,16 +168,13 @@ export interface SharwaZone {
   is_active: boolean;
   sort_order: number;
 }
-const PLATFORM_ZONES: SharwaZone[] = [
-  { code: "SAN-01", name: "صنعاء — الأمانة", price: "1200.00", currency: "YER_NEW", volumetric_divisor: 5000, center_latitude: "15.3694", center_longitude: "44.1910", radius_km: "22", is_active: true, sort_order: 1 },
-  { code: "ADN-01", name: "عدن — المدينة", price: "1400.00", currency: "YER_NEW", volumetric_divisor: 5000, center_latitude: "12.7855", center_longitude: "45.0187", radius_km: "16", is_active: true, sort_order: 2 },
-  { code: "TAZ-01", name: "تعز", price: "1500.00", currency: "YER_NEW", volumetric_divisor: 5000, center_latitude: "13.5795", center_longitude: "44.0209", radius_km: "12", is_active: true, sort_order: 3 },
-  { code: "HOD-01", name: "الحديدة", price: "1600.00", currency: "YER_NEW", volumetric_divisor: 6000, center_latitude: "14.7979", center_longitude: "42.9545", radius_km: "14", is_active: true, sort_order: 4 },
-  { code: "MKX-01", name: "المكلا", price: "18.00", currency: "SAR", volumetric_divisor: 5000, center_latitude: "14.5425", center_longitude: "49.1242", radius_km: "10", is_active: false, sort_order: 5 },
-];
-
+/** The zones M20 manages in the console (`platformState().zones`) — one source, read-only here. */
 export function listZones(store: string | null) {
-  const rows = isEmptyStore(store) ? [] : PLATFORM_ZONES;
+  const rows: SharwaZone[] = isEmptyStore(store)
+    ? []
+    : [...platformState().zones]
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((z) => ({ code: z.code, name: z.name, price: z.price, currency: z.currency, volumetric_divisor: z.volumetric_divisor, center_latitude: z.center_latitude, center_longitude: z.center_longitude, radius_km: z.radius_km, is_active: z.is_active, sort_order: z.sort_order }));
   return rows.map((z) => ({ ...z, display_price: displayMoney(Number(z.price), z.currency) }));
 }
 

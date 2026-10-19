@@ -1,18 +1,15 @@
 import type { MarketCategory } from "@/features/onboarding/schemas";
+import { platformState } from "@/mocks/platform/state";
 
 /**
  * `GET /api/v1/public/market-categories/` fixture (M02 §7 — `[NEEDS BACKEND]`).
- * Active `MarketCategory` rows, already ordered by `display_order`.
+ * Active `MarketCategory` rows ordered by `display_order` — read from the console's state
+ * (M20 US-20.6 a3), so a category the platform owner disables or reorders shows in the
+ * wizard at once.
  */
 export function marketCategoriesMock(): MarketCategory[] {
-  return [
-    { id: 1, name: "أزياء وملابس" },
-    { id: 2, name: "عطور وتجميل" },
-    { id: 3, name: "إلكترونيات" },
-    { id: 4, name: "مواد غذائية" },
-    { id: 5, name: "منزل ومطبخ" },
-    { id: 6, name: "هدايا" },
-    { id: 7, name: "أطفال" },
-    { id: 8, name: "خدمات وحجوزات" },
-  ];
+  return platformState()
+    .categories.filter((c) => c.is_active)
+    .sort((a, b) => a.display_order - b.display_order)
+    .map(({ id, name }) => ({ id, name }));
 }

@@ -456,14 +456,29 @@ description: "Task list — Sharwa Frontend Platform (001)"
 **Independent Test**: إعادة تجهيز متجر فاشل، تفعيل ميزة لمتجر، قبول شحن محفظة، تحصيل مستحق — كلها بالـ mocks.
 
 - [ ] T135 [US4] وسم `rp/22-admin-before`
-- [ ] T136 [P] [US4] شِيمات M20/M45/M46 في `src/features/platform-admin/schemas/*.ts` (Client, Plan, Subscription, Feature, Override, App, Dues, SharwaPay requests, Zones, MarketCategory, WebhookEvent, Deactivation — enums حرفياً من data-model §5) + mocks `src/mocks/platform/*.ts` + handlers `src/app/api/bff/{platform,admin}/**` لكل صفوف §7
-- [ ] T137 [US4] هيكل `src/app/(admin)/_a/layout.tsx` (نفس الشريط/الشريط العلوي بمحتوى الإدارة، مصادقة admin عبر BFF mock) + `page.tsx` نظرة عامة (إجمالي المتاجر/المبيعات/الطلبات Mono، المتاجر الفاشلة، آخر 50 متجراً)
-- [ ] T138 [US4] المتاجر `_a/stores/**` (قائمة بفلاتر الحالة/الخطة، تفاصيل، إعادة تجهيز بتحديث حيّ `provisioning→ready`, تبديل شروة شيب، تجاوزات الميزات لكل متجر ومجمَّع، دورة التعطيل، أحداث Webhook المعلّقة)
-- [ ] T139 [US4] M46 `_a/{plans,features,subscriptions,apps,billing-settings,market-categories}/**` (مصفوفة خطة×ميزة، فحص الحسم بـ `decided_by`, تعيين اشتراك، مفتاحا `subscriptions_enabled`/`commission_enabled`)
-- [ ] T140 [US4] M45 `_a/dues/**` (نظرة عامة بالإيراد، تفاصيل متجر بالعملات، 8 إجراءات بـ `{detail, level}` و409 «تم التعامل معه مسبقاً»، إعفاء/إلغاء إعفاء) + Sharwa Pay `_a/sharwa-pay/{topups,withdrawals,wallets}/**` + مناطق شروة شيب
-- [ ] T141 [US4] فحص Playwright `docs/visual-checks/{20-admin,45-dues,46-plans}/`؛ lint + tsc؛ commit + `rp/22-admin-after`
+- [X] T136 [P] [US4] شِيمات M20/M45/M46 في `src/features/platform-admin/schemas/*.ts` (Client, Plan, Subscription, Feature, Override, App, Dues, SharwaPay requests, Zones, MarketCategory, WebhookEvent, Deactivation — enums حرفياً من data-model §5) + mocks `src/mocks/platform/*.ts` + handlers `src/app/api/bff/{platform,admin}/**` لكل صفوف §7
+- [X] T137 [US4] هيكل `src/app/(admin)/_a/layout.tsx` (نفس الشريط/الشريط العلوي بمحتوى الإدارة، مصادقة admin عبر BFF mock) + `page.tsx` نظرة عامة (إجمالي المتاجر/المبيعات/الطلبات Mono، المتاجر الفاشلة، آخر 50 متجراً)
+- [X] T138 [US4] المتاجر `_a/stores/**` (قائمة بفلاتر الحالة/الخطة، تفاصيل، إعادة تجهيز بتحديث حيّ `provisioning→ready`, تبديل شروة شيب، تجاوزات الميزات لكل متجر ومجمَّع، دورة التعطيل، أحداث Webhook المعلّقة)
+- [X] T139 [US4] M46 `_a/{plans,features,subscriptions,apps,billing-settings,market-categories}/**` (مصفوفة خطة×ميزة، فحص الحسم بـ `decided_by`, تعيين اشتراك، مفتاحا `subscriptions_enabled`/`commission_enabled`)
+- [X] T140 [US4] M45 `_a/dues/**` (نظرة عامة بالإيراد، تفاصيل متجر بالعملات، 8 إجراءات بـ `{detail, level}` و409 «تم التعامل معه مسبقاً»، إعفاء/إلغاء إعفاء) + Sharwa Pay `_a/sharwa-pay/{topups,withdrawals,wallets}/**` + مناطق شروة شيب
+- [X] T141 [US4] فحص Playwright `docs/visual-checks/{20-admin,45-dues,46-plans}/`؛ lint + tsc؛ commit + `rp/22-admin-after`
 
 ---
+
+> **تعديل الخطة — المرحلة 6 (2026-10-19).** نُفِّذت T136–T141 بالـ mocks على `console.<base>`. بوابات: lint ✅ · tsc ✅ · `admin-shell` 23 · `admin-stores` 35 · `admin-billing` 53 · `admin-money` 58 ✅ (تشغيلان متتاليان على خادم أُعيد تشغيله، 0 أخطاء console) · تراجعات المراحل السابقة ✅. التفصيل في `execution_log.md`.
+>
+> | المهمة | الانحراف | السبب |
+> |---|---|---|
+> | T135 | بلا وسم `rp/22-admin-before` | سياسة المالك خطية بلا وسوم |
+> | T136 | كل الصفوف تحت `/api/v1/platform/*` بمحوِّل BFF واحد `platform/[...path]` بدل `/api/v1/admin/*` في M45/M46 | `/api/bff/admin/*` محجوز لأقسام المتجر (M08)، وجسر الجهاز لا يكتب أعمق من 7 مجلدات |
+> | T136 | حالة المنصة مصدر واحد: ميزات جلسة التاجر (FR-46.04) ومناطق شروة شيب (M15) وفئات السوق (M02) تُقرأ منها | SC-20.4: صفر اختلاف بين اللوحة وحساب الخادم |
+> | T137 | المسارات بلا بادئة `/admin` و`/master-dashboard` (`/dues`، `/plans`…) | النطاق `console.` يقولها؛ جذر واحد للوحة |
+> | T138 | إجراء «إعادة التفعيل» من المعلَّق/المعطَّل (لا من المغلق) | تعليق بلا رفع طريق مسدود — قرار مفتوح للمالك |
+> | T138 | تسوية العهدة في الـ mock = لا مستحقات معلّقة ورصيد محفظة صفري | الحقل غير موصوف في الـ discovery — قرار مفتوح |
+> | T139 | القوائم القصيرة جداول كثيفة بلا `DataTable` | لا ترقيم خادمي لها |
+> | T140 | محفظة العميل على `/wallets/[phone]` لا `/sharwa-pay/wallets/[phone]` | حد عمق جسر الجهاز (7 مجلدات) |
+> | T140 | الإيصال إطار نصي بالمفتاح والمبلغ ورقم الحوالة مع «تكبير» | الـ mock يحمل مفتاحاً لا صورة؛ بلا طلبات خارجية |
+> | T140 | اختصار `C` في المستحقات لم يُبنَ | اختياري في المواصفة |
 
 ## Phase 7: User Story 5 — القنوات والامتدادات المتقدمة (Priority: P3) · M16 M17 M23 M26–M33 M36–M40 M43
 

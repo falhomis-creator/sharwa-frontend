@@ -1,3 +1,65 @@
+# Execution log — Phase 6 · US4 platform-owner console: M20 · M45 · M46 (T135–T141)
+
+**Date:** 2026-10-19 · **Branch:** `main` · **Base:** your local Phase 5 commits (not on GitHub yet; see «Push» below) · **Status:** T136–T141 done on mocks (`x-sharwa-mock: 1`). T135 skipped, like the Phase 5 tags (the owner keeps a linear history with no tags). Gates: `npm run lint` ✅ (0 problems) · `npx tsc --noEmit` ✅ · console checks `admin-shell` 23 · `admin-stores` 35 · `admin-billing` 53 · `admin-money` 58 ✅ (two serial runs on a freshly restarted server, 0 console errors) · regressions phase5-decisions 24 · tenant-shell 9 · settings 23 · catalog-orders 22 · storefront 41 · onboarding 33 ✅. Backend untouched. No git run from the session.
+
+## Where it lives
+
+- **Host.** `console.<base>` (on dev: `console.localhost:3000`). The proxy already rewrote that host to `/_a/*`; `src/app/(admin)/%5Fa/` is the new route group. The marketing, store and custom hosts get 404 on `/_a` and on the console BFF (FR-20.01).
+- **Login.** `/login`, with users `admin` (superuser: everything) and `ops` (operator: reads everything, writes dues and Sharwa Pay only — FR-20.09). The password is the same as every other mocked login. The dev session cookie is `sharwa_mock_admin=superuser|operator`, a different name from the merchant cookie, so one can never open the other.
+- **API.** One catch-all adapter, `src/app/api/bff/platform/[...path]/route.ts`, maps to `/api/v1/platform/*`; `src/mocks/platform/router.ts` serves every row of the three §7 tables. It became a single file for two reasons: the device bridge cannot write more than 7 folders deep, and a passthrough is one file whenever Django ships the rows.
+
+## Screens
+
+| Task | Routes |
+|---|---|
+| T137 shell | `/login`, `/` overview: Mono number strip (stores, sales as sent, orders; failed and stalled link to the filtered list), queues awaiting a decision, last 50 stores. Sidebar with live counters, ⌘K store search by name/schema/phone/domain (FR-20.08), `G S` / `G D`, dark mode, «Django admin» footer link |
+| T138 M20 stores | `/stores`: status (+ `stalled`) / plan / active / q filters in the URL; bulk re-provision with a per-store report; bulk feature override. `/stores/[schema]`: re-provision; Sharwa Ship on/off with a live «قيد التفعيل»; tabs for subscription, domains (add / make primary), features (39 keys, inherited vs override on/off + notes, decided-by step), apps, deactivation (suspend → deactivate → close, reinstate; disallowed steps disabled with the server's reason), action log. `/webhook-events` (retry/discard; a deleted store can only be discarded) |
+| T139 M46 | `/plans` (+ sheet editor; delete → 409 with the subscription count), `/plans/matrix` (optimistic toggles with rollback), `/features` (kill switch + requires_plan with impact dialogs), `/features/overrides` (bulk editor), `/subscriptions` (assign plan, history kept), `/billing-settings` (the two master switches + the FR-46.04 order + «افحص متجراً»), `/apps` (+ billing overrides), `/market-categories` (rename, toggle, ↑/↓ order) |
+| T140 M45 + Sharwa Pay + zones | `/dues` (`q`/`period` in the URL, wallet per currency or «لا محفظة»), `/dues/[schema]` (four sections + installed apps, the 8 FR-45.03 actions, each through a confirmation, server sentences verbatim, 409 refreshes), `/sharwa-pay/topups` (receipt panel, duplicate transfer → link to the earlier request, A/R), `/sharwa-pay/withdrawals` («مخصوم مسبقاً», reject returns the amount), `/wallets/[phone]`, `/sharwa-ship/zones` (CRUD + an SVG map, no tiles) |
+
+## One source of truth (the platform state feeds the merchant side)
+
+`src/mocks/platform/state.ts` holds the public-schema rows and implements the FR-46.04 resolution order once (`resolveFeature`).
+
+- **Merchant session (M03).** Its `features[]` now come from that state through `effectiveFeatures()`. An override, kill switch or plan gate set in the console changes the merchant's sidebar immediately (SC-20.4). The checks prove it on `glow`, `noor` and `zahra`, and restore every flag they touch.
+- **M15 «شروة شيب».** It now reads the console's zones.
+- **M02 wizard.** Its market categories are the console's rows (active only, in the console's order).
+- **Fixture stores.** `noor`, `shop`, `pending1` and `closed` carry no override, so they keep all 39 features exactly as before.
+
+## Build
+
+Foundation first (T136/T137, main session), then three isolated builds (T138, T139, T140) that created files only. One shared patch was merged: the server-side `?plan=` filter on subscriptions.
+
+A real bug fix came out of the merge run: at 390px the overview's sales figure overflowed and the search box covered the menu button. The sales figure now spans both columns and steps down a size.
+
+## Gates
+
+```
+$ npm run lint                                   → 0 problems
+$ rm -rf .next/types && npx tsc --noEmit         → exit 0
+$ SHARWA_CHROMIUM=… npx tsx scripts/<name>-check.ts 3300   (serial, fresh server)
+admin-shell 23 ✓ · admin-stores 35 ✓ · admin-billing 53 ✓ · admin-money 58 ✓ (0 console errors)
+phase5-decisions 24 ✓ · tenant-shell 9 ✓ · settings 23 ✓ · catalog-orders 22 ✓ · storefront 41 ✓ · onboarding 33 ✓
+(storefront: one run logged a one-off service-worker hydration warning on the PWA second visit; an immediate rerun was clean. No Phase 6 code touches the storefront.)
+```
+
+Visual checks: `docs/visual-checks/20-admin/` (overview, stores, store features, override, deactivation dialog, webhook events, Sharwa Pay, zones, operator read-only, login), `45-dues/`, `46-plans/` — desktop / tablet / mobile / desktop-dark, 0 horizontal scroll at 390px, mobile targets ≥ 44px.
+
+The checks change state. They consume seeded pending top-ups, withdrawals and noor commissions, and skip those steps once the queues are empty. They restore every global flag they touch. A dev-server restart resets everything.
+
+## Deviations
+
+See the Phase 6 table in `tasks.md`.
+
+## Owner decisions still open
+
+1. **Admin auth contract.** Until Django exposes a session contract for `/api/v1/platform/*`, the console works only with mocks on. Please add a staff/superuser session + CSRF on the public schema (M20 §7), and name the operator group, e.g. Django staff without superuser.
+2. **Custody settlement.** The mock treats custody as settled when the store has no pending dues and a zero Sharwa Pay balance, and `close` is blocked otherwise. Confirm this is the backend's rule, or name the field that marks `settled_custody`.
+3. **Reinstate.** The spec lists suspend → deactivate → close. I added «إعادة التفعيل» from suspended/deactivated (never from closed), because a suspension that cannot be lifted is a dead end. Keep it?
+4. **Suspended stores on the storefront.** A suspended store is marked `is_active=false` in the console, but the storefront probe fixtures (M47) were not wired to it. With the real backend that is automatic. Nothing to do unless you want the mock wired too.
+
+---
+
 # Execution log — Phase 5 · owner decisions (2026-10-19)
 
 **Date:** 2026-10-19 · **Branch:** `main` · **Base:** the Phase 5 working tree (not yet committed) · **Status:** the seven open Phase 5 items are decided (the owner delegated all of them) and applied on mocks. Gates: `npm run lint` ✅ (0 problems) · `npx next typegen && npx tsc --noEmit` ✅ · new `scripts/phase5-decisions-check.ts` 24 ✓ (two runs in a row, 0 console errors) · passthrough replace-by-key unit check ✅ · regressions `tenant-shell` 9 · `settings` 23 · `catalog-orders` 22 · `storefront` 41 · `onboarding` 33 ✅. Backend untouched. No git run from the session.

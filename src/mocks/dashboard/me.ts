@@ -1,6 +1,6 @@
-import { FEATURE_KEYS } from "@/lib/access";
 import type { Session } from "@/features/dashboard-shell/schemas";
 import { tenantFixture } from "@/mocks/tenant/config";
+import { effectiveFeatures, findClient } from "@/mocks/platform/state";
 
 /**
  * `GET /api/v1/auth/me/` fixture (M03 §7 — `[NEEDS BACKEND]`).
@@ -63,7 +63,7 @@ export const MOCK_MANAGER_PERMISSIONS = [
 
 export function storeNameFor(store: string | null): string {
   const fixture = tenantFixture(store);
-  return fixture?.config?.store_name ?? (store ? `متجر ${store}` : "متجري");
+  return fixture?.config?.store_name ?? (store ? (findClient(store)?.name ?? `متجر ${store}`) : "متجري");
 }
 
 export function sessionMock(
@@ -76,7 +76,8 @@ export function sessionMock(
       kind: "merchant",
       store_name,
       store_host: opts.storeHost,
-      features: [...FEATURE_KEYS],
+      // Resolved by the platform (M46 FR-46.04) — the console and this session never disagree.
+      features: effectiveFeatures(opts.store),
       behavior: { export: "none", view: "none" },
     };
   }
@@ -93,7 +94,7 @@ export function sessionMock(
         locations: [{ id: 3, name: "فرع جدة" }],
         max_discount_percent: "25.00",
       },
-      features: [...FEATURE_KEYS],
+      features: effectiveFeatures(opts.store),
       behavior: { export: "none", view: "none" },
     };
   }
