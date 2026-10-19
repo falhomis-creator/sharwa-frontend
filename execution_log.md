@@ -43,12 +43,13 @@ Two older checks hard-coded «39 features» (`phase5-decisions`, `admin-billing`
 
 Screenshots in `docs/visual-checks/` were **not** regenerated here (Linux fonts differ). Re-run on your machine to refresh: `affiliates procurement bookings dropshipping expenses courier sharwa-pay admin-billing tenant-shell catalog-orders inbox`.
 
-## Open (owner)
+## Owner decisions (2026-10-19, final)
 
-1. **Performance budget (IX).** LCP is render delay, not network (TTFB ≤ 40 ms): framework JS (~70 KB chunk) + hydration cost 2–4 s of main thread under the 4× mobile CPU. Options: accept per surface (as for landing v3: 66), or a dedicated pass (fewer client components on the store home/orders, defer non-critical islands, `next/dynamic` for drawers/charts). Which?
-2. **Semantic text tones.** Raised to `#047857 / #b45309 / #0369a1` for AA; the design-system table still lists the 600 shades. Update the table?
-3. Still open from Phase 7: courier handover target (agent list), bundle component choice field, M13 influencer link/`?influencer=`, M06 «جملة» manual order, session resolver location (`src/lib/session/`).
-4. Two stray empty files `git` and `main` sit at the repo root on your machine (from a mistyped command); delete them before committing.
+1. **Performance budget (IX): accepted per surface** for the MVP (landing 70 · store 64 · PDP 87 · orders 46, mobile simulation). No JS-reduction pass now; re-measure on the edge-deployed production environment.
+2. **Semantic text tones: adopted.** The constitution's design-system table now lists `#047857 / #b45309 / #0369a1` (700 shades); accessibility and contrast take precedence.
+3. Carried forward as backlog (not blocking): courier handover target (agent list), bundle component choice field, M13 influencer link / `?influencer=`, M06 «جملة» manual order, session resolver location (`src/lib/session/`).
+
+**Status: Phase 8 closed. Phases 1–8 complete and pushed to `main` by the owner. Project concluded.**
 
 ---
 
