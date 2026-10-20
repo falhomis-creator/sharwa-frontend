@@ -43,7 +43,7 @@ export function LocationStaffTab({ locationId, active }: { locationId: number; a
     <div className="flex flex-col gap-4" data-testid="location-staff">
       {canManage ? (
         <form
-          className="flex flex-wrap items-end gap-2 rounded-lg border border-border p-3"
+          className="flex flex-wrap items-end gap-2 surface-card p-4"
           onSubmit={(e) => {
             e.preventDefault();
             if (!staffId) return;
@@ -88,7 +88,7 @@ export function LocationStaffTab({ locationId, active }: { locationId: number; a
       {rows.length === 0 ? (
         <EmptyState title="لا موظفين مسندين" description={canManage ? "أسند كاشيراً أو مديراً من القائمة أعلاه." : undefined} />
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden">
           {rows.map((a) => (
             <li key={a.id} className="flex min-h-11 items-center gap-3 px-3 py-2 text-sm" data-testid="assignment-row">
               <span className="flex min-w-0 flex-1 flex-col">

@@ -77,7 +77,7 @@ export function OpenShiftScreen() {
       </div>
 
       {ctx.data.force_closed_notice ? (
-        <div role="status" className="rounded-lg border border-border p-4 text-sm" data-testid="pos-force-closed">
+        <div role="status" className="surface-card p-5 lg:p-6 text-sm" data-testid="pos-force-closed">
           <p className="font-medium">أُغلقت ورديتك السابقة قسرياً</p>
           <p className="text-muted-foreground">
             أغلق النظام الوردية <Mono>#{ctx.data.force_closed_notice.shift_id}</Mono> على «{ctx.data.force_closed_notice.register_name}» في{" "}
@@ -87,7 +87,7 @@ export function OpenShiftScreen() {
       ) : null}
 
       {pending ? (
-        <div className="rounded-lg border border-border p-4 text-sm" data-testid="pos-pending">
+        <div className="surface-card p-5 lg:p-6 text-sm" data-testid="pos-pending">
           <p className="font-medium">ورديتك بانتظار اعتماد المدير</p>
           <p className="text-muted-foreground">
             عجز <Mono>{pending.display_variance}</Mono> على «{pending.register.name}». لا يمكن فتح وردية جديدة قبل أن يحسمه المدير.
@@ -129,7 +129,7 @@ export function OpenShiftScreen() {
               ) : registers.data.length === 0 ? (
                 <EmptyState title="لا أجهزة كاش في هذا الموقع — أضفها من المواقع" />
               ) : (
-                <ul className="divide-y divide-border rounded-lg border border-border" data-testid="pos-registers">
+                <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="pos-registers">
                   {registers.data.map((r) => (
                     <RegisterRow key={r.id} r={r} selected={registerId === r.id} onSelect={() => setRegisterId(r.id)} onResume={() => router.replace("/pos/sell")} />
                   ))}
@@ -181,7 +181,7 @@ function RegisterRow({ r, selected, onSelect, onResume }: { r: Register; selecte
         data-testid={`pos-register-${r.id}`}
         className={cn("flex min-h-14 w-full items-center gap-3 px-4 py-2 text-start transition-colors", selected ? "bg-muted" : "hover:bg-muted/60", disabled && !mine && "cursor-not-allowed opacity-70 hover:bg-transparent")}
       >
-        <span aria-hidden className={cn("size-2 shrink-0 rounded-full", busy || !r.is_active ? "bg-muted-foreground" : "bg-foreground")} />
+        <span aria-hidden className={cn("size-2 shrink-0 rounded-full", busy || !r.is_active ? "bg-muted-foreground" : "bg-primary")} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium">{r.name}</span>
           <span className="block truncate text-xs text-muted-foreground">
@@ -210,7 +210,7 @@ function PendingVariances() {
   return (
     <section className="flex flex-col gap-2 border-t border-border pt-6" data-testid="pos-pending-variances">
       <h2 className="text-base font-medium">ورديات بانتظار اعتمادك</h2>
-      <ul className="divide-y divide-border rounded-lg border border-border">
+      <ul className="divide-y divide-border/60 surface-card overflow-hidden">
         {pending.data.map((s) => (
           <li key={s.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
             <span className="min-w-0 flex-1 text-sm">

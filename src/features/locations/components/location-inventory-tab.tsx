@@ -99,7 +99,7 @@ export function LocationInventoryTab({
         />
       ) : (
         <>
-          <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
+          <div className="hidden overflow-x-auto surface-card md:block">
             <table className="w-full text-sm">
               <caption className="sr-only">مخزون الموقع</caption>
               <thead className="bg-muted/40 text-xs text-muted-foreground">
@@ -153,7 +153,7 @@ export function LocationInventoryTab({
           </div>
           {/* Phones: one card per row; the editor opens under the card (no horizontal table). */}
           <ul
-            className="flex flex-col divide-y divide-border rounded-lg border border-border md:hidden"
+            className="flex flex-col divide-y divide-border/60 surface-card md:hidden overflow-hidden"
             data-testid="inventory-cards"
           >
             {rows.map((r) => {

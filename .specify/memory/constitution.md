@@ -1,6 +1,14 @@
 <!--
 Sync Impact Report
-- Version change: (template, unversioned) → 1.0.0 → 2.0.0 (2026-10-17, owner-directed)
+- Version change: (template, unversioned) → 1.0.0 → 2.0.0 (2026-10-17) → 3.0.0 (2026-10-20, owner-directed)
+- 3.0.0 (+2026-10-20 clarification): chart area/bar fills may use a soft vertical royal-blue gradient.
+- 3.0.0 BREAKING: Principle I-ب redefined — the product surfaces (dashboard, admin) leave the zinc-only,
+  hairline, no-brand-hue, no-shadow rule. New section «UI/UX & Design Guidelines (Updated)»: deep navy
+  sidebar, cool slate-50 ground, royal blue (#0066ff / blue-600) accent, NO coral or orange, white
+  rounded-2xl cards with soft diffused shadows. Principle VII radius cap (0.5rem) lifted for cards.
+  Design System Constraints «اللوحة (المنتج)» rewritten. Storefront still wears the merchant's theme.
+  Follow-up: the coral accent shipped in the 2026-10-19 polish pass must be migrated to royal blue
+  in `src/app/globals.css` (tokens only).
 - 2.0.0 BREAKING: Principle I split by surface — I-أ expressive marketing (gradients, glow,
   glassmorphism, brand emerald now ALLOWED on `(marketing)`), I-ب restrained product (1.0.0 rules
   unchanged for dashboard/storefront/admin). Design System Constraints gained a marketing palette.
@@ -60,18 +68,28 @@ Sync Impact Report
 - رص بطاقات متماثلة بنفس الأيقونة داخل دائرة ملونة ونفس الطول.
 - أي حركة لا تحترم `prefers-reduced-motion`، أو تجعل المحتوى غير مقروء قبل تنفيذ JS.
 
-#### I-ب · لوحة التاجر والمتجر و Super Admin — مُقيَّدة (NON-NEGOTIABLE)
+#### I-ب · لوحة التاجر و Super Admin — مؤسسية نظيفة (NON-NEGOTIABLE)
 
-هنا تبقى قواعد 1.0.0 كما هي بلا استثناء:
+> **تعديل v3.0.0 (2026-10-20، بقرار المالك).** أُلغيت قاعدة «zinc فقط، حدود `1px` بلا ظلال، بلا لون brand»
+> لأسطح المنتج. الهوية البصرية الملزِمة الآن هي قسم **«UI/UX & Design Guidelines (Updated)»** أدناه:
+> شريط جانبي كحلي داكن، أرضية رمادية باردة فاتحة، لون تمييز أزرق ملكي (**لا مرجاني ولا برتقالي**)،
+> وبطاقات بيضاء بظلال ناعمة وحواف `rounded-2xl`.
 
-- لوحة أحادية (zinc) بتباين حاد؛ الفصل بحدود `1px` لا بالظلال.
-- الألوان الدلالية فقط لحالات البيانات، **بلا لون brand وبلا تدرجات وبلا هالات وبلا glassmorphism**.
+ويبقى ملزِماً هنا:
+
+- **بلا تدرجات وبلا هالات ملونة وبلا glassmorphism** في الأسطح والنصوص — العمق من الظلال المحايدة الناعمة فقط.
+  الاستثناء الوحيد: **تعبئة الرسوم البيانية** (مساحة تحت الخط/أشرطة) بتدرج رأسي ناعم من لون التمييز الأزرق، كما في تصميم المالك.
+- الألوان الدلالية (نجاح/تحذير/خطأ/معلومة) لحالات البيانات فقط، ولا تحلّ محل لون التمييز.
 - أرقام `font-mono tabular-nums`، تخطيطات غير متماثلة، مساحات بيضاء بدل الزخرفة.
 - الحركة وظيفية: 150–300ms، `ease-out`، وتحترم `prefers-reduced-motion`.
 
+**المتجر (`(storefront)`)** لا يتبع ألوان هذا القسم: يُرسَم بثيم التاجر نفسه (المبدأ VII)، ويرث فقط
+شكل البطاقات والعمق. ألوان اللوحة لا تُفرض على متاجر التجار.
+
 **Rationale**: التاجر يرى الصفحة الترويجية مرة واحدة ويقرر؛ ويرى اللوحة ثماني ساعات يومياً.
 الأولى تحتاج جاذبية بصرية تُقنع، والثانية تحتاج هدوءاً لا يُرهق ولا يزاحم البيانات. فصل السطحين
-يحفظ الهدفين معاً بدل التضحية بأحدهما — وهو ما فشلت فيه النسخة 1.0.0.
+يحفظ الهدفين معاً بدل التضحية بأحدهما — وهو ما فشلت فيه النسخة 1.0.0. وفي v3.0.0 تبيّن أن «الهدوء»
+لا يعني «التسطيح»: لوحة باردة الألوان بعمق ناعم ولون تمييز واحد أهدأ للعين وأوضح للتسلسل من لوحة أحادية.
 
 ### II. Arabic-First, Native RTL (NON-NEGOTIABLE) — عربي أصيل
 
@@ -155,7 +173,13 @@ git reset --hard <tag>   # الوسم المذكور، وإلا آخر وسم *-
 - يُمنع كتابة قيم hex/oklch/px خام داخل المكونات أو الصفحات؛ الاستثناء الوحيد ملف الرموز نفسه.
 - ثيم المتجر الذي يختاره التاجر (Theme Customizer) يُطبَّق عبر تجاوز نفس الرموز على جذر مجموعة مسار المتجر فقط،
   ولا يلمس رموز لوحة التاجر أو الصفحة الترويجية.
-- نصف قطر الحواف الافتراضي `--radius: 0.5rem` أو أقل؛ لا حواف دائرية كاملة إلا للـ avatars والـ badges.
+- نصف قطر الحواف: البطاقات والحاويات `rounded-2xl` (v3.0.0)؛ الحقول والأزرار حسب `--radius`؛
+  الحواف الدائرية الكاملة للـ avatars والـ badges والمفاتيح (switches) فقط.
+- قيم قسم «UI/UX & Design Guidelines» (الكحلي، الأزرق الملكي، slate-50، الظل الناعم) تُعرَّف **رموزاً**
+  في `globals.css` (`--primary-color`, `--accent-color`, `--bg-main`, `--elevation-card`…) وتُستهلك عبر
+  الفئات الدلالية (`bg-sidebar`, `bg-primary`, `bg-background`, `bg-card`, `shadow-card`)؛ الأمثلة الحرفية في
+  ذلك القسم (`#1a2642`، `bg-slate-50`، `shadow-[0_8px_30px_rgb(0,0,0,0.04)]`) مواصفة للقيمة لا صيغة تُكتب
+  في المكونات — فحظر القيم الخام أعلاه ما زال سارياً، وهو ما يُبقي تخصيص الثيم لكل مستأجر ممكناً.
 - المكونات الأساسية من Shadcn/ui (نمط base-nova) ومكونات Aceternity/Magic UI تُعاد كتابتها لتستهلك الرموز نفسها قبل الاستخدام.
 
 **Rationale**: الاتساق البصري عبر 20+ وحدة لا يمكن حفظه يدوياً؛ الرموز تحميه آلياً.
@@ -185,10 +209,22 @@ git reset --hard <tag>   # الوسم المذكور، وإلا آخر وسم *-
 
 **Rationale**: المتجر يُفتح من جوال التاجر والمشتري في شبكات متواضعة؛ السرعة والوضوح جزء من الهوية.
 
+## UI/UX & Design Guidelines (Updated)
+- **Vibe:** Ultra-clean, modern, enterprise-grade e-commerce SaaS. High contrast, cool tones.
+- **Colors (Dashboard & Admin):** 
+  - Sidebar: Deep Navy Blue (`#1a2642` or similar).
+  - Background: Very light cool gray/off-white (`bg-slate-50`).
+  - Accent/CTAs: Bright Royal Blue (`#0066ff` or `blue-600`) for primary buttons, charts, and active highlights. NO CORAL OR ORANGE.
+- **Cards & Depth:** Pure white backgrounds (`bg-white`), with very soft, diffused, large drop shadows (e.g., `shadow-[0_8px_30px_rgb(0,0,0,0.04)]`), completely rounded corners (`rounded-2xl`), and clean, light borders (`border-slate-100`).
+
+> نطاق هذا القسم: `(dashboard)` و`(admin)` وما يشاركهما الهوية (`(pos)`، `(courier)`، `(onboarding)`، `sharwa-pay`).
+> التطبيق عبر الرموز وفق المبدأ VII. المتجر يتبع ثيم التاجر (I-ب)، والصفحة الترويجية تتبع I-أ.
+
 ## Design System Constraints — قيود نظام التصميم
 
-- **اللوحة (المنتج)**: zinc فقط. فاتح: `background #FAFAFA`، `foreground #09090B`، `border zinc-200`، `muted zinc-500`.
-  داكن: `background #09090B`، `foreground #FAFAFA`، `border zinc-800`. الألوان الدلالية:
+- **اللوحة (المنتج)** (v3.0.0): وفق قسم «UI/UX & Design Guidelines (Updated)» — شريط جانبي كحلي داكن،
+  أرضية `slate-50`، بطاقات بيضاء بحدود `slate-100`، لون تمييز أزرق ملكي للأزرار الرئيسية والرسوم والحالات النشطة.
+  يُمنع المرجاني والبرتقالي كلون تمييز. الوضع الداكن يشتق نفس الرموز بدرجات كحلية. الألوان الدلالية:
   `emerald-700` (`#047857`) نجاح، `amber-700` (`#b45309`) تحذير، `red-600` خطأ/حذف، `sky-700` (`#0369a1`) معلومة — تُستخدم للنص والنقاط الصغيرة لا للمساحات، وكلها ≥ 4.5:1 على الأبيض (AA). (تعديل 2026-10-19 بقرار المالك: الوصول والتباين يتقدّمان؛ كانت درجات 600.)
 - **اللوحة (الترويجي، I-أ)**: zinc كأساس + `emerald` لون brand للأفعال، وتدرج `emerald-500 → cyan-500`
   للكلمات المفتاحية والأسطح. الرموز في `globals.css` تحت البادئة `--brand-*` و`--glow-*` و`--glass-*`.
@@ -237,4 +273,4 @@ Playwright · Git.
 - **الاستثناءات**: أي استثناء مؤقت يُسجَّل في `plan.md` للوحدة تحت «Complexity Tracking» مع المبرر وتاريخ الإزالة.
 - الإرشاد التشغيلي أثناء التطوير: `.specify/memory/constitution.md` (هذا الملف) ثم `AGENTS.md` لقواعد Next.js الإصدارية.
 
-**Version**: 1.0.0 | **Ratified**: 2026-10-17 | **Last Amended**: 2026-10-17
+**Version**: 3.0.0 | **Ratified**: 2026-10-17 | **Last Amended**: 2026-10-20

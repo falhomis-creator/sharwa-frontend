@@ -61,7 +61,7 @@ export function FilePicker({
       <label
         htmlFor={inputId}
         className={cn(
-          "inline-flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-border bg-background px-4 text-sm font-medium transition-colors hover:bg-muted",
+          "inline-flex h-11 shrink-0 cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-4 text-sm font-medium transition-colors hover:bg-muted",
           "peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50 peer-disabled:cursor-not-allowed peer-disabled:opacity-60 peer-aria-invalid:border-destructive",
           buttonClassName,
         )}

@@ -38,7 +38,7 @@ function ReceiptList() {
       ) : list.data.results.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">{deferred ? "لا إيصال بهذا الرقم في الوردية الحالية." : "لا إيصالات بعد في هذه الوردية."}</p>
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden">
           {list.data.results.map((r) => (
             <li key={r.id}>
               <Link href={`/pos/receipts/${r.id}`} className="flex min-h-14 items-center gap-3 px-4 py-2 hover:bg-muted" data-testid="pos-receipt-row">
@@ -136,7 +136,7 @@ function RefundPanel({ id, max }: { id: number; max: string }) {
   }
 
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-border p-4" aria-label="استرجاع" data-testid="pos-refund">
+    <section className="flex flex-col gap-3 surface-card p-5 lg:p-6" aria-label="استرجاع" data-testid="pos-refund">
       <p className="text-sm font-medium">استرجاع</p>
       <p className="text-xs text-muted-foreground">
         القابل للاسترجاع <Mono>{max}</Mono>

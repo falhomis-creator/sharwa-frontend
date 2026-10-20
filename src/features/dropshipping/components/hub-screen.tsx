@@ -61,7 +61,7 @@ function HubInner() {
       ) : (
         <>
           {!q.data.results.some((c) => c.connected) ? <EmptyState title="لم تربط مورداً بعد" description="اربط CJ أو مخازن أو كنوات، أو أنشئ ملفاً مسطّحاً." /> : null}
-          <ul className="divide-y divide-border rounded-lg border border-border" data-testid="supplier-rows">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="supplier-rows">
             {q.data.results.map((c) => (
               <SupplierRow key={c.supplier_code} c={c} now={now} />
             ))}
@@ -77,7 +77,7 @@ function HubInner() {
             كل المهام
           </Link>
         </div>
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden">
           {(jobs.data?.results ?? []).map((j) => (
             <li key={j.id} className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm">
               <Mono className="text-muted-foreground">#{j.id}</Mono>

@@ -154,7 +154,7 @@ export function PreviewFrame({ reloadKey }: { reloadKey: number }) {
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-muted/40 p-0 md:p-4" data-testid="preview">
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-border bg-background md:rounded-lg md:border">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden border-border bg-card md:rounded-lg md:border">
         <div className="flex h-9 shrink-0 items-center justify-between gap-2 border-b border-border px-3 text-xs text-muted-foreground">
           <Mono className="truncate" data-testid="preview-host">
             {host}/
@@ -186,21 +186,21 @@ export function PreviewFrame({ reloadKey }: { reloadKey: number }) {
                 // The dashboard is RTL: the frame is anchored at the inline start (right) and scaled from there.
                 style={{ width: deviceWidth, height: scale > 0 ? size.h / scale : size.h, transform: `scale(${scale})`, transformOrigin: "top right" }}
                 className={cn(
-                  "absolute top-0 start-0 border-0 bg-background transition-[width,transform] duration-200 ease-out motion-reduce:transition-none",
+                  "absolute top-0 start-0 border-0 bg-card transition-[width,transform] duration-200 ease-out motion-reduce:transition-none",
                   wide && device === "mobile" && "border-x border-border",
                 )}
               />
             </div>
           </div>
           {phase === "loading" ? (
-            <div className="absolute inset-0 flex flex-col gap-3 bg-background p-6" aria-hidden data-testid="preview-loading">
+            <div className="absolute inset-0 flex flex-col gap-3 bg-card p-6" aria-hidden data-testid="preview-loading">
               <Skeleton className="h-9 w-full" />
               <Skeleton className="h-40 w-full" />
               <Skeleton className="h-24 w-2/3" />
             </div>
           ) : null}
           {phase === "error" ? (
-            <div role="alert" className="absolute inset-0 flex flex-col items-start justify-center gap-3 bg-background p-6" data-testid="preview-error">
+            <div role="alert" className="absolute inset-0 flex flex-col items-start justify-center gap-3 bg-card p-6" data-testid="preview-error">
               <p className="text-base font-medium">تعذّر تحميل المعاينة</p>
               <p className="max-w-prose text-sm text-muted-foreground">قد يكون المتجر قيد التجهيز أو الشبكة متقطعة. تعديلاتك في اللوحة محفوظة في المسودة.</p>
               <Button variant="outline" className="h-11 md:h-9" onClick={() => setRetry((n) => n + 1)}>

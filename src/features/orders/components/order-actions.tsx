@@ -136,7 +136,7 @@ export function PaymentReview({ order, write, canEdit }: { order: OrderDetail; w
 
   const tone = receipt?.difference_sign === "under" ? "text-destructive" : receipt?.difference_sign === "over" ? "text-warning" : "text-success";
   return (
-    <section className="flex flex-col gap-3 rounded-lg border border-border p-4" aria-labelledby="payment-review" data-testid="payment-review">
+    <section className="flex flex-col gap-3 surface-card p-5 lg:p-6" aria-labelledby="payment-review" data-testid="payment-review">
       <h3 id="payment-review" className="text-sm font-medium">
         {review ? "مراجعة الدفع" : "بانتظار تأكيد الدفع"}
       </h3>
@@ -346,7 +346,7 @@ export function GiftNoteDialog({ order, write, open, onOpenChange }: { order: Or
             rows={4}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="min-h-24 w-full rounded-lg border border-input bg-background px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+            className="min-h-24 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
           />
         </Field>
         <DialogFooter>

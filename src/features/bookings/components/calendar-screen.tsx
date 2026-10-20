@@ -197,7 +197,7 @@ export function CalendarScreen() {
                   role="radio"
                   aria-checked={d === anchor}
                   onClick={() => go(d)}
-                  className={cn("flex min-h-11 min-w-16 shrink-0 flex-col items-center justify-center rounded-md border px-2 text-xs", d === anchor ? "border-foreground font-medium" : "border-border text-muted-foreground")}
+                  className={cn("flex min-h-11 min-w-16 shrink-0 flex-col items-center justify-center rounded-md border px-2 text-xs", d === anchor ? "border-cta font-medium text-primary" : "border-border text-muted-foreground")}
                 >
                   {shortDay.format(asUtcNoon(d))}
                   <Mono className="text-[11px]">{(byDay.get(d) ?? []).length}</Mono>
@@ -274,7 +274,7 @@ function SlotBlock({ slot, tz, onOpen, className, style }: { slot: Slot; tz: str
       data-testid="slot-block"
       data-status={slot.status}
       className={cn(
-        "flex min-h-11 flex-col items-start overflow-hidden rounded-sm border bg-background px-1.5 py-1 text-start text-xs leading-5 hover:bg-muted lg:min-h-0",
+        "flex min-h-11 flex-col items-start overflow-hidden rounded-sm border bg-card px-1.5 py-1 text-start text-xs leading-5 hover:bg-muted lg:min-h-0",
         slot.status === "booked" && "border-solid border-foreground/70",
         slot.status === "held" && "border-dashed border-foreground/60",
         slot.status === "cancelled" && "border-dotted border-border text-muted-foreground line-through",

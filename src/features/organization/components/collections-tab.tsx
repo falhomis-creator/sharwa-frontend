@@ -86,7 +86,7 @@ export function CollectionForm({
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
-          className="min-h-20 w-full rounded-lg border border-input bg-background px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+          className="min-h-20 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
         />
       </Field>
     </form>
@@ -125,7 +125,7 @@ export function CollectionsTab({ canManage }: { canManage: boolean }) {
       {collections.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">لا مجموعات بعد — مثلاً «عروض رمضان» أو «اختيارات المحرّر».</p>
       ) : (
-        <ul className="rounded-lg border border-border">
+        <ul className="surface-card">
           {collections.map((c) => (
             <li key={c.id} className="flex min-h-12 items-center gap-3 border-b border-border px-3 last:border-0" data-testid="collection-row">
               <Link href={`/dashboard/products/organization/collections/${c.id}`} className="flex min-h-11 min-w-0 flex-1 flex-col justify-center py-1.5 hover:underline">

@@ -207,7 +207,7 @@ function RoleFormView({ id, permissions, role, clone }: { id: number | null; per
                   const on = list.filter((p) => selected.has(p.code)).length;
                   const all = on === list.length;
                   return (
-                    <div key={category} className="rounded-lg border border-border" data-testid={`perm-group-${category}`}>
+                    <div key={category} className="surface-card" data-testid={`perm-group-${category}`}>
                       <label className={cn("flex min-h-11 cursor-pointer items-center justify-between gap-2 border-b border-border px-3 text-sm", readOnly && "cursor-default")}>
                         <span className="font-medium">
                           {category} <Mono className="text-xs text-muted-foreground">{on}/{list.length}</Mono>
@@ -276,7 +276,7 @@ function RoleFormView({ id, permissions, role, clone }: { id: number | null; per
         <DialogContent className="sm:max-w-sm" data-testid="role-in-use">
           <DialogTitle>الدور قيد الاستخدام</DialogTitle>
           <DialogDescription>هؤلاء الموظفون معيَّنون بهذا الدور. غيّر دورهم من صفحة كل موظف ثم أعد المحاولة.</DialogDescription>
-          <ul className="divide-y divide-border rounded-lg border border-border text-sm">
+          <ul className="divide-y divide-border/60 surface-card text-sm overflow-hidden">
             {(inUse ?? []).map((s) => (
               <li key={s.id} className="flex min-h-11 items-center justify-between gap-2 px-3">
                 <span>{s.full_name}</span>

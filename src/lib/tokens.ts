@@ -4,8 +4,10 @@
  * Components must never import these for styling; use Tailwind semantic classes instead.
  */
 export const TOKENS = {
-  background: { light: "#fafafa", dark: "#09090b" },
-  foreground: { light: "#09090b", dark: "#fafafa" },
-  border: { light: "#e4e4e7", dark: "#27272a" },
-  mutedForeground: { light: "#71717a", dark: "#a1a1aa" },
+  background: { light: "#f5f7fa", dark: "#0b1224" },
+  foreground: { light: "#0f1b33", dark: "#eef2f8" },
+  border: { light: "#e8edf3", dark: "#1f2b48" },
+  mutedForeground: { light: "#5b6b82", dark: "#9aa7bd" },
+  primary: { light: "#0066ff", dark: "#4d8dff" },
+  sidebar: { light: "#0f1e45", dark: "#0a1430" },
 } as const;

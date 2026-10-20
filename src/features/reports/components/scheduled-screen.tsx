@@ -70,7 +70,7 @@ function ScheduledBody() {
       ) : query.data.results.length === 0 ? (
         <EmptyState title="لا تقارير مجدولة بعد" description="أضف اشتراكاً ليصلك تقرير المبيعات أو المخزون بالبريد في موعده." action={addButton} />
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border" data-testid="schedules-list">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden" data-testid="schedules-list">
           {query.data.results.map((s) => (
             <ScheduleLine key={s.id} schedule={s} onDelete={() => setToDelete(s)} />
           ))}

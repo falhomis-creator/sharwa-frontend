@@ -1,4 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { connection } from "next/server";
 import { getOverview } from "@/features/dashboard-shell/api/overview";
 import { getSession } from "@/features/dashboard-shell/api/session";
@@ -42,15 +46,23 @@ export default async function DashboardOverviewPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold tracking-tight">{session?.store_name ?? identity.store}</h1>
-        <p className="text-sm text-muted-foreground">ما حدث اليوم، وما يحتاج تدخلك الآن.</p>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight text-foreground md:text-3xl">
+            أهلاً بك في لوحة تحكم {session?.store_name ?? identity.store}
+          </h1>
+          <p className="text-sm text-muted-foreground">ما حدث اليوم، وما يحتاج تدخلك الآن.</p>
+        </div>
+        <Link href="/dashboard/products/new" className={cn(buttonVariants({ size: "lg" }), "h-11 gap-2 px-5")}>
+          <Plus className="size-4" strokeWidth={2.25} aria-hidden />
+          إضافة منتج جديد
+        </Link>
       </div>
 
       <TodayBar initial={data.today} store={identity.store} />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
         <NewOrdersBlock rows={data.new_orders} storeUrl={identity.storeOrigin} />
         <AttentionBlock attention={data.attention} />
         <TopProductsBlock products={data.top_products} />

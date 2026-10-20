@@ -65,7 +65,7 @@ function DomainsInner() {
         <ErrorState error={q.error} onRetry={() => void q.refetch()} />
       ) : (
         <>
-          <ul className="flex flex-col divide-y divide-border rounded-lg border border-border" aria-label="نطاقات المتجر" data-testid="domain-list">
+          <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden" aria-label="نطاقات المتجر" data-testid="domain-list">
             {rows
               .filter((d) => d.kind === "subdomain")
               .map((d) => (
@@ -257,7 +257,7 @@ function DnsRecords({ records }: { records: DnsRecord[] }) {
         </tbody>
       </table>
       {/* Phones: a vertical list with large copy buttons (§6). */}
-      <ul className="flex flex-col divide-y divide-border rounded-lg border border-border md:hidden">
+      <ul className="flex flex-col divide-y divide-border/60 surface-card md:hidden overflow-hidden">
         {records.map((r, i) => (
           <li key={i} className="flex flex-col gap-2 p-3">
             <Mono className="text-xs font-medium text-muted-foreground">{r.type}</Mono>

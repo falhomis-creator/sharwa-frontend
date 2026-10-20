@@ -132,7 +132,7 @@ function DraftsInner({ canCreate, canApprove }: { canCreate: boolean; canApprove
       />
       {!canApprove ? <p className="text-sm text-muted-foreground">تعرض مسوداتك المعلّقة — الاعتماد يتطلب صلاحية «اعتماد طلبات الجملة».</p> : null}
       {conflict ? (
-        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3 text-sm" data-testid="b2b-conflict">
+        <div role="alert" className="flex flex-wrap items-center gap-3 surface-card p-4 text-sm" data-testid="b2b-conflict">
           <span className="text-destructive">{conflict}</span>
           <Button
             type="button"
@@ -266,7 +266,7 @@ function DraftSheet({ draft, onClose, canApprove, mine, onDecide }: { draft: B2b
               ) : order.error ? (
                 <ErrorState error={order.error} onRetry={() => void order.refetch()} />
               ) : (
-                <ul className="divide-y divide-border rounded-lg border border-border">
+                <ul className="divide-y divide-border/60 surface-card overflow-hidden">
                   {order.data?.items.map((it) => (
                     <li key={it.id} className="flex min-h-11 items-center gap-3 px-3 py-2 text-sm">
                       <span className="min-w-0 flex-1">

@@ -294,7 +294,7 @@ function AppOverrides({ apps, canWrite }: { apps: App[]; canWrite: boolean }) {
         </tbody>
       </Table>
 
-      <fieldset disabled={!canWrite} className="grid gap-3 rounded-lg border border-border p-4 md:grid-cols-2" data-testid="app-override-form">
+      <fieldset disabled={!canWrite} className="grid gap-3 surface-card p-5 lg:p-6 md:grid-cols-2" data-testid="app-override-form">
         <legend className="px-1 text-sm font-medium">استثناء جديد</legend>
         <Field label="التطبيق" htmlFor="ov-app" error={errors.app_code}>
           <NativeSelect id="ov-app" className={INPUT} value={appCode} onChange={(e) => setAppCode(e.target.value)} data-testid="ov-app">

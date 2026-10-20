@@ -98,7 +98,7 @@ function OrdersInner() {
           تحتاج انتباهاً <Mono className="text-muted-foreground" data-testid="attention-count">{attention.data?.count ?? 0}</Mono>
         </h2>
         {attn.length ? (
-          <ul className="divide-y divide-border rounded-lg border border-border">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden">
             {attn.map((o) => (
               <li key={o.id} className="flex flex-col gap-1.5 p-3 text-sm lg:flex-row lg:items-center lg:gap-4" data-testid="attention-row">
                 <Link href={`/dashboard/orders?order=${o.order_id}`} className="hover:underline">

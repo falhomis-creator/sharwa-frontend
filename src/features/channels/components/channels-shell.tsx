@@ -38,7 +38,7 @@ export function ChannelsShell({ title, description, actions, children }: { title
               key={t.href}
               href={t.href}
               aria-current={active ? "page" : undefined}
-              className={cn("-mb-px inline-flex h-11 shrink-0 items-center border-b-2 px-3 text-sm lg:h-9", active ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}
+              className={cn("-mb-px inline-flex h-11 shrink-0 items-center border-b-2 px-3 text-sm lg:h-9", active ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
             >
               {t.label}
             </Link>

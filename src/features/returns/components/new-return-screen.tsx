@@ -210,7 +210,7 @@ function ReturnForm({ orderId, items }: { orderId: number; items: ReturnableItem
         <h2 className="text-sm font-medium">
           عناصر الطلب <Mono>#{orderId}</Mono>
         </h2>
-        <ul className="rounded-lg border border-border" data-testid="returnable-items">
+        <ul className="surface-card" data-testid="returnable-items">
           {items.map((it, i) => {
             const full = it.remaining <= 0;
             const selected = Boolean(lines?.[i]?.selected);

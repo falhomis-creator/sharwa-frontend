@@ -204,7 +204,9 @@ export function createTemplate(store: string | null, body: Body): MockResult<Pro
         is_hazardous: p.is_hazardous,
         hazard_class: p.hazard_class,
       };
-      attributeIds = [...p.variant_attribute_ids];
+      // Merge, not replace: attributes the merchant checked in the form (e.g. from a standard
+      // category preset) survive alongside the product's own. [NEEDS BACKEND] same semantics.
+      attributeIds = [...new Set([...attributeIds, ...p.variant_attribute_ids])];
     }
   }
   const t = {

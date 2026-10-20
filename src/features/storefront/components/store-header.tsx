@@ -16,7 +16,7 @@ import { WishlistLink } from "@/features/storefront/components/mobile-tab-bar";
  */
 export function StoreHeader({ config, categories }: { config: StoreConfig; categories: CategoryNode[] }) {
   return (
-    <header className="store-header sticky top-0 z-40 border-b border-border bg-background">
+    <header className="store-header sticky top-0 z-40 border-b border-border bg-background shadow-card">
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-2 px-4 md:h-16 md:gap-4 md:px-6">
         <Link href="/" className="flex min-h-11 min-w-0 items-center gap-2" aria-label={`${config.store_name} — الرئيسية`}>
           {config.logo ? (
@@ -42,7 +42,7 @@ export function StoreHeader({ config, categories }: { config: StoreConfig; categ
           <Link
             href="/search"
             aria-label="البحث"
-            className="inline-flex size-11 items-center justify-center rounded-lg text-foreground hover:bg-muted md:hidden"
+            className="inline-flex size-11 items-center justify-center rounded-lg text-foreground hover:bg-accent hover:text-accent-foreground md:hidden"
           >
             <SearchIcon aria-hidden className="size-5" />
           </Link>

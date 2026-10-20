@@ -176,7 +176,7 @@ export function StoreDetailScreen({ schema }: { schema: string }) {
             onClick={() => void setTab(key)}
             className={cn(
               "-mb-px flex h-11 shrink-0 items-center border-b-2 px-3 text-sm transition-colors lg:h-9",
-              tab === key ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+              tab === key ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {label}

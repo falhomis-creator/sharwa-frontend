@@ -117,7 +117,7 @@ function StoreReviewForm({ onCancel, onDone }: { onCancel: () => void; onDone: (
 
   return (
     <form
-      className="store-frame space-y-4 rounded-lg border-border p-5"
+      className="store-frame space-y-4 rounded-xl border-border p-5 shadow-card bg-card"
       data-testid="store-review-form"
       onSubmit={async (e) => {
         e.preventDefault();

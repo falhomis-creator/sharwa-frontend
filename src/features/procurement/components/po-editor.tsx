@@ -143,7 +143,7 @@ export function PoEditor({ initial, presetSupplier }: { initial: PoDetail | null
           </p>
         ) : null}
         {lines.fields.length ? (
-          <ul className="divide-y divide-border rounded-lg border border-border" data-testid="po-lines">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="po-lines">
             {lines.fields.map((field, i) => (
               <li key={field.id} className="grid grid-cols-[1fr_auto] gap-3 p-3 md:grid-cols-[1fr_9rem_9rem_auto] md:items-start" data-testid="po-line">
                 <span className="flex min-w-0 flex-col">

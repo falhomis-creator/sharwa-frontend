@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { RefreshCw } from "lucide-react";
+import { CircleCheck, CircleX, RefreshCw, RotateCcw, ShoppingCart, TrendingUp, Wallet, type LucideIcon } from "lucide-react";
 import { Money } from "@/components/shared/money";
 import { apiFetch } from "@/lib/api-client";
 import { formatRelative } from "@/lib/format";
@@ -11,13 +11,23 @@ import { cn } from "@/lib/utils";
 import { TODAY_FIELDS } from "@/features/dashboard-shell/labels";
 import { todayMetricsSchema, type TodayMetrics } from "@/features/dashboard-shell/schemas";
 
+/** The pale-blue icon tile each stat card carries (owner mockup 2026-10-20). */
+const FIELD_ICONS: Record<(typeof TODAY_FIELDS)[number]["key"], LucideIcon> = {
+  orders_count: ShoppingCart,
+  completed_orders_count: CircleCheck,
+  cancelled_orders_count: CircleX,
+  refunded_orders_count: RotateCcw,
+  display_gross_revenue: Wallet,
+  display_net_revenue: TrendingUp,
+};
+
 /**
- * Today's six numbers in ONE dense row (M03 US-03.4): 32px Mono values separated by 1px
- * hairlines, 12px labels underneath. Explicitly NOT four identical KPI cards — that row of
- * cards is the first thing constitution I-ب rules out.
+ * Today's six numbers (M03 US-03.4) as six elevated stat cards — UI/UX Polish Phase (owner
+ * direction 2026-10-19 supersedes the earlier hairline row): white surface, soft shadow,
+ * 16px corners, 24px padding, 16–24px gaps. Label and a pale-blue icon tile on top, 32px Mono
+ * value below (owner mockup 2026-10-20).
  *
- * 2×3 on mobile, 3 columns on tablet and small laptops, 6 across from xl; the hairlines come from a 1px
- * gap over `bg-border`, so there is no shadow and no card chrome. Money values step their
+ * 2×3 on mobile, 3 columns on tablet and small laptops, 6 across from xl. Money values step their
  * size down with the cell's own width (container queries) and may wrap — never truncate —
  * so a long figure such as «1,222,278.75 ر.س» stays whole inside its cell.
  */
@@ -45,9 +55,9 @@ export function TodayBar({ initial, store }: { initial: TodayMetrics; store: str
   });
 
   return (
-    <section aria-labelledby="today-heading" className="flex flex-col gap-3" data-testid="today-bar">
+    <section aria-labelledby="today-heading" className="flex flex-col gap-4" data-testid="today-bar">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="today-heading" className="text-sm font-medium">
+        <h2 id="today-heading" className="text-base font-semibold">
           أرقام اليوم
         </h2>
         <div className="flex items-center gap-3">
@@ -60,7 +70,7 @@ export function TodayBar({ initial, store }: { initial: TodayMetrics; store: str
             type="button"
             onClick={() => refresh.mutate()}
             disabled={refresh.isPending}
-            className="flex h-11 items-center gap-1.5 rounded-md border border-border px-3 text-sm transition-colors hover:bg-muted disabled:opacity-60 lg:h-8"
+            className="flex h-11 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm shadow-xs transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-60 lg:h-9"
           >
             <RefreshCw
               className={cn("size-4", refresh.isPending && "animate-spin")}
@@ -78,12 +88,20 @@ export function TodayBar({ initial, store }: { initial: TodayMetrics; store: str
         </p>
       ) : null}
 
-      <dl className="grid grid-cols-2 gap-px border border-border bg-border md:grid-cols-3 xl:grid-cols-6">
-        {TODAY_FIELDS.map((field) => (
-          <div key={field.key} className="@container flex min-w-0 flex-col gap-1 bg-background p-4">
+      <dl className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:gap-6 xl:grid-cols-6">
+        {TODAY_FIELDS.map((field) => {
+          const Icon = FIELD_ICONS[field.key];
+          return (
+          <div key={field.key} className="surface-card @container flex min-w-0 flex-col gap-4 p-5 lg:p-6">
+            <dt className="flex items-start justify-between gap-2 text-sm text-muted-foreground">
+              <span className="min-w-0 pt-1">{field.label}</span>
+              <span aria-hidden className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-ink">
+                <Icon className="size-5" strokeWidth={1.75} />
+              </span>
+            </dt>
             <dd
               className={cn(
-                "min-w-0 font-mono text-[2rem] leading-none tabular-nums transition-opacity duration-150",
+                "min-w-0 font-mono text-[2rem] font-semibold leading-none tabular-nums text-foreground transition-opacity duration-150",
                 refresh.isPending && "opacity-50",
               )}
               data-mono
@@ -98,9 +116,9 @@ export function TodayBar({ initial, store }: { initial: TodayMetrics; store: str
                 (today[field.key] as number).toLocaleString("en-US")
               )}
             </dd>
-            <dt className="text-xs text-muted-foreground">{field.label}</dt>
           </div>
-        ))}
+          );
+        })}
       </dl>
       <span className="sr-only" data-testid="today-store">
         {store}

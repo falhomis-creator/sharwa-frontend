@@ -30,7 +30,7 @@ function isTyping(target: EventTarget | null): boolean {
   return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.tagName === "SELECT" || target.isContentEditable;
 }
 
-const dateInputClass = "h-11 rounded-lg border border-input bg-background px-2 font-mono text-sm md:h-8";
+const dateInputClass = "h-11 rounded-lg border border-input bg-card px-2 font-mono text-sm md:h-8";
 
 export function CustomersTable() {
   const router = useRouter();
@@ -243,7 +243,7 @@ export function CustomersTable() {
                   if (e.key === "Enter") e.currentTarget.blur();
                 }}
                 placeholder="0"
-                className="h-11 w-full rounded-lg border border-input bg-background px-2 text-end font-mono text-sm md:h-8 md:w-24"
+                className="h-11 w-full rounded-lg border border-input bg-card px-2 text-end font-mono text-sm md:h-8 md:w-24"
                 aria-label="حد الإنفاق الأدنى"
                 data-testid="filter-min-spent"
               />

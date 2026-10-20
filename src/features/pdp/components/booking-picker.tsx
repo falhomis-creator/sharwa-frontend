@@ -143,7 +143,7 @@ export function BookingPicker({ productId, durationMinutes, missing }: { product
             role="radio"
             aria-checked={d === date}
             onClick={() => setDate(d)}
-            className={cn("store-frame flex min-h-14 min-w-16 shrink-0 flex-col items-center justify-center rounded-lg border-border px-2 text-xs", d === date && "bg-foreground text-background")}
+            className={cn("store-frame flex min-h-14 min-w-16 shrink-0 flex-col items-center justify-center rounded-xl border-border px-2 text-xs shadow-card bg-card", d === date && "bg-foreground text-background")}
           >
             {dayFmt.format(new Date(`${d}T12:00:00Z`))}
           </button>
@@ -168,7 +168,7 @@ export function BookingPicker({ productId, durationMinutes, missing }: { product
                 data-status={mine ? "mine" : s.status}
                 onClick={() => free && !pending && void choose(s.start_datetime)}
                 className={cn(
-                  "store-frame min-h-11 rounded-lg border-border text-sm",
+                  "store-frame min-h-11 rounded-xl border-border text-sm shadow-card bg-card",
                   mine && "bg-foreground text-background",
                   !free && "cursor-not-allowed text-muted-foreground line-through opacity-50",
                   pending === s.start_datetime && "opacity-60",

@@ -125,7 +125,7 @@ function DraftForm({ ownerNotice }: { ownerNotice: boolean }) {
         <h2 id="l-h" className="text-sm font-medium">السطور</h2>
         <SearchBox value={q} onChange={setQ} placeholder="ابحث عن منتج بالاسم أو SKU" label="بحث المنتجات" />
         {q.trim() && results.data?.results.length ? (
-          <ul className="flex flex-col divide-y divide-border rounded-lg border border-border" data-testid="b2b-results">
+          <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden" data-testid="b2b-results">
             {results.data.results
               .filter((p) => !inDraft.has(p.id))
               .map((p) => (
@@ -148,7 +148,7 @@ function DraftForm({ ownerNotice }: { ownerNotice: boolean }) {
           </ul>
         ) : null}
         {lines.length ? (
-          <ul className="flex flex-col divide-y divide-border rounded-lg border border-border" data-testid="b2b-lines">
+          <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden" data-testid="b2b-lines">
             {lines.map((l) => (
               <li key={l.product_id} className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm" data-testid="b2b-line">
                 <span className="min-w-0 flex-1">
@@ -159,7 +159,7 @@ function DraftForm({ ownerNotice }: { ownerNotice: boolean }) {
                   <button type="button" onClick={() => setQty(l.product_id, l.quantity - 1)} aria-label="إنقاص الكمية" className="flex size-11 items-center justify-center rounded-md border border-border lg:size-8">
                     <Minus className="size-3.5" aria-hidden />
                   </button>
-                  <input value={l.quantity} onChange={(e) => setQty(l.product_id, Number(toWesternDigits(e.target.value)))} inputMode="numeric" dir="ltr" aria-label={`كمية ${l.name}`} className="h-11 w-16 rounded-lg border border-input bg-background text-center font-mono text-sm lg:h-8" data-testid="b2b-qty" />
+                  <input value={l.quantity} onChange={(e) => setQty(l.product_id, Number(toWesternDigits(e.target.value)))} inputMode="numeric" dir="ltr" aria-label={`كمية ${l.name}`} className="h-11 w-16 rounded-lg border border-input bg-card text-center font-mono text-sm lg:h-8" data-testid="b2b-qty" />
                   <button type="button" onClick={() => setQty(l.product_id, l.quantity + 1)} aria-label="زيادة الكمية" className="flex size-11 items-center justify-center rounded-md border border-border lg:size-8">
                     <Plus className="size-3.5" aria-hidden />
                   </button>

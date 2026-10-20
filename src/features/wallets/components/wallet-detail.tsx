@@ -127,7 +127,7 @@ export function WalletDetailView({ walletId, variant }: { walletId: number; vari
             aria-selected={tab === t}
             onClick={() => void setParams({ tab: t })}
             data-testid={`wallet-tab-${t}`}
-            className={cn("-mb-px min-h-11 border-b-2 px-3 text-sm lg:min-h-9", tab === t ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}
+            className={cn("-mb-px min-h-11 border-b-2 px-3 text-sm lg:min-h-9", tab === t ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
           >
             {t === "transactions" ? "الحركات" : "النقاط"}
           </button>
@@ -183,7 +183,7 @@ function Ledger({ walletId, reason, onReason, onOpenOrder }: { walletId: number;
       ) : query.data && query.data.results.length === 0 ? (
         <EmptyState title={reason ? "لا حركات بهذا السبب" : "لا حركات بعد"} description={reason ? "جرّب سبباً آخر أو أزل التصفية." : "أول تعبئة تظهر هنا مع رصيدها بعد الحركة."} />
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden">
           {query.data?.results.map((t) => (
             <LedgerRow key={t.id} t={t} now={now} onOpenOrder={onOpenOrder} />
           ))}
@@ -231,7 +231,7 @@ function PointsTab({ phone }: { phone: string }) {
   const [now] = useState(() => new Date());
   return (
     <section className="flex flex-col gap-4" aria-label="نقاط الولاء" data-testid="wallet-points">
-      <div className="rounded-lg border border-border p-4 text-sm">
+      <div className="surface-card p-5 lg:p-6 text-sm">
         {program.isLoading ? (
           <Skeleton className="h-5 w-72" />
         ) : program.data?.is_enabled ? (
@@ -272,7 +272,7 @@ function PointsTab({ phone }: { phone: string }) {
       ) : points.data && points.data.results.length === 0 ? (
         <EmptyState title="لا حركات نقاط بعد" description="تُكتب نقاط الكسب تلقائياً من الطلبات المكتملة." />
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden">
           {points.data?.results.map((t) => (
             <li key={t.id} className="flex items-center gap-3 p-3 text-sm" data-testid="points-row" data-type={t.type}>
               <span className="flex-1">

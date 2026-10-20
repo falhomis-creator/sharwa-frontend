@@ -88,7 +88,7 @@ function Row({
     // Drop indicator: a 1px foreground rule at the projected depth.
     return (
       <li ref={setNodeRef} style={{ transform: translateToString(transform), transition }} aria-hidden className="py-2">
-        <div className="h-px bg-foreground" style={{ marginInlineStart: depth * INDENT + 8 }} data-testid="drop-indicator" />
+        <div className="h-px bg-primary" style={{ marginInlineStart: depth * INDENT + 8 }} data-testid="drop-indicator" />
       </li>
     );
   }
@@ -97,7 +97,7 @@ function Row({
     <li
       ref={isOverlay ? undefined : setNodeRef}
       style={isOverlay ? undefined : { transform: translateToString(transform), transition }}
-      className={cn("group flex min-h-11 items-center gap-1 border-b border-border bg-background pe-2 last:border-0", isOverlay && "border border-foreground")}
+      className={cn("group flex min-h-11 items-center gap-1 border-b border-border bg-card pe-2 last:border-0", isOverlay && "border border-foreground")}
       data-testid="category-row"
       data-depth={node.depth}
       data-name={node.category.name}
@@ -291,7 +291,7 @@ export function CategoryTree({ canManage }: { canManage: boolean }) {
                 }
               }}
             >
-              <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="مثال: إلكترونيات" aria-label="اسم أول تصنيف" className="h-11 flex-1 rounded-lg border border-input bg-background px-2.5 text-base outline-none focus-visible:border-ring lg:h-9 lg:text-sm" />
+              <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="مثال: إلكترونيات" aria-label="اسم أول تصنيف" className="h-11 flex-1 rounded-lg border border-input bg-card px-2.5 text-base outline-none focus-visible:border-ring lg:h-9 lg:text-sm" />
               <Button type="submit" size="lg" className="h-11 lg:h-9">
                 إنشاء
               </Button>
@@ -313,7 +313,7 @@ export function CategoryTree({ canManage }: { canManage: boolean }) {
           }}
         >
           <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
-            <ul className="rounded-lg border border-border" aria-label="شجرة التصنيفات">
+            <ul className="surface-card" aria-label="شجرة التصنيفات">
               {items.map((node) => (
                 <Row
                   key={node.id}

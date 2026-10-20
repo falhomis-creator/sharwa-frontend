@@ -112,7 +112,7 @@ function ScanInner() {
             enterKeyHint="send"
             placeholder="RMA-801"
             aria-describedby="scan-result"
-            className="h-16 w-full rounded-lg border border-input bg-background px-4 text-start font-mono text-2xl tracking-wide outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-20 md:text-3xl dark:bg-input/30"
+            className="h-16 w-full rounded-lg border border-input bg-card px-4 text-start font-mono text-2xl tracking-wide outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-20 md:text-3xl dark:bg-input/30"
             data-testid="scan-input"
           />
         </label>
@@ -144,7 +144,7 @@ function ScanInner() {
           <h2 className="text-sm font-medium">
             هذه الجلسة · <Mono>{received}</Mono> مستلم من <Mono>{log.length}</Mono>
           </h2>
-          <ul className="rounded-lg border border-border" data-testid="scan-log">
+          <ul className="surface-card" data-testid="scan-log">
             {log.map((e) => (
               <li key={e.key} className={cn("flex flex-col gap-2 border-b border-border p-3 last:border-0 md:flex-row md:items-center md:justify-between")} data-testid="scan-log-row" data-ok={String(e.ok)}>
                 {e.ok ? (

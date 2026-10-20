@@ -25,7 +25,22 @@ import { useQuickAdd, useTemplates } from "@/features/products/api/products";
  * published with unit `piece` and a generated SKU; the toast offers «تحرير كامل».
  *
  * SC-04.1: a product with an image and a price in ≤ 30 s and ≤ 5 fields.
+ *
+ * «القالب» sits up front (owner directive 2026-10-20): picking one FILLS the visible fields
+ * (unit, pricing, flags) with the template's values, so what the merchant sees is what is
+ * applied — the server then copies the rest of the blueprint (`blueprint_id`).
  */
+/** Quick-add fields a template may pre-fill — the visible ones the merchant can still change. */
+const TEMPLATE_PREFILL_KEYS = [
+  "unit",
+  "pricing_type",
+  "formula_coefficient",
+  "formula_fixed_extra",
+  "is_serialized",
+  "is_bundle",
+  "is_auction",
+  "is_personalizable",
+] as const;
 const DEFAULTS: QuickAddValues = {
   name: "",
   name_en: "",
@@ -64,6 +79,21 @@ export function QuickAddDialog({ open, onOpenChange }: { open: boolean; onOpenCh
   const form = useForm<QuickAddValues>({ resolver: zodResolver(quickAddSchema), defaultValues: DEFAULTS });
   const { register, handleSubmit, setValue, setError, reset, formState } = form;
   const values = { ...form.formState.defaultValues, ...useWatch({ control: form.control }) } as QuickAddValues;
+
+  const pickedTemplate = (templates.data ?? []).find((t) => String(t.id) === values.blueprint_id);
+
+  function pickTemplate(id: string) {
+    setValue("blueprint_id", id, { shouldDirty: true });
+    const t = (templates.data ?? []).find((x) => String(x.id) === id);
+    // Back to the plain defaults first, so switching templates never leaves the previous one's values behind.
+    for (const key of TEMPLATE_PREFILL_KEYS) {
+      const raw = t?.fields[key];
+      const fallback = DEFAULTS[key];
+      const next = raw === undefined || raw === null ? fallback : typeof fallback === "boolean" ? Boolean(raw) : String(raw);
+      setValue(key, next as never, { shouldDirty: true });
+    }
+    if (t && (t.fields.pricing_type === "formula" || t.fields.is_serialized || t.fields.is_bundle)) setMore(true);
+  }
 
   // `is_auction` pins stock to 1 (discovery 02 §2).
   useEffect(() => {
@@ -127,6 +157,31 @@ export function QuickAddDialog({ open, onOpenChange }: { open: boolean; onOpenCh
           <SheetDescription>الاسم والسعر والصورة تكفي — أكمل الباقي لاحقاً من المحرّر.</SheetDescription>
         </SheetHeader>
         <form onSubmit={onSubmit} className="flex flex-1 flex-col gap-4 p-4" noValidate>
+          <Field
+            label="القالب"
+            htmlFor="qa-blueprint"
+            hint={
+              pickedTemplate
+                ? `يُعبّئ ${Object.keys(pickedTemplate.fields).length} حقلاً (الوحدة، الضريبة، الشحن…) — عدّل ما يلزم.`
+                : "اختياري — ابدأ من قالب لتعبئة الحقول المتكررة تلقائياً."
+            }
+          >
+            <NativeSelect
+              id="qa-blueprint"
+              className="h-11 md:h-8"
+              value={values.blueprint_id}
+              onChange={(e) => pickTemplate(e.target.value)}
+              data-testid="quick-add-template"
+            >
+              <option value="">بلا قالب</option>
+              {(templates.data ?? []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </NativeSelect>
+          </Field>
+
           <Field label="اسم المنتج" htmlFor="qa-name" required error={formState.errors.name?.message}>
             <input id="qa-name" autoFocus className={inputClass} aria-invalid={Boolean(formState.errors.name)} {...register("name")} />
           </Field>
@@ -209,27 +264,15 @@ export function QuickAddDialog({ open, onOpenChange }: { open: boolean; onOpenCh
               <Field label="الاسم بالإنجليزية" htmlFor="qa-name-en">
                 <input id="qa-name-en" dir="ltr" className={inputClass} {...register("name_en")} />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="الوحدة" htmlFor="qa-unit">
-                  <NativeSelect id="qa-unit" className="h-11 md:h-8" {...register("unit")}>
-                    {UNITS.map((u) => (
-                      <option key={u} value={u}>
-                        {UNIT_LABELS[u]}
-                      </option>
-                    ))}
-                  </NativeSelect>
-                </Field>
-                <Field label="القالب" htmlFor="qa-blueprint">
-                  <NativeSelect id="qa-blueprint" className="h-11 md:h-8" {...register("blueprint_id")}>
-                    <option value="">بلا قالب</option>
-                    {(templates.data ?? []).map((t) => (
-                      <option key={t.id} value={t.id}>
-                        {t.name}
-                      </option>
-                    ))}
-                  </NativeSelect>
-                </Field>
-              </div>
+              <Field label="الوحدة" htmlFor="qa-unit">
+                <NativeSelect id="qa-unit" className="h-11 md:h-8" {...register("unit")}>
+                  {UNITS.map((u) => (
+                    <option key={u} value={u}>
+                      {UNIT_LABELS[u]}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </Field>
               <Field label="التسعير" htmlFor="qa-pricing">
                 <NativeSelect id="qa-pricing" className="h-11 md:h-8" {...register("pricing_type")}>
                   <option value="fixed">سعر ثابت</option>

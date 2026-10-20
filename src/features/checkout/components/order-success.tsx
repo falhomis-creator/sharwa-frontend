@@ -77,7 +77,7 @@ export function OrderSuccess({ uuid, mode }: { uuid: string; mode: "success" | "
         </p>
       </header>
 
-      <dl className="store-frame divide-y divide-border rounded-xl border-border text-sm">
+      <dl className="store-frame divide-y divide-border rounded-xl border-border text-sm shadow-card bg-card">
         <div className="flex justify-between gap-3 p-4">
           <dt className="text-muted-foreground">حالة الطلب</dt>
           <dd className="font-medium" data-testid="order-status">{o.status_label}</dd>
@@ -126,7 +126,7 @@ export function OrderSuccess({ uuid, mode }: { uuid: string; mode: "success" | "
       </ul>
 
       <div className="flex flex-wrap gap-2">
-        <Link href={`/track/${o.public_uuid}`} className={cn(buttonVariants(), "h-11 px-5")} data-testid="track-link">
+        <Link href={`/track/${o.public_uuid}`} className={cn(buttonVariants({ variant: "cta" }), "h-11 px-5")} data-testid="track-link">
           تتبّع طلبك
         </Link>
         {whatsapp ? (
@@ -183,7 +183,7 @@ function ReceiptUpload({ order }: { order: PublicOrder }) {
     return <p className="text-sm text-success" data-testid="receipt-attached">وصلنا إيصال التحويل، وسيؤكد المتجر الدفع قريباً.</p>;
   }
   return (
-    <section className="store-frame space-y-4 rounded-xl border-border p-4" aria-labelledby="receipt-title" data-testid="receipt-upload">
+    <section className="store-frame space-y-4 rounded-xl border-border p-4 shadow-card bg-card" aria-labelledby="receipt-title" data-testid="receipt-upload">
       <h2 id="receipt-title" className="font-semibold">
         حوّل المبلغ ثم أرفق الإيصال
       </h2>

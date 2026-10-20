@@ -186,7 +186,7 @@ export function DataTable<T>({
 
   if (forbidden) {
     return (
-      <div className="rounded-lg border border-border p-6" data-testid={testId ? `${testId}-forbidden` : undefined}>
+      <div className="surface-card p-6 lg:p-8" data-testid={testId ? `${testId}-forbidden` : undefined}>
         <p className="text-base font-medium">ليست لديك صلاحية لعرض هذه القائمة</p>
         <p className="mt-1 text-sm text-muted-foreground">اطلب الصلاحية من مالك المتجر أو مدير الفرع.</p>
       </div>
@@ -224,7 +224,7 @@ export function DataTable<T>({
           role="region"
           aria-label="إجراءات جماعية"
           data-testid="bulk-bar"
-          className="sticky top-0 z-20 flex flex-wrap items-center gap-2 rounded-lg border border-foreground/20 bg-background px-3 py-2"
+          className="sticky top-0 z-20 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 shadow-card"
         >
           <span className="text-sm">
             <Mono>{formatNumber(selectedIds.length)}</Mono> محدد
@@ -250,16 +250,16 @@ export function DataTable<T>({
           {/* Desktop/tablet table */}
           <ScrollX
             className={cn(
-              "rounded-lg border border-border",
+              "surface-card",
               renderMobileCard && "hidden md:block",
               isFetching && !isLoading && "opacity-70 transition-opacity",
             )}
           >
             <table className="w-full border-collapse text-sm" aria-busy={isLoading || isFetching}>
               <caption className="sr-only">{caption}</caption>
-              <thead className="sticky top-0 z-10 bg-background">
+              <thead className="sticky top-0 z-10 bg-card">
                 {table.getHeaderGroups().map((hg) => (
-                  <tr key={hg.id} className="border-b border-border">
+                  <tr key={hg.id} className="border-b border-border/60">
                     {hg.headers.map((header) => {
                       const meta = header.column.columnDef.meta;
                       const sortKey = meta?.sortKey;
@@ -274,7 +274,7 @@ export function DataTable<T>({
                           scope="col"
                           aria-sort={direction === "asc" ? "ascending" : direction === "desc" ? "descending" : undefined}
                           className={cn(
-                            "h-9 whitespace-nowrap px-3 text-xs font-normal text-muted-foreground",
+                            "h-11 whitespace-nowrap bg-muted/40 px-3 text-xs font-medium text-muted-foreground first:ps-5 last:pe-5",
                             meta?.numeric ? "text-end" : "text-start",
                             meta?.className,
                           )}
@@ -332,7 +332,7 @@ export function DataTable<T>({
                             onRowOpen(row.original);
                           }
                         }}
-                        className="border-b border-border outline-none last:border-0 hover:bg-muted/50 focus-visible:bg-muted/70 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring data-[state=selected]:bg-muted/60"
+                        className="border-b border-border/60 outline-none transition-colors last:border-0 hover:bg-accent/50 focus-visible:bg-muted/70 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-ring data-[state=selected]:bg-muted/60"
                       >
                         {row.getVisibleCells().map((cell) => {
                           const meta = cell.column.columnDef.meta;
@@ -341,7 +341,7 @@ export function DataTable<T>({
                               key={cell.id}
                               className={cn(
                                 ROW_HEIGHT[density],
-                                "px-3 align-middle",
+                                "px-3 align-middle first:ps-5 last:pe-5",
                                 meta?.numeric ? "text-end font-mono tabular-nums" : "text-start",
                                 meta?.className,
                               )}
@@ -358,7 +358,7 @@ export function DataTable<T>({
 
           {/* Mobile cards */}
           {renderMobileCard ? (
-            <ul ref={mobileRef} className="flex flex-col divide-y divide-border rounded-lg border border-border md:hidden">
+            <ul ref={mobileRef} className="surface-card flex flex-col divide-y divide-border/60 overflow-hidden md:hidden">
               {isLoading
                 ? Array.from({ length: 6 }, (_, i) => (
                     <li key={i} className="flex flex-col gap-2 p-3">

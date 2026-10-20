@@ -19,7 +19,7 @@ export function ErrorState({
   const message = isApiError(error) ? error.userMessage : error instanceof Error ? error.message : undefined;
   const retryAfter = isApiError(error) ? error.retryAfter : undefined;
   return (
-    <div role="alert" className={cn("flex flex-col items-start gap-3 rounded-lg border border-border p-6", className)}>
+    <div role="alert" className={cn("surface-card flex flex-col items-start gap-3 p-6 lg:p-8", className)}>
       <p className="text-base font-medium">{title}</p>
       {message ? <p className="text-sm text-destructive">{message}</p> : null}
       {retryAfter ? (

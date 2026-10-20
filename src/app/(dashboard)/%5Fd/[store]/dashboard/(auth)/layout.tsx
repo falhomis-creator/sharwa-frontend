@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { ShoppingBag } from "lucide-react";
 import { connection } from "next/server";
 import { Mono } from "@/components/shared/mono";
 import { SkipLink } from "@/components/shared/visually-hidden";
@@ -7,19 +8,22 @@ import { requestIdentity } from "@/features/tenant/request";
 
 /**
  * Auth screens live OUTSIDE the shell (T057): one 400px column, no sidebar, no topbar,
- * no illustration (M03 FR-03.07). The store is already resolved from the host, so the
+ * no illustration (M03 FR-03.07). UI/UX Polish Phase: the column is a white card on the cool
+ * gray ground, headed by the royal-blue brand tile — clean, no imagery. The store is already resolved from the host, so the
  * merchant only ever types a password — there is no e-mail or store field to fill.
  */
 export default function DashboardAuthLayout({ children }: { children: ReactNode }) {
   return (
     <>
       <SkipLink />
-      <main id="main" className="mx-auto flex w-full max-w-[25rem] flex-1 flex-col justify-center gap-8 px-6 py-16">
-        <Suspense fallback={<div className="h-12" />}>
-          <StoreBadge />
-        </Suspense>
-        {children}
-      </main>
+      <div className="flex flex-1 flex-col bg-background">
+        <main id="main" className="mx-auto flex w-full max-w-[27rem] flex-1 flex-col justify-center gap-6 px-4 py-12 sm:px-6 sm:py-16">
+          <Suspense fallback={<div className="h-12" />}>
+            <StoreBadge />
+          </Suspense>
+          <div className="surface-card p-6 sm:p-8">{children}</div>
+        </main>
+      </div>
     </>
   );
 }
@@ -31,12 +35,17 @@ async function StoreBadge() {
   const identity = await requestIdentity();
   const probe = await probeStore({ store: identity.store, storeHost: identity.storeHost });
   return (
-    <div className="flex flex-col gap-1">
-      <span className="text-sm text-muted-foreground">لوحة تحكم</span>
-      <span className="text-lg font-medium tracking-tight">
-        {probe.config?.store_name ?? identity.store}
+    <div className="flex items-center gap-3">
+      <span aria-hidden className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-cta text-cta-foreground shadow-card">
+        <ShoppingBag className="size-5" strokeWidth={1.75} />
       </span>
-      <Mono className="text-xs text-muted-foreground">{identity.storeHost}</Mono>
+      <div className="flex min-w-0 flex-col gap-0.5">
+        <span className="text-xs text-muted-foreground">لوحة تحكم</span>
+        <span className="truncate text-lg font-semibold tracking-tight text-foreground">
+          {probe.config?.store_name ?? identity.store}
+        </span>
+        <Mono className="truncate text-xs text-muted-foreground">{identity.storeHost}</Mono>
+      </div>
     </div>
   );
 }

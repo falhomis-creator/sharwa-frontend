@@ -8,9 +8,10 @@ import { WishlistButton } from "@/features/engagement/components/wishlist-button
 
 /**
  * THE product card (FR-09.08): one component for every section, listing, search result and
- * the related rows of M10. Separation is a 1px border in the merchant's `card_border_color`
- * (`border-border`), badges are text, «شحن مجاني» is emerald TEXT (US-09.5.4) — no fill, no
- * shadow. Prices are the server's `display_*` strings, Mono, never re-formatted (FR-09.06).
+ * the related rows of M10. UI/UX Polish: a white card (`bg-card`) on the merchant ground with a
+ * soft shadow that deepens on hover, 1.5× the style radius, and the merchant's
+ * `card_border_color` kept as a faint rim. Badges are text, «شحن مجاني» is emerald TEXT
+ * (US-09.5.4); «تخفيض» is a solid `cta` chip. Prices are the server's `display_*` strings, Mono, never re-formatted (FR-09.06).
  *
  * Until Django exports `badges` on list items, «نفدت الكمية» and «تخفيض» are derived here
  * from `stock` and `display_old_price` (M09 §7); merchant badges show when present.
@@ -25,7 +26,7 @@ export function ProductCard({ product, priority = false, className, saveable = t
     <article
       data-testid="product-card"
       className={cn(
-        "store-frame group relative flex h-full flex-col overflow-hidden rounded-lg border-border bg-card transition-colors hover:border-foreground/30",
+        "store-frame group relative flex h-full flex-col overflow-hidden rounded-xl border-border/60 bg-card shadow-card transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-card-hover motion-reduce:hover:translate-y-0",
         className,
       )}
     >
@@ -37,7 +38,7 @@ export function ProductCard({ product, priority = false, className, saveable = t
           {(out || onSale || merchantBadges.length > 0) && (
             <ul className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-medium">
               {out && <li className="text-destructive">نفدت الكمية</li>}
-              {onSale && !out && <li className="text-foreground">تخفيض</li>}
+              {onSale && !out && <li className="rounded-full bg-cta px-2 py-0.5 text-cta-foreground">تخفيض</li>}
               {merchantBadges.slice(0, 2).map((b) => (
                 <li key={b.name} className="inline-flex items-center gap-1.5 text-muted-foreground">
                   {/* The merchant's badge colour is DATA: a 6px dot, never a fill. */}
@@ -92,7 +93,7 @@ export function ProductGridSkeleton({ count = 8 }: { count?: number }) {
   return (
     <ul className="grid grid-cols-2 gap-[var(--store-grid-gap)] sm:grid-cols-3 lg:grid-cols-4" aria-hidden>
       {Array.from({ length: count }, (_, i) => (
-        <li key={i} className="store-frame overflow-hidden rounded-lg border-border">
+        <li key={i} className="store-frame overflow-hidden rounded-xl border-border/60 bg-card shadow-card">
           <div className="aspect-square w-full animate-pulse bg-muted" />
           <div className="space-y-2 p-3 md:p-4">
             <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />

@@ -115,7 +115,7 @@ function Profile({ customer: c, variant }: { customer: CustomerDetail; variant: 
   return (
     <div className="flex min-w-0 flex-col gap-6" data-testid="customer-profile" data-phone={c.phone}>
       {viewWarning ? (
-        <p role="status" className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground" data-testid="view-warning">
+        <p role="status" className="flex items-center gap-2 surface-card px-3 py-2 text-sm text-muted-foreground" data-testid="view-warning">
           <span aria-hidden className="size-1.5 rounded-full bg-warning" />
           نشاطك مرتفع اليوم — تُحتسب مشاهدات ملفات العملاء ضمن تنبيهات الحجم.
         </p>
@@ -199,9 +199,9 @@ function Profile({ customer: c, variant }: { customer: CustomerDetail; variant: 
         </p>
       </header>
 
-      <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border md:grid-cols-4" data-testid="number-strip">
+      <dl className="grid grid-cols-2 gap-px overflow-hidden surface-card bg-border md:grid-cols-4" data-testid="number-strip">
         {strip.map((s) => (
-          <div key={s.key} className="flex min-w-0 flex-col gap-0.5 bg-background px-3 py-2">
+          <div key={s.key} className="flex min-w-0 flex-col gap-0.5 bg-card px-3 py-2">
             <dt className="text-xs text-muted-foreground">{s.label}</dt>
             <dd className="truncate text-base font-medium">{s.value}</dd>
           </div>
@@ -229,7 +229,7 @@ function Profile({ customer: c, variant }: { customer: CustomerDetail; variant: 
               data-testid={`profile-tab-${t}`}
               className={cn(
                 "-mb-px min-h-11 shrink-0 whitespace-nowrap border-b-2 px-3 text-sm lg:min-h-9",
-                tab === t ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+                tab === t ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
               {TAB_LABELS[t]}

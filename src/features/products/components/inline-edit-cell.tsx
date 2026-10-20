@@ -110,7 +110,7 @@ export function InlineEditCell({
           }
         }}
         className={cn(
-          "h-8 w-24 rounded-md border border-ring bg-background px-2 text-end font-mono text-sm tabular-nums outline-none",
+          "h-8 w-24 rounded-md border border-ring bg-card px-2 text-end font-mono text-sm tabular-nums outline-none",
           error && "border-destructive",
         )}
       />

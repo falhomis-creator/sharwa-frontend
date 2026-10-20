@@ -48,7 +48,7 @@ export function IntegrationsScreen() {
                 <h3 id={`grp-${g}`} className="text-sm font-semibold">
                   {INTEGRATION_GROUP_LABELS[g]}
                 </h3>
-                <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+                <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
                   {rows.map((r) => (
                     <IntegrationRow key={r.code} r={r} />
                   ))}
@@ -64,7 +64,7 @@ export function IntegrationsScreen() {
           <h3 id="grp-out" className="text-sm font-semibold">
             الربط الصادر والتتبع
           </h3>
-          <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+          <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
             <ToolRow href="/dashboard/settings/domains" title="النطاقات" description="نطاقك الخاص وسجلات DNS." />
             <ToolRow href="/dashboard/settings/webhooks" title="Webhooks" description="أرسل أحداث متجرك إلى أنظمتك." />
             {canFeature("tracking_tools") ? <ToolRow href="/dashboard/marketing/tracking" title="أدوات التتبع" description="بكسلات Meta وTikTok وSnapchat وGoogle — تُحمَّل في المتجر فقط." /> : null}

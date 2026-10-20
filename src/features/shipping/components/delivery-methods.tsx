@@ -194,8 +194,8 @@ function CustomerPreview() {
       ) : (
         <ul className="flex flex-col gap-2" data-testid="preview-methods">
           {methods.map((m, i) => (
-            <li key={m.id} className="flex items-center gap-3 rounded-lg border border-border bg-background p-3 text-sm">
-              <span aria-hidden className={i === 0 ? "size-3.5 rounded-full border-4 border-foreground" : "size-3.5 rounded-full border border-muted-foreground"} />
+            <li key={m.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3 text-sm">
+              <span aria-hidden className={i === 0 ? "size-3.5 rounded-full border-4 border-primary" : "size-3.5 rounded-full border border-muted-foreground"} />
               <span className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate font-medium">{m.name}</span>
                 {m.estimated_time ? <span className="text-xs text-muted-foreground">{m.estimated_time}</span> : null}
@@ -249,7 +249,7 @@ function MethodSheet({ open, method, onOpenChange }: { open: boolean; method?: D
         <Field label="المدة المتوقعة" htmlFor="method-eta" error={formState.errors.estimated_time?.message} hint="نص يراه العميل، مثل «1-2 يوم».">
           <input id="method-eta" className={inputClass} aria-invalid={Boolean(formState.errors.estimated_time)} {...register("estimated_time")} />
         </Field>
-        <div className="rounded-lg border border-border px-3">
+        <div className="surface-card px-3">
           <Controller control={control} name="is_active" render={({ field }) => <ToggleRow id="method-active" label="نشطة" description="المعطّلة لا تظهر في صفحة الدفع." checked={field.value} onCheckedChange={field.onChange} />} />
         </div>
         <SheetActions onCancel={() => onOpenChange(false)} submitLabel={method ? "حفظ" : "إضافة"} pending={formState.isSubmitting} testId="method-submit" />

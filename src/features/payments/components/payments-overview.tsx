@@ -81,7 +81,7 @@ function GatewaysSection({ onOpen }: { onOpen: (code: string) => void }) {
       ) : !query.data?.length ? (
         <EmptyState title="لا بوابات متاحة" description="لم تُعرَّف بوابات دفع لمتجرك بعد. تواصل مع دعم شروة." />
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden">
           {query.data.map((g) => (
             <GatewayRow key={g.gateway_code} gateway={g} onOpen={() => onOpen(g.gateway_code)} />
           ))}
@@ -163,7 +163,7 @@ function StoreSwitches() {
 
 function SwitchRows({ data, busy, onToggle, accountsLink }: { data: StorePayments; busy: boolean; onToggle: (k: SwitchKey, next: boolean) => void; accountsLink: boolean }) {
   return (
-    <div className="divide-y divide-border rounded-lg border border-border px-3">
+    <div className="divide-y divide-border/60 surface-card px-3 overflow-hidden">
       <ToggleRow
         id="enable-sharwa-pay"
         label="قبول شروة باي"

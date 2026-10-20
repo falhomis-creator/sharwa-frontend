@@ -20,7 +20,7 @@ export function CustodyScreen() {
   return (
     <div className="flex flex-col gap-4" data-testid="custody-screen">
       <OfflineNote snap={q.data} />
-      <section className="flex flex-col gap-1 rounded-lg border border-border p-4" aria-label="الرصيد">
+      <section className="flex flex-col gap-1 surface-card p-5 lg:p-6" aria-label="الرصيد">
         <span className="text-xs text-muted-foreground">الرصيد الحالي</span>
         <Mono className="text-3xl font-medium" data-testid="custody-balance">
           {c.display_balance}
@@ -29,7 +29,7 @@ export function CustodyScreen() {
       {c.results.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">لا حركات بعد.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {c.results.map((e) => (
             <li key={e.id} className="flex flex-col gap-1 p-3" data-testid="custody-entry" data-type={e.entry_type}>
               <span className="flex items-center justify-between gap-2">

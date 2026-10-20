@@ -130,14 +130,14 @@ export function HeaderSearch({ className, autoFocus = false, initial = "" }: { c
             setActive((i) => (i <= 0 ? results.length - 1 : i - 1));
           } else if (e.key === "Escape") setOpen(false);
         }}
-        className="store-frame h-11 w-full rounded-lg border-input bg-background ps-9 pe-3 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 md:h-10 md:text-sm"
+        className="store-frame h-11 w-full rounded-full border-input bg-muted/60 ps-9 pe-3 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40 md:h-10 md:text-sm"
       />
       {showList ? (
         <ul
           id={listId}
           role="listbox"
           aria-label="اقتراحات البحث"
-          className="store-frame absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-lg border-border bg-popover text-sm"
+          className="store-frame absolute inset-x-0 top-full z-50 mt-1 overflow-hidden rounded-xl border-border bg-popover text-sm shadow-card"
         >
           {results.length === 0 ? (
             <li className="px-3 py-3 text-muted-foreground">لا منتجات تطابق «{q.trim()}»</li>

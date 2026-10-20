@@ -103,7 +103,7 @@ function Editor({ data, productId }: { data: Availability; productId: number }) 
                           value={r.start_time}
                           onChange={(e) => update(r.key, { start_time: e.target.value })}
                           aria-invalid={Boolean(err)}
-                          className={cn("h-11 w-32 rounded-md border border-input bg-background px-2 font-mono text-sm tabular-nums lg:h-8", err && "border-destructive")}
+                          className={cn("h-11 w-32 rounded-md border border-input bg-card px-2 font-mono text-sm tabular-nums lg:h-8", err && "border-destructive")}
                           data-testid="window-start"
                         />
                         <span className="text-sm text-muted-foreground">إلى</span>
@@ -118,7 +118,7 @@ function Editor({ data, productId }: { data: Availability; productId: number }) 
                           value={r.end_time}
                           onChange={(e) => update(r.key, { end_time: e.target.value })}
                           aria-invalid={Boolean(err)}
-                          className={cn("h-11 w-32 rounded-md border border-input bg-background px-2 font-mono text-sm tabular-nums lg:h-8", err && "border-destructive")}
+                          className={cn("h-11 w-32 rounded-md border border-input bg-card px-2 font-mono text-sm tabular-nums lg:h-8", err && "border-destructive")}
                           data-testid="window-end"
                         />
                         <Button type="button" variant="ghost" size="icon" className="size-11 lg:size-8" aria-label="حذف النافذة" onClick={() => setRows((rs) => rs.filter((x) => x.key !== r.key))}>
@@ -156,7 +156,7 @@ function Editor({ data, productId }: { data: Availability; productId: number }) 
       </ul>
 
       {dirty ? (
-        <div role="region" aria-label="حفظ التغييرات" className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-background lg:bottom-0 lg:start-auto lg:end-0 lg:w-[calc(100%-16rem)]" data-testid="save-bar">
+        <div role="region" aria-label="حفظ التغييرات" className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-card lg:bottom-0 lg:start-auto lg:end-0 lg:w-[calc(100%-16rem)]" data-testid="save-bar">
           <div className="mx-auto flex max-w-[1440px] items-center gap-3 px-4 py-3 lg:px-6">
             <p className="flex-1 text-sm">تغييرات غير محفوظة</p>
             <Button type="button" variant="ghost" className="h-11 lg:h-9" onClick={() => setRows(initial)}>

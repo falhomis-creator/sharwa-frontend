@@ -158,7 +158,7 @@ function SettingsFormView({ code, c }: { code: SupplierCode; c: Connection }) {
       data-testid="sync-settings"
     >
       <h2 className="text-base font-medium">المزامنة</h2>
-      <ul className="divide-y divide-border rounded-lg border border-border">
+      <ul className="divide-y divide-border/60 surface-card overflow-hidden">
         {rows.map((r) => (
           <li key={r.toggle} className="flex flex-wrap items-center gap-3 p-3">
             <Controller control={control} name={r.toggle} render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} aria-label={r.label} />} />
@@ -205,7 +205,7 @@ function WebhookSection({ code, configured }: { code: SupplierCode; configured: 
       </h2>
       <p className="text-sm text-muted-foreground">{configured ? "الرمز الحالي مخفي. التدوير يُبطل الرابط القديم فوراً." : "لا رابط بعد — دوّر الرمز لإنشائه."}</p>
       {url ? (
-        <div className="flex flex-col gap-2 rounded-lg border border-border p-3" data-testid="webhook-url">
+        <div className="flex flex-col gap-2 surface-card p-4" data-testid="webhook-url">
           <span className="text-xs text-muted-foreground">انسخه الآن — لن يُعرض مرة أخرى.</span>
           <span className="flex items-center gap-2">
             <Mono className="min-w-0 flex-1 break-all text-xs">{url}</Mono>

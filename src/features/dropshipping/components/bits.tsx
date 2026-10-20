@@ -47,7 +47,7 @@ export function DropshippingNav({ active }: { active: (typeof TABS)[number]["key
           key={t.key}
           href={t.href}
           aria-current={t.key === active ? "page" : undefined}
-          className={cn("flex h-11 shrink-0 items-center border-b-2 px-3 text-sm lg:h-9", t.key === active ? "border-foreground font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}
+          className={cn("flex h-11 shrink-0 items-center border-b-2 px-3 text-sm lg:h-9", t.key === active ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
         >
           {t.label}
         </Link>

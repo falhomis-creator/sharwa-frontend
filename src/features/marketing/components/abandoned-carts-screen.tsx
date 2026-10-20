@@ -154,7 +154,7 @@ function CartSheet({ id, onClose }: { id: number | null; onClose: () => void }) 
             </dl>
             <section aria-label="عناصر السلة" className="flex flex-col gap-2">
               <h3 className="text-xs font-medium text-muted-foreground">العناصر ({c.items_count})</h3>
-              <ul className="divide-y divide-border rounded-lg border border-border">
+              <ul className="divide-y divide-border/60 surface-card overflow-hidden">
                 {c.items.map((it, i) => (
                   <li key={i} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                     <span className="flex min-w-0 flex-col"><span className="truncate">{it.product_id ? <Link href={`/dashboard/products/${it.product_id}`} className="hover:underline">{it.name}</Link> : it.name}</span><Mono className="text-[11px] text-muted-foreground">× {it.quantity}</Mono></span>

@@ -102,7 +102,7 @@ function Balances() {
       ) : query.error || !query.data ? (
         <ErrorState error={query.error} onRetry={() => void query.refetch()} />
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden">
           {query.data.balances.map((b) => (
             <BalanceRow key={b.currency} b={b} />
           ))}
@@ -242,11 +242,11 @@ function Transactions() {
             <FilterSelect label="النوع" value={filters.type ?? ""} onChange={(v) => set({ type: (v || null) as (typeof TRANSACTION_TYPES)[number] | null })} options={TRANSACTION_TYPES.map((t) => ({ value: t, label: TRANSACTION_TYPE_LABELS[t] }))} testId="tx-type" />
             <label className="flex flex-col gap-1 text-xs text-muted-foreground md:flex-row md:items-center md:gap-1.5">
               من
-              <input type="date" dir="ltr" value={filters.from} max={filters.to || undefined} onChange={(e) => set({ from: e.target.value || null })} className="h-11 rounded-lg border border-input bg-background px-2 font-mono text-sm text-foreground md:h-8" aria-label="من تاريخ" data-testid="tx-from" />
+              <input type="date" dir="ltr" value={filters.from} max={filters.to || undefined} onChange={(e) => set({ from: e.target.value || null })} className="h-11 rounded-lg border border-input bg-card px-2 font-mono text-sm text-foreground md:h-8" aria-label="من تاريخ" data-testid="tx-from" />
             </label>
             <label className="flex flex-col gap-1 text-xs text-muted-foreground md:flex-row md:items-center md:gap-1.5">
               إلى
-              <input type="date" dir="ltr" value={filters.to} min={filters.from || undefined} onChange={(e) => set({ to: e.target.value || null })} className="h-11 rounded-lg border border-input bg-background px-2 font-mono text-sm text-foreground md:h-8" aria-label="إلى تاريخ" data-testid="tx-to" />
+              <input type="date" dir="ltr" value={filters.to} min={filters.from || undefined} onChange={(e) => set({ to: e.target.value || null })} className="h-11 rounded-lg border border-input bg-card px-2 font-mono text-sm text-foreground md:h-8" aria-label="إلى تاريخ" data-testid="tx-to" />
             </label>
           </FilterBar>
         }

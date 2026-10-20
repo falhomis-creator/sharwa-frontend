@@ -244,7 +244,7 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
                 </Button>
               )
             ) : (
-              <Button ref={addButton} className="h-12 w-full text-base" onClick={(e) => add(e.currentTarget)} disabled={bundleBlocked} data-testid="add-to-cart">
+              <Button ref={addButton} variant="cta" className="h-12 w-full text-base" onClick={(e) => add(e.currentTarget)} disabled={bundleBlocked} data-testid="add-to-cart">
                 أضف إلى السلة
               </Button>
             )}
@@ -284,7 +284,7 @@ export function BuyBox({ product, compactTitle = false }: { product: ProductDeta
           data-testid="sticky-add"
         >
           <Money value={price} className="text-base font-semibold" />
-          <Button className="h-11 flex-1" tabIndex={offscreen ? 0 : -1} onClick={(e) => add(e.currentTarget)}>
+          <Button variant="cta" className="h-11 flex-1" tabIndex={offscreen ? 0 : -1} onClick={(e) => add(e.currentTarget)}>
             أضف إلى السلة
           </Button>
         </div>
@@ -366,7 +366,7 @@ function BackInStock({ productId, onDone }: { productId: number; onDone: () => v
   const [busy, setBusy] = useState(false);
   return (
     <form
-      className="store-frame space-y-2 rounded-lg border-border p-4"
+      className="store-frame space-y-2 rounded-xl border-border p-4 shadow-card bg-card"
       onSubmit={async (e) => {
         e.preventDefault();
         setBusy(true);

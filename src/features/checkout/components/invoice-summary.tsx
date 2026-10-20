@@ -46,7 +46,7 @@ export function InvoiceLines({ invoice, recomputing }: { invoice: Invoice; recom
         <Row label="الإجمالي" value={invoice.display_total} strong />
       </div>
       {invoice.display_upfront_required ? (
-        <div className="store-frame space-y-1.5 rounded-lg border-border p-3">
+        <div className="store-frame space-y-1.5 rounded-xl border-border p-3 shadow-card bg-card">
           <Row label="المطلوب الآن (العربون)" value={invoice.display_upfront_required} strong />
           <Row label="عند الاستلام" value={invoice.display_amount_on_delivery} strong />
         </div>
@@ -59,7 +59,7 @@ export function InvoiceLines({ invoice, recomputing }: { invoice: Invoice; recom
 export function MobileInvoiceBar({ invoice, recomputing, children }: { invoice: Invoice | undefined; recomputing: boolean; children?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="store-frame rounded-lg border-border md:hidden" data-testid="invoice-mobile">
+    <div className="store-frame rounded-xl border-border md:hidden shadow-card bg-card" data-testid="invoice-mobile">
       <button type="button" aria-expanded={open} onClick={() => setOpen((v) => !v)} className="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-sm">
         <span className="flex items-center gap-1.5 font-medium">
           ملخص الطلب

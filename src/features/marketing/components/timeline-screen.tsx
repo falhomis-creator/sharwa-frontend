@@ -78,7 +78,7 @@ function Inner() {
       {events.data && rows.length === 0 ? <EmptyState title="لا أحداث على الجدول" description="أضف المواسم والمناسبات القادمة لتخطيط العروض والحملات حولها." action={<Button type="button" className="h-11 lg:h-9" onClick={() => void setUrl({ new: "1" })}>حدث جديد</Button>} /> : null}
       {events.data && rows.length > 0 ? (
         <>
-          <ol className="hidden flex-col divide-y divide-border rounded-lg border border-border md:flex" aria-label="الأشهر" data-testid="timeline-months">
+          <ol className="hidden flex-col divide-y divide-border/60 surface-card md:flex overflow-hidden" aria-label="الأشهر" data-testid="timeline-months">
             {months.map((m) => (
               <MonthRow key={m} month={m} events={rows} today={today} onOpen={(id) => void setUrl({ event: id, new: null })} />
             ))}
@@ -87,7 +87,7 @@ function Inner() {
             {months.filter((m) => rows.some((e) => monthKey(e.start_date) <= m && monthKey(e.end_date) >= m)).map((m) => (
               <li key={m} className="flex flex-col gap-1">
                 <h3 className="text-xs font-medium text-muted-foreground">{monthLabel(m)}</h3>
-                <ul className="divide-y divide-border rounded-lg border border-border">
+                <ul className="divide-y divide-border/60 surface-card overflow-hidden">
                   {rows.filter((e) => monthKey(e.start_date) <= m && monthKey(e.end_date) >= m).sort((a, b) => a.start_date.localeCompare(b.start_date)).map((e) => (
                     <li key={e.id}>
                       <button type="button" onClick={() => void setUrl({ event: e.id, new: null })} className="flex min-h-12 w-full items-center gap-3 px-3 py-2 text-start" style={{ borderInlineStartWidth: 2, borderInlineStartColor: EVENT_COLOR_HEX[e.color] }}>

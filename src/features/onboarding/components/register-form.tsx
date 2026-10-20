@@ -282,7 +282,7 @@ export function RegisterForm({ initialStoreName, baseDomain }: { initialStoreNam
             <input id="agree_terms" type="checkbox" className="peer sr-only" {...register("agree_terms")} />
             <span
               aria-hidden
-              className="flex size-5 shrink-0 items-center justify-center rounded-[5px] border border-input text-background transition-colors peer-checked:border-foreground peer-checked:bg-foreground peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50 peer-aria-invalid:border-destructive [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100"
+              className="flex size-5 shrink-0 items-center justify-center rounded-[5px] border border-input text-background transition-colors peer-checked:border-primary peer-checked:bg-primary peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50 peer-aria-invalid:border-destructive [&>svg]:opacity-0 peer-checked:[&>svg]:opacity-100"
             >
               <Check className="size-3.5" strokeWidth={3} />
             </span>
@@ -294,7 +294,7 @@ export function RegisterForm({ initialStoreName, baseDomain }: { initialStoreNam
         <FieldError message={errors.agree_terms?.message} />
       </div>
 
-      <div className="sticky bottom-0 -mx-4 border-t border-border bg-background px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:p-0">
+      <div className="sticky bottom-0 -mx-4 border-t border-border bg-card px-4 py-3 sm:static sm:mx-0 sm:border-0 sm:p-0">
         <Button type="submit" size="lg" className="h-11 w-full" disabled={!fieldsValid || isSubmitting}>
           {isSubmitting ? copy.submitting : copy.submit}
         </Button>
@@ -401,7 +401,7 @@ function CategoryChips({ control }: { control: Control<RegistrationDraft, unknow
                     className={cn(
                       "inline-flex h-11 items-center rounded-full border px-4 text-sm transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9",
                       selected
-                        ? "border-foreground bg-foreground text-background"
+                        ? "border-primary bg-primary text-primary-foreground"
                         : "border-border text-foreground hover:bg-muted",
                     )}
                   >

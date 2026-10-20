@@ -64,7 +64,7 @@ export function AuctionPanel({ productId, onBuyNow }: { productId: number; onBuy
   const sniping = !ended && !openEnded && left <= a.anti_sniping_seconds * 1000;
 
   return (
-    <div className="store-frame space-y-4 rounded-lg border-border p-4" data-testid="auction-panel">
+    <div className="store-frame space-y-4 rounded-xl border-border p-4 shadow-card bg-card" data-testid="auction-panel">
       <dl className="grid grid-cols-2 gap-3 text-sm">
         <div>
           <dt className="text-muted-foreground">المزايدة الحالية</dt>
@@ -103,7 +103,7 @@ export function AuctionPanel({ productId, onBuyNow }: { productId: number; onBuy
         </div>
       ) : (
         <div className="space-y-2">
-          <Button className="h-12 w-full text-base" onClick={() => setBidOpen(true)} data-testid="auction-bid">
+          <Button variant="cta" className="h-12 w-full text-base" onClick={() => setBidOpen(true)} data-testid="auction-bid">
             زايد بـ <Money value={a.display_next_bid} />
           </Button>
           {a.display_buy_now ? (

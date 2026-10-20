@@ -4,14 +4,22 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { parseAsBoolean, useQueryState } from "nuqs";
-import { Download, MoreHorizontal, Plus, Upload, Zap } from "lucide-react";
+import { ChevronDown, Download, LayoutTemplate, MoreHorizontal, Plus, Upload, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/shared/page-header";
 import { Mono } from "@/components/shared/mono";
 import { useAccess } from "@/features/dashboard-shell/components/session-context";
-import { downloadProductsCsv } from "@/features/products/api/products";
+import { downloadProductsCsv, useTemplates } from "@/features/products/api/products";
+import { productFromTemplateHref } from "@/features/products/components/editor/prefill";
 import { useProductFilters } from "@/features/products/hooks/use-product-filters";
 import { useCatalogAccess } from "@/features/products/hooks/use-catalog-access";
 import { ProductsTable } from "@/features/products/components/products-table";
@@ -32,6 +40,7 @@ export function ProductsScreen() {
   const { canFeature } = useAccess();
   const { filters } = useProductFilters();
   const [quick, setQuick] = useQueryState("quick", parseAsBoolean.withDefault(false).withOptions({ history: "replace" }));
+  const templates = useTemplates({ enabled: access.canManage }).data ?? [];
 
   useEffect(() => {
     if (!access.canManage) return;
@@ -80,13 +89,43 @@ export function ProductsScreen() {
                 <Zap className="size-4" aria-hidden />
                 إضافة سريعة <Mono className="hidden text-[11px] opacity-70 lg:inline">Q</Mono>
               </Button>
-              <Link
-                href="/dashboard/products/new"
-                className="inline-flex h-11 items-center gap-1.5 rounded-lg border border-border px-3 text-sm font-medium hover:bg-muted lg:h-9"
-              >
-                <Plus className="size-4" aria-hidden />
-                منتج جديد <Mono className="hidden text-[11px] text-muted-foreground lg:inline">N</Mono>
-              </Link>
+              {/* «منتج جديد» + a template picker: start from a preset instead of a blank form. */}
+              <div className="inline-flex rounded-lg border border-border bg-card shadow-xs">
+                <Link
+                  href="/dashboard/products/new"
+                  className="inline-flex h-11 items-center gap-1.5 rounded-s-lg px-3 text-sm font-medium hover:bg-accent hover:text-accent-foreground lg:h-9"
+                >
+                  <Plus className="size-4" aria-hidden />
+                  منتج جديد <Mono className="hidden text-[11px] text-muted-foreground lg:inline">N</Mono>
+                </Link>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    aria-label="إنشاء منتج من قالب"
+                    data-testid="new-from-template"
+                    className="inline-flex h-11 w-10 items-center justify-center rounded-e-lg border-s border-border hover:bg-accent hover:text-accent-foreground lg:h-9 lg:w-8"
+                  >
+                    <ChevronDown className="size-4" aria-hidden />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-60">
+                    <DropdownMenuGroup>
+                    <DropdownMenuLabel>ابدأ من قالب</DropdownMenuLabel>
+                    {templates.length === 0 ? (
+                      <DropdownMenuItem onClick={() => router.push("/dashboard/products/templates")}>
+                        <LayoutTemplate aria-hidden /> لا قوالب بعد — أنشئ قالباً
+                      </DropdownMenuItem>
+                    ) : (
+                      templates.map((t) => (
+                        <DropdownMenuItem key={t.id} onClick={() => router.push(productFromTemplateHref(t.id))}>
+                          <LayoutTemplate aria-hidden />
+                          <span className="min-w-0 flex-1 truncate">{t.name}</span>
+                          <Mono className="text-[11px] text-muted-foreground">{Object.keys(t.fields).length}</Mono>
+                        </DropdownMenuItem>
+                      ))
+                    )}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger
                   aria-label="المزيد"

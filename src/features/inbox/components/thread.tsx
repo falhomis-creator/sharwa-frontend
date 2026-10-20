@@ -230,7 +230,7 @@ function MessageList({
             ref.current?.scrollTo({ top: ref.current.scrollHeight, behavior: "smooth" });
             setFresh(0);
           }}
-          className="absolute inset-x-0 bottom-2 mx-auto h-11 w-fit rounded-full border border-border bg-background px-4 text-sm shadow-sm lg:h-8"
+          className="absolute inset-x-0 bottom-2 mx-auto h-11 w-fit rounded-full border border-border bg-card px-4 text-sm shadow-sm lg:h-8"
           data-testid="new-messages"
         >
           رسائل جديدة <Mono>{fresh}</Mono>
@@ -272,7 +272,7 @@ function MessageBubble({ m, onResend, onZoom }: { m: Message; onResend: (m: Mess
   return (
     <li className={cn("flex max-w-[85%] flex-col gap-1 md:max-w-[70%]", out ? "self-end items-end" : "self-start items-start")} data-testid="message" data-direction={m.direction} data-id={m.id}>
       {/* FR-27.05: inbound = 1px border; outbound = `muted` background — never brand colours. */}
-      <div className={cn("flex flex-col gap-2 rounded-lg px-3 py-2 text-sm", out ? "bg-muted" : "border border-border bg-background")}>
+      <div className={cn("flex flex-col gap-2 rounded-lg px-3 py-2 text-sm", out ? "bg-muted" : "border border-border bg-card")}>
         {m.media.map((media) =>
           media.type === "image" ? (
             <MessageImage key={media.url} url={media.url} onZoom={onZoom} />
@@ -283,7 +283,7 @@ function MessageBubble({ m, onResend, onZoom }: { m: Message; onResend: (m: Mess
           ),
         )}
         {m.product ? (
-          <div className="flex flex-col rounded-md border border-border bg-background px-2 py-1.5" data-testid="product-card">
+          <div className="flex flex-col rounded-md border border-border bg-card px-2 py-1.5" data-testid="product-card">
             <span className="text-xs text-muted-foreground">بطاقة منتج</span>
             <span className="font-medium">{m.product.name}</span>
             <Mono className="text-xs">{m.product.display_price}</Mono>

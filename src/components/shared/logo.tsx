@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
  *
  * That is the real logo — there is no logo image file in either repository.
  *
- * The name inherits its color so one lockup can sit on the cream ground and
+ * The name inherits its color so one lockup can sit on the light ground and
  * on the hero video; the header owns that choice. The full stop keeps the
  * accent green, one step lighter over footage, via `dotClassName`.
  */

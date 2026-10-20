@@ -77,7 +77,7 @@ function PendingTab({ query }: { query: ReturnType<typeof usePendingOrders> }) {
   if (!rows.length) return <EmptyState title="لا طلبات بانتظار بوليصة" description="كل الطلبات المفتوحة لها بوليصة." />;
   return (
     <>
-      <ul className="flex flex-col divide-y divide-border rounded-lg border border-border" data-testid="pending-orders">
+      <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden" data-testid="pending-orders">
         {rows.map((o) => (
           <li key={o.order_id} className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:gap-6" data-testid="pending-order">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -160,7 +160,7 @@ function IssueSheet({ order, onClose }: { order: PendingOrder | null; onClose: (
             <legend className="pb-1.5 text-sm font-medium">منطقة الشحن</legend>
             {zones.isLoading ? <Skeleton className="h-24" /> : null}
             {zones.data?.map((z) => (
-              <label key={z.code} className={cn("flex min-h-11 cursor-pointer items-center gap-3 rounded-md border border-border px-3 lg:min-h-9", zone === z.code && "border-foreground")}>
+              <label key={z.code} className={cn("flex min-h-11 cursor-pointer items-center gap-3 rounded-md border border-border px-3 lg:min-h-9", zone === z.code && "border-primary")}>
                 <input type="radio" name="zone_code" value={z.code} checked={zone === z.code} onChange={() => setZone(z.code)} className="size-4 accent-foreground" data-testid={`zone-${z.code}`} />
                 <span className="flex-1">{z.name}</span>
                 <Mono className="text-xs text-muted-foreground">{z.code}</Mono>

@@ -51,7 +51,7 @@ export function ShipmentsScreen() {
               role="tab"
               aria-selected={tab === t}
               onClick={() => void setTab(t)}
-              className={cn("flex h-12 items-center gap-1.5 whitespace-nowrap px-3 text-sm", tab === t ? "border-b-2 border-foreground text-foreground" : "text-muted-foreground")}
+              className={cn("flex h-12 items-center gap-1.5 whitespace-nowrap px-3 text-sm", tab === t ? "border-b-2 border-cta font-medium text-primary" : "text-muted-foreground")}
               data-testid={`status-tab-${t}`}
             >
               {TAB_LABELS[t]}
@@ -78,7 +78,7 @@ export function ShipmentsScreen() {
           لا شحنات في هذه الحالة.
         </p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {list.data.data.results.map((s) => (
             <li key={s.id}>
               <Link href={`/agent/shipments/${s.id}`} className="flex min-h-16 flex-col gap-1 p-3" data-testid="agent-shipment">

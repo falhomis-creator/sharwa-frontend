@@ -56,7 +56,7 @@ export function OverviewScreen() {
 
       <section aria-labelledby="queues-h" className="flex flex-col gap-3">
         <h2 id="queues-h" className="text-sm font-medium">بانتظار قرار</h2>
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border text-sm" data-testid="overview-queues">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card text-sm overflow-hidden" data-testid="overview-queues">
           <Queue href="/sharwa-pay/topups?status=pending" label="طلبات شحن شروة باي قيد المراجعة" count={d?.pending_topups} />
           <Queue href="/sharwa-pay/withdrawals?status=pending" label="طلبات سحب بانتظار التنفيذ" count={d?.pending_withdrawals} />
           <Queue href="/webhook-events?status=pending" label="أحداث Webhook معلّقة" count={d?.pending_webhook_events} />

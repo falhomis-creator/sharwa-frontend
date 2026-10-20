@@ -94,7 +94,7 @@ function BadgeDialog({ badge, onClose }: { badge: Badge | null; onClose: () => v
             hint={lowContrast ? undefined : "يُعرض النص أبيض فوقه."}
           >
             <div className="flex items-center gap-2">
-              <input type="color" value={valid ? color : BADGE_DEFAULT_COLOR} onChange={(e) => setColor(e.target.value)} aria-label="منتقي اللون" className="h-11 w-14 shrink-0 cursor-pointer rounded-md border border-input bg-background p-1 md:h-8" />
+              <input type="color" value={valid ? color : BADGE_DEFAULT_COLOR} onChange={(e) => setColor(e.target.value)} aria-label="منتقي اللون" className="h-11 w-14 shrink-0 cursor-pointer rounded-md border border-input bg-card p-1 md:h-8" />
               <input id="badge-color" value={color} dir="ltr" onChange={(e) => setColor(e.target.value.trim())} className={`${inputClass} font-mono`} aria-invalid={!valid} />
             </div>
           </Field>
@@ -154,7 +154,7 @@ export function BadgesTab({ canManage }: { canManage: boolean }) {
         {badges.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">لا شارات بعد — أنشئ «حصري» أو «الأكثر طلباً» لتمييز منتجات بعينها.</p>
         ) : (
-          <ul className="rounded-lg border border-border">
+          <ul className="surface-card">
             {badges.map((b) => (
               <li key={b.id} className="flex flex-wrap items-center gap-3 border-b border-border p-3 last:border-0" data-testid="badge-row">
                 <CardPreview name={b.name} color={b.color} compact />
@@ -189,7 +189,7 @@ export function BadgesTab({ canManage }: { canManage: boolean }) {
         <h2 id="dynamic-badges" className="text-sm font-medium">
           شارات تلقائية <span className="font-normal text-muted-foreground">· للقراءة فقط</span>
         </h2>
-        <ul className="rounded-lg border border-border">
+        <ul className="surface-card">
           {DYNAMIC_BADGES.map((b) => (
             <li key={b.key} className="flex items-center gap-3 border-b border-border p-3 last:border-0" data-testid="dynamic-badge">
               <BadgeChip name={b.name} color={b.color} />

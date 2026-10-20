@@ -20,11 +20,19 @@ interface ShellStore {
    * tall. The active group is resolved by the sidebar, not stored here.
    */
   expandedGroups: string[];
+  /**
+   * Keys of groups the merchant has explicitly collapsed. The active group opens on its own,
+   * so without this a click on its chevron could never close it (the «المنتجات» bug). Not
+   * persisted: after a reload the screen's own group opens again, as the default promises.
+   */
+  collapsedGroups: string[];
   drawerOpen: boolean;
   shortcutsOpen: boolean;
   toggleSidebar: () => void;
   setSidebar: (state: SidebarState) => void;
-  toggleGroup: (key: string) => void;
+  /** Flip a group from the state it is SHOWN in (`open`), not the stored one — the active
+   * group is open without being in `expandedGroups`. Each group is independent. */
+  toggleGroup: (key: string, open: boolean) => void;
   setDrawer: (open: boolean) => void;
   setShortcuts: (open: boolean) => void;
 }
@@ -34,16 +42,19 @@ export const useShellStore = create<ShellStore>()(
     (set) => ({
       sidebar: "expanded",
       expandedGroups: [],
+      collapsedGroups: [],
       drawerOpen: false,
       shortcutsOpen: false,
       toggleSidebar: () => set((s) => ({ sidebar: s.sidebar === "expanded" ? "rail" : "expanded" })),
       setSidebar: (sidebar) => set({ sidebar }),
-      toggleGroup: (key) =>
-        set((s) => ({
-          expandedGroups: s.expandedGroups.includes(key)
-            ? s.expandedGroups.filter((k) => k !== key)
-            : [...s.expandedGroups, key],
-        })),
+      toggleGroup: (key, open) =>
+        set((s) => {
+          const expanded = s.expandedGroups.filter((k) => k !== key);
+          const collapsed = s.collapsedGroups.filter((k) => k !== key);
+          return open
+            ? { expandedGroups: expanded, collapsedGroups: [...collapsed, key] }
+            : { expandedGroups: [...expanded, key], collapsedGroups: collapsed };
+        }),
       setDrawer: (drawerOpen) => set({ drawerOpen }),
       setShortcuts: (shortcutsOpen) => set({ shortcutsOpen }),
     }),

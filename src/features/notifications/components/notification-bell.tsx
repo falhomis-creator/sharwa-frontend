@@ -115,7 +115,7 @@ export function NotificationBell() {
         {unread > 0 ? (
           <span className="absolute -top-0.5 end-0 flex items-center gap-0.5 lg:-top-1 lg:-end-1.5" aria-hidden data-testid="bell-count">
             {summary.data?.has_critical ? <span className="size-1.5 rounded-full bg-destructive" data-testid="bell-critical" /> : null}
-            <Mono className="rounded-sm border border-border bg-background px-0.5 text-[10px] leading-3.5 text-foreground">{unread > 99 ? "99+" : unread}</Mono>
+            <Mono className="rounded-sm border border-border bg-card px-0.5 text-[10px] leading-3.5 text-foreground">{unread > 99 ? "99+" : unread}</Mono>
           </span>
         ) : null}
       </button>
@@ -283,7 +283,7 @@ function Panel({ unavailable, onNavigate }: { unavailable: boolean; onNavigate: 
                           </time>
                         </span>
                       </span>
-                      {g.unread ? <span aria-label="غير مقروء" className="mt-1.5 size-1.5 shrink-0 rounded-full bg-foreground" /> : null}
+                      {g.unread ? <span aria-label="غير مقروء" className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" /> : null}
                     </button>
                     {g.items.length > 1 ? (
                       <button

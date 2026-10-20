@@ -35,7 +35,7 @@ function Balances({ w }: { w: Wallet }) {
     <section aria-label="الأرصدة" className="flex flex-col gap-2">
       <h2 className="text-sm text-muted-foreground">الأرصدة</h2>
       {/* Four rows, always — zero is zero; never a converted «total» (FR-40.03). */}
-      <ul className="divide-y divide-border rounded-lg border border-border" data-testid="balances">
+      <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="balances">
         {w.balances.map((b) => (
           <li key={b.currency} className="flex items-center justify-between gap-3 px-4 py-3" data-testid="balance-row" data-currency={b.currency}>
             <span className="text-sm text-muted-foreground">{CURRENCY_LABELS[b.currency]}</span>
@@ -141,7 +141,7 @@ function TxList({ rows, loading }: { rows: Transaction[] | undefined; loading: b
   if (loading) return <BalancesSkeleton />;
   if (!rows?.length) return <p className="rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">لا حركات بعد.</p>;
   return (
-    <ul className="divide-y divide-border rounded-lg border border-border" data-testid="tx-list">
+    <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="tx-list">
       {rows.map((t) => (
         <TxRow key={t.id} t={t} />
       ))}
@@ -218,7 +218,7 @@ function RequestsBody() {
         {topups.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">لا طلبات شحن.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden">
             {topups.map((t) => (
               <li key={t.id} className="flex flex-col gap-1 px-4 py-3" data-testid="topup-row" data-status={t.status}>
                 <span className="flex items-center justify-between gap-2">
@@ -247,7 +247,7 @@ function RequestsBody() {
         {withdrawals.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">لا طلبات سحب.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden">
             {withdrawals.map((w) => (
               <li key={w.id} className="flex flex-col gap-1 px-4 py-3" data-testid="withdrawal-row" data-status={w.status}>
                 <span className="flex items-center justify-between gap-2">

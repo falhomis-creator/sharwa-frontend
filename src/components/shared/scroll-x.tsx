@@ -54,7 +54,7 @@ export function ScrollX({
   }, [measure]);
 
   const chip = cn(
-    "pointer-events-none absolute z-20 flex size-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground",
+    "pointer-events-none absolute z-20 flex size-6 items-center justify-center rounded-full border border-border bg-card text-muted-foreground",
     cueAlign === "center" ? "top-1/2 -translate-y-1/2" : "top-1.5",
   );
 

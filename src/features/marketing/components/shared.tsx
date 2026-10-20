@@ -89,7 +89,7 @@ export function ProductPicker({ id, value, onChange, error, label = "المنت�
   return (
     <Field label={label} htmlFor={id} error={error} required={required} hint={hint}>
       {selectedId ? (
-        <div className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-border px-3 py-1.5 lg:min-h-9" data-testid={`${id}-selected`}>
+        <div className="flex min-h-11 items-center justify-between gap-3 surface-card px-3 py-1.5 lg:min-h-9" data-testid={`${id}-selected`}>
           <span className="flex min-w-0 flex-col">
             {selected.data ? <span className="truncate text-sm">{selected.data.name}</span> : selected.isLoading ? <Skeleton className="h-4 w-32" /> : <span className="text-sm text-muted-foreground">منتج #{selectedId}</span>}
             {selected.data ? <Mono className="text-[11px] text-muted-foreground">{selected.data.sku}</Mono> : null}
@@ -102,7 +102,7 @@ export function ProductPicker({ id, value, onChange, error, label = "المنت�
         <div className="flex flex-col gap-1.5">
           <input id={id} value={q} onChange={(e) => setQ(e.target.value)} placeholder="ابحث باسم المنتج أو SKU" className={inputClass} aria-invalid={!!error} aria-controls={listId} autoComplete="off" data-testid={id} />
           {q.trim() ? (
-            <ul id={listId} role="listbox" className="divide-y divide-border rounded-lg border border-border">
+            <ul id={listId} role="listbox" className="divide-y divide-border/60 surface-card overflow-hidden">
               {results.isLoading ? (
                 <li className="px-3 py-2"><Skeleton className="h-4 w-40" /></li>
               ) : results.data && results.data.results.length > 0 ? (

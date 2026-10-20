@@ -37,7 +37,7 @@ export function AnnouncementPanel() {
 
   return (
     <div className="flex flex-col gap-5" data-testid="announcement-panel">
-      <label className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-border px-3 text-sm">
+      <label className="flex min-h-11 items-center justify-between gap-3 surface-card px-3 text-sm">
         <span className="flex flex-col">
           تفعيل الشريط
           <span className="text-xs text-muted-foreground">يظهر أعلى الصفحات المختارة أدناه.</span>
@@ -88,7 +88,7 @@ export function AnnouncementPanel() {
           أماكن الظهور
         </h3>
         <p className="text-xs text-muted-foreground">تنقّل داخل المعاينة لترى الشريط في كل صفحة.</p>
-        <div className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <div className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {PLACEMENTS.map((p) => (
             <label key={p.key} className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 text-sm md:min-h-10">
               {p.label}

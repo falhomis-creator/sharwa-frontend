@@ -86,7 +86,7 @@ function SettingsForm({ settings }: { settings: AbandonedSettings }) {
       <form onSubmit={onSubmit} noValidate className="flex max-w-2xl flex-col gap-5">
         <Controller control={control} name="is_enabled" render={({ field }) => <ToggleRow id="is_enabled" label="تفعيل تذكيرات السلات المتروكة" description="عند الإيقاف تبقى السلات مرصودة في القائمة دون إرسال." checked={field.value} onCheckedChange={field.onChange} testId="is_enabled" />} />
 
-        <fieldset className="flex flex-col gap-4 rounded-lg border border-border p-4" disabled={!enabled} data-testid="settings-fields">
+        <fieldset className="flex flex-col gap-4 surface-card p-5 lg:p-6" disabled={!enabled} data-testid="settings-fields">
           <legend className="px-1 text-xs text-muted-foreground">القنوات</legend>
           <Controller control={control} name="channel_whatsapp" render={({ field }) => <ToggleRow id="channel_whatsapp" label="واتساب" description="عبر رقم المتجر المربوط." checked={field.value} onCheckedChange={field.onChange} testId="channel_whatsapp" />} />
           <ToggleRow id="channel_email" label="البريد الإلكتروني" description="قريباً" checked={false} onCheckedChange={() => undefined} disabled testId="channel_email" />
@@ -94,14 +94,14 @@ function SettingsForm({ settings }: { settings: AbandonedSettings }) {
           <Controller control={control} name="channel_conversational_enabled" render={({ field }) => <ToggleRow id="channel_conversational_enabled" label="التذكير في المحادثة أيضاً" description="إن كانت السلة بدأت من محادثة (واتساب/تيليجرام) يُرسل التذكير في نفس المحادثة." checked={field.value} onCheckedChange={field.onChange} />} />
         </fieldset>
 
-        <fieldset className="flex flex-col gap-4 rounded-lg border border-border p-4" disabled={!enabled}>
+        <fieldset className="flex flex-col gap-4 surface-card p-5 lg:p-6" disabled={!enabled}>
           <legend className="px-1 text-xs text-muted-foreground">متى تُعدّ السلة متروكة</legend>
           <Field label="الحد الأدنى لقيمة السلة (ر.س)" htmlFor="min_cart_value" error={errors.min_cart_value?.message} hint="السلات الأقل لا تُذكَّر. 0 = الكل.">
             <input id="min_cart_value" {...register("min_cart_value")} inputMode="decimal" className={numericInputClass} dir="ltr" aria-invalid={!!errors.min_cart_value} />
           </Field>
         </fieldset>
 
-        <fieldset className="flex flex-col gap-4 rounded-lg border border-border p-4" disabled={!enabled}>
+        <fieldset className="flex flex-col gap-4 surface-card p-5 lg:p-6" disabled={!enabled}>
           <legend className="px-1 text-xs text-muted-foreground">التذكير الأول</legend>
           <Field label="بعد (ساعات)" htmlFor="reminder_1_delay_hours" error={errors.reminder_1_delay_hours?.message} required className="max-w-40">
             <input id="reminder_1_delay_hours" {...register("reminder_1_delay_hours")} inputMode="numeric" className={numericInputClass} dir="ltr" aria-invalid={!!errors.reminder_1_delay_hours} data-testid="reminder_1_delay_hours" />
@@ -111,7 +111,7 @@ function SettingsForm({ settings }: { settings: AbandonedSettings }) {
           </Field>
         </fieldset>
 
-        <fieldset className="flex flex-col gap-4 rounded-lg border border-border p-4" disabled={!enabled}>
+        <fieldset className="flex flex-col gap-4 surface-card p-5 lg:p-6" disabled={!enabled}>
           <legend className="px-1 text-xs text-muted-foreground">التذكير الثاني — مع كوبون</legend>
           <Field label="بعد (ساعات)" htmlFor="reminder_2_delay_hours" error={errors.reminder_2_delay_hours?.message} required className="max-w-40" hint="من وقت ترك السلة.">
             <input id="reminder_2_delay_hours" {...register("reminder_2_delay_hours")} inputMode="numeric" className={numericInputClass} dir="ltr" aria-invalid={!!errors.reminder_2_delay_hours} />

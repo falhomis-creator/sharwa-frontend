@@ -137,7 +137,7 @@ export function InstallPrompt({ storeName }: { storeName: string }) {
         aria-label="تثبيت المتجر"
         data-testid="install-prompt"
         onKeyDown={(e) => e.key === "Escape" && dismiss()}
-        className="store-frame fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 flex h-14 items-center gap-2 rounded-lg border-border bg-background ps-4 pe-1 text-sm motion-safe:animate-in motion-safe:fade-in md:inset-x-auto md:end-6 md:bottom-6 md:w-[26rem]"
+        className="store-frame fixed inset-x-3 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 flex h-14 items-center gap-2 rounded-lg border-border bg-card ps-4 pe-1 text-sm motion-safe:animate-in motion-safe:fade-in md:inset-x-auto md:end-6 md:bottom-6 md:w-[26rem]"
       >
         <p className="min-w-0 flex-1 truncate">أضف {storeName} إلى شاشتك الرئيسية</p>
         <button type="button" onClick={install} className="h-11 shrink-0 rounded-md px-3 font-medium store-link hover:bg-muted">

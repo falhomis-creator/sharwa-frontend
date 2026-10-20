@@ -28,7 +28,7 @@ export function TierTable({ product }: { product: ProductDetail }) {
   return (
     <div className="space-y-2" data-testid="tier-table">
       <p className="text-sm font-medium">أسعار الكميات</p>
-      <table className="store-frame w-full overflow-hidden rounded-lg border-border text-sm">
+      <table className="store-frame w-full overflow-hidden rounded-xl border-border text-sm shadow-card bg-card">
         <thead className="bg-muted text-muted-foreground">
           <tr>
             <th className="px-3 py-2 text-start font-medium">الكمية من</th>
@@ -82,7 +82,7 @@ export function FormulaQuote({ product }: { product: ProductDetail }) {
   const f = product.formula;
   if (!f) return null;
   return (
-    <div className="store-frame space-y-3 rounded-lg border-border p-4" data-testid="formula-quote">
+    <div className="store-frame space-y-3 rounded-xl border-border p-4 shadow-card bg-card" data-testid="formula-quote">
       <p className="text-sm text-muted-foreground">
         السعر = سعر الوحدة <Money value={f.display_unit_price} /> × المعامل <span className="font-mono tabular-nums">{f.coefficient}</span>
         {f.display_fixed_extra ? (
@@ -149,7 +149,7 @@ export function BundleParts({ product }: { product: ProductDetail }) {
           الحزمة غير متاحة حالياً — ينقصها «{b.unavailable_component}».
         </p>
       ) : null}
-      <ol className="store-frame divide-y divide-border rounded-lg border-border">
+      <ol className="store-frame divide-y divide-border rounded-xl border-border shadow-card bg-card">
         {b.components.map((c) => {
           const included = !c.is_optional || optional.includes(c.product_id);
           const err = missing.includes(`bundle:${c.product_id}`);
@@ -205,7 +205,7 @@ export function BundleParts({ product }: { product: ProductDetail }) {
                             set({ bundleChoices: next, missing: missing.filter((m) => m !== `bundle:${c.product_id}`) });
                           }}
                           className={cn(
-                            "store-frame min-h-11 rounded-lg border-border px-3 text-sm",
+                            "store-frame min-h-11 rounded-xl border-border px-3 text-sm shadow-card bg-card",
                             on && "bg-foreground text-background",
                             blocker && "cursor-not-allowed text-muted-foreground line-through opacity-60",
                           )}

@@ -43,7 +43,7 @@ export function ProductPicker({ productId, productName, onChange }: { productId:
         onChange={(e) => setDraft(e.target.value)}
         placeholder="ابحث باسم المنتج أو SKU"
         autoComplete="off"
-        className="h-11 w-full min-w-0 rounded-lg border border-input bg-background px-2.5 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:w-56 md:text-sm dark:bg-input/30"
+        className="h-11 w-full min-w-0 rounded-lg border border-input bg-card px-2.5 text-base outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:w-56 md:text-sm dark:bg-input/30"
         data-testid="product-search"
       />
       {q.length >= 2 ? (

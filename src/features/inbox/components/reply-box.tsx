@@ -120,7 +120,7 @@ export function ReplyBox({ conversationId, disabledReason, send }: { conversatio
           dir="auto"
           placeholder={disabled ? "الردّ غير متاح" : "اكتب ردّاً… (/ للقوالب، Shift+Enter لسطر جديد)"}
           aria-label="نص الردّ"
-          className="max-h-40 min-h-11 flex-1 resize-none rounded-lg border border-input bg-background px-2.5 py-2.5 text-base outline-none field-sizing-content focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm lg:min-h-9 lg:py-1.5"
+          className="max-h-40 min-h-11 flex-1 resize-none rounded-lg border border-input bg-card px-2.5 py-2.5 text-base outline-none field-sizing-content focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60 md:text-sm lg:min-h-9 lg:py-1.5"
           data-testid="reply-input"
         />
         <button
@@ -160,7 +160,7 @@ export function ProductPicker({ open, onOpenChange, onPick, title = "إرفاق 
           onChange={(e) => setQ(e.target.value)}
           autoFocus
           aria-label="بحث عن منتج"
-          className="h-11 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring lg:h-9"
+          className="h-11 w-full rounded-lg border border-input bg-card px-2.5 text-sm outline-none focus-visible:border-ring lg:h-9"
         />
         <ul className="max-h-72 overflow-y-auto">
           {(products.data ?? []).map((p) => (

@@ -34,7 +34,7 @@ function MarketInner({ market }: { market: Market }) {
       <PageHeader title={MARKET_LABELS[market]} description={row?.account_label ?? undefined} actions={row ? <StatusText tone={row.connected ? "success" : "muted"} label={row.connected ? "مربوط" : "غير مربوط"} /> : null} />
       <MarketplacesNav active={market} />
       {row && !canPush ? (
-        <p role="status" className="rounded-lg border border-border p-3 text-sm text-muted-foreground" data-testid="push-disabled-hint">
+        <p role="status" className="surface-card p-4 text-sm text-muted-foreground" data-testid="push-disabled-hint">
           {row.needs_reauth ? "انتهت صلاحية الربط — أعد الربط من صفحة الأسواق لتفعيل الدفع." : "السوق غير مربوط — الدفع معطّل حتى الربط."}
         </p>
       ) : null}

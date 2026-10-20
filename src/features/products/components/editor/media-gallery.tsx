@@ -46,12 +46,12 @@ function SortableImage({
     <li
       ref={setNodeRef}
       style={{ transform: transformToString(transform), transition }}
-      className={cn("group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted", isDragging && "z-10 ring-1 ring-foreground")}
+      className={cn("group relative aspect-square overflow-hidden rounded-lg border border-border bg-muted", isDragging && "z-10 ring-2 ring-primary")}
       data-testid="gallery-item"
     >
       <Image src={image.url} alt={`صورة ${index + 1}`} fill sizes="160px" unoptimized className="object-cover" />
       {index === 0 ? (
-        <span className="absolute top-1.5 end-1.5 rounded-sm border border-border bg-background px-1.5 text-[11px]">الرئيسية</span>
+        <span className="absolute top-1.5 end-1.5 rounded-sm border border-border bg-card px-1.5 text-[11px]">الرئيسية</span>
       ) : null}
       {!disabled ? (
         <>
@@ -205,7 +205,7 @@ export function MediaGallery({ product, readOnly }: { product: ProductDetail; re
         <p className="text-xs text-muted-foreground">jpg, jpeg, png, webp, gif — اسحب صورة إلى البداية لتصبح الرئيسية.</p>
       )}
       {product.image_url || product.video_url ? (
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border text-sm">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card text-sm overflow-hidden">
           {product.image_url ? (
             <li className="flex items-center gap-2 px-3 py-2">
               <Link2 className="size-4 shrink-0 text-muted-foreground" aria-hidden />

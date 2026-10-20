@@ -146,7 +146,7 @@ function BidFields({ amount, onSubmit, onDone }: { amount: string; onSubmit: (b:
           {errors.form}
         </p>
       ) : null}
-      <Button type="submit" className="h-12 w-full text-base" disabled={busy} data-testid="bid-submit">
+      <Button type="submit" variant="cta" className="h-12 w-full text-base" disabled={busy} data-testid="bid-submit">
         زايد بـ <Money value={amount} />
       </Button>
     </form>

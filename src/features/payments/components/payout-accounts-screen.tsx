@@ -83,7 +83,7 @@ function AccountsInner() {
             aria-selected={tab === t}
             onClick={() => void setParams({ tab: t })}
             data-testid={`accounts-tab-${t}`}
-            className={cn("-mb-px min-h-11 border-b-2 px-3 text-sm lg:min-h-9", tab === t ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}
+            className={cn("-mb-px min-h-11 border-b-2 px-3 text-sm lg:min-h-9", tab === t ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
           >
             {ACCOUNT_TAB_LABELS[t]}
             {query.data ? <Mono className="px-1.5 text-xs text-muted-foreground">{query.data.counts[t]}</Mono> : null}
@@ -159,7 +159,7 @@ function AccountsList({ data, type, onEdit, onDelete }: { data: PayoutAccountsRe
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => void onDragEnd(e)}>
       <SortableContext items={data.results.map((a) => a.id)} strategy={verticalListSortingStrategy}>
-        <ul className="min-w-0 rounded-lg border border-border" aria-label={ACCOUNT_TAB_LABELS[type]} data-testid="accounts-list">
+        <ul className="min-w-0 surface-card" aria-label={ACCOUNT_TAB_LABELS[type]} data-testid="accounts-list">
           {data.results.map((a) => (
             <AccountRow key={a.id} account={a} onEdit={() => onEdit(a)} onDelete={() => onDelete(a)} onToggle={(v) => toggleActive(a, v)} busy={save.isPending} />
           ))}
@@ -175,7 +175,7 @@ function AccountRow({ account, onEdit, onDelete, onToggle, busy }: { account: Pa
     <li
       ref={setNodeRef}
       style={{ transform: translateToString(transform), transition }}
-      className={cn("flex flex-wrap items-center gap-2 border-b border-border bg-background px-2 py-2 last:border-0", isDragging && "relative z-10 border border-foreground")}
+      className={cn("flex flex-wrap items-center gap-2 border-b border-border bg-card px-2 py-2 last:border-0", isDragging && "relative z-10 border border-primary ring-1 ring-primary/20")}
       data-testid="account-row"
       data-id={account.id}
       data-active={account.is_active}
@@ -211,7 +211,7 @@ function AccountRow({ account, onEdit, onDelete, onToggle, busy }: { account: Pa
 function CustomerPreview({ accounts, type }: { accounts: PayoutAccount[]; type: AccountType }) {
   const visible = accounts.filter((a) => a.is_active);
   return (
-    <aside className="flex min-w-0 flex-col gap-3 rounded-lg border border-border p-4" aria-label="كما يراها العميل" data-testid="customer-preview">
+    <aside className="flex min-w-0 flex-col gap-3 surface-card p-5 lg:p-6" aria-label="كما يراها العميل" data-testid="customer-preview">
       <div className="flex flex-col gap-0.5">
         <h2 className="text-sm font-semibold">كما يراها العميل</h2>
         <p className="text-xs text-muted-foreground">صفحة الدفع › التحويل اليدوي › {ACCOUNT_TAB_LABELS[type]}</p>

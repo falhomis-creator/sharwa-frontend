@@ -9,12 +9,26 @@
 
 /*
  * Sharwa design tokens — the ONLY place where raw color/radius values live
- * (constitution VII). Palette: zinc monochrome + 4 semantic colors used for
- * text and small dots only, never for surfaces (constitution I).
+ * (constitution VII).
  *
- * zinc-50 #FAFAFA · zinc-100 #F4F4F5 · zinc-200 #E4E4E7 · zinc-300 #D4D4D8
- * zinc-400 #A1A1AA · zinc-500 #71717A · zinc-600 #52525B · zinc-700 #3F3F46
- * zinc-800 #27272A · zinc-900 #18181B · zinc-950 #09090B
+ * Enterprise palette (constitution v3.0.0, owner mockup 2026-10-20): deep rich navy sidebar,
+ * royal blue (#0066FF) for primary actions, charts and active highlights, a cool very light
+ * gray ground and pure white cards with very soft diffused shadows.
+ *
+ * Two layers:
+ *
+ *   1. BRAND LAYER — six raw inputs (`--primary-color`, `--accent-color`, `--bg-main`, …).
+ *      This is the white-label surface: a tenant theme only ever overrides these, on the
+ *      same element they are declared on (`:root`), e.g. an injected `:root{--accent-color:…}`.
+ *   2. SEMANTIC LAYER — the shadcn/Tailwind tokens (`--primary`, `--accent`, `--sidebar`…),
+ *      DERIVED from the brand layer with `var()` / `color-mix()`. Components consume only
+ *      these, through utilities such as `bg-primary`, `bg-sidebar`, `bg-cta`, `text-accent-ink`.
+ *
+ * Contrast (WCAG AA, measured on #F5F7FA): ink 16:1 · muted text 5.1:1 · white on royal
+ * blue 4.8:1 · `--accent-ink` (blue as text) 6.3:1 · sidebar text 8.5:1, sidebar icons 5.1:1.
+ *
+ * Tailwind v4 note: there is no `tailwind.config.ts`. The mapping from these variables to
+ * utility classes is the `@theme inline` block below — that block IS the Tailwind config.
  */
 
 @theme inline {
@@ -32,6 +46,11 @@
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  /* Brand accent, solid: CTAs, count chips, the logo tile (`bg-cta text-cta-foreground`). */
+  --color-cta: var(--cta);
+  --color-cta-foreground: var(--cta-foreground);
+  /* The accent as TEXT, lifted to AA (`text-accent-ink`). */
+  --color-accent-ink: var(--accent-ink);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
@@ -50,12 +69,19 @@
   --color-chart-5: var(--chart-5);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-strong: var(--sidebar-strong);
+  --color-sidebar-icon: var(--sidebar-icon);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Soft elevation for cards, popovers and the sticky storefront header (`shadow-card`). */
+  --shadow-card: var(--elevation-card);
+  --shadow-card-hover: var(--elevation-card-hover);
+  --shadow-button: var(--elevation-button);
 
   --font-sans: var(--font-ibm-plex-arabic), ui-sans-serif, system-ui, "Segoe UI", Tahoma, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "Cascadia Mono", Consolas, monospace;
@@ -88,95 +114,155 @@
 }
 
 :root {
+  /* ---- 1. BRAND LAYER (white-label inputs) -------------------------------- */
+  /* Enterprise navy + royal blue (constitution v3.0.0 · owner mockup 2026-10-20). */
+  --primary-color: #0066ff; /* royal blue — primary buttons, active highlights */
+  --sidebar-color: #0f1e45; /* deep rich navy — the sidebar */
+  --accent-color: #0066ff; /* royal blue — charts, icon highlights, focus rings */
+  --bg-main: #f8fafc; /* slate-50 — the cool, very light gray page ground */
+  --surface-color: #ffffff; /* pure white cards, inputs, popovers */
+  --ink-color: #0f1b33; /* navy-black text (16:1 on the ground) */
+
+  /* ---- 2. SEMANTIC LAYER (derived — do not override per tenant) ----------- */
   /* surfaces */
-  --background: #ffffff;
-  --foreground: #09090b;
-  --card: #ffffff;
-  --card-foreground: #09090b;
-  --popover: #ffffff;
-  --popover-foreground: #09090b;
-  /* actions */
-  --primary: #09090b;
-  --primary-foreground: #fafafa;
-  --secondary: #f4f4f5;
-  --secondary-foreground: #09090b;
-  --muted: #f4f4f5;
-  --muted-foreground: #71717a;
-  --accent: #f4f4f5;
-  --accent-foreground: #09090b;
-  /* semantic (text + dots only) */
-  --destructive: #dc2626;
-  --destructive-foreground: #fafafa;
-  /* Text-grade semantic tones: ≥ 4.5:1 on #fff (WCAG AA) — Phase 8 Lighthouse audit
-     (#059669 3.8, #d97706 3.2, #0284c7 4.1 failed as 12–14px status text). */
+  --background: var(--bg-main);
+  --foreground: var(--ink-color);
+  --card: var(--surface-color);
+  --card-foreground: var(--ink-color);
+  --popover: var(--surface-color);
+  --popover-foreground: var(--ink-color);
+  /* actions — white on #0066FF is 4.8:1 (AA) */
+  --primary: var(--primary-color);
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: var(--ink-color);
+  --muted: #f1f5f9;
+  --muted-foreground: #5b6b82; /* 5.1:1 on the ground */
+  /* shadcn "accent" = hover/selected surfaces and the search field: a pale blue wash */
+  --accent: color-mix(in srgb, var(--accent-color) 8%, var(--surface-color));
+  --accent-foreground: var(--ink-color);
+  /* solid royal blue for the conversion CTA */
+  --cta: var(--accent-color);
+  --cta-foreground: #ffffff;
+  /* blue used as text — deepened so small text clears AA on every light surface */
+  --accent-ink: color-mix(in srgb, var(--accent-color) 82%, #000000);
+  /* semantic (text + dots only), ≥ 4.5:1 on the ground (Phase 8 audit: the 700 shades) */
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
   --success: #047857;
-  --success-foreground: #fafafa;
+  --success-foreground: #ffffff;
   --warning: #b45309;
-  --warning-foreground: #fafafa;
+  --warning-foreground: #ffffff;
   --info: #0369a1;
-  --info-foreground: #fafafa;
-  /* lines */
-  --border: #e4e4e7;
-  --input: #e4e4e7;
-  --ring: #a1a1aa;
-  /* charts: monochrome ramp */
-  --chart-1: #09090b;
-  --chart-2: #52525b;
-  --chart-3: #a1a1aa;
-  --chart-4: #d4d4d8;
-  --chart-5: #e4e4e7;
-  /* sidebar */
-  --sidebar: #fafafa;
-  --sidebar-foreground: #09090b;
-  --sidebar-primary: #09090b;
-  --sidebar-primary-foreground: #fafafa;
-  --sidebar-accent: #f4f4f5;
-  --sidebar-accent-foreground: #09090b;
-  --sidebar-border: #e4e4e7;
-  --sidebar-ring: #a1a1aa;
-  /* shape */
-  --radius: 0.5rem;
+  --info-foreground: #ffffff;
+  /* lines: clean slate-100 hairlines */
+  --border: #e8edf3;
+  --input: #dce3ec;
+  --ring: var(--accent-color);
+  /* charts: one royal-blue lead, a navy companion, then cool tints */
+  --chart-1: var(--accent-color);
+  --chart-2: #1e3a8a;
+  --chart-3: color-mix(in srgb, var(--accent-color) 55%, var(--surface-color));
+  --chart-4: color-mix(in srgb, var(--accent-color) 30%, var(--surface-color));
+  --chart-5: color-mix(in srgb, var(--sidebar-color) 25%, var(--surface-color));
+  /* sidebar: deep navy; the active item is a translucent light block, not an underline */
+  --sidebar: var(--sidebar-color);
+  --sidebar-foreground: color-mix(in srgb, #ffffff 70%, var(--sidebar-color)); /* 8.5:1 */
+  --sidebar-strong: #ffffff;
+  --sidebar-icon: #4d8dff; /* bright blue icons, 5.1:1 on the navy */
+  --sidebar-primary: color-mix(in srgb, #ffffff 12%, var(--sidebar-color));
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: color-mix(in srgb, #ffffff 7%, var(--sidebar-color));
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: color-mix(in srgb, #ffffff 9%, var(--sidebar-color));
+  --sidebar-ring: var(--sidebar-icon);
+  /* elevation: very soft, large and diffused — the card floats, it never "drops" */
+  --elevation-card:
+    0 1px 2px 0 rgb(15 23 42 / 0.03),
+    0 4px 20px 0 rgb(15 23 42 / 0.04);
+  --elevation-card-hover:
+    0 2px 4px 0 rgb(15 23 42 / 0.04),
+    0 10px 32px -4px rgb(15 23 42 / 0.08);
+  /* a faint blue lift under the primary/CTA buttons */
+  --elevation-button:
+    0 1px 2px 0 rgb(0 102 255 / 0.18),
+    0 4px 12px -2px rgb(0 102 255 / 0.28);
+  --radius: 0.75rem;
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #09090b;
-  --card-foreground: #fafafa;
-  --popover: #09090b;
-  --popover-foreground: #fafafa;
-  --primary: #fafafa;
-  --primary-foreground: #09090b;
-  --secondary: #18181b;
-  --secondary-foreground: #fafafa;
-  --muted: #18181b;
-  --muted-foreground: #a1a1aa;
-  --accent: #18181b;
-  --accent-foreground: #fafafa;
+  /* brand layer, dark palette */
+  --primary-color: #4d8dff;
+  --sidebar-color: #0a1430;
+  --accent-color: #4d8dff;
+  --bg-main: #0b1224;
+  --surface-color: #111a31;
+  --ink-color: #eef2f8;
+
+  --primary-foreground: #0a1430;
+  --secondary: #182340;
+  --secondary-foreground: var(--ink-color);
+  --muted: #182340;
+  --muted-foreground: #9aa7bd;
+  --accent: color-mix(in srgb, var(--accent-color) 14%, var(--surface-color));
+  --cta-foreground: #0a1430;
+  --accent-ink: var(--accent-color);
   --destructive: #ef4444;
-  --destructive-foreground: #09090b;
+  --destructive-foreground: #0b1224;
   --success: #10b981;
-  --success-foreground: #09090b;
+  --success-foreground: #0b1224;
   --warning: #f59e0b;
-  --warning-foreground: #09090b;
+  --warning-foreground: #0b1224;
   --info: #0ea5e9;
-  --info-foreground: #09090b;
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #52525b;
-  --chart-1: #fafafa;
-  --chart-2: #a1a1aa;
-  --chart-3: #52525b;
-  --chart-4: #3f3f46;
-  --chart-5: #27272a;
-  --sidebar: #09090b;
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #fafafa;
-  --sidebar-primary-foreground: #09090b;
-  --sidebar-accent: #18181b;
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #27272a;
-  --sidebar-ring: #52525b;
+  --info-foreground: #0b1224;
+  --border: #1f2b48;
+  --input: #2a3858;
+  --chart-2: #93b4ff;
+  --elevation-card:
+    0 1px 2px 0 rgb(0 0 0 / 0.3),
+    0 4px 20px 0 rgb(0 0 0 / 0.35);
+  --elevation-card-hover:
+    0 2px 4px 0 rgb(0 0 0 / 0.35),
+    0 10px 32px -4px rgb(0 0 0 / 0.5);
+  --elevation-button: 0 4px 12px -2px rgb(77 141 255 / 0.3);
+}
+
+/* ---- Brand panel: a navy surface whose children keep using the ordinary tokens ----------
+ * Re-scopes the semantic tokens locally, so a component written for the page ground
+ * (`text-foreground`, `text-muted-foreground`, `border-border`) reads correctly on navy
+ * without a second set of classes. Used by the registration aside. */
+@layer components {
+  .surface-brand {
+    --foreground: var(--sidebar-strong);
+    --muted-foreground: var(--sidebar-foreground);
+    --border: var(--sidebar-border);
+    --muted: var(--sidebar-accent);
+    background-color: var(--sidebar);
+    color: var(--sidebar-strong);
+  }
+
+  /* The card surface every polished panel shares: white sheet on the cool ground, faint rim,
+     soft shadow, rounded. `.surface-card-interactive` adds the hover lift. */
+  .surface-card {
+    background-color: var(--card);
+    color: var(--card-foreground);
+    /* The shadow carries the edge; the hairline is only a faint rim so the card never
+       reads as a wireframe box. */
+    border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+    border-radius: 1rem;
+    box-shadow: var(--elevation-card);
+  }
+
+  .surface-card-interactive {
+    transition:
+      box-shadow var(--duration-base) var(--ease-out-soft),
+      transform var(--duration-base) var(--ease-out-soft);
+  }
+
+  .surface-card-interactive:hover {
+    box-shadow: var(--elevation-card-hover);
+    transform: translateY(-1px);
+  }
 }
 
 @layer base {
@@ -203,7 +289,7 @@
     @apply outline-none ring-1 ring-ring ring-offset-1 ring-offset-background;
   }
   ::selection {
-    @apply bg-foreground text-background;
+    @apply bg-accent text-accent-foreground;
   }
   @media (prefers-reduced-motion: reduce) {
     html {
@@ -772,9 +858,11 @@
 }
 
 /* ===========================================================================
- * PRODUCT SURFACE (constitution I-ب) — dashboard · storefront · admin · tenant
- * guard pages. Strictly zinc: hairlines, no brand hue, no gradient, no glow,
- * no glassmorphism. None of the MARKETING classes above may be used here.
+ * PRODUCT SURFACE — dashboard · admin · tenant guard pages. Since the UI/UX
+ * Polish Phase it wears the Sharwa navy / royal-blue / cool-gray tokens defined
+ * at the top of this file; still no gradient, no glow, no glassmorphism. None of
+ * the MARKETING classes above may be used here. The storefront is painted by the
+ * merchant's own tokens (see the Storefront block below).
  * ======================================================================== */
 
 /* Indeterminate 1px progress line (M47 US-47.3.1: no fake percentages).
@@ -907,5 +995,34 @@
     background-color: color-mix(in srgb, var(--background) 82%, transparent);
     -webkit-backdrop-filter: blur(12px);
     backdrop-filter: blur(12px);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * `scrollbar-none` — scrolling stays (wheel, touch, keyboard), the bar is not drawn.
+ * Used on the navy sidebar, where the default light scrollbar breaks the surface.
+ * ------------------------------------------------------------------------ */
+/* `scrollbar-sidebar` — a thin, low-contrast scrollbar for the navy rails: scrolling stays
+ * obvious (the bar shows on hover/scroll) without the default light bar breaking the surface. */
+@utility scrollbar-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, #ffffff 22%, transparent) transparent;
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    border-radius: 9999px;
+    background-color: color-mix(in srgb, #ffffff 22%, transparent);
+  }
+}
+
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

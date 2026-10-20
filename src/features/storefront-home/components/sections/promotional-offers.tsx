@@ -18,7 +18,7 @@ export async function PromotionalOffersSection({ view, store, storeHost, timezon
     <SectionShell id={view.id} title={view.title ?? "العروض"} showOnMobile={view.showOnMobile} testId="section-promotional_offers">
       <ul className="grid gap-[var(--store-grid-gap)] md:grid-cols-3">
         {offers.map((o) => (
-          <li key={o.id} className="store-frame flex flex-col gap-2 rounded-lg border-border p-5">
+          <li key={o.id} className="store-frame flex flex-col gap-2 rounded-xl border-border p-5 shadow-card bg-card">
             <span className="text-xs font-medium text-muted-foreground">{OFFER_LABEL[o.offer_type]}</span>
             <p className="store-heading text-lg font-bold leading-snug">{o.name}</p>
             {o.description ? <p className="text-sm leading-7 text-muted-foreground">{o.description}</p> : null}

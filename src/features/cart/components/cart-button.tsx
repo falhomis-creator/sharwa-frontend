@@ -37,7 +37,7 @@ export function CartButton({ className, variant = "header" }: { className?: stri
           <span
             data-testid="cart-count"
             data-mono
-            className="absolute -top-2 -end-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground px-1 font-mono text-[10px] font-medium leading-none text-background tabular-nums"
+            className="absolute -top-2 -end-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-cta px-1 font-mono text-[10px] font-medium leading-none text-cta-foreground tabular-nums"
           >
             {count > 99 ? "99+" : count}
           </span>

@@ -102,7 +102,7 @@ function PickupsBody() {
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={list.map((p) => p.id)} strategy={verticalListSortingStrategy}>
-            <ol className="rounded-lg border border-border" aria-label="نقاط الاستلام بالترتيب" data-testid="pickups-list">
+            <ol className="surface-card" aria-label="نقاط الاستلام بالترتيب" data-testid="pickups-list">
               {list.map((p, i) => (
                 <SortablePickup key={p.id} pickup={p} index={i} count={list.length} onUp={() => step(i, -1)} onDown={() => step(i, 1)} onEdit={() => void setOpenId(String(p.id))} onDelete={() => setDeleting(p)} />
               ))}
@@ -139,7 +139,7 @@ function SortablePickup({ pickup, index, count, onUp, onDown, onEdit, onDelete }
     <li
       ref={setNodeRef}
       style={{ transform: translateToString(transform), transition }}
-      className={cn("flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-border bg-background p-2 last:border-0 motion-reduce:transition-none", isDragging && "relative z-10 border border-foreground")}
+      className={cn("flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-border bg-card p-2 last:border-0 motion-reduce:transition-none", isDragging && "relative z-10 border border-primary ring-1 ring-primary/20")}
       data-testid="pickup-row"
     >
       <button type="button" ref={setActivatorNodeRef} {...attributes} {...listeners} aria-label={`اسحب «${pickup.name}»`} className="flex size-11 shrink-0 cursor-grab items-center justify-center rounded-md text-muted-foreground hover:bg-muted lg:size-8">
@@ -214,7 +214,7 @@ function PickupSheet({ open, pickup, onOpenChange }: { open: boolean; pickup?: P
             {...register("phone", { onBlur: (e: React.FocusEvent<HTMLInputElement>) => e.target.value.trim() && setValue("phone", normalizePhone(e.target.value), { shouldValidate: true }) })}
           />
         </Field>
-        <div className="rounded-lg border border-border px-3">
+        <div className="surface-card px-3">
           <Controller control={control} name="is_active" render={({ field }) => <ToggleRow id="pickup-active" label="نشطة" description="المعطّلة لا تظهر للعميل ولا في التحويل إلى استلام." checked={field.value} onCheckedChange={field.onChange} />} />
         </div>
         <SheetActions onCancel={() => onOpenChange(false)} submitLabel={pickup ? "حفظ" : "إضافة"} pending={formState.isSubmitting} testId="pickup-submit" />

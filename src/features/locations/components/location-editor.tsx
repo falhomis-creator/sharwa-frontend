@@ -132,7 +132,7 @@ export function LocationEditor({ initial }: { initial: LocationDetail | null }) 
       className="flex max-w-3xl flex-col gap-4"
       data-testid="location-form"
     >
-      <Accordion multiple value={openSections} onValueChange={(v) => setOpenSections(v as string[])} className="divide-y divide-border rounded-lg border border-border px-4">
+      <Accordion multiple value={openSections} onValueChange={(v) => setOpenSections(v as string[])} className="divide-y divide-border/60 surface-card px-4 overflow-hidden">
         <AccordionItem value="identity">
           <AccordionTrigger className="min-h-11">الهوية</AccordionTrigger>
           <AccordionContent className="flex flex-col gap-4 pb-4">

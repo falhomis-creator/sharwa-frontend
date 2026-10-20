@@ -92,7 +92,7 @@ export function Gallery({
             </li>
           ))}
         </ul>
-        <button type="button" className="store-frame hidden w-full overflow-hidden rounded-xl border-border md:block" onClick={() => setZoom(true)} aria-label="تكبير الصورة">
+        <button type="button" className="store-frame hidden w-full overflow-hidden rounded-xl border-border md:block shadow-card bg-card" onClick={() => setZoom(true)} aria-label="تكبير الصورة">
           <ProductImage src={list[index]!.url || null} alt={list[index]!.alt} priority sizes="(min-width: 1024px) 50vw, 60vw" />
         </button>
         {list.length > 1 ? (

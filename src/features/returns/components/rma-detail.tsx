@@ -138,7 +138,7 @@ function RmaBody({ rma, variant }: { rma: Rma; variant: "sheet" | "page" }) {
         <ol className="flex flex-col" data-testid="rma-events">
           {[...rma.events].reverse().map((ev, i) => (
             <li key={`${ev.to_status}-${i}`} className="relative flex gap-3 border-s border-border pb-4 ps-4 last:pb-0">
-              <span aria-hidden className="absolute -start-[3.5px] top-1.5 size-1.5 rounded-full bg-foreground" />
+              <span aria-hidden className="absolute -start-[3.5px] top-1.5 size-1.5 rounded-full bg-primary" />
               <span className="flex min-w-0 flex-col gap-0.5 text-sm">
                 <span>{RMA_STATUS_LABELS[ev.to_status]}</span>
                 <span className="text-xs text-muted-foreground">

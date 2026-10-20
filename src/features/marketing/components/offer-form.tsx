@@ -146,7 +146,7 @@ function OfferForm({ offer }: { offer: Offer | null }) {
           </Field>
 
           {v.offer_type === "discount" ? (
-            <fieldset className="grid gap-4 rounded-lg border border-border p-4 md:grid-cols-2" data-testid="discount-fields">
+            <fieldset className="grid gap-4 surface-card p-5 lg:p-6 md:grid-cols-2" data-testid="discount-fields">
               <legend className="px-1 text-xs text-muted-foreground">الخصم</legend>
               <Field label="النوع" htmlFor="discount_type" required>
                 <NativeSelect id="discount_type" {...register("discount_type")} className="h-11 lg:h-9">
@@ -166,7 +166,7 @@ function OfferForm({ offer }: { offer: Offer | null }) {
           ) : null}
 
           {v.offer_type === "buy_x_get_y" ? (
-            <fieldset className="flex flex-col gap-4 rounded-lg border border-border p-4" data-testid="bxgy-fields">
+            <fieldset className="flex flex-col gap-4 surface-card p-5 lg:p-6" data-testid="bxgy-fields">
               <legend className="px-1 text-xs text-muted-foreground">اشترِ X</legend>
               <div className="grid gap-4 md:grid-cols-2">
                 <Field label="الكمية المشتراة" htmlFor="buy_quantity" error={errors.buy_quantity?.message} required>
@@ -237,7 +237,7 @@ function OfferForm({ offer }: { offer: Offer | null }) {
 
         <aside className="flex flex-col gap-2 lg:sticky lg:top-20 lg:self-start" aria-label="معاينة في المتجر" data-testid="offer-preview">
           <p className="text-xs text-muted-foreground">كما يظهر في واجهة المتجر</p>
-          <div className="flex flex-col gap-2 rounded-lg border border-border p-5">
+          <div className="flex flex-col gap-2 surface-card p-6">
             {/* eslint-disable-next-line @next/next/no-img-element -- blob/data URL preview */}
             {previewImage ? <img src={previewImage} alt="" className="aspect-[3/2] w-full rounded-md object-cover" /> : null}
             <span className="text-xs font-medium text-muted-foreground">{v.offer_type === "buy_x_get_y" ? "اشترِ واحصل" : OFFER_TYPE_LABELS[v.offer_type ?? "discount"]}</span>

@@ -41,7 +41,7 @@ function CustomersScreenInner() {
         }
       />
       {viewWarning ? (
-        <p role="status" className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground" data-testid="view-warning">
+        <p role="status" className="flex items-center gap-2 surface-card px-3 py-2 text-sm text-muted-foreground" data-testid="view-warning">
           <span aria-hidden className="size-1.5 rounded-full bg-warning" />
           نشاطك مرتفع اليوم — تُحتسب مشاهدات ملفات العملاء ضمن تنبيهات الحجم.
         </p>

@@ -104,7 +104,7 @@ function SupplierInner({ supplierId }: { supplierId: number }) {
         ) : rows.length === 0 ? (
           <EmptyState title="لا أوامر شراء لهذا المورد" description="أنشئ أول أمر — المورد مُعبَّأ مسبقاً." />
         ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border" data-testid="supplier-orders">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="supplier-orders">
             {rows.map((o) => (
               <li key={o.id}>
                 <Link href={`/dashboard/purchase-orders/${o.id}`} className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm hover:bg-muted">

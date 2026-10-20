@@ -42,7 +42,7 @@ export function ReceivedProgress({ received, ordered }: { received: number; orde
         استُلم <Mono className="text-foreground">{received}</Mono> من <Mono className="text-foreground">{ordered}</Mono>
       </span>
       <span aria-hidden className="h-0.5 w-full bg-border">
-        <span className="block h-0.5 bg-foreground" style={{ width: `${pct}%` }} />
+        <span className="block h-0.5 bg-primary" style={{ width: `${pct}%` }} />
       </span>
     </span>
   );
@@ -54,7 +54,7 @@ export function PoTimeline({ events, now }: { events: PoEvent[]; now: Date }) {
     <ol className="flex flex-col" data-testid="po-timeline">
       {events.map((ev) => (
         <li key={ev.id} className="relative flex gap-3 border-s border-border pb-4 ps-4 last:pb-0" data-kind={ev.kind}>
-          <span aria-hidden className="absolute -start-[3.5px] top-1.5 size-1.5 rounded-full bg-foreground" />
+          <span aria-hidden className="absolute -start-[3.5px] top-1.5 size-1.5 rounded-full bg-primary" />
           <span className="flex min-w-0 flex-col gap-0.5 text-sm">
             <span>{ev.text}</span>
             {ev.quantities?.length ? (

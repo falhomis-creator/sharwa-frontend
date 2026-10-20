@@ -59,7 +59,7 @@ export function MarketplacesNav({ active }: { active: "hub" | Market | "jobs" | 
           key={t.href}
           href={t.href}
           aria-current={key(t.href) === active ? "page" : undefined}
-          className={cn("flex h-11 shrink-0 items-center border-b-2 px-3 text-sm lg:h-9", key(t.href) === active ? "border-foreground font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}
+          className={cn("flex h-11 shrink-0 items-center border-b-2 px-3 text-sm lg:h-9", key(t.href) === active ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
         >
           {t.label}
         </Link>

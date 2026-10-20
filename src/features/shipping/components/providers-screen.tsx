@@ -305,7 +305,7 @@ function ProviderSheet({ open, provider, defaultCarrier, onOpenChange }: { open:
             </NativeSelect>
           </Field>
         ) : null}
-        <div className="divide-y divide-border rounded-lg border border-border px-3">
+        <div className="divide-y divide-border/60 surface-card px-3 overflow-hidden">
           <Controller control={control} name="accepts_hazardous" render={({ field }) => <ToggleRow id="provider-hazard" label="يقبل المواد الخطرة" description="العطور والبطاريات وما يعلَّم «خطر» في المنتج." checked={field.value} onCheckedChange={field.onChange} />} />
           <Controller control={control} name="is_active" render={({ field }) => <ToggleRow id="provider-active" label="نشط" description="غير النشط لا تُسند إليه بوالص جديدة." checked={field.value} onCheckedChange={field.onChange} />} />
         </div>

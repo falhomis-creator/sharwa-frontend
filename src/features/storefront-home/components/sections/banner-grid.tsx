@@ -17,7 +17,7 @@ export function BannerGridSection({ view }: { view: SectionView }) {
       <ul className="grid gap-[var(--store-grid-gap)] md:grid-cols-[3fr_2fr] md:grid-rows-2">
         {items.slice(0, 5).map((item, i) => {
           const body = (
-            <div className={cn("store-frame relative flex h-full overflow-hidden rounded-xl border-border", i === 0 ? "min-h-48 md:min-h-[22rem]" : "min-h-32 md:min-h-0")}>
+            <div className={cn("store-frame relative flex h-full overflow-hidden rounded-xl border-border shadow-card bg-card", i === 0 ? "min-h-48 md:min-h-[22rem]" : "min-h-32 md:min-h-0")}>
               {item.image ? (
                 <Image src={item.image} alt={item.title ?? ""} fill sizes="(min-width: 768px) 50vw, 100vw" unoptimized={!item.image.startsWith("/")} className="object-cover" />
               ) : null}

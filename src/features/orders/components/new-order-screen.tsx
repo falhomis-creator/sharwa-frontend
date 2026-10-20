@@ -204,7 +204,7 @@ export function NewOrderScreen() {
               ) : (results.data?.results.length ?? 0) === 0 ? (
                 <p className="text-sm text-muted-foreground">لا منتج يطابق</p>
               ) : (
-                <ul className="rounded-lg border border-border" data-testid="new-order-results">
+                <ul className="surface-card" data-testid="new-order-results">
                   {results.data!.results.map((p) => (
                     <li key={p.id} className="flex min-h-12 items-center gap-2 border-b border-border px-2 last:border-0">
                       <ProductThumb src={p.image} name={p.name} size={32} />
@@ -221,7 +221,7 @@ export function NewOrderScreen() {
             {lines.length === 0 ? (
               <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">{errors.items ?? "ابحث عن منتج وأضفه."}</p>
             ) : (
-              <ul className="rounded-lg border border-border">
+              <ul className="surface-card">
                 {lines.map((l, i) => (
                   <LineRow
                     key={l.key}
@@ -256,7 +256,7 @@ export function NewOrderScreen() {
             </h2>
             <div role="radiogroup" aria-label="طريقة الاستلام" className="grid grid-cols-2 gap-2">
               {(["delivery", "pickup"] as const).map((d) => (
-                <label key={d} className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border text-sm has-checked:border-foreground lg:h-9">
+                <label key={d} className="flex h-11 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border text-sm has-checked:border-primary has-checked:bg-accent lg:h-9">
                   <input type="radio" name="delivery" className="sr-only" checked={delivery === d} onChange={() => setDelivery(d)} />
                   {d === "delivery" ? "توصيل" : "استلام من فرع"}
                 </label>
@@ -279,7 +279,7 @@ export function NewOrderScreen() {
                     rows={2}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    className="min-h-16 w-full rounded-lg border border-input bg-background px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+                    className="min-h-16 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
                   />
                 </Field>
               </>

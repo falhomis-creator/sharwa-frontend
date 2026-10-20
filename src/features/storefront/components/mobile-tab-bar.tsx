@@ -37,7 +37,7 @@ export function MobileTabBar({ categories }: { categories: CategoryNode[] }) {
       <nav
         aria-label="التنقل السفلي"
         data-testid="mobile-tab-bar"
-        className="store-frame fixed inset-x-0 bottom-0 z-40 border-x-0 border-b-0 border-border bg-background pb-[env(safe-area-inset-bottom)] md:hidden"
+        className="store-frame fixed inset-x-0 bottom-0 z-40 border-x-0 border-b-0 border-border bg-card pb-[env(safe-area-inset-bottom)] shadow-card md:hidden"
       >
         <ul className="grid grid-cols-5">
           <li>
@@ -66,7 +66,7 @@ export function MobileTabBar({ categories }: { categories: CategoryNode[] }) {
               <span className="relative">
                 <HeartIcon aria-hidden className="size-5" />
                 {wishlist.length > 0 ? (
-                  <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground px-1 font-mono text-[10px] leading-none text-background tabular-nums">
+                  <span className="absolute -top-1.5 -end-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-cta px-1 font-mono text-[10px] leading-none text-cta-foreground tabular-nums">
                     {wishlist.length}
                   </span>
                 ) : null}
@@ -92,7 +92,7 @@ export function WishlistLink() {
     >
       <HeartIcon aria-hidden className="size-5" />
       {ids.length > 0 ? (
-        <span className="absolute top-1 end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-foreground px-1 font-mono text-[10px] leading-none text-background tabular-nums">
+        <span className="absolute top-1 end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-cta px-1 font-mono text-[10px] leading-none text-cta-foreground tabular-nums">
           {ids.length}
         </span>
       ) : null}

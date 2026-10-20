@@ -71,7 +71,7 @@ function AwbQueue() {
       {q.isLoading ? <Skeleton className="h-40" /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data?.results.length ? (
         <EmptyState title="لا طلبات إصدار معلّقة" />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto surface-card">
           <table className={tableClass}>
             <caption className="sr-only">طابور AWB</caption>
             <thead>
@@ -154,7 +154,7 @@ function RateCards() {
       {q.isLoading ? <Skeleton className="h-40" /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data?.length ? (
         <EmptyState title="لا لقطات تسعيرة بعد" />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto surface-card">
           <table className={tableClass}>
             <caption className="sr-only">لقطات التسعيرة</caption>
             <thead>
@@ -224,7 +224,7 @@ function SupervisorBody() {
         <>
           <section aria-label="المندوبون" className="flex flex-col gap-2">
             <h2 className="text-base font-medium">المندوبون</h2>
-            <ul className="divide-y divide-border rounded-lg border border-border">
+            <ul className="divide-y divide-border/60 surface-card overflow-hidden">
               {data.agents.map((a) => (
                 <li key={a.id} className="flex flex-col gap-2 p-4 md:flex-row md:items-center md:gap-6" data-testid="agent-row" data-agent={a.id}>
                   <span className="flex min-w-0 flex-1 flex-col">
@@ -263,7 +263,7 @@ function SupervisorBody() {
             {data.unassigned_new_orders.length === 0 ? (
               <p className="text-sm text-muted-foreground">كل الشحنات مُسنَدة.</p>
             ) : (
-              <ul className="divide-y divide-border rounded-lg border border-border">
+              <ul className="divide-y divide-border/60 surface-card overflow-hidden">
                 {data.unassigned_new_orders.map((s) => (
                   <li key={s.id} className="flex flex-col gap-2 p-4 md:flex-row md:items-center md:gap-4" data-testid="unassigned-row">
                     <Link href={`/dashboard/shipping/sharwa-ship/${s.id}`} className="hover:underline">
@@ -301,7 +301,7 @@ function SupervisorBody() {
             {data.reversals.length === 0 ? (
               <p className="text-sm text-muted-foreground">لا حركات تراجع.</p>
             ) : (
-              <ul className="divide-y divide-border rounded-lg border border-border text-sm">
+              <ul className="divide-y divide-border/60 surface-card text-sm overflow-hidden">
                 {data.reversals.map((r) => (
                   <li key={r.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2.5" data-testid="reversal-row">
                     <span className="text-warning">{CUSTODY_LABELS[r.entry_type]}</span>
@@ -401,7 +401,7 @@ function Shifts() {
       {q.isLoading ? <Skeleton className="h-40" /> : q.error ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : !q.data?.results.length ? (
         <EmptyState title="لا مناوبات بعد" />
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border">
+        <div className="overflow-x-auto surface-card">
           <table className={tableClass}>
             <caption className="sr-only">المناوبات</caption>
             <thead>

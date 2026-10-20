@@ -71,7 +71,7 @@ export function SectionsPanel({ categoryIds, compact }: { categoryIds: ReadonlyS
       {sections.length > 0 ? (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-            <ol className="flex flex-col divide-y divide-border rounded-lg border border-border" data-testid="sections-list" aria-label="ترتيب الأقسام">
+            <ol className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden" data-testid="sections-list" aria-label="ترتيب الأقسام">
               {sections.map((s, i) => (
                 <SectionRow
                   key={s.id}
@@ -119,7 +119,7 @@ function SectionRow({
       style={{ transform: translateToString(transform), transition }}
       data-testid={`section-row-${section.id}`}
       data-section-type={section.section_type}
-      className={cn("flex items-center gap-1 bg-background px-1.5 first:rounded-t-lg last:rounded-b-lg", isDragging && "relative z-10 border border-foreground")}
+      className={cn("flex items-center gap-1 bg-card px-1.5 first:rounded-t-lg last:rounded-b-lg", isDragging && "relative z-10 border border-primary ring-1 ring-primary/20")}
     >
       {compact ? null : (
         <button
@@ -186,7 +186,7 @@ function AddSectionDialog({ open, onOpenChange }: { open: boolean; onOpenChange:
           <DialogTitle>إضافة قسم</DialogTitle>
           <DialogDescription>يُضاف في آخر الصفحة؛ رتّبه بالسحب ثم انشر.</DialogDescription>
         </DialogHeader>
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {SECTION_TYPES_ORDER.map((t) => {
             const singleton = isSingleton(t);
             const disabled = singleton && exists(t);

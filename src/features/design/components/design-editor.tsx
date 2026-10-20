@@ -268,7 +268,7 @@ function Editor() {
       </div>
       {wide ? null : (
         <>
-          <div className="flex shrink-0 items-center gap-2 border-t border-border bg-background px-4 py-2" data-testid="mobile-actions">
+          <div className="flex shrink-0 items-center gap-2 border-t border-border bg-card px-4 py-2" data-testid="mobile-actions">
             <Button type="button" variant="outline" className="h-11 flex-1" onClick={() => setDrawer(true)} data-testid="open-panel">
               <SlidersHorizontal aria-hidden />
               تعديل
@@ -303,7 +303,7 @@ function DeviceButton({ active, onClick, label, testId, children }: { active: bo
       title={label}
       onClick={onClick}
       data-testid={testId}
-      className={cn("flex size-8 items-center justify-center rounded-md transition-colors", active ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted")}
+      className={cn("flex size-8 items-center justify-center rounded-md transition-colors", active ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:bg-muted")}
     >
       {children}
     </button>

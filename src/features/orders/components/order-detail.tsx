@@ -120,7 +120,7 @@ export function OrderDetailView({ orderId, variant }: { orderId: number; variant
   const main = (
     <div className="flex min-w-0 flex-col gap-6">
       <Section title={`العناصر (${o.items.length})`}>
-        <ul className="rounded-lg border border-border" data-testid="order-items">
+        <ul className="surface-card" data-testid="order-items">
           {o.items.map((it) => (
             <li key={it.id} className="flex items-center gap-3 border-b border-border p-2.5 last:border-0">
               <ProductThumb src={it.product_image_snapshot} name={it.product_name} size={40} />
@@ -184,7 +184,7 @@ export function OrderDetailView({ orderId, variant }: { orderId: number; variant
         ) : null}
         <div className="grid gap-3 md:grid-cols-2">
           {o.fulfillments.map((f) => (
-            <div key={f.id} className="flex flex-col gap-1.5 rounded-lg border border-border p-3 text-sm" data-testid="fulfillment-card">
+            <div key={f.id} className="flex flex-col gap-1.5 surface-card p-4 text-sm" data-testid="fulfillment-card">
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium">{f.location.name}</span>
                 <span className={cn("text-xs", f.status === "delivered" ? "text-success" : f.status === "cancelled" ? "text-destructive" : "text-muted-foreground")}>
@@ -255,7 +255,7 @@ export function OrderDetailView({ orderId, variant }: { orderId: number; variant
             .sort((a, b) => b.at.localeCompare(a.at))
             .map((ev) => (
               <li key={ev.id} className="relative flex gap-3 border-s border-border pb-4 ps-4 last:pb-0">
-                <span aria-hidden className="absolute -start-[3.5px] top-1.5 size-1.5 rounded-full bg-foreground" />
+                <span aria-hidden className="absolute -start-[3.5px] top-1.5 size-1.5 rounded-full bg-primary" />
                 <span className="flex min-w-0 flex-col gap-0.5 text-sm">
                   <span>{ev.text}</span>
                   <span className="text-xs text-muted-foreground">
@@ -302,7 +302,7 @@ export function OrderDetailView({ orderId, variant }: { orderId: number; variant
             ) : null
           }
         >
-          <div className="flex flex-col gap-1 rounded-lg border border-border p-3 text-sm" data-testid="gift">
+          <div className="flex flex-col gap-1 surface-card p-4 text-sm" data-testid="gift">
             <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <Gift className="size-3.5" aria-hidden /> المستلم (غير المشتري)
             </span>

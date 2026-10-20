@@ -75,7 +75,7 @@ function FeesForm({ settings }: { settings: ShippingSettings }) {
 
   const converted = settings.store_display_currency !== settings.currency;
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-border p-4 md:p-5" aria-labelledby="fees-h" data-testid="fees-section">
+    <section className="flex flex-col gap-4 surface-card p-5 lg:p-6 md:p-5" aria-labelledby="fees-h" data-testid="fees-section">
       <div className="flex flex-col gap-1">
         <h2 id="fees-h" className="text-base font-semibold">
           الرسوم العامة

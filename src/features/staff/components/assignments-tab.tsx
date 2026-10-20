@@ -56,7 +56,7 @@ export function AssignmentsTab({ staff }: { staff: StaffMember }) {
           معيَّن على {assignedCount} من {rows.length} مواقع. الدور يحدّد الصلاحيات، والدور التشغيلي يحدّد ما يراه في الموقع.
         </p>
       )}
-      <div className="rounded-lg border border-border">
+      <div className="surface-card">
         <div aria-hidden className="hidden h-10 items-center gap-3 border-b border-border px-3 text-xs font-medium text-muted-foreground md:grid md:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)_minmax(0,1fr)_auto]">
           <span>الموقع</span>
           <span>دور الصلاحيات</span>

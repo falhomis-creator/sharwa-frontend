@@ -114,7 +114,7 @@ function ReportsIndexBody() {
               <h2 id={`cat-${c.category}`} className="pt-2 text-sm font-medium text-muted-foreground">
                 {c.title}
               </h2>
-              <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+              <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
                 {c.reports.map((r) => (
                   <li key={r.code}>
                     <ReportLine row={r} />

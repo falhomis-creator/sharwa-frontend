@@ -30,7 +30,7 @@ function Inner() {
       {q.isLoading ? <Skeleton className="h-14 w-full max-w-xl" /> : null}
       {q.isError ? <ErrorState error={q.error} onRetry={() => void q.refetch()} /> : null}
       {q.data ? (
-        <div className="max-w-xl rounded-lg border border-border px-4">
+        <div className="max-w-xl surface-card px-4">
           <ToggleRow
             id="gift_is_enabled"
             label="تفعيل خيار الإهداء في الدفع"

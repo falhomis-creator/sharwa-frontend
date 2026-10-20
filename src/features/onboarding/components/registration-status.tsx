@@ -143,12 +143,12 @@ function StatusDot({ tone }: { tone: "live" | "offline" | "failed" }) {
   return (
     <span className="relative flex size-2 shrink-0" aria-hidden>
       {tone === "live" ? (
-        <span className="absolute inline-flex size-full rounded-full bg-foreground opacity-40 motion-safe:animate-ping" />
+        <span className="absolute inline-flex size-full rounded-full bg-primary opacity-40 motion-safe:animate-ping" />
       ) : null}
       <span
         className={cn(
           "relative inline-flex size-2 rounded-full",
-          tone === "live" && "bg-foreground",
+          tone === "live" && "bg-primary",
           tone === "offline" && "bg-muted-foreground",
           tone === "failed" && "bg-destructive",
         )}

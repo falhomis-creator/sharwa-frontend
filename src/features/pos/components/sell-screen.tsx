@@ -256,7 +256,7 @@ function Till({ shift }: { shift: Shift }) {
       </section>
 
       {/* 390px: the cart is a bottom sheet behind a fixed count button (§6). */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background p-3 md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card p-3 md:hidden">
         <button type="button" onClick={() => setSheet(true)} data-testid="pos-cart-open" className="flex h-12 w-full items-center gap-3 rounded-lg bg-primary px-4 text-primary-foreground">
           <ShoppingBag className="size-5" strokeWidth={1.75} aria-hidden />
           <span>السلة</span>
@@ -433,7 +433,7 @@ function CartPanel(props: {
                 <Money value={priced?.display_line_total ?? null} className={cn("text-sm", props.quoteStale && "text-muted-foreground")} />
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex items-center rounded-lg border border-border">
+                <div className="flex items-center surface-card">
                   <button type="button" aria-label="إنقاص الكمية" className="flex size-12 items-center justify-center text-muted-foreground hover:text-foreground" onClick={() => s.setQty(cartKey, l.key, l.quantity - 1)} disabled={l.quantity <= Math.max(1, l.min_quantity ?? 1)}>
                     <Minus className="size-4" aria-hidden />
                   </button>
@@ -582,7 +582,7 @@ function DiscountApproval({ message, percent, approvalId, displayTotal, onManage
     }
   }
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-border p-3 text-sm" data-testid="pos-discount-approval">
+    <div className="flex flex-col gap-2 surface-card p-4 text-sm" data-testid="pos-discount-approval">
       <p className="font-medium">{message}</p>
       {approvalId ? (
         <div className="flex items-center gap-2">

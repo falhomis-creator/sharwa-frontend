@@ -53,8 +53,8 @@ export function CodTrustBlock({ customer }: { customer: CustomerDetail }) {
       <h3 id="cod-trust-title" className="text-sm font-medium">
         ثقة الدفع عند الاستلام
       </h3>
-      <dl className="grid gap-px overflow-hidden rounded-lg border border-border bg-border sm:grid-cols-2">
-        <div className="flex flex-col gap-1 bg-background p-3" data-testid="trust-platform">
+      <dl className="grid gap-px overflow-hidden surface-card bg-border sm:grid-cols-2">
+        <div className="flex flex-col gap-1 bg-card p-3" data-testid="trust-platform">
           <dt className="text-xs text-muted-foreground">عبر المنصة</dt>
           <dd className="flex flex-col gap-0.5">
             {platform && t ? (
@@ -71,7 +71,7 @@ export function CodTrustBlock({ customer }: { customer: CustomerDetail }) {
             )}
           </dd>
         </div>
-        <div className="flex flex-col gap-1 bg-background p-3" data-testid="trust-store">
+        <div className="flex flex-col gap-1 bg-card p-3" data-testid="trust-store">
           <dt className="text-xs text-muted-foreground">في متجرك</dt>
           <dd className="flex flex-col gap-0.5">
             <span className="text-base">
@@ -84,7 +84,7 @@ export function CodTrustBlock({ customer }: { customer: CustomerDetail }) {
         </div>
       </dl>
       {local.cod_disabled ? (
-        <div className="flex flex-col gap-2 rounded-lg border border-border p-3 text-sm sm:flex-row sm:items-center sm:justify-between" data-testid="cod-disabled-banner">
+        <div className="flex flex-col gap-2 surface-card p-4 text-sm sm:flex-row sm:items-center sm:justify-between" data-testid="cod-disabled-banner">
           <p className="flex flex-col gap-0.5">
             <span className="flex items-center gap-2 font-medium text-destructive">
               <span aria-hidden className="size-1.5 rounded-full bg-destructive" />

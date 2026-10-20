@@ -15,8 +15,8 @@ import { CommandPalette } from "@/features/command-palette/command-palette";
 
 /**
  * The shell every dashboard module renders inside (M03 FR-03.01, §6):
- * sidebar 256px / 56px rail with a 1px end border · topbar 48px with a 1px bottom border ·
- * content capped at 1440px with 24px gutters · no shadows anywhere.
+ * navy sidebar 256px / 64px rail, sticky to the viewport · topbar 48px on the card surface ·
+ * content on the cream ground, capped at 1440px with 24px gutters (UI/UX Polish Phase).
  *
  * `requireSession()` runs here, so every `/dashboard/*` screen is gated in one place and a
  * missing session lands on the login screen (FR-03.08).
@@ -52,8 +52,8 @@ export default async function DashboardShellLayout({ children }: { children: Rea
         <ShellHydrator />
         <ShellShortcuts />
         <SkipLink />
-        <div className="flex min-h-dvh flex-1">
-          <div className="hidden lg:block">
+        <div className="flex min-h-dvh flex-1 bg-background">
+          <div className="sticky top-0 hidden h-dvh shrink-0 lg:block">
             <Sidebar store={identity.store} storeName={session.store_name} />
           </div>
           <div className="flex min-w-0 flex-1 flex-col">
@@ -63,7 +63,7 @@ export default async function DashboardShellLayout({ children }: { children: Rea
               protocol={identity.protocol}
               port={identity.port}
             />
-            <main id="main" className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 lg:px-6">
+            <main id="main" className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-6 lg:px-8 lg:py-8">
               {children}
             </main>
             <MobileBottomNav />

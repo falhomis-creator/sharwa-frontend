@@ -108,7 +108,7 @@ function IdentityForm({ settings }: { settings: StoreSettings }) {
             id="about_us"
             rows={4}
             {...form.register("about_us")}
-            className="min-h-24 w-full rounded-lg border border-input bg-background px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 md:text-sm dark:bg-input/30"
+            className="min-h-24 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 md:text-sm dark:bg-input/30"
           />
           <Mono className={cn("self-end text-[11px] text-muted-foreground", about.length > ABOUT_US_MAX && "text-destructive")}>
             {about.length}/{ABOUT_US_MAX}
@@ -309,12 +309,12 @@ function PoliciesForm({ settings }: { settings: StoreSettings }) {
               reg.ref(el);
               ref.current = el;
             }}
-            className="min-h-48 w-full rounded-lg border border-input bg-background px-2.5 py-2 text-base leading-relaxed md:text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 dark:bg-input/30"
+            className="min-h-48 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-base leading-relaxed md:text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 dark:bg-input/30"
           />
         </SettingBlock>
         <section className="flex flex-col gap-3 py-5" aria-label="المعاينة">
           <h3 className="text-sm font-medium">كما يراها المشتري</h3>
-          <div className="rounded-lg border border-border p-5" data-testid="policy-preview">
+          <div className="surface-card p-6" data-testid="policy-preview">
             {policy.trim() ? <RichText source={policy} /> : <p className="text-sm text-muted-foreground">لا سياسة بعد — تُخفى الصفحة من المتجر حتى تكتبها.</p>}
           </div>
         </section>
@@ -371,7 +371,7 @@ function SeoForm({ settings }: { settings: StoreSettings }) {
             id="seo_description"
             rows={3}
             {...form.register("seo_description")}
-            className="min-h-20 w-full rounded-lg border border-input bg-background px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
+            className="min-h-20 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
           />
         </SettingRow>
         <SettingRow label="الكلمات المفتاحية" description="مفصولة بفواصل." htmlFor="seo_keywords" error={e.seo_keywords?.message} counter={{ value: keywords.length, max: SEO_LIMITS.seo_keywords }}>
@@ -411,7 +411,7 @@ function SeoForm({ settings }: { settings: StoreSettings }) {
         </SettingRow>
         <section className="flex flex-col gap-3 py-5" aria-label="معاينة نتيجة البحث">
           <h3 className="text-sm font-medium">معاينة نتيجة البحث</h3>
-          <div className="flex flex-col gap-1 rounded-lg border border-border p-4" data-testid="serp-preview">
+          <div className="flex flex-col gap-1 surface-card p-5 lg:p-6" data-testid="serp-preview">
             <Mono dir="ltr" className="truncate text-xs text-muted-foreground">
               {settings.store_url}
             </Mono>
@@ -467,7 +467,7 @@ function AnnouncementForm({ settings }: { settings: StoreSettings }) {
       <SectionHeader section="announcement" indicator={<SaveIndicator section="announcement" onRetry={auto.retry} />} readOnlyReason={readOnlyReason} />
       <section className="flex flex-col gap-2 border-b border-border py-5" aria-label="المعاينة">
         <h3 className="text-sm font-medium">المعاينة بأبعاد المتجر</h3>
-        <div className="overflow-hidden rounded-lg border border-border" data-testid="announcement-preview">
+        <div className="overflow-hidden surface-card" data-testid="announcement-preview">
           {text.trim() ? (
             <AnnouncementBar text={text} background={bg} color={fg} seconds={SCROLL_SPEED_SECONDS[v.announcement_scroll_speed ?? "medium"]} className={cn(!v.enable_announcement_bar && "opacity-40")} />
           ) : (

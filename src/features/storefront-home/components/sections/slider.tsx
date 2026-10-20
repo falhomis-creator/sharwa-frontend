@@ -59,7 +59,7 @@ export function SliderSection({ view }: { view: SectionView }) {
           >
             {items.map((item, i) => (
               <li key={`${item.title}-${i}`} className="w-full shrink-0" aria-roledescription="شريحة" aria-label={`${i + 1} من ${items.length}`}>
-                <div className="store-frame relative flex min-h-44 overflow-hidden rounded-xl border-border md:min-h-72">
+                <div className="store-frame relative flex min-h-44 overflow-hidden rounded-xl border-border md:min-h-72 shadow-card bg-card">
                   {item.image ? (
                     <Image src={item.image} alt={item.title ?? ""} fill sizes="100vw" unoptimized={!item.image.startsWith("/")} className="object-cover" />
                   ) : null}

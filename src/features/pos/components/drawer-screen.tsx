@@ -84,12 +84,12 @@ function Drawer({ shift }: { shift: Shift }) {
   return (
     <div className="mx-auto grid w-full max-w-6xl gap-6 p-4 md:p-6 lg:grid-cols-[22rem_minmax(0,1fr)]" data-testid="pos-drawer">
       <div className="flex flex-col gap-6">
-        <section className="flex flex-col gap-3 rounded-lg border border-border p-4">
+        <section className="flex flex-col gap-3 surface-card p-5 lg:p-6">
           <h1 className="text-lg font-semibold">درج الكاش</h1>
           <ShiftSummary shift={shift} />
         </section>
         {open ? (
-          <section className="flex flex-col gap-3 rounded-lg border border-border p-4" aria-label="إضافة حركة">
+          <section className="flex flex-col gap-3 surface-card p-5 lg:p-6" aria-label="إضافة حركة">
             <div role="radiogroup" aria-label="نوع الحركة" className="grid grid-cols-2 gap-2">
               {(["cash_in", "cash_out"] as const).map((t) => (
                 <button key={t} type="button" role="radio" aria-checked={type === t} onClick={() => setType(t)} className={cn("h-12 rounded-lg border text-sm", type === t ? "border-foreground bg-muted font-medium" : "border-border text-muted-foreground hover:bg-muted")}>
@@ -117,7 +117,7 @@ function Drawer({ shift }: { shift: Shift }) {
         {shift.movements.length === 0 ? (
           <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">لا حركات بعد في هذه الوردية.</p>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border">
+          <div className="overflow-x-auto surface-card">
             <table className="w-full text-sm" data-testid="pos-movements">
               <thead className="border-b border-border text-xs text-muted-foreground">
                 <tr>

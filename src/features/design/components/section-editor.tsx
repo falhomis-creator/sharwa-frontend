@@ -78,7 +78,7 @@ export function SectionEditor({ sectionId, categories }: { sectionId: number; ca
         <input id="section_label" className={inputClass} value={section.label} onChange={(e) => update(section.id, { label: e.target.value })} />
       </Field>
 
-      <div className="flex flex-col divide-y divide-border rounded-lg border border-border">
+      <div className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
         <label className="flex min-h-11 items-center justify-between gap-3 px-3 text-sm">
           مفعّل في المتجر
           <Switch checked={section.is_active} onCheckedChange={(v) => update(section.id, { is_active: v })} data-testid="editor-active" />
@@ -304,7 +304,7 @@ function ItemRow({
     <li
       ref={setNodeRef}
       style={{ transform: translateToString(transform), transition }}
-      className={cn("flex flex-col gap-2 rounded-lg border border-border bg-background p-2", isDragging && "relative z-10 border-foreground")}
+      className={cn("flex flex-col gap-2 rounded-lg border border-border bg-card p-2", isDragging && "relative z-10 border border-primary ring-1 ring-primary/20")}
       data-testid={`item-${index}`}
     >
       <div className="flex items-center gap-1">

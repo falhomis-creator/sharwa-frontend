@@ -107,7 +107,7 @@ export function SettingsIndex() {
               </h2>
               {g.note ? <span className="text-xs text-muted-foreground">{g.note}</span> : null}
             </div>
-            <ul className={gi === 1 ? "rounded-lg border border-destructive/70" : "rounded-lg border border-border"}>
+            <ul className={gi === 1 ? "rounded-lg border border-destructive/70" : "surface-card"}>
               {keys.map((k) => {
                 const meta = SECTION_META[k];
                 const readOnly = meta.ownerOnly && session.kind !== "merchant";

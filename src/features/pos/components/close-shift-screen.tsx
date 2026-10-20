@@ -61,7 +61,7 @@ function CloseForm({ shift, onDone }: { shift: Shift; onDone: (s: Shift) => void
           راجع المعاينة ثم عُدّ النقد في الدرج وأدخل المبلغ الفعلي. يحسب الخادم الفرق.
         </p>
       </div>
-      <section className="rounded-lg border border-border p-4" aria-label="معاينة الإغلاق">
+      <section className="surface-card p-5 lg:p-6" aria-label="معاينة الإغلاق">
         <ShiftSummary shift={shift} />
       </section>
       <Field label="المبلغ المعدود فعلياً" htmlFor="actual-closing" error={error}>
@@ -94,12 +94,12 @@ function Outcome({ shift }: { shift: Shift }) {
     <div className="mx-auto flex w-full max-w-lg flex-col gap-5 p-4 md:p-6" data-testid="pos-close-result">
       <div className="flex flex-col gap-1">
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span aria-hidden className={cn("size-2 rounded-full", shortage ? "bg-destructive" : "bg-foreground")} />
+          <span aria-hidden className={cn("size-2 rounded-full", shortage ? "bg-destructive" : "bg-primary")} />
           الوردية <Mono>#{shift.id}</Mono> · <span data-testid="pos-close-status">{SHIFT_STATUS_LABELS[shift.status]}</span>
         </p>
         <h1 className="text-2xl font-semibold tracking-tight">{shortage ? "عجز في الدرج — بانتظار اعتماد المدير" : "أُغلقت الوردية"}</h1>
       </div>
-      <dl className="grid gap-1 rounded-lg border border-border p-4 text-sm">
+      <dl className="grid gap-1 surface-card p-5 lg:p-6 text-sm">
         <div className="flex justify-between">
           <dt className="text-muted-foreground">المتوقع</dt>
           <dd>
@@ -124,7 +124,7 @@ function Outcome({ shift }: { shift: Shift }) {
           أُرسل طلب «عجز وردية» {shift.approval ? <Mono>#{shift.approval.id}</Mono> : null} إلى المدير. البيع موقوف على هذا الجهاز حتى يُحسم.
         </p>
       ) : null}
-      <section className="rounded-lg border border-border p-4" aria-label="ملخص الوردية">
+      <section className="surface-card p-5 lg:p-6" aria-label="ملخص الوردية">
         <p className="mb-2 text-sm font-medium">
           ملخص الوردية · <Mono>{shift.sales_count}</Mono> عملية بيع نقدية
         </p>

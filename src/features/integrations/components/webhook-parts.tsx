@@ -77,7 +77,7 @@ export function EndpointForm({
             control={form.control}
             name="events"
             render={({ field }) => (
-              <ul className="flex flex-col divide-y divide-border rounded-lg border border-border" data-testid="event-options">
+              <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden" data-testid="event-options">
                 {(events.data ?? []).map((ev) => {
                   const checked = field.value.includes(ev.code);
                   return (
@@ -142,7 +142,7 @@ export function SecretDialog({ secret, onClose, rotated }: { secret: string | nu
         <DialogTitle>{rotated ? "السرّ الجديد" : "سرّ التوقيع"}</DialogTitle>
         <DialogDescription>انسخه الآن واحفظه في نظامك — لن يُعرض مجدداً. نستخدمه لتوقيع كل طلب في الترويسة <Mono>X-Sharwa-Signature</Mono>.</DialogDescription>
         {secret ? (
-          <div className="flex items-center gap-2 rounded-lg border border-border p-2">
+          <div className="flex items-center gap-2 surface-card p-2">
             <Mono className="min-w-0 flex-1 break-all text-sm" data-testid="secret-value">
               {secret}
             </Mono>

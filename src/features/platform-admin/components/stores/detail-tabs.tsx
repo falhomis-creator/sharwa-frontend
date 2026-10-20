@@ -25,7 +25,7 @@ export function SubscriptionTab({ detail }: { detail: StoreDetail }) {
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-medium">الاشتراك الحالي</h2>
         {sub ? (
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-lg border border-border p-4 text-sm md:grid-cols-4">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 surface-card p-5 lg:p-6 text-sm md:grid-cols-4">
             <Item label="الباقة">
               {sub.plan.name} <Code className="text-muted-foreground">{sub.plan.code}</Code>
             </Item>
@@ -45,7 +45,7 @@ export function SubscriptionTab({ detail }: { detail: StoreDetail }) {
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-medium">السجل</h2>
         {detail.subscription_history.length ? (
-          <div className="overflow-x-auto rounded-lg border border-border">
+          <div className="overflow-x-auto surface-card">
             <table className="w-full text-sm">
               <caption className="sr-only">سجل الاشتراكات</caption>
               <thead className="border-b border-border">
@@ -124,7 +124,7 @@ export function DomainsTab({ detail }: { detail: StoreDetail }) {
 
   return (
     <div className="flex flex-col gap-4" data-testid="domains-tab">
-      <ul className="divide-y divide-border rounded-lg border border-border">
+      <ul className="divide-y divide-border/60 surface-card overflow-hidden">
         {detail.domains.map((d) => (
           <li key={d.id} className="flex min-h-11 flex-wrap items-center justify-between gap-2 px-4 py-2" data-testid="domain-row">
             <span className="flex items-center gap-3">
@@ -176,7 +176,7 @@ export function AppsTab({ detail }: { detail: StoreDetail }) {
   if (!detail.installations.length) return <EmptyState title="لا تطبيقات مثبّتة" />;
   return (
     <div className="flex flex-col gap-3" data-testid="apps-tab">
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <div className="overflow-x-auto surface-card">
         <table className="w-full text-sm">
           <caption className="sr-only">التطبيقات المثبّتة</caption>
           <thead className="border-b border-border">
@@ -221,7 +221,7 @@ export function AppsTab({ detail }: { detail: StoreDetail }) {
 export function ActionsTab({ detail }: { detail: StoreDetail }) {
   if (!detail.recent_actions.length) return <EmptyState title="لا إجراءات مسجّلة على هذا المتجر" />;
   return (
-    <div className="overflow-x-auto rounded-lg border border-border" data-testid="actions-tab">
+    <div className="overflow-x-auto surface-card" data-testid="actions-tab">
       <table className="w-full text-sm">
         <caption className="sr-only">آخر الإجراءات (FR-20.07)</caption>
         <thead className="border-b border-border">

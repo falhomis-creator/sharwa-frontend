@@ -48,7 +48,7 @@ function StatusRow({
     <li
       ref={setNodeRef}
       style={{ transform: translateToString(transform), transition }}
-      className={`flex min-h-12 flex-wrap items-center gap-2 border-b border-border bg-background px-2 py-1.5 last:border-0 ${isDragging ? "relative z-10 border border-foreground" : ""}`}
+      className={`flex min-h-12 flex-wrap items-center gap-2 border-b border-border bg-background px-2 py-1.5 last:border-0 ${isDragging ? "relative z-10 border border-primary ring-1 ring-primary/20" : ""}`}
       data-testid="status-row"
       data-name={status.name}
     >
@@ -157,12 +157,12 @@ function StatusDialog({ status, onClose }: { status: OrderStatusDef | null; onCl
                 value={/^#[0-9a-fA-F]{6}$/.test(values.color) ? values.color : SUGGESTED_COLOR}
                 onChange={(e) => setValues({ ...values, color: e.target.value })}
                 aria-label="منتقي اللون"
-                className="h-11 w-14 shrink-0 cursor-pointer rounded-md border border-input bg-background p-1 md:h-8"
+                className="h-11 w-14 shrink-0 cursor-pointer rounded-md border border-input bg-card p-1 md:h-8"
               />
               <input id="status-color" dir="ltr" value={values.color} onChange={(e) => setValues({ ...values, color: e.target.value.trim() })} className={`${inputClass} font-mono`} />
             </div>
           </Field>
-          <div className="flex flex-col divide-y divide-border rounded-lg border border-border px-3">
+          <div className="flex flex-col divide-y divide-border/60 surface-card px-3 overflow-hidden">
             <ToggleRow
               id="status-default"
               label="الافتراضية"
@@ -261,7 +261,7 @@ export function StatusesScreen() {
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => void onDragEnd(e)}>
           <SortableContext items={(query.data ?? []).map((s) => s.id)} strategy={verticalListSortingStrategy}>
-            <ul className="max-w-3xl rounded-lg border border-border" aria-label="حالات التنفيذ">
+            <ul className="max-w-3xl surface-card" aria-label="حالات التنفيذ">
               {(query.data ?? []).map((s) => (
                 <StatusRow
                   key={s.id}

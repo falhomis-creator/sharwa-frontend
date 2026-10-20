@@ -63,7 +63,7 @@ export function OrdersTab({ customer }: { customer: CustomerDetail }) {
   return (
     <TabState query={query} empty={query.data && rows.length === 0 ? <EmptyState title="لا طلبات حديثة لهذا العميل" description={`عدد طلباته الإجمالي ${customer.orders_count}؛ الأقدم منها مؤرشفة خارج قائمة الطلبات الحالية.`} /> : null}>
       <section className="flex flex-col gap-2" aria-label="طلبات العميل" data-testid="tab-orders">
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden">
           {rows.map((o) => (
             <li key={o.id}>
               <Link href={`/dashboard/orders?order=${o.id}`} className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm hover:bg-muted/50" data-testid="customer-order-row">
@@ -133,7 +133,7 @@ export function WalletTab({ customer }: { customer: CustomerDetail }) {
           ) : (
             <>
               <p className="text-xs text-muted-foreground">آخر {formatNumber(data.results.length)} حركات</p>
-              <ul className="divide-y divide-border rounded-lg border border-border">
+              <ul className="divide-y divide-border/60 surface-card overflow-hidden">
                 {data.results.map((t) => (
                   <li key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm" data-testid="wallet-row" data-reason={t.reason}>
                     <span className="font-medium">{WALLET_REASON_LABELS[t.reason]}</span>
@@ -168,7 +168,7 @@ export function PointsTab({ customer }: { customer: CustomerDetail }) {
       {data ? (
         <section className="flex flex-col gap-3" aria-label="نقاط العميل" data-testid="tab-points">
           {!data.program_enabled ? (
-            <p className="rounded-lg border border-border p-3 text-sm text-muted-foreground" data-testid="loyalty-off">
+            <p className="surface-card p-4 text-sm text-muted-foreground" data-testid="loyalty-off">
               برنامج الولاء غير مفعّل — النقاط والحركات للقراءة فقط.
             </p>
           ) : null}
@@ -191,7 +191,7 @@ export function PointsTab({ customer }: { customer: CustomerDetail }) {
           {data.transactions.length === 0 ? (
             <p className="text-sm text-muted-foreground">لا حركات نقاط بعد — تُكتسب النقاط مع كل طلب مكتمل.</p>
           ) : (
-            <ul className="divide-y divide-border rounded-lg border border-border">
+            <ul className="divide-y divide-border/60 surface-card overflow-hidden">
               {data.transactions.map((t) => (
                 <li key={t.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm" data-testid="points-row">
                   <span className="font-medium">{POINTS_TYPE_LABELS[t.type]}</span>
@@ -224,7 +224,7 @@ export function WishlistTab({ customer }: { customer: CustomerDetail }) {
   const rows = query.data ?? [];
   return (
     <TabState query={query} empty={query.data && rows.length === 0 ? <EmptyState title="لا أمنيات ولا طلبات إشعار توفر" description="ما يحفظه العميل في «أمنياتي» أو يطلب إشعاره عند توفره يظهر هنا." /> : null}>
-      <ul className="divide-y divide-border rounded-lg border border-border" aria-label="أمنيات العميل" data-testid="tab-wishlist">
+      <ul className="divide-y divide-border/60 surface-card overflow-hidden" aria-label="أمنيات العميل" data-testid="tab-wishlist">
         {rows.map((r) => (
           <li key={r.product_id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm" data-testid="wishlist-row">
             {r.product ? (
@@ -286,7 +286,7 @@ function ReviewItem({ review, phone }: { review: Review; phone: string }) {
   }
 
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-border p-3 text-sm" data-testid="review-row" data-review-id={review.id}>
+    <li className="flex flex-col gap-2 surface-card p-4 text-sm" data-testid="review-row" data-review-id={review.id}>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <Mono className="font-medium" aria-label={`التقييم ${review.rating} من 5`}>
           {review.rating}/5
@@ -391,7 +391,7 @@ export function NotesTab({ customer, onInputRef }: { customer: CustomerDetail; o
         </Button>
       </form>
       <TabState query={query} empty={query.data && rows.length === 0 ? <p className="text-sm text-muted-foreground">لا ملاحظات بعد.</p> : null}>
-        <ul className="divide-y divide-border rounded-lg border border-border">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden">
           {rows.map((n) => (
             <li key={n.id} className="flex items-start gap-3 px-3 py-2 text-sm" data-testid="note-row">
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">

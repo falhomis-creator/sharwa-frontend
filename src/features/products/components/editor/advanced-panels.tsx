@@ -520,7 +520,7 @@ function PersonalizationFields({ productId, readOnly }: { productId: number; rea
 function FieldRow({ row, readOnly, onDelete, onToggleRequired }: { row: PersonalizationFieldRow; readOnly: boolean; onDelete: () => void; onToggleRequired: (v: boolean) => void }) {
   const { attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging } = useSortable({ id: row.id, disabled: readOnly });
   return (
-    <li ref={setNodeRef} style={{ transform: translateToString(transform), transition }} className={cn("flex items-center gap-2 bg-background py-2 text-sm", isDragging && "relative z-10 opacity-80")} data-testid="pf-row">
+    <li ref={setNodeRef} style={{ transform: translateToString(transform), transition }} className={cn("flex items-center gap-2 bg-card py-2 text-sm", isDragging && "relative z-10 opacity-80")} data-testid="pf-row">
       {!readOnly ? (
         <button type="button" ref={setActivatorNodeRef} {...attributes} {...listeners} aria-label={`نقل «${row.label}»`} className="flex size-11 shrink-0 cursor-grab items-center justify-center text-muted-foreground lg:size-8">
           <GripVertical className="size-4" aria-hidden />

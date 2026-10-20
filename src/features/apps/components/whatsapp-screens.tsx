@@ -41,7 +41,7 @@ function WaGate({ active, children }: { active: string; children: React.ReactNod
         <PageHeader title="تطبيق الواتساب" description="إشعارات الطلبات والشحن والدفع عبر واتساب من رقم متجرك." />
         <nav aria-label="أقسام الواتساب" className="-mt-2 flex gap-1 overflow-x-auto border-b border-border">
           {WA_TABS.map((t) => (
-            <Link key={t.href} href={t.href} aria-current={active === t.href ? "page" : undefined} className={cn("-mb-px inline-flex h-11 shrink-0 items-center border-b-2 px-3 text-sm lg:h-9", active === t.href ? "border-foreground font-medium" : "border-transparent text-muted-foreground hover:text-foreground")}>
+            <Link key={t.href} href={t.href} aria-current={active === t.href ? "page" : undefined} className={cn("-mb-px inline-flex h-11 shrink-0 items-center border-b-2 px-3 text-sm lg:h-9", active === t.href ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}>
               {t.label}
             </Link>
           ))}
@@ -171,7 +171,7 @@ function UsageTable() {
     ],
     [now],
   );
-  const dateInput = "h-11 rounded-lg border border-input bg-background px-2 font-mono text-sm md:h-8";
+  const dateInput = "h-11 rounded-lg border border-input bg-card px-2 font-mono text-sm md:h-8";
   return (
     <DataTable<UsageRow>
       testId="wa-usage"

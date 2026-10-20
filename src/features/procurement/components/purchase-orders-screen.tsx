@@ -223,7 +223,7 @@ function Board({
         else refs.current.delete(o.id);
       }}
       onFocus={() => setFocus(o.id)}
-      className={cn("flex flex-col gap-1.5 rounded-md border border-border bg-background p-3 text-sm outline-none hover:border-foreground/40 focus-visible:ring-3 focus-visible:ring-ring/50", focus === o.id && "border-foreground/60")}
+      className={cn("flex flex-col gap-1.5 rounded-md border border-border bg-card p-3 text-sm outline-none hover:border-foreground/40 focus-visible:ring-3 focus-visible:ring-ring/50", focus === o.id && "border-foreground/60")}
       data-testid="po-card"
       data-status={o.status}
       onKeyDown={(e) => {
@@ -252,7 +252,7 @@ function Board({
       <div className="flex flex-col gap-3 md:hidden">
         <ScrollX className="-mx-4 border-b border-border" scrollerClassName="flex gap-1 px-4" cueAlign="center" role="tablist" aria-label="حالات أوامر الشراء">
           {PO_STATUSES.map((s) => (
-            <button key={s} type="button" role="tab" aria-selected={col === s} onClick={() => onCol(s)} className={cn("flex h-11 shrink-0 items-center gap-1.5 border-b-2 px-2 text-sm", col === s ? "border-foreground font-medium" : "border-transparent text-muted-foreground")}>
+            <button key={s} type="button" role="tab" aria-selected={col === s} onClick={() => onCol(s)} className={cn("flex h-11 shrink-0 items-center gap-1.5 border-b-2 px-2 text-sm", col === s ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground")}>
               {PO_STATUS_LABELS[s]} <Mono className="text-xs text-muted-foreground">{byStatus.get(s)!.length}</Mono>
             </button>
           ))}

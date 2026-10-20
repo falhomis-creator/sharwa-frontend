@@ -110,7 +110,7 @@ export function TagsTab({ canManage }: { canManage: boolean }) {
       {tags.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">لا وسوم بعد.</p>
       ) : (
-        <ul className="rounded-lg border border-border">
+        <ul className="surface-card">
           {tags.map((t) => (
             <li key={t.id} className="flex min-h-11 items-center gap-3 border-b border-border px-3 last:border-0 lg:min-h-9" data-testid="tag-row">
               {editing?.id === t.id ? (

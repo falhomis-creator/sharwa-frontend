@@ -189,7 +189,7 @@ function CouponsBlock({ row }: { row: Influencer }) {
       {row.coupons.length === 0 ? (
         <p className="text-sm text-warning" data-testid="no-coupon">لا كوبون مرتبط — لن تُنسب له مبيعات.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {row.coupons.map((c) => (
             <li key={c.id} className="flex min-h-11 items-center gap-3 px-3 text-sm">
               <Link href={`/dashboard/marketing/coupons/${c.id}`} className="hover:underline">

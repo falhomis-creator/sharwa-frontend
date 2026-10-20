@@ -28,7 +28,7 @@ export default async function AboutPage() {
         </section>
       ) : null}
       {config.return_policy ? (
-        <section id="returns" className="store-frame space-y-3 rounded-lg border-border p-5 md:p-8">
+        <section id="returns" className="store-frame space-y-3 rounded-xl border-border p-5 md:p-8 shadow-card bg-card">
           <h2 className="text-xl font-bold">سياسة الاسترجاع</h2>
           <RichText source={config.return_policy} className="text-sm leading-7" />
         </section>

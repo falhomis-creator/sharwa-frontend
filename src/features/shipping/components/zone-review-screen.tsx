@@ -329,7 +329,7 @@ function RestrictedTab() {
       ) : (
         <>
           <SchematicMap polygons={list.map((z) => ({ id: `rz-${z.id}`, label: z.name, points: z.polygon_points, muted: !z.is_active }))} label="مخطط النطاقات المحظورة" />
-          <ul className="divide-y divide-border rounded-lg border border-border" data-testid="restricted-list">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="restricted-list">
             {list.map((z) => (
               <li key={z.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 p-3" data-testid="restricted-row">
                 <span className="flex min-w-0 flex-1 basis-48 flex-col">
@@ -436,7 +436,7 @@ function RestrictedSheet({ open, zone, onOpenChange }: { open: boolean; zone?: R
           <Textarea id="rz-points" dir="ltr" rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder={"15.47, 44.15\n15.50, 44.24\n15.44, 44.27"} className="font-mono text-sm" aria-invalid={Boolean(errors.polygon_points)} data-testid="rz-points" />
         </Field>
         {parsed.points.length >= 3 ? <SchematicMap polygons={[{ id: "draft", label: name || "النطاق", points: parsed.points }]} label="معاينة النطاق" className="[&>div]:h-48 [&>div]:md:h-48" /> : null}
-        <div className="rounded-lg border border-border px-3">
+        <div className="surface-card px-3">
           <ToggleRow id="rz-active" label="نشط" description="غير النشط لا يُرسل الطلبات إلى المراجعة." checked={active} onCheckedChange={setActive} />
         </div>
         <SheetActions onCancel={() => onOpenChange(false)} submitLabel={zone ? "حفظ" : "إضافة"} pending={writes.save.isPending} testId="restricted-submit" />

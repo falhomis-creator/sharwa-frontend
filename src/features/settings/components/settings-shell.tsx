@@ -72,7 +72,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
 
       <div className="grid gap-6 md:grid-cols-[220px_minmax(0,1fr)] md:gap-10">
         {/* Phones: a sticky select. */}
-        <div className="sticky top-0 z-20 -mx-4 border-b border-border bg-background px-4 py-2 md:hidden">
+        <div className="sticky top-0 z-20 -mx-4 border-b border-border bg-card px-4 py-2 md:hidden">
           <NativeSelect
             aria-label="قسم الإعدادات"
             value={current ?? linkSegment(pathname) ?? ""}
@@ -111,7 +111,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
                 aria-current={current === null ? "page" : undefined}
                 className={cn(
                   "flex h-9 items-center rounded-md px-3 text-sm transition-colors hover:bg-muted",
-                  current === null ? "bg-muted font-medium text-foreground" : "text-muted-foreground",
+                  current === null ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground",
                 )}
               >
                 كل الإعدادات
@@ -128,7 +128,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
                     aria-current={current === k ? "page" : undefined}
                     className={cn(
                       "flex h-9 items-center justify-between gap-2 rounded-md px-3 text-sm transition-colors hover:bg-muted",
-                      current === k ? "bg-muted font-medium text-foreground" : "text-muted-foreground",
+                      current === k ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground",
                     )}
                     data-testid={`settings-nav-${k}`}
                   >
@@ -152,7 +152,7 @@ export function SettingsShell({ children }: { children: ReactNode }) {
                           aria-current={active ? "page" : undefined}
                           className={cn(
                             "flex h-9 items-center rounded-md px-3 text-sm transition-colors hover:bg-muted",
-                            active ? "bg-muted font-medium text-foreground" : "text-muted-foreground",
+                            active ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground",
                           )}
                           data-testid={`settings-nav-${l.key}`}
                         >
@@ -186,7 +186,7 @@ function UnsavedBar() {
     <div
       role="region"
       aria-label="تغييرات غير محفوظة"
-      className="sticky bottom-0 z-20 -mx-4 mt-6 border-t border-border bg-background px-4 py-3 md:mx-0 md:rounded-t-lg md:border-x"
+      className="sticky bottom-0 z-20 -mx-4 mt-6 border-t border-border bg-card px-4 py-3 md:mx-0 md:rounded-t-lg md:border-x"
       data-testid="unsaved-bar"
     >
       {/* Re-keyed on every refused navigation, so the nudge animation replays (motion-safe). */}

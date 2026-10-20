@@ -394,7 +394,7 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
 function Section({ title, count, children, empty, testId, defaultOpen = true }: { title: string; count: number; children: ReactNode; empty: string; testId: string; defaultOpen?: boolean }) {
   const hasRows = Array.isArray(children) ? children.length > 0 : Boolean(children);
   return (
-    <details open={defaultOpen || undefined} className="group/sec rounded-lg border border-border" data-testid={testId}>
+    <details open={defaultOpen || undefined} className="group/sec surface-card" data-testid={testId}>
       <summary className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-4 py-2 text-sm font-medium marker:content-none">
         <span>{title}</span>
         <Mono className={count ? "text-foreground" : "text-muted-foreground"} data-testid="section-count">

@@ -57,7 +57,7 @@ function PartnerTabs({ kind, enabled }: { kind: PartnerKind; enabled: Record<Par
           key={k}
           href={PARTNER_KIND_LABELS[k].path}
           aria-current={k === kind ? "page" : undefined}
-          className={cn("-mb-px inline-flex h-11 items-center border-b-2 px-3 text-sm transition-colors lg:h-9", k === kind ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}
+          className={cn("-mb-px inline-flex h-11 items-center border-b-2 px-3 text-sm transition-colors lg:h-9", k === kind ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
         >
           {PARTNER_KIND_LABELS[k].plural}
         </Link>

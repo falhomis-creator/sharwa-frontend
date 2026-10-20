@@ -66,7 +66,7 @@ function AlertsList() {
       ) : query.data.results.length === 0 ? (
         <EmptyState title="لا تنبيهات" description={filters.level || filters.unread ? "لا تنبيهات بهذه الفلاتر." : "عندما يتجاوز موظف حدّاً من حدود السلوك، يظهر التنبيه هنا."} />
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border" data-testid="alerts-list">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="alerts-list">
           {query.data.results.map((a) => (
             <li key={a.id} className={cn("flex flex-col gap-2 px-3 py-3 md:flex-row md:items-center md:justify-between", a.is_read && "text-muted-foreground")} data-testid={`alert-${a.id}`}>
               <div className="flex min-w-0 flex-col gap-0.5">

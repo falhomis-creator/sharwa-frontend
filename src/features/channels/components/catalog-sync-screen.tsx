@@ -46,7 +46,7 @@ function CatalogInner() {
     <div className="flex flex-col gap-8">
       <div role="tablist" aria-label="القناة" className="flex gap-2">
         {(["meta", "tiktok"] as const).map((c) => (
-          <button key={c} role="tab" type="button" aria-selected={f.channel === c} onClick={() => void setF({ channel: c, sync_status: null })} className={cn("h-11 rounded-lg border px-4 text-sm lg:h-9", f.channel === c ? "border-foreground font-medium" : "border-border text-muted-foreground")}>
+          <button key={c} role="tab" type="button" aria-selected={f.channel === c} onClick={() => void setF({ channel: c, sync_status: null })} className={cn("h-11 rounded-lg border px-4 text-sm lg:h-9", f.channel === c ? "border-cta font-medium text-primary" : "border-border text-muted-foreground")}>
             {c === "meta" ? "Meta" : "TikTok Shop"}
           </button>
         ))}

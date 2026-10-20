@@ -74,7 +74,7 @@ function Body({ id }: { id: number }) {
       <SharwaShipNav />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="flex min-w-0 flex-col gap-6">
-          <section aria-label="الحالتان" className="flex flex-wrap items-center gap-x-8 gap-y-2 rounded-lg border border-border p-4">
+          <section aria-label="الحالتان" className="flex flex-wrap items-center gap-x-8 gap-y-2 surface-card p-5 lg:p-6">
             <span className="flex flex-col gap-1">
               <span className="text-xs text-muted-foreground">أين الشحنة؟</span>
               <span data-testid="detail-status">
@@ -115,7 +115,7 @@ function Facts({ s }: { s: ShipmentDetail }) {
   ];
   if (s.master_waybill_number) rows.push(["البوليصة الرئيسة", <Mono key="m">{s.master_waybill_number}</Mono>]);
   return (
-    <section aria-label="التفاصيل" className="rounded-lg border border-border">
+    <section aria-label="التفاصيل" className="surface-card">
       <dl className="divide-y divide-border text-sm">
         {rows.map(([k, v]) => (
           <div key={k} className="flex items-start justify-between gap-3 px-4 py-2.5">
@@ -147,7 +147,7 @@ function Facts({ s }: { s: ShipmentDetail }) {
 
 function Items({ s }: { s: ShipmentDetail }) {
   return (
-    <section aria-label="البنود" className="rounded-lg border border-border">
+    <section aria-label="البنود" className="surface-card">
       <h2 className="border-b border-border px-4 py-2.5 text-sm font-medium">البنود</h2>
       <ul className="divide-y divide-border text-sm">
         {s.items.map((i) => (
@@ -190,7 +190,7 @@ function ManualStatus({ s, refEl }: { s: ShipmentDetail; refEl: React.RefObject<
   }
 
   return (
-    <section aria-label="تعديل الحالة يدوياً" className="flex flex-col gap-3 rounded-lg border border-border p-4" ref={refEl} data-testid="manual-status">
+    <section aria-label="تعديل الحالة يدوياً" className="flex flex-col gap-3 surface-card p-5 lg:p-6" ref={refEl} data-testid="manual-status">
       <h2 className="flex items-center justify-between text-sm font-medium">
         تعديل الحالة يدوياً <kbd className="hidden font-mono text-[11px] text-muted-foreground lg:inline">E</kbd>
       </h2>
@@ -243,7 +243,7 @@ function Timeline({ events }: { events: ShipmentEvent[] }) {
           const bounce = !e.is_rejected && e.from_status === "delivered" && e.to_status === "returned";
           return (
             <li key={e.id} className={cn("relative flex flex-col gap-1 pb-5", e.is_rejected && "text-muted-foreground")} data-testid="timeline-event" data-rejected={e.is_rejected}>
-              <span aria-hidden className={cn("absolute -start-[25px] top-1.5 size-2 rounded-full border border-background", e.is_rejected ? "bg-muted-foreground/50" : e.flagged_for_review ? "bg-warning" : "bg-foreground")} />
+              <span aria-hidden className={cn("absolute -start-[25px] top-1.5 size-2 rounded-full border border-background", e.is_rejected ? "bg-muted-foreground/50" : e.flagged_for_review ? "bg-warning" : "bg-primary")} />
               <span className="flex flex-wrap items-baseline gap-x-2 text-sm">
                 <span className={cn(!e.is_rejected && "text-foreground")}>
                   {e.from_status ? SHIPMENT_STATUS_LABELS[e.from_status] : "—"} ← {SHIPMENT_STATUS_LABELS[e.to_status]}

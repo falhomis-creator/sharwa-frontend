@@ -159,7 +159,7 @@ function AdjustForm({
             role="radio"
             aria-checked={mode === m}
             onClick={() => setValue("mode", m)}
-            className={cn("min-h-9 rounded-md px-3 text-sm", mode === m ? "bg-foreground text-background" : "text-muted-foreground")}
+            className={cn("min-h-9 rounded-md px-3 text-sm", mode === m ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground")}
           >
             {m === "delta" ? "فرق (±)" : "كمية جديدة"}
           </button>

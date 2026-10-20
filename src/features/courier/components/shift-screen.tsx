@@ -64,14 +64,14 @@ export function ShiftScreen() {
   return (
     <div className="flex flex-col gap-4" data-testid="shift-screen">
       <OfflineNote snap={snap} />
-      <section className="flex flex-col gap-1 rounded-lg border border-border p-4" aria-label="العهدة">
+      <section className="flex flex-col gap-1 surface-card p-5 lg:p-6" aria-label="العهدة">
         <span className="text-xs text-muted-foreground">رصيد العهدة</span>
         <Mono className="text-3xl font-medium" data-testid="balance">
           {display_balance}
         </Mono>
       </section>
       {open_shift ? (
-        <section className="flex flex-col gap-1 rounded-lg border border-border p-4" aria-label="المناوبة" data-testid="open-shift">
+        <section className="flex flex-col gap-1 surface-card p-5 lg:p-6" aria-label="المناوبة" data-testid="open-shift">
           <span className="text-base font-medium">مناوبة مفتوحة</span>
           <span className="text-sm text-muted-foreground">
             رقم <Mono className="text-foreground">#{open_shift.id}</Mono> · منذ <Mono className="text-foreground">{formatDateTime(open_shift.started_at)}</Mono>

@@ -119,7 +119,7 @@ function CameraView({ onCode, onClose, onError }: { onCode: (c: string) => void;
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black" role="dialog" aria-label="مسح الباركود">
       <video ref={video} className="flex-1 object-cover" playsInline muted />
-      <div className="flex flex-col gap-2 bg-background p-4">
+      <div className="flex flex-col gap-2 bg-card p-4">
         <p className="text-center text-sm">وجّه الكاميرا نحو الباركود على الشحنة.</p>
         <button type="button" onClick={onClose} className={primaryAction}>
           <X className="size-5" aria-hidden /> إغلاق

@@ -44,7 +44,7 @@ function CarriersList() {
       ) : !query.data ? (
         <ErrorState error={query.error} onRetry={() => void query.refetch()} />
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border" data-testid="carriers-list">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="carriers-list">
           {query.data.map((c) => (
             <li key={c.carrier_code}>
               <Link href={`/dashboard/shipping/carriers/${c.carrier_code}`} className="flex min-h-14 flex-wrap items-center gap-x-4 gap-y-1 p-3 hover:bg-muted/50" data-testid={`carrier-${c.carrier_code}`}>
@@ -165,7 +165,7 @@ function CredentialsForm({ carrier }: { carrier: Carrier }) {
     });
 
   return (
-    <section className="flex min-w-0 flex-col gap-4 rounded-lg border border-border p-4 md:p-5" aria-labelledby="cred-h" data-testid="credentials-form">
+    <section className="flex min-w-0 flex-col gap-4 surface-card p-5 lg:p-6 md:p-5" aria-labelledby="cred-h" data-testid="credentials-form">
       <h2 id="cred-h" className="text-base font-semibold">
         بيانات الاعتماد
       </h2>
@@ -228,7 +228,7 @@ function WebhookPanel({ carrier }: { carrier: Carrier }) {
     }
   };
   return (
-    <section className="flex h-fit min-w-0 flex-col gap-3 rounded-lg border border-border p-4" aria-labelledby="hook-h" data-testid="webhook-panel">
+    <section className="flex h-fit min-w-0 flex-col gap-3 surface-card p-5 lg:p-6" aria-labelledby="hook-h" data-testid="webhook-panel">
       <h2 id="hook-h" className="text-base font-semibold">
         الأحداث الواردة
       </h2>

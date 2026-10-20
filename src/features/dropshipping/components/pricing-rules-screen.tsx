@@ -78,7 +78,7 @@ function Inner() {
       ) : !q.data.length ? (
         <EmptyState title="لا قواعد تسعير — ستُستورد المنتجات بتكلفة المورد" action={<Button className="h-11 lg:h-9" onClick={() => setSheet({ open: true, rule: null })}>قاعدة جديدة</Button>} />
       ) : (
-        <ol className="divide-y divide-border rounded-lg border border-border" data-testid="rules-list">
+        <ol className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="rules-list">
           {q.data.map((r) => (
             <li key={r.id} className="flex flex-col gap-2 p-3 lg:flex-row lg:items-center lg:gap-6" data-testid="rule-row">
               <Mono className="w-10 text-muted-foreground" title="الأولوية">
@@ -325,7 +325,7 @@ function SimulationView({ sim }: { sim: Simulation }) {
           تتداخل مع: {sim.overlaps.map((o) => `${o.name} (أولوية ${o.priority})`).join("، ")} — يُطبَّق الأصغر أولوية.
         </p>
       ) : null}
-      <ScrollX className="rounded-lg border border-border">
+      <ScrollX className="surface-card">
         <table className="w-full min-w-[480px] text-sm">
           <caption className="sr-only">عيّنة المحاكاة</caption>
           <thead className="border-b border-border text-xs text-muted-foreground">

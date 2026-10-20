@@ -232,11 +232,12 @@ export const attributeApi = {
 };
 
 // ── Templates ─────────────────────────────────────────────────────────────────────────
-export function useTemplates() {
+export function useTemplates(opts: { enabled?: boolean } = {}) {
   const store = useStore();
   return useQuery({
     queryKey: productKeys(store).templates,
     queryFn: ({ signal }) => apiFetch(`${BASE}/templates`, productTemplateListSchema, { signal }),
+    enabled: opts.enabled ?? true,
   });
 }
 

@@ -60,7 +60,7 @@ export function OverridesTab({ staff }: { staff: StaffMember }) {
           الاستثناءات <Mono className="text-sm text-muted-foreground">{rows.length}</Mono>
         </h2>
         {rows.length === 0 ? <p className="text-sm text-muted-foreground">لا استثناءات — صلاحياته من الدور فقط.</p> : null}
-        <ul className="divide-y divide-border rounded-lg border border-border empty:hidden">
+        <ul className="divide-y divide-border/60 surface-card empty:hidden overflow-hidden">
           {rows.map((o) => (
             <li key={o.id} className="flex min-h-11 items-center justify-between gap-3 px-3 py-1.5 text-sm" data-testid={`override-${o.id}`}>
               <div className="flex min-w-0 flex-col">
@@ -131,7 +131,7 @@ export function OverridesTab({ staff }: { staff: StaffMember }) {
             {[...byCategory.entries()].map(([cat, list]) => (
               <div key={cat}>
                 <p className="mb-1 text-xs font-medium text-muted-foreground">{cat}</p>
-                <ul className="divide-y divide-border rounded-lg border border-border">
+                <ul className="divide-y divide-border/60 surface-card overflow-hidden">
                   {list.map((p) => {
                     const e = effMap.get(p.code);
                     const on = e?.effective ?? false;

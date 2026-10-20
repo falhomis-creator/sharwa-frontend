@@ -26,7 +26,7 @@ export function FeatureOffState({ title = "هذه الميزة غير متاحة
 
 export function ForbiddenState({ title = "ليست لديك صلاحية لعرض هذه الصفحة", description, className }: { title?: string; description?: string; className?: string }) {
   return (
-    <div role="status" data-testid="forbidden" className={cn("flex flex-col items-start gap-3 rounded-lg border border-border p-6 md:p-8", className)}>
+    <div role="status" data-testid="forbidden" className={cn("flex flex-col items-start gap-3 surface-card p-6 md:p-8", className)}>
       <p className="text-base font-medium">{title}</p>
       <p className="max-w-prose text-sm text-muted-foreground">{description ?? "اطلب الصلاحية من مالك المتجر أو مدير المتجر."}</p>
       <Link href="/dashboard" className={cn(buttonVariants({ variant: "outline" }), "h-11 lg:h-9")}>

@@ -31,7 +31,7 @@ export function Segmented<T extends string>({
           key={o.value}
           className={cn(
             "flex h-9 cursor-pointer items-center justify-center rounded-md text-sm transition-colors has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
-            value === o.value ? "bg-foreground text-background" : "text-muted-foreground hover:bg-muted",
+            value === o.value ? "bg-primary text-primary-foreground shadow-xs" : "text-muted-foreground hover:bg-muted",
             disabled && "cursor-not-allowed opacity-60",
           )}
         >
@@ -92,7 +92,7 @@ export function TimezonePicker({ id, value, onChange, disabled }: { id: string; 
         <PopoverTrigger
           id={id}
           disabled={disabled}
-          className="flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60 md:h-8 dark:bg-input/30"
+          className="flex h-11 w-full items-center justify-between gap-2 rounded-lg border border-input bg-card px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-60 md:h-8 dark:bg-input/30"
           data-testid="timezone-trigger"
         >
           <Mono dir="ltr">{value}</Mono>
@@ -142,7 +142,7 @@ export function ColorInput({ id, value, onChange, disabled, fallback }: { id: st
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
         aria-label="منتقي اللون"
-        className="h-11 w-12 shrink-0 cursor-pointer rounded-md border border-input bg-background p-1 md:h-8"
+        className="h-11 w-12 shrink-0 cursor-pointer rounded-md border border-input bg-card p-1 md:h-8"
       />
       <input
         id={id}
@@ -151,7 +151,7 @@ export function ColorInput({ id, value, onChange, disabled, fallback }: { id: st
         onChange={(e) => onChange(e.target.value.trim())}
         disabled={disabled}
         aria-invalid={!valid}
-        className="h-11 w-full min-w-0 rounded-lg border border-input bg-background px-2.5 font-mono text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive md:h-8 dark:bg-input/30"
+        className="h-11 w-full min-w-0 rounded-lg border border-input bg-card px-2.5 font-mono text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive md:h-8 dark:bg-input/30"
       />
     </div>
   );

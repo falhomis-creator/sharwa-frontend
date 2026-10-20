@@ -1,9 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { Layers, Pencil, Plus, Trash2, Wand2 } from "lucide-react";
+import { Copy, Layers, PackagePlus, Pencil, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
@@ -21,6 +23,7 @@ import { formatRelative } from "@/lib/format";
 import { useStore } from "@/features/dashboard-shell/components/store-context";
 import { BLUEPRINT_FIELD_LABELS, type ProductTemplate } from "@/features/products/schemas";
 import {
+  attributeApi,
   productKeys,
   templateApi,
   useGlobalTemplates,
@@ -29,20 +32,37 @@ import {
   useVariantAttributes,
 } from "@/features/products/api/products";
 import { useCatalogAccess } from "@/features/products/hooks/use-catalog-access";
+import { DUPLICATE_SUFFIX, productFromTemplateHref } from "@/features/products/components/editor/prefill";
+import {
+  STANDARD_TAXONOMY_GROUPS,
+  attributeCreateType,
+  normalizeAttributeName,
+  standardCategory,
+} from "@/features/products/constants/standard-taxonomy";
 
 /**
  * `/dashboard/products/templates` — merchant blueprints (`ProductTemplate`, US-04.6, T073).
  * Create from scratch, from an existing product, or seed the store dictionary from one of
  * the 35 central sectors (US-04.6.1 — attributes copied without duplicating existing ones).
  * Applying a template to products shows the fields that will be replaced, then a report.
+ *
+ * Presets (owner directive 2026-10-20): «إنشاء منتج» opens the product editor pre-filled from
+ * the template — the primary use, so it leads the row — and «نسخ» opens the template form as
+ * an unsaved copy named «… (نسخة)».
+ *
+ * Zero-Config (owner directive 2026-10-20): the «قالب جديد» form opens with «تعبئة من قسم قياسي»,
+ * a grouped picker over `STANDARD_TAXONOMY`. Picking a category checks its attributes and names the
+ * template. Attributes missing from the store dictionary are listed as new and created on save,
+ * so a store with no products and no dictionary can still build its first template.
  */
+type Editing = { mode: "new" } | { mode: "edit"; template: ProductTemplate } | { mode: "duplicate"; template: ProductTemplate };
 export function TemplatesScreen() {
   const store = useStore();
   const qc = useQueryClient();
   const access = useCatalogAccess();
   const templates = useTemplates();
   const attributes = useVariantAttributes().data ?? [];
-  const [editing, setEditing] = useState<ProductTemplate | "new" | null>(null);
+  const [editing, setEditing] = useState<Editing | null>(null);
   const [applying, setApplying] = useState<ProductTemplate | null>(null);
   const [sectorFor, setSectorFor] = useState<ProductTemplate | null>(null);
   const [deleting, setDeleting] = useState<ProductTemplate | null>(null);
@@ -59,7 +79,7 @@ export function TemplatesScreen() {
         description="قوالب جاهزة بالحقول المتكررة (الوحدة، الضريبة، الشحن، السمات) تُطبَّق على المنتجات الجديدة أو القائمة."
         actions={
           access.canManage ? (
-            <Button size="lg" className="h-11 gap-1.5 lg:h-9" onClick={() => setEditing("new")}>
+            <Button size="lg" className="h-11 gap-1.5 lg:h-9" onClick={() => setEditing({ mode: "new" })}>
               <Plus className="size-4" aria-hidden /> قالب جديد
             </Button>
           ) : null
@@ -73,10 +93,10 @@ export function TemplatesScreen() {
         <EmptyState
           title="لا قوالب بعد"
           description="أنشئ قالباً من منتج قائم أو من أحد القطاعات المركزية الـ 35."
-          action={access.canManage ? <Button size="lg" className="h-11" onClick={() => setEditing("new")}>قالب جديد</Button> : undefined}
+          action={access.canManage ? <Button size="lg" className="h-11" onClick={() => setEditing({ mode: "new" })}>قالب جديد</Button> : undefined}
         />
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {(templates.data ?? []).map((t) => (
             <li key={t.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-start md:justify-between" data-testid="template-row">
               <div className="flex min-w-0 flex-col gap-1">
@@ -96,13 +116,30 @@ export function TemplatesScreen() {
               </div>
               {access.canManage ? (
                 <div className="flex flex-wrap gap-1.5">
+                  <Link
+                    href={productFromTemplateHref(t.id)}
+                    className="inline-flex h-11 items-center gap-1 rounded-lg bg-primary px-2.5 text-[0.8rem] font-semibold text-primary-foreground shadow-button hover:bg-primary/90 lg:h-7"
+                    data-testid="template-create-product"
+                  >
+                    <PackagePlus className="size-3.5" aria-hidden /> إنشاء منتج
+                  </Link>
                   <Button variant="outline" size="sm" className="h-11 gap-1 lg:h-7" onClick={() => setApplying(t)}>
                     <Wand2 className="size-3.5" aria-hidden /> تطبيق على منتجات
                   </Button>
                   <Button variant="outline" size="sm" className="h-11 gap-1 lg:h-7" onClick={() => setSectorFor(t)}>
                     <Layers className="size-3.5" aria-hidden /> من قطاع مركزي
                   </Button>
-                  <button type="button" onClick={() => setEditing(t)} aria-label={`تحرير ${t.name}`} className="flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted lg:size-7">
+                  <button
+                    type="button"
+                    onClick={() => setEditing({ mode: "duplicate", template: t })}
+                    aria-label={`نسخ ${t.name}`}
+                    title="نسخ"
+                    data-testid="template-duplicate"
+                    className="flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted lg:size-7"
+                  >
+                    <Copy className="size-4" aria-hidden />
+                  </button>
+                  <button type="button" onClick={() => setEditing({ mode: "edit", template: t })} aria-label={`تحرير ${t.name}`} className="flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted lg:size-7">
                     <Pencil className="size-4" aria-hidden />
                   </button>
                   <button type="button" onClick={() => setDeleting(t)} aria-label={`حذف ${t.name}`} className="flex size-11 items-center justify-center rounded-md text-destructive hover:bg-muted lg:size-7">
@@ -119,8 +156,9 @@ export function TemplatesScreen() {
         <SheetContent side="right" className="w-full gap-0 overflow-y-auto p-0 shadow-none sm:max-w-md">
           {editing !== null ? (
             <TemplateForm
-              key={editing === "new" ? "new" : editing.id}
-              template={editing === "new" ? null : editing}
+              key={editing.mode === "new" ? "new" : `${editing.mode}-${editing.template.id}`}
+              template={editing.mode === "edit" ? editing.template : null}
+              copyOf={editing.mode === "duplicate" ? editing.template : null}
               onDone={() => {
                 setEditing(null);
                 void refresh();
@@ -162,27 +200,158 @@ export function TemplatesScreen() {
   );
 }
 
-function TemplateForm({ template, onDone, onCancel }: { template: ProductTemplate | null; onDone: () => void; onCancel: () => void }) {
-  const attributes = useVariantAttributes().data ?? [];
+type NewAttribute = { name: string; on: boolean };
+type PresetTrace = { ids: number[]; names: string[]; autoName: string };
+const EMPTY_PRESET: PresetTrace = { ids: [], names: [], autoName: "" };
+
+function TemplateForm({
+  template,
+  copyOf = null,
+  onDone,
+  onCancel,
+}: {
+  template: ProductTemplate | null;
+  /** Duplicate: a NEW template seeded from this one (saved with «create», not «update»). */
+  copyOf?: ProductTemplate | null;
+  onDone: () => void;
+  onCancel: () => void;
+}) {
+  const store = useStore();
+  const qc = useQueryClient();
+  const attributeQuery = useVariantAttributes();
+  const attributes = useMemo(() => attributeQuery.data ?? [], [attributeQuery.data]);
   const products = useProducts({ page_size: 100, ordering: "name" }).data?.results ?? [];
-  const [name, setName] = useState(template?.name ?? "");
+  const seed = template ?? copyOf;
+  const creating = !template && !copyOf;
+  const [name, setName] = useState(template?.name ?? (copyOf ? `${copyOf.name}${DUPLICATE_SUFFIX}` : ""));
   const [fromProduct, setFromProduct] = useState("");
-  const [attrIds, setAttrIds] = useState<number[]>(template?.variant_attribute_ids ?? []);
-  const [fields, setFields] = useState<Record<string, string | number | boolean | null>>(template?.fields ?? {});
+  const [attrIds, setAttrIds] = useState<number[]>(seed?.variant_attribute_ids ?? []);
+  /** Attributes not in the store dictionary yet, created on save. `on` = checked. */
+  const [newAttrs, setNewAttrs] = useState<NewAttribute[]>([]);
+  const [category, setCategory] = useState("");
+  /** What the current preset added and the merchant has not touched since: a switch removes only these. */
+  const [preset, setPreset] = useState<PresetTrace>(EMPTY_PRESET);
+  const [customAttr, setCustomAttr] = useState("");
+  const [fields, setFields] = useState<Record<string, string | number | boolean | null>>(seed ? { ...seed.fields } : {});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const byName = useMemo(() => new Map(attributes.map((a) => [normalizeAttributeName(a.name), a])), [attributes]);
+  const checkedNew = newAttrs.filter((a) => a.on).length;
+
+  function pickCategory(id: string) {
+    setCategory(id);
+    const cat = standardCategory(id);
+    const ids = attrIds.filter((x) => !preset.ids.includes(x));
+    const pending = newAttrs.filter((a) => !preset.names.includes(a.name)).map((a) => ({ ...a }));
+    const added: PresetTrace = { ids: [], names: [], autoName: cat ? `قالب ${cat.label}` : "" };
+    for (const label of cat?.attributes ?? []) {
+      const key = normalizeAttributeName(label);
+      const existing = byName.get(key);
+      if (existing) {
+        if (!ids.includes(existing.id)) {
+          ids.push(existing.id);
+          added.ids.push(existing.id);
+        }
+      } else {
+        const listed = pending.find((a) => normalizeAttributeName(a.name) === key);
+        if (listed) listed.on = true;
+        else {
+          pending.push({ name: label, on: true });
+          added.names.push(label);
+        }
+      }
+    }
+    setAttrIds(ids);
+    setNewAttrs(pending);
+    // Name the template after the category unless the merchant typed a name of their own.
+    if (!name.trim() || name === preset.autoName) setName(added.autoName);
+    setPreset(added);
+  }
+
+  function toggleExisting(id: number, on: boolean) {
+    setAttrIds((ids) => (on ? [...ids, id] : ids.filter((x) => x !== id)));
+    setPreset((p) => ({ ...p, ids: p.ids.filter((x) => x !== id) }));
+  }
+
+  function toggleNew(label: string, on: boolean) {
+    setNewAttrs((list) => list.map((a) => (a.name === label ? { ...a, on } : a)));
+    setPreset((p) => ({ ...p, names: p.names.filter((x) => x !== label) }));
+  }
+
+  function addCustom() {
+    const label = customAttr.trim().replace(/\s+/g, " ");
+    if (!label) return;
+    const key = normalizeAttributeName(label);
+    const existing = byName.get(key);
+    if (existing) setAttrIds((ids) => (ids.includes(existing.id) ? ids : [...ids, existing.id]));
+    else
+      setNewAttrs((list) =>
+        list.some((a) => normalizeAttributeName(a.name) === key)
+          ? list.map((a) => (normalizeAttributeName(a.name) === key ? { ...a, on: true } : a))
+          : [...list, { name: label, on: true }],
+      );
+    setCustomAttr("");
+  }
+
+  /**
+   * Creates the checked new attributes in the store dictionary and returns their ids. It first
+   * re-reads the dictionary so a name that appeared meanwhile is reused, not duplicated. Each
+   * resolved name moves into `attrIds` at once, so a failed save retried later never creates
+   * the same attribute twice.
+   */
+  async function resolveNewAttributes(): Promise<number[]> {
+    const pending = newAttrs.filter((a) => a.on);
+    if (pending.length === 0) return [];
+    const fresh = (await attributeQuery.refetch()).data ?? attributes;
+    const known = new Map(fresh.map((a) => [normalizeAttributeName(a.name), a.id]));
+    const resolved: { name: string; id: number }[] = [];
+    try {
+      for (const [i, attr] of pending.entries()) {
+        const existingId = known.get(normalizeAttributeName(attr.name));
+        if (existingId !== undefined) {
+          resolved.push({ name: attr.name, id: existingId });
+          continue;
+        }
+        try {
+          const created = await attributeApi.create({
+            name: attr.name,
+            ...attributeCreateType(attr.name),
+            unit: "",
+            min_value: null,
+            max_value: null,
+            is_required: false,
+            sort_order: String(fresh.length + i),
+          });
+          resolved.push({ name: attr.name, id: created.id });
+        } catch (err) {
+          throw new Error(`تعذّر إنشاء السمة «${attr.name}»${isApiError(err) ? `: ${err.userMessage}` : "."}`);
+        }
+      }
+    } finally {
+      if (resolved.length > 0) {
+        const done = new Set(resolved.map((r) => r.name));
+        setNewAttrs((list) => list.filter((a) => !done.has(a.name)));
+        setAttrIds((ids) => [...new Set([...ids, ...resolved.map((r) => r.id)])]);
+        setPreset((p) => ({ ...p, names: p.names.filter((x) => !done.has(x)) }));
+        void qc.invalidateQueries({ queryKey: productKeys(store).attributes });
+      }
+    }
+    return resolved.map((r) => r.id);
+  }
 
   async function save() {
     setError("");
     setBusy(true);
     try {
-      const body = { name, variant_attribute_ids: attrIds, fields, from_product_id: fromProduct ? Number(fromProduct) : undefined };
+      const createdIds = await resolveNewAttributes();
+      const variantAttributeIds = [...new Set([...attrIds, ...createdIds])];
+      const body = { name, variant_attribute_ids: variantAttributeIds, fields, from_product_id: fromProduct ? Number(fromProduct) : undefined };
       if (template) await templateApi.update(template.id, body);
       else await templateApi.create(body);
-      toast.success(template ? "حُفظ القالب" : `أُنشئ القالب «${name}»`);
+      toast.success(template ? "حُفظ القالب" : copyOf ? `أُنشئت نسخة القالب «${name}»` : `أُنشئ القالب «${name}»`);
       onDone();
     } catch (err) {
-      setError(isApiError(err) ? err.userMessage : "تعذّر الحفظ.");
+      setError(isApiError(err) ? err.userMessage : err instanceof Error && err.message ? err.message : "تعذّر الحفظ.");
     } finally {
       setBusy(false);
     }
@@ -191,14 +360,58 @@ function TemplateForm({ template, onDone, onCancel }: { template: ProductTemplat
   return (
     <>
       <SheetHeader className="border-b border-border">
-        <SheetTitle>{template ? `تحرير «${template.name}»` : "قالب جديد"}</SheetTitle>
-        <SheetDescription>القيم هنا تُنسخ إلى المنتج عند تطبيق القالب.</SheetDescription>
+        <SheetTitle>{template ? `تحرير «${template.name}»` : copyOf ? `نسخ «${copyOf.name}»` : "قالب جديد"}</SheetTitle>
+        <SheetDescription>
+          {copyOf ? "نسخة غير محفوظة بكل الحقول والسمات — غيّر الاسم وما يلزم ثم احفظ." : "القيم هنا تُنسخ إلى المنتج عند تطبيق القالب."}
+        </SheetDescription>
       </SheetHeader>
       <div className="flex flex-1 flex-col gap-4 p-4">
+        {creating ? (
+          <div className="flex flex-col gap-2 rounded-xl border border-primary/25 bg-primary/5 p-3" data-testid="standard-category">
+            <Field
+              label={
+                <span className="inline-flex items-center gap-1.5">
+                  <Sparkles className="size-4 text-primary" aria-hidden /> تعبئة من قسم قياسي
+                </span>
+              }
+              htmlFor="tp-category"
+              hint="اختر نشاط متجرك لتحديد السمات المعتادة تلقائياً — يمكنك تعديلها بعد ذلك."
+            >
+              <NativeSelect
+                id="tp-category"
+                value={category}
+                onChange={(e) => pickCategory(e.target.value)}
+                className="h-11 bg-card md:h-9"
+              >
+                <option value="">بلا — سأختار السمات بنفسي</option>
+                {STANDARD_TAXONOMY_GROUPS.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.ids.map((id) => (
+                      <option key={id} value={id}>
+                        {standardCategory(id)?.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </NativeSelect>
+            </Field>
+            {category ? (
+              <p className="text-xs text-muted-foreground" role="status">
+                حُدّدت سمات «{standardCategory(category)?.label}».
+                {checkedNew > 0 ? (
+                  <>
+                    {" "}
+                    السمات المعلَّمة «جديدة» (<Mono>{checkedNew}</Mono>) تُضاف إلى قاموس المتجر عند الحفظ.
+                  </>
+                ) : null}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
         <Field label="اسم القالب" htmlFor="tp-name" required error={error && !name ? "أدخل اسم القالب." : undefined}>
-          <input id="tp-name" autoFocus value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
+          <input id="tp-name" autoFocus={!creating} value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
         </Field>
-        {!template ? (
+        {!template && !copyOf ? (
           <Field label="انسخ القيم من منتج قائم" htmlFor="tp-from" hint="اختياري — يملأ الحقول والسمات من المنتج.">
             <NativeSelect id="tp-from" value={fromProduct} onChange={(e) => setFromProduct(e.target.value)} className="h-11 md:h-8">
               <option value="">بلا</option>
@@ -210,14 +423,45 @@ function TemplateForm({ template, onDone, onCancel }: { template: ProductTemplat
             </NativeSelect>
           </Field>
         ) : null}
-        <fieldset className="flex flex-col gap-1">
+        <fieldset className="flex flex-col gap-1" data-testid="template-attributes">
           <legend className="mb-1 text-sm font-medium">السمات</legend>
+          {newAttrs.map((a) => (
+            <label key={`new-${a.name}`} className="flex min-h-11 items-center gap-2 text-sm lg:min-h-8">
+              <Checkbox checked={a.on} onCheckedChange={(on) => toggleNew(a.name, on === true)} />
+              <span className="flex-1">{a.name}</span>
+              <Badge variant="secondary" title="غير موجودة في قاموس المتجر — تُنشأ عند الحفظ">
+                جديدة
+              </Badge>
+            </label>
+          ))}
           {attributes.map((a) => (
             <label key={a.id} className="flex min-h-11 items-center gap-2 text-sm lg:min-h-8">
-              <Checkbox checked={attrIds.includes(a.id)} onCheckedChange={(on) => setAttrIds((ids) => (on ? [...ids, a.id] : ids.filter((x) => x !== a.id)))} />
+              <Checkbox checked={attrIds.includes(a.id)} onCheckedChange={(on) => toggleExisting(a.id, on === true)} />
               {a.name}
             </label>
           ))}
+          {attributes.length === 0 && newAttrs.length === 0 && !attributeQuery.isLoading ? (
+            <p className="text-sm text-muted-foreground">لا سمات في قاموس المتجر بعد — اختر قسماً قياسياً أو أضف سمة.</p>
+          ) : null}
+          <div className="mt-1 flex gap-2">
+            <input
+              value={customAttr}
+              onChange={(e) => setCustomAttr(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addCustom();
+                }
+              }}
+              placeholder="أضف سمة (مثال: الطول)"
+              aria-label="اسم سمة جديدة"
+              maxLength={100}
+              className={inputClass}
+            />
+            <Button type="button" variant="outline" size="lg" className="h-11 shrink-0 gap-1 lg:h-9" disabled={!customAttr.trim()} onClick={addCustom}>
+              <Plus className="size-4" aria-hidden /> إضافة
+            </Button>
+          </div>
         </fieldset>
         {Object.keys(fields).length > 0 ? (
           <fieldset className="flex flex-col gap-2">

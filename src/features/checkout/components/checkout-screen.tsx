@@ -354,7 +354,7 @@ export function CheckoutScreen() {
     return (
       <div className="mx-auto w-full max-w-xl space-y-4 px-4 py-16 md:px-6" data-testid="checkout-empty">
         <h1 className="text-2xl font-bold">لا يمكن إتمام طلب بسلة فارغة</h1>
-        <Link href="/products" className={cn(buttonVariants(), "h-11 px-5")}>
+        <Link href="/products" className={cn(buttonVariants({ variant: "cta" }), "h-11 px-5")}>
           تصفّح المنتجات
         </Link>
       </div>
@@ -415,7 +415,7 @@ export function CheckoutScreen() {
           {detail}
         </p>
       ) : null}
-      <Button type="submit" className="h-12 w-full text-base" disabled={submitting || !anyEnabled} data-testid="checkout-submit">
+      <Button type="submit" variant="cta" className="h-12 w-full text-base" disabled={submitting || !anyEnabled} data-testid="checkout-submit">
         {submitting ? "جارٍ تأكيد الطلب…" : (
           <>
             تأكيد الطلب
@@ -507,7 +507,7 @@ export function CheckoutScreen() {
               <Field id="pickup_location_id" label="نقطة الاستلام" error={err("pickup_location_id")}>
                 <div id="field-pickup_location_id" role="radiogroup" className="space-y-2">
                   {options.pickup_locations.map((p) => (
-                    <label key={p.id} className={cn("store-frame flex cursor-pointer gap-3 rounded-lg border-border p-4", v.pickup_location_id === String(p.id) && "ring-2 ring-foreground")}>
+                    <label key={p.id} className={cn("store-frame flex cursor-pointer gap-3 rounded-xl border-border p-4 shadow-card bg-card", v.pickup_location_id === String(p.id) && "ring-2 ring-foreground")}>
                       <input type="radio" value={String(p.id)} {...register("pickup_location_id")} className="mt-1 size-4 accent-[var(--foreground)]" />
                       <span className="text-sm">
                         <span className="block font-medium">{p.name}</span>
@@ -538,7 +538,7 @@ export function CheckoutScreen() {
                 {options && options.delivery_methods.length > 0 ? (
                   <div id="field-delivery_method_id" role="radiogroup" aria-label="طريقة التوصيل" className="space-y-2">
                     {options.delivery_methods.map((m) => (
-                      <label key={m.id} className={cn("store-frame flex min-h-14 cursor-pointer items-center gap-3 rounded-lg border-border px-4 py-3", v.delivery_method_id === String(m.id) && "ring-2 ring-foreground")}>
+                      <label key={m.id} className={cn("store-frame flex min-h-14 cursor-pointer items-center gap-3 rounded-xl border-border px-4 py-3 shadow-card bg-card", v.delivery_method_id === String(m.id) && "ring-2 ring-foreground")}>
                         <input type="radio" value={String(m.id)} {...register("delivery_method_id")} className="size-4 accent-[var(--foreground)]" />
                         <span className="flex-1 text-sm">
                           <span className="block font-medium">
@@ -573,7 +573,7 @@ export function CheckoutScreen() {
                   key={m.code}
                   data-testid={`pay-${m.code}`}
                   className={cn(
-                    "store-frame flex min-h-14 cursor-pointer items-start gap-3 rounded-lg border-border px-4 py-3",
+                    "store-frame flex min-h-14 cursor-pointer items-start gap-3 rounded-xl border-border px-4 py-3 shadow-card bg-card",
                     v.payment_method === m.code && "ring-2 ring-foreground",
                     !m.enabled && "cursor-not-allowed opacity-60",
                   )}
@@ -706,7 +706,7 @@ export function CheckoutScreen() {
         </div>
 
         <aside className="hidden md:col-span-5 md:block" aria-label="ملخص الطلب">
-          <div className="store-frame sticky top-24 space-y-4 rounded-xl border-border p-5">
+          <div className="store-frame sticky top-24 space-y-4 rounded-xl border-border p-5 shadow-card bg-card">
             <h2 className="store-heading text-lg font-bold">ملخص الطلب</h2>
             {items}
             {quote.data ? <InvoiceLines invoice={quote.data} recomputing={recomputing} /> : <div className="h-40 animate-pulse rounded-lg bg-muted" aria-hidden />}
@@ -815,7 +815,7 @@ function ManualTransfer({
 }) {
   const [copied, setCopied] = useState<string | null>(null);
   return (
-    <div className="store-frame space-y-4 rounded-lg border-border p-4" data-testid="manual-transfer">
+    <div className="store-frame space-y-4 rounded-xl border-border p-4 shadow-card bg-card" data-testid="manual-transfer">
       <p className="text-sm font-medium">حوّل المبلغ إلى أحد الحسابات التالية:</p>
       <ul className="space-y-2">
         {accounts.map((a) => (

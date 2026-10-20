@@ -12,7 +12,11 @@ import { cn } from "@/lib/utils";
  * - permission missing → rendered disabled with a tooltip (T056);
  * - `comingSoon` → disabled with a «قريباً» tag (FR-03.04, reports only).
  *
- * 44px tall on touch viewports, 32px on the desktop grid (constitution: density).
+ * 44px tall on touch viewports, 36px on the desktop grid (constitution: density).
+ *
+ * Painted for the navy sidebar: the active row is a full-width translucent light block
+ * (`bg-white/10`) with white text, exactly as in the owner mockup; the rest is
+ * light-on-navy. The rail flyout uses the same navy surface.
  */
 export function NavEntry({
   title,
@@ -32,8 +36,10 @@ export function NavEntry({
   onNavigate?: () => void;
 }) {
   const rowClass = cn(
-    "flex h-11 items-center justify-between gap-2 rounded-md px-3 text-sm transition-colors md:h-8",
-    active ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+    "flex h-11 items-center justify-between gap-2 rounded-lg px-3 text-sm transition-colors md:h-9",
+    active
+      ? "bg-white/10 font-medium text-white"
+      : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
   );
 
   if (disabledReason || comingSoon) {
@@ -43,12 +49,12 @@ export function NavEntry({
           render={
             <span
               aria-disabled="true"
-              className={cn(rowClass, "cursor-not-allowed text-muted-foreground/70 hover:bg-transparent")}
+              className={cn(rowClass, "cursor-not-allowed text-sidebar-foreground/45 hover:bg-transparent hover:text-sidebar-foreground/45")}
             />
           }
         >
           <span className="truncate">{title}</span>
-          {comingSoon ? <span className="shrink-0 text-xs text-muted-foreground">قريباً</span> : null}
+          {comingSoon ? <span className="shrink-0 text-xs text-sidebar-foreground/60">قريباً</span> : null}
         </TooltipTrigger>
         <TooltipContent side="inline-start">{disabledReason ?? "قريباً"}</TooltipContent>
       </Tooltip>
@@ -59,7 +65,7 @@ export function NavEntry({
     <Link href={href} onClick={onNavigate} aria-current={active ? "page" : undefined} className={rowClass}>
       <span className="truncate">{title}</span>
       {count > 0 ? (
-        <Mono className="shrink-0 rounded-sm bg-muted px-1.5 text-xs text-foreground">{count}</Mono>
+        <Mono className="shrink-0 rounded-full bg-cta px-1.5 text-xs text-cta-foreground">{count}</Mono>
       ) : null}
     </Link>
   );

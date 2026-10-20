@@ -74,7 +74,7 @@ export function SessionsTab({ staff }: { staff: StaffMember }) {
         ) : sessions.data.length === 0 ? (
           <p className="text-sm text-muted-foreground">لا جلسات نشطة.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border" data-testid="sessions-list">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="sessions-list">
             {sessions.data.map((s) => (
               <li key={s.id} className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 gap-y-1 px-3 py-2 text-sm">
                 <div className="flex min-w-0 flex-col">
@@ -107,7 +107,7 @@ export function SessionsTab({ staff }: { staff: StaffMember }) {
         ) : tokens.data.length === 0 ? (
           <p className="text-sm text-muted-foreground">لا رموز.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border" data-testid="tokens-list">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="tokens-list">
             {tokens.data.map((t) => (
               <li key={t.id} className="flex min-h-11 items-center justify-between gap-3 px-3 py-2 text-sm">
                 <div className="flex min-w-0 flex-col">
@@ -150,7 +150,7 @@ export function SessionsTab({ staff }: { staff: StaffMember }) {
         ) : devices.data.length === 0 ? (
           <p className="text-sm text-muted-foreground">لا أجهزة موثوقة — سيُطلب رمز التحقق في كل دخول.</p>
         ) : (
-          <ul className="divide-y divide-border rounded-lg border border-border" data-testid="devices-list">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="devices-list">
             {devices.data.map((d) => (
               <li key={d.id} className="flex min-h-11 items-center justify-between gap-3 px-3 py-2 text-sm">
                 <div className="flex min-w-0 flex-col">

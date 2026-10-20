@@ -203,7 +203,7 @@ function ApprovalSheet({ approval, canDecide, onDone, onReload }: { approval: Ap
         <SheetDescription>{approval.summary}</SheetDescription>
       </SheetHeader>
 
-      <dl className="divide-y divide-border rounded-lg border border-border px-3">
+      <dl className="divide-y divide-border/60 surface-card px-3 overflow-hidden">
         <Row label="مقدِّم الطلب">{approval.requester_name}</Row>
         <Row label="يحسمه">{approval.approver_role}</Row>
         <Row label="الحالة">
@@ -242,7 +242,7 @@ function ApprovalSheet({ approval, canDecide, onDone, onReload }: { approval: Ap
       </section>
 
       {conflict ? (
-        <div role="alert" className="flex flex-col gap-2 rounded-lg border border-border p-3 text-sm" data-testid="approval-conflict">
+        <div role="alert" className="flex flex-col gap-2 surface-card p-4 text-sm" data-testid="approval-conflict">
           <p className="font-medium">حُسم الطلب من مستخدم آخر</p>
           <p className="text-muted-foreground">تغيّرت نسخة الطلب منذ فتحته. أعد التحميل لرؤية القرار.</p>
           <button
@@ -262,7 +262,7 @@ function ApprovalSheet({ approval, canDecide, onDone, onReload }: { approval: Ap
         <div className="flex flex-col gap-3 border-t border-border pt-4">
           <label className="flex flex-col gap-1.5 text-sm">
             <span className="font-medium">ملاحظة (اختياري)</span>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} disabled={!canAct} className="min-h-11 w-full rounded-lg border border-input bg-background px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 dark:bg-input/30" placeholder="سبب القرار يظهر لمقدِّم الطلب." />
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={2} disabled={!canAct} className="min-h-11 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-60 dark:bg-input/30" placeholder="سبب القرار يظهر لمقدِّم الطلب." />
           </label>
           {blockedReason ? (
             <p role="status" className="text-sm text-muted-foreground" data-testid="approval-blocked">

@@ -153,7 +153,7 @@ export function TagPicker({ value, onChange, disabled }: { value: number[]; onCh
             disabled={busy}
             placeholder="اكتب وسماً ثم Enter"
             aria-label="إضافة وسم"
-            className="h-11 w-full rounded-lg border border-input bg-background px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:text-sm"
+            className="h-11 w-full rounded-lg border border-input bg-card px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:text-sm"
             data-testid="tag-input"
           />
           {suggestions.length ? (

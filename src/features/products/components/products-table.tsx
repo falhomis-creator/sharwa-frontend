@@ -4,8 +4,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Copy, MoreHorizontal, Pencil } from "lucide-react";
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { NativeSelect } from "@/components/ui/native-select";
 import { EmptyState } from "@/components/shared/empty-state";
 import { Money } from "@/components/shared/money";
@@ -45,6 +47,7 @@ import { useCatalogAccess } from "@/features/products/hooks/use-catalog-access";
 import { InlineEditCell } from "@/features/products/components/inline-edit-cell";
 import { ProductStatusText } from "@/features/products/components/status-text";
 import { ProductThumb } from "@/features/products/components/product-thumb";
+import { duplicateProductHref } from "@/features/products/components/editor/prefill";
 import { isApiError } from "@/lib/api-error";
 
 /**
@@ -239,8 +242,36 @@ export function ProductsTable({ onQuickAdd }: { onQuickAdd: () => void }) {
           </span>
         ),
       },
+      {
+        // Row actions (Shopify/BigCommerce «…» menu): edit, and «نسخ» → a pre-filled copy.
+        id: "actions",
+        meta: { srOnlyHeader: true, className: "w-12" },
+        header: "إجراءات",
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label={`إجراءات ${row.original.name}`}
+              data-testid="product-row-actions"
+              onKeyDown={(e) => e.stopPropagation()}
+              className="inline-flex size-11 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-accent-foreground lg:size-8"
+            >
+              <MoreHorizontal className="size-4" aria-hidden />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => router.push(`/dashboard/products/${row.original.id}`)}>
+                <Pencil aria-hidden /> تحرير
+              </DropdownMenuItem>
+              {access.canManage ? (
+                <DropdownMenuItem onClick={() => router.push(duplicateProductHref(row.original.id))} data-testid="duplicate-row">
+                  <Copy aria-hidden /> نسخ
+                </DropdownMenuItem>
+              ) : null}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
+      },
     ],
-    [access.canAdjustStock, access.canManage, byCategory, setPrice, setStock],
+    [access.canAdjustStock, access.canManage, byCategory, router, setPrice, setStock],
   );
 
   const summary = data?.summary;

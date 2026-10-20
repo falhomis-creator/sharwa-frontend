@@ -24,7 +24,7 @@ export function FontPicker({ id, label, value, onChange }: { id: string; label: 
         id={id}
         aria-label={`${label}: ${current}`}
         data-testid={`font-${id}`}
-        className="flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-input bg-background px-2.5 text-start text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9 dark:bg-input/30"
+        className="flex h-11 w-full min-w-0 items-center justify-between gap-2 rounded-lg border border-input bg-card px-2.5 text-start text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-9 dark:bg-input/30"
       >
         <span className="truncate" style={{ fontFamily: storeFontStack(current) }}>
           {current}

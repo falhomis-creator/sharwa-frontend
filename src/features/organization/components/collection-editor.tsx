@@ -37,7 +37,7 @@ function SortableProduct({ product, canManage, onRemove }: { product: Collection
     <li
       ref={setNodeRef}
       style={{ transform: translateToString(transform), transition }}
-      className={`flex min-h-12 items-center gap-2 border-b border-border bg-background px-2 last:border-0 ${isDragging ? "relative z-10 border border-foreground" : ""}`}
+      className={`flex min-h-12 items-center gap-2 border-b border-border bg-background px-2 last:border-0 ${isDragging ? "relative z-10 border border-primary ring-1 ring-primary/20" : ""}`}
       data-testid="collection-product"
     >
       {canManage ? (
@@ -166,7 +166,7 @@ export function CollectionEditor({ collectionId }: { collectionId: number }) {
         title={c.name}
         description={c.description || "مجموعة يدوية: المنتجات وترتيبها كما تختارها."}
         actions={
-          <div className="flex items-center gap-1 rounded-lg border border-border ps-2.5">
+          <div className="flex items-center gap-1 surface-card ps-2.5">
             <Mono className="max-w-64 truncate text-xs text-muted-foreground" data-testid="collection-link">
               {link}
             </Mono>
@@ -212,7 +212,7 @@ export function CollectionEditor({ collectionId }: { collectionId: number }) {
           ) : (
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
               <SortableContext items={c.products.map((p) => p.id)} strategy={verticalListSortingStrategy}>
-                <ul className="rounded-lg border border-border">
+                <ul className="surface-card">
                   {c.products.map((p) => (
                     <SortableProduct
                       key={p.id}

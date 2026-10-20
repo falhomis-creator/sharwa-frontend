@@ -111,11 +111,11 @@ function RefundsInner() {
             />
             <label className="flex min-w-0 flex-col gap-1 md:flex-row md:items-center md:gap-1.5">
               <span className="text-xs text-muted-foreground md:whitespace-nowrap">من</span>
-              <input type="date" dir="ltr" value={f.from} max={f.to || undefined} onChange={(e) => set({ from: e.target.value || null })} className="h-11 rounded-lg border border-input bg-background px-2 font-mono text-sm md:h-8" aria-label="من تاريخ" />
+              <input type="date" dir="ltr" value={f.from} max={f.to || undefined} onChange={(e) => set({ from: e.target.value || null })} className="h-11 rounded-lg border border-input bg-card px-2 font-mono text-sm md:h-8" aria-label="من تاريخ" />
             </label>
             <label className="flex min-w-0 flex-col gap-1 md:flex-row md:items-center md:gap-1.5">
               <span className="text-xs text-muted-foreground md:whitespace-nowrap">إلى</span>
-              <input type="date" dir="ltr" value={f.to} min={f.from || undefined} onChange={(e) => set({ to: e.target.value || null })} className="h-11 rounded-lg border border-input bg-background px-2 font-mono text-sm md:h-8" aria-label="إلى تاريخ" />
+              <input type="date" dir="ltr" value={f.to} min={f.from || undefined} onChange={(e) => set({ to: e.target.value || null })} className="h-11 rounded-lg border border-input bg-card px-2 font-mono text-sm md:h-8" aria-label="إلى تاريخ" />
             </label>
           </FilterBar>
         }

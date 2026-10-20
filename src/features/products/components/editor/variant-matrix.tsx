@@ -192,7 +192,7 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
                     key={a.id}
                     className={cn(
                       "flex min-h-11 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm lg:min-h-8",
-                      attrIds.includes(a.id) ? "border-foreground" : "border-border",
+                      attrIds.includes(a.id) ? "border-primary" : "border-border",
                     )}
                   >
                     <Checkbox checked={attrIds.includes(a.id)} onCheckedChange={() => toggleAttr(a.id)} aria-label={a.name} />
@@ -218,7 +218,7 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
                       onClick={() => toggleOption(a, o.id)}
                       className={cn(
                         "inline-flex min-h-11 items-center gap-1.5 rounded-md border px-2.5 text-sm lg:min-h-8",
-                        on ? "border-foreground text-foreground" : "border-border text-muted-foreground line-through",
+                        on ? "border-cta font-medium text-primary" : "border-border text-muted-foreground line-through",
                       )}
                     >
                       <Swatch color={o.color} label={o.value} />
@@ -231,7 +231,7 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
           ))}
 
           {selectedAttrs.length > 0 ? (
-            <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
+            <div className="flex flex-col gap-2 surface-card p-4">
               <p className="text-sm">
                 <Mono>{formatNumber(kept.length)}</Mono> تركيبة
                 {excluded.size > 0 ? (
@@ -291,7 +291,7 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
 
       {product.variants.length > 0 ? (
         <div className="flex flex-col gap-3">
-          <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
+          <div className="hidden overflow-x-auto surface-card md:block">
             <table className="w-full text-sm">
               <caption className="sr-only">مصفوفة المتغيرات</caption>
               <thead>
@@ -340,7 +340,7 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
                             aria-invalid={Boolean(errors[`${v.id}.${field}`])}
                             inputMode={field === "sku" ? undefined : "decimal"}
                             className={cn(
-                              "h-8 w-full min-w-24 rounded-md border border-input bg-background px-2 font-mono text-sm tabular-nums outline-none focus-visible:border-ring",
+                              "h-8 w-full min-w-24 rounded-md border border-input bg-card px-2 font-mono text-sm tabular-nums outline-none focus-visible:border-ring",
                               field !== "sku" && "text-end",
                               errors[`${v.id}.${field}`] && "border-destructive",
                             )}
@@ -365,7 +365,7 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
             </table>
           </div>
 
-          <ul className="flex flex-col divide-y divide-border rounded-lg border border-border md:hidden">
+          <ul className="flex flex-col divide-y divide-border/60 surface-card md:hidden overflow-hidden">
             {product.variants.map((v) => {
               const row = rowOf(v);
               return (
@@ -380,7 +380,7 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
                           value={row[field]}
                           readOnly={readOnly}
                           onChange={(e) => edit(v, field, e.target.value)}
-                          className="h-11 w-full rounded-md border border-input bg-background px-2 font-mono text-sm text-foreground tabular-nums"
+                          className="h-11 w-full rounded-md border border-input bg-card px-2 font-mono text-sm text-foreground tabular-nums"
                         />
                       </label>
                     ))}

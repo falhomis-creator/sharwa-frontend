@@ -83,7 +83,7 @@ function ToolList() {
   const { canFeature, session } = useAccess();
   const isOwner = session.kind === "merchant";
   return (
-    <ul className="divide-y divide-border rounded-lg border border-border" data-testid="marketing-tools">
+    <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="marketing-tools">
       {TOOLS.map((t) => {
         const on = canFeature(t.feature);
         const allowed = on && (!t.ownerOnly || isOwner);

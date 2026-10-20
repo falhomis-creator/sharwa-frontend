@@ -137,7 +137,7 @@ function WithdrawalForm({ wallet, accounts }: { wallet: MerchantWallet; accounts
     <form onSubmit={(e) => void review(e)} noValidate className="flex max-w-xl flex-col gap-5" data-testid="withdrawal-form">
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1.5 text-sm font-medium">العملة</legend>
-        <div className="divide-y divide-border rounded-lg border border-border">
+        <div className="divide-y divide-border/60 surface-card overflow-hidden">
           {wallet.balances.map((b) => {
             const zero = compareDecimal(b.available, "0") <= 0;
             return (

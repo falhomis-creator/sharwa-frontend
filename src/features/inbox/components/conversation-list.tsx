@@ -43,7 +43,7 @@ export function InboxFilters({ value, onChange }: { value: InboxFilterValue; onC
         onChange={(e) => setQ(e.target.value)}
         placeholder="اسم، معرّف، أو هاتف"
         aria-label="بحث في المحادثات"
-        className="h-11 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 lg:h-8"
+        className="h-11 w-full rounded-lg border border-input bg-card px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 lg:h-8"
         data-testid="inbox-search"
       />
       <div className="flex gap-1.5">

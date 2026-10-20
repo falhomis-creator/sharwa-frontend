@@ -74,7 +74,7 @@ export function VariantDictionary() {
       ) : (query.data ?? []).length === 0 ? (
         <EmptyState title="لا سمات بعد" description="أضف سمة مثل «المقاس» ثم قيمها." />
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {(query.data ?? []).map((a) => (
             <AttributeRow
               key={a.id}
@@ -234,7 +234,7 @@ function AttributeRow({
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2">
             {a.field_type === "swatches" ? (
-              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} aria-label="لون القيمة" className="size-11 shrink-0 cursor-pointer rounded-md border border-border bg-background p-1 lg:size-8" />
+              <input type="color" value={color} onChange={(e) => setColor(e.target.value)} aria-label="لون القيمة" className="size-11 shrink-0 cursor-pointer rounded-md border border-border bg-card p-1 lg:size-8" />
             ) : null}
             <input
               value={value}

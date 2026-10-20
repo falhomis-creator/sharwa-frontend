@@ -91,7 +91,7 @@ export function FeaturesTab({ schema, storeName }: { schema: string; storeName: 
           <h2 id={`fg-${g.key}`} className="text-xs text-muted-foreground">
             {g.label}
           </h2>
-          <ul className="divide-y divide-border rounded-lg border border-border">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden">
             {g.rows.map((f) => {
               const d = draftOf(f);
               const dirty = changes.includes(f);
@@ -120,7 +120,7 @@ export function FeaturesTab({ schema, storeName }: { schema: string; storeName: 
                           key={s}
                           className={cn(
                             "flex h-11 cursor-pointer items-center rounded-md px-2.5 text-xs transition-colors has-disabled:cursor-not-allowed lg:h-7",
-                            d.state === s ? (s === "off" ? "bg-destructive/10 text-destructive" : "bg-muted font-medium text-foreground") : "text-muted-foreground hover:text-foreground",
+                            d.state === s ? (s === "off" ? "bg-destructive/10 text-destructive" : "bg-accent font-medium text-accent-foreground") : "text-muted-foreground hover:text-foreground",
                           )}
                         >
                           <input type="radio" className="sr-only" name={`ov-${f.code}`} value={s} checked={d.state === s} onChange={() => setDraft(f.code, { state: s }, serverDraft(f))} data-testid={`ov-${f.code}-${s}`} />
@@ -148,7 +148,7 @@ export function FeaturesTab({ schema, storeName }: { schema: string; storeName: 
       ))}
 
       {canWrite ? (
-        <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t border-border bg-background px-4 py-3 lg:-mx-6 lg:px-6">
+        <div className="sticky bottom-0 -mx-4 flex items-center justify-between gap-3 border-t border-border bg-card px-4 py-3 lg:-mx-6 lg:px-6">
           <span className="text-sm text-muted-foreground">{changes.length ? <><Mono className="text-foreground">{changes.length}</Mono> تغييرات غير محفوظة</> : "لا تغييرات"}</span>
           <div className="flex gap-2">
             <Button variant="outline" className="h-11 lg:h-8" disabled={!changes.length} onClick={() => setDrafts({})}>

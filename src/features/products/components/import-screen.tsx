@@ -124,7 +124,7 @@ export function ImportScreen() {
               </>
             ) : null}
           </p>
-          <div className="overflow-x-auto rounded-lg border border-border">
+          <div className="overflow-x-auto surface-card">
             <table className="w-full min-w-[40rem] text-sm">
               <caption className="sr-only">معاينة الملف ومطابقة الأعمدة</caption>
               <thead>
@@ -206,7 +206,7 @@ export function ImportScreen() {
       {step === 2 && upload ? (
         <div className="flex flex-col gap-3" role="status" aria-live="polite">
           <div className="h-1 w-full overflow-hidden rounded-full bg-muted">
-            <div className="h-full bg-foreground transition-[width] duration-300" style={{ width: `${st ? Math.round((st.done / Math.max(1, st.total)) * 100) : 0}%` }} />
+            <div className="h-full bg-primary transition-[width] duration-300" style={{ width: `${st ? Math.round((st.done / Math.max(1, st.total)) * 100) : 0}%` }} />
           </div>
           <p className="text-sm">
             {st?.status === "done" ? "اكتمل الاستيراد" : "جارٍ الاستيراد…"} <Mono>{formatNumber(st?.done ?? 0)}</Mono>/<Mono>{formatNumber(st?.total ?? upload.total_rows)}</Mono>

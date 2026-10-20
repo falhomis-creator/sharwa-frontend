@@ -174,7 +174,7 @@ export function BrandsTab({ canManage }: { canManage: boolean }) {
       {brands.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-6 text-sm text-muted-foreground">لا ماركات بعد — اكتب اسم أول ماركة واضغط Enter.</p>
       ) : (
-        <ul className="rounded-lg border border-border">
+        <ul className="surface-card">
           <li aria-hidden className="hidden items-center gap-3 border-b border-border px-3 py-2 text-xs text-muted-foreground md:flex">
             <span className="w-8">الشعار</span>
             <span className="flex-1">الاسم</span>

@@ -16,7 +16,7 @@ import { useLogout, useWallet } from "@/features/sharwa-pay/api";
  * by «لا اتصال — لا نعرض رصيداً قديماً» (US-40.5 a1). The service worker registered here
  * caches nothing; it exists so the app can be installed (FR-40.06).
  */
-export const payPrimary = "inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-foreground px-4 text-base font-medium text-background disabled:cursor-not-allowed disabled:opacity-50";
+export const payPrimary = "inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-cta px-4 text-base font-medium text-cta-foreground shadow-xs disabled:cursor-not-allowed disabled:opacity-50";
 export const paySecondary = "inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border px-4 text-base disabled:cursor-not-allowed disabled:opacity-50";
 
 function subscribe(cb: () => void) {
@@ -58,7 +58,7 @@ export function PayShell({ children }: { children: ReactNode }) {
 
 export function OfflineState() {
   return (
-    <div role="status" className="flex flex-col gap-2 rounded-lg border border-border p-5" data-testid="pay-offline">
+    <div role="status" className="flex flex-col gap-2 surface-card p-6" data-testid="pay-offline">
       <p className="text-base font-medium">لا اتصال — لا نعرض رصيداً قديماً</p>
       <p className="text-sm text-muted-foreground">تعرض المحفظة أرصدتك من الخادم مباشرة فقط. أعد الاتصال بالإنترنت ثم حدّث الصفحة.</p>
     </div>
@@ -151,7 +151,7 @@ export function BalancesSkeleton() {
 
 export function PayError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
   return (
-    <div role="alert" className="flex flex-col gap-3 rounded-lg border border-border p-5">
+    <div role="alert" className="flex flex-col gap-3 surface-card p-6">
       <p className="text-base font-medium">تعذّر التحميل</p>
       {error instanceof Error ? <p className="text-sm text-destructive">{error.message}</p> : null}
       <button type="button" className={paySecondary} onClick={onRetry}>
@@ -163,7 +163,7 @@ export function PayError({ error, onRetry }: { error: unknown; onRetry: () => vo
 
 export function BottomBar({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
       <div className={cn("mx-auto grid max-w-[480px] gap-2 px-4 py-3", className)}>{children}</div>
     </div>
   );

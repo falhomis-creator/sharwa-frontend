@@ -30,7 +30,7 @@ export function Table({
   tableClassName?: string;
 }) {
   return (
-    <ScrollX className={cn("rounded-lg border border-border", className)}>
+    <ScrollX className={cn("surface-card", className)}>
       <table data-testid={testId} className={cn("w-full border-collapse text-sm", tableClassName)}>
         <caption className="sr-only">{caption}</caption>
         {children}
@@ -41,7 +41,7 @@ export function Table({
 
 export function Th({ children, numeric, className }: { children?: ReactNode; numeric?: boolean; className?: string }) {
   return (
-    <th scope="col" className={cn("sticky top-0 z-[1] h-10 whitespace-nowrap border-b border-border bg-background px-3 text-start text-xs font-normal text-muted-foreground", numeric && "text-end", className)}>
+    <th scope="col" className={cn("sticky top-0 z-[1] h-10 whitespace-nowrap border-b border-border bg-card px-3 text-start text-xs font-normal text-muted-foreground", numeric && "text-end", className)}>
       {children}
     </th>
   );

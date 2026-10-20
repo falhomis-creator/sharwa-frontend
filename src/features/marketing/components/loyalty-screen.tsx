@@ -78,7 +78,7 @@ function LoyaltyForm({ settings }: { settings: LoyaltySettings }) {
       <PageHeader title="نقاط الولاء" description="يكسب العميل نقاطاً مع كل طلب ويستبدلها عند الدفع." />
       <form onSubmit={onSubmit} noValidate className="flex max-w-xl flex-col gap-5">
         <Controller control={control} name="is_enabled" render={({ field }) => <ToggleRow id="is_enabled" label="تفعيل برنامج النقاط" description="عند الإيقاف تبقى أرصدة العملاء محفوظة دون كسب أو استبدال." checked={field.value} onCheckedChange={field.onChange} testId="is_enabled" />} />
-        <fieldset className="flex flex-col gap-4 rounded-lg border border-border p-4" disabled={!v.is_enabled}>
+        <fieldset className="flex flex-col gap-4 surface-card p-5 lg:p-6" disabled={!v.is_enabled}>
           <legend className="px-1 text-xs text-muted-foreground">المعادلة</legend>
           <Field label="ريالات لكل نقطة" htmlFor="riyals_per_point" error={errors.riyals_per_point?.message} required hint="كل هذا المبلغ من الطلب يكسب نقطة واحدة.">
             <input id="riyals_per_point" {...register("riyals_per_point")} inputMode="numeric" className={numericInputClass} dir="ltr" aria-invalid={!!errors.riyals_per_point} data-testid="riyals_per_point" />

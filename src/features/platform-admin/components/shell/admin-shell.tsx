@@ -26,8 +26,8 @@ export function AdminShell({ children, djangoAdminUrl }: { children: ReactNode; 
   useShortcuts(() => setPalette(true));
 
   return (
-    <div className="flex min-h-dvh flex-1">
-      <div className="hidden lg:block">
+    <div className="flex min-h-dvh flex-1 bg-background">
+      <div className="sticky top-0 hidden h-dvh shrink-0 lg:block">
         <AdminSidebar djangoAdminUrl={djangoAdminUrl} />
       </div>
       <div className="flex min-w-0 flex-1 flex-col">
@@ -37,7 +37,7 @@ export function AdminShell({ children, djangoAdminUrl }: { children: ReactNode; 
         </main>
       </div>
       <Sheet open={drawer} onOpenChange={setDrawer}>
-        <SheetContent side="right" className="w-72 p-0" data-testid="admin-drawer">
+        <SheetContent side="right" className="w-72 bg-sidebar p-0 text-sidebar-foreground" data-testid="admin-drawer">
           <SheetTitle className="sr-only">قائمة لوحة المنصة</SheetTitle>
           <AdminSidebar djangoAdminUrl={djangoAdminUrl} onNavigate={() => setDrawer(false)} />
         </SheetContent>
@@ -86,13 +86,13 @@ function AdminSidebar({ djangoAdminUrl, onNavigate }: { djangoAdminUrl: string; 
   const overview = useOverview();
 
   return (
-    <nav aria-label="أقسام لوحة المنصة" className="flex h-full w-64 flex-col border-e border-border bg-sidebar text-sidebar-foreground" data-testid="admin-sidebar">
+    <nav aria-label="أقسام لوحة المنصة" className="surface-brand flex h-full min-h-0 w-64 flex-col border-e border-border bg-sidebar text-sidebar-foreground" data-testid="admin-sidebar">
       <div className="flex h-12 shrink-0 items-center gap-2 border-b border-border px-3">
-        <span aria-hidden className="size-5 shrink-0 rounded-sm border border-border bg-background" />
-        <span className="text-sm font-medium">لوحة المنصة</span>
+        <span aria-hidden className="size-6 shrink-0 rounded-md bg-cta shadow-xs" />
+        <span className="text-sm font-semibold text-sidebar-strong">لوحة المنصة</span>
         <Mono className="ms-auto text-[11px] text-muted-foreground">console</Mono>
       </div>
-      <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-3">
+      <div className="scrollbar-sidebar min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3">
         <NavLink href={ADMIN_OVERVIEW.path} title={ADMIN_OVERVIEW.title} active={active === "/"} onNavigate={onNavigate} />
         {ADMIN_NAV.map((g) => (
           <div key={g.key} className="mt-4">
@@ -128,7 +128,7 @@ function NavLink({ href, title, active, count = 0, onNavigate }: { href: string;
       aria-current={active ? "page" : undefined}
       className={cn(
         "flex h-11 items-center gap-2 rounded-md px-3 text-sm transition-colors lg:h-8",
-        active ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        active ? "bg-white/10 font-medium text-white" : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
       <span className="min-w-0 flex-1 truncate">{title}</span>
@@ -143,7 +143,7 @@ function NavLink({ href, title, active, count = 0, onNavigate }: { href: string;
 
 function AdminTopbar({ onMenu, onSearch }: { onMenu: () => void; onSearch: () => void }) {
   return (
-    <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-background px-2 lg:px-3">
+    <header className="flex h-12 shrink-0 items-center gap-2 border-b border-border bg-card px-2 lg:px-3">
       <button type="button" onClick={onMenu} aria-label="فتح القائمة" data-testid="admin-drawer-open" className="flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground lg:hidden">
         <Menu className="size-5" strokeWidth={1.75} aria-hidden />
       </button>

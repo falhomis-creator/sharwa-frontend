@@ -195,7 +195,7 @@ function ReviewForm({ productId, open, onOpenChange, onDone }: { productId: numb
   if (!open) return null;
   return (
     <form
-      className="store-frame space-y-4 rounded-lg border-border p-5"
+      className="store-frame space-y-4 rounded-xl border-border p-5 shadow-card bg-card"
       data-testid="review-form"
       onSubmit={(e) => {
         e.preventDefault();

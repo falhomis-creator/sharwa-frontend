@@ -77,14 +77,14 @@ function ReceiveForm({ po, onReload }: { po: PoDetail; onReload: () => void }) {
     <div className="flex max-w-3xl flex-col gap-6">
       <PageHeader eyebrow={po.number} title="تسجيل الاستلام" description={`سيُحدَّث مخزون الموقع: ${po.location.name}`} />
       {conflict ? (
-        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3 text-sm" data-testid="po-conflict">
+        <div role="alert" className="flex flex-wrap items-center gap-3 surface-card p-4 text-sm" data-testid="po-conflict">
           حُدِّث الأمر من مستخدم آخر.
           <Button variant="outline" size="sm" className="h-11 lg:h-7" onClick={onReload}>
             إعادة التحميل
           </Button>
         </div>
       ) : null}
-      <ul className="divide-y divide-border rounded-lg border border-border" data-testid="receive-lines">
+      <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="receive-lines">
         {po.lines.map((l) => {
           const remaining = l.quantity_ordered - l.quantity_received;
           return (

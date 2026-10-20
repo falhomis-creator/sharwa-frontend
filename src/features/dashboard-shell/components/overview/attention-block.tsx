@@ -15,23 +15,23 @@ export function AttentionBlock({ attention }: { attention: Overview["attention"]
   return (
     <section
       aria-labelledby="attention-heading"
-      className="flex flex-col rounded-lg border border-border lg:col-span-4"
+      className="surface-card flex flex-col overflow-hidden lg:col-span-4"
     >
-      <header className="border-b border-border px-4 py-3">
-        <h2 id="attention-heading" className="text-sm font-medium">
+      <header className="border-b border-border/60 px-6 pt-5 pb-4">
+        <h2 id="attention-heading" className="text-base font-semibold">
           يحتاج تدخلك
         </h2>
       </header>
 
       {rows.length === 0 ? (
-        <p className="p-4 text-sm text-muted-foreground">لا شيء يحتاج تدخلك الآن.</p>
+        <p className="p-6 text-sm text-muted-foreground">لا شيء يحتاج تدخلك الآن.</p>
       ) : (
-        <ul className="flex flex-col">
+        <ul className="flex flex-col px-3 py-3">
           {rows.map((row) => (
-            <li key={row.key} className="border-b border-border last:border-0">
+            <li key={row.key}>
               <Link
                 href={row.href}
-                className="flex min-h-11 items-center justify-between gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-muted/60"
+                className="flex min-h-12 items-center justify-between gap-3 rounded-lg px-3 py-3 text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
               >
                 <span className="min-w-0 truncate">{row.label}</span>
                 <Mono

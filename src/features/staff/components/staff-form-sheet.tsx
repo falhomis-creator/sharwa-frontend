@@ -82,7 +82,7 @@ export function StaffFormSheet({ open, onOpenChange, staff }: { open: boolean; o
           >
             <input id="staff-phone" dir="ltr" inputMode="tel" autoComplete="off" placeholder="0770841802" className={`${inputClass} font-mono text-start`} aria-invalid={Boolean(formState.errors.phone)} {...register("phone")} />
           </Field>
-          <div className="divide-y divide-border rounded-lg border border-border px-3">
+          <div className="divide-y divide-border/60 surface-card px-3 overflow-hidden">
             <Controller control={control} name="is_active" render={({ field }) => <ToggleRow id="staff-active" label="نشط" description="المعطّل لا يستطيع الدخول لكن سجله يبقى." checked={field.value} onCheckedChange={field.onChange} />} />
             <Controller
               control={control}

@@ -56,7 +56,7 @@ function FeedsInner() {
       ) : !q.data.length ? (
         <EmptyState title="لا ملفات بعد" action={<Link href={`${DROP_ROOT}/feeds/new`} className={cn(buttonVariants(), "h-11 lg:h-9")}>ملف جديد</Link>} />
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border" data-testid="feeds-list">
+        <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="feeds-list">
           {q.data.map((f) => (
             <li key={f.id}>
               <Link href={`${DROP_ROOT}/feeds/${f.id}`} className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm hover:bg-muted">
@@ -234,7 +234,7 @@ function MappingStep({ feed, onNext }: { feed: Feed; onNext: () => void }) {
         ) : null}
         <Mono>{feed.columns.length}</Mono> عموداً في الملف. اكتُشف بعض الربط تلقائياً بالاسم.
       </p>
-      <ul className="divide-y divide-border rounded-lg border border-border">
+      <ul className="divide-y divide-border/60 surface-card overflow-hidden">
         {fields.map((f) => {
           const error = duplicates[f.key] ?? serverErrors[f.key];
           return (
@@ -300,7 +300,7 @@ function PreviewStep({ feed, onBack, onNext }: { feed: Feed; onBack: () => void;
           {p.errors_count}
         </Mono>
       </p>
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <div className="overflow-x-auto surface-card">
         <table className="w-full min-w-[720px] text-sm" data-testid="preview-table">
           <caption className="sr-only">معاينة الصفوف</caption>
           <thead className="border-b border-border text-xs text-muted-foreground">

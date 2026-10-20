@@ -58,7 +58,7 @@ function HubInner() {
       ) : (
         <>
           {hub.data && !hub.data.some((m) => m.connected) ? <EmptyState title="لم تربط أي سوق بعد" description="اربط أمازون أو نون للبدء." /> : null}
-          <ul className="divide-y divide-border rounded-lg border border-border" data-testid="market-rows">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden" data-testid="market-rows">
             {hub.data?.map((m) => <MarketRowView key={m.marketplace} m={m} now={now} onNoon={() => setNoonOpen(true)} />)}
           </ul>
         </>
@@ -74,7 +74,7 @@ function HubInner() {
           </Link>
         </div>
         {jobs.data?.results.length ? (
-          <ul className="divide-y divide-border rounded-lg border border-border">
+          <ul className="divide-y divide-border/60 surface-card overflow-hidden">
             {jobs.data.results.map((j) => (
               <li key={j.id}>
                 <Link href={`/dashboard/channels/marketplaces/jobs?job=${j.id}`} className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm hover:bg-muted">

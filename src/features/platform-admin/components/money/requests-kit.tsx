@@ -27,7 +27,7 @@ export function StatusTabs({ value, onChange, labels }: { value: StatusFilter; o
           data-testid={`status-tab-${s}`}
           className={cn(
             "-mb-px min-h-11 border-b-2 px-3 text-sm transition-colors lg:min-h-9",
-            value === s ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
+            value === s ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground",
           )}
         >
           {all[s]}

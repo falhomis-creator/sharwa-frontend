@@ -27,7 +27,7 @@ export function ChangeLog({ productId }: { productId: number }) {
   if (rows.length === 0) return <EmptyState title="لا تغييرات مسجّلة بعد" description="يُسجَّل هنا كل تعديل على السعر والمخزون والاسم والحالة." />;
   return (
     <div className="flex flex-col gap-3" data-testid="change-log">
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <div className="overflow-x-auto surface-card">
         <table className="w-full min-w-[36rem] text-sm">
           <caption className="sr-only">سجل تغييرات المنتج</caption>
           <thead>

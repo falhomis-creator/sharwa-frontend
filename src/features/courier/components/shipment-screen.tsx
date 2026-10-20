@@ -110,7 +110,7 @@ export function ShipmentScreen({ id }: { id: number }) {
           <p>{mismatch}</p>
         </div>
       ) : null}
-      <section className="flex flex-col gap-2 rounded-lg border border-border p-4" aria-label="الشحنة">
+      <section className="flex flex-col gap-2 surface-card p-5 lg:p-6" aria-label="الشحنة">
         <span className="flex items-center justify-between gap-2">
           <Mono className="text-lg" data-testid="waybill">
             {s.waybill_number}
@@ -145,7 +145,7 @@ export function ShipmentScreen({ id }: { id: number }) {
 
       {delivering ? <Delivery s={s} onDone={() => setDelivering(false)} /> : null}
 
-      <section aria-label="البنود" className="rounded-lg border border-border">
+      <section aria-label="البنود" className="surface-card">
         <h2 className="border-b border-border px-4 py-2.5 text-sm font-medium">البنود</h2>
         <ul className="divide-y divide-border text-sm">
           {s.items.map((i) => (
@@ -248,7 +248,7 @@ function Delivery({ s, onDone }: { s: AgentShipmentDetail; onDone: () => void })
   }
 
   return (
-    <section aria-label="التسليم" className="flex flex-col gap-3 rounded-lg border border-foreground p-4" data-testid="delivery-form">
+    <section aria-label="التسليم" className="flex flex-col gap-3 surface-card border-primary p-5" data-testid="delivery-form">
       <h2 className="text-base font-medium">تسليم وتحصيل</h2>
       {s.items.map((i) => {
         const n = qty[i.fulfillment_item_id] ?? 0;

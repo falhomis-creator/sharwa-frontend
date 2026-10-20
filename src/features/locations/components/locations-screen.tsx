@@ -198,7 +198,7 @@ function ActivationScreen({ isOwner }: { isOwner: boolean }) {
   return (
     <div className="flex flex-col gap-6" data-testid="locations-activation">
       <PageHeader title="المواقع" description="تعدد المواقع غير مفعّل. متجرك يعمل من موقع واحد." />
-      <section className="flex max-w-2xl flex-col gap-4 rounded-lg border border-border p-6">
+      <section className="flex max-w-2xl flex-col gap-4 surface-card p-6">
         <p className="text-base font-medium">ماذا يتغير عند التفعيل؟</p>
         <p className="max-w-prose text-sm text-muted-foreground">
           يظهر عمود الموقع في جدول المخزون وتُحفظ الكميات لكل موقع على حدة، وتُوجَّه الطلبات تلقائياً إلى الموقع المناسب حسب قواعد التوجيه التي تضبطها.

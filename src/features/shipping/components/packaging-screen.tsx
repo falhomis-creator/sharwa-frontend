@@ -178,7 +178,7 @@ function PackagingSheet({ open, profile, onOpenChange }: { open: boolean; profil
         <Field label="الوزن الفارغ (غ)" htmlFor="pk-weight" required error={formState.errors.empty_weight_g?.message}>
           <input id="pk-weight" dir="ltr" inputMode="numeric" className={numericInputClass} aria-invalid={Boolean(formState.errors.empty_weight_g)} {...register("empty_weight_g")} />
         </Field>
-        <div className="rounded-lg border border-border px-3">
+        <div className="surface-card px-3">
           <Controller control={control} name="is_default" render={({ field }) => <ToggleRow id="pk-default" label="الافتراضي" description="يُستخدم تلقائياً عند إصدار البوليصة." checked={field.value} onCheckedChange={field.onChange} />} />
         </div>
         <SheetActions onCancel={() => onOpenChange(false)} submitLabel={profile ? "حفظ" : "إضافة"} pending={formState.isSubmitting} testId="profile-submit" />

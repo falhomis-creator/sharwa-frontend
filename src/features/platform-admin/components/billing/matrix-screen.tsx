@@ -34,7 +34,7 @@ export function MatrixScreen() {
     <div className="flex flex-col gap-6">
       <PageHeader title="مصفوفة الميزات" description="أي ميزة تتيحها كل باقة (PlanFeature). يُحفظ التبديل فوراً." actions={<Link href="/plans" className="inline-flex h-11 items-center rounded-lg border border-border px-3 text-sm hover:bg-muted lg:h-8">الباقات</Link>} />
       {billing.data && !billing.data.subscriptions_enabled ? (
-        <p role="note" data-testid="subscriptions-off-note" className="rounded-lg border border-border px-4 py-3 text-sm">
+        <p role="note" data-testid="subscriptions-off-note" className="surface-card px-4 py-3 text-sm">
           الباقات غير مفعَّلة — كل الميزات ذات <Code>requires_plan</Code> تُعتبر متاحة.{" "}
           <Link href="/billing-settings" className="text-muted-foreground underline underline-offset-4">
             المفاتيح الرئيسية
@@ -45,16 +45,16 @@ export function MatrixScreen() {
       {error ? <ErrorState error={error} onRetry={() => void Promise.all([plans.refetch(), features.refetch(), matrix.refetch()])} /> : null}
       {loading ? <Skeleton className="h-96 w-full" /> : null}
       {!loading && features.data && plans.data ? (
-        <div className="max-h-[75vh] overflow-auto rounded-lg border border-border" data-testid="matrix-scroll">
+        <div className="max-h-[75vh] overflow-auto surface-card" data-testid="matrix-scroll">
           <table className="w-full border-collapse text-sm" data-testid="matrix">
             <caption className="sr-only">الباقات × الميزات</caption>
             <thead>
               <tr>
-                <th scope="col" className="sticky start-0 top-0 z-[3] h-11 min-w-56 border-b border-e border-border bg-background px-3 text-start text-xs font-normal text-muted-foreground">
+                <th scope="col" className="sticky start-0 top-0 z-[3] h-11 min-w-56 border-b border-e border-border bg-card px-3 text-start text-xs font-normal text-muted-foreground">
                   الميزة
                 </th>
                 {orderedPlans.map((p) => (
-                  <th key={p.id} scope="col" className="sticky top-0 z-[2] h-11 border-b border-border bg-background px-3 text-center text-xs font-normal whitespace-nowrap">
+                  <th key={p.id} scope="col" className="sticky top-0 z-[2] h-11 border-b border-border bg-card px-3 text-center text-xs font-normal whitespace-nowrap">
                     <span className={cn("block text-foreground", !p.is_active && "text-muted-foreground")}>{p.name}</span>
                     <Code className="text-muted-foreground">{p.code}</Code>
                   </th>
@@ -73,7 +73,7 @@ export function MatrixScreen() {
                     const free = !f.requires_plan;
                     return (
                       <tr key={f.code} data-testid="matrix-row" data-code={f.code} data-free={free ? "true" : "false"} className={cn(free && "text-muted-foreground")}>
-                        <th scope="row" className="sticky start-0 z-[1] h-11 border-b border-e border-border bg-background px-3 text-start font-normal">
+                        <th scope="row" className="sticky start-0 z-[1] h-11 border-b border-e border-border bg-card px-3 text-start font-normal">
                           <span className="flex flex-col">
                             <span className={free ? "text-muted-foreground" : "text-foreground"}>{f.name}</span>
                             <span className="flex flex-wrap items-center gap-x-2">

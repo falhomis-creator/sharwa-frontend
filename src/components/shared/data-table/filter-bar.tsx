@@ -65,7 +65,7 @@ export function SearchBox({
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full min-w-0 rounded-lg border border-input bg-background ps-8 pe-8 text-base outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:text-sm dark:bg-input/30 [&::-webkit-search-cancel-button]:hidden"
+        className="h-11 w-full min-w-0 rounded-lg border border-input bg-card ps-8 pe-8 text-base outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:text-sm dark:bg-input/30 [&::-webkit-search-cancel-button]:hidden"
       />
       {draft ? (
         <button

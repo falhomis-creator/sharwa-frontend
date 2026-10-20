@@ -2,7 +2,7 @@ import { Mono } from "@/components/shared/mono";
 import { TRAFFIC_SOURCES, TRAFFIC_SOURCE_LABELS, type Overview, type TrafficSource } from "@/features/dashboard-shell/schemas";
 
 /**
- * «مصادر الزيارات» — 8 columns (M03 US-03.5.1): horizontal bars in `foreground`, the share
+ * «مصادر الزيارات» — 8 columns (M03 US-03.5.1): horizontal bars in `primary` (navy), the share
  * as a Mono percentage, zero sources hidden, and explicitly NOT a pie chart.
  *
  * Drawn with two divs rather than Recharts (which T058 names): nine static bars do not
@@ -17,10 +17,10 @@ export function TrafficSourcesBlock({ sources }: { sources: Overview["traffic_so
   return (
     <section
       aria-labelledby="traffic-heading"
-      className="flex flex-col rounded-lg border border-border lg:col-span-8"
+      className="surface-card flex flex-col overflow-hidden lg:col-span-8"
     >
-      <header className="flex items-baseline justify-between gap-2 border-b border-border px-4 py-3">
-        <h2 id="traffic-heading" className="text-sm font-medium">
+      <header className="flex items-baseline justify-between gap-2 border-b border-border/60 px-6 pt-5 pb-4">
+        <h2 id="traffic-heading" className="text-base font-semibold">
           مصادر الزيارات
         </h2>
         {total > 0 ? (
@@ -31,9 +31,9 @@ export function TrafficSourcesBlock({ sources }: { sources: Overview["traffic_so
       </header>
 
       {rows.length === 0 ? (
-        <p className="p-4 text-sm text-muted-foreground">لا زيارات مسجّلة اليوم.</p>
+        <p className="p-6 text-sm text-muted-foreground">لا زيارات مسجّلة اليوم.</p>
       ) : (
-        <ul className="flex flex-col gap-3 p-4">
+        <ul className="flex flex-col gap-4 p-6">
           {rows.map((row) => (
             <li key={row.key} className="flex flex-col gap-1.5">
               <div className="flex items-baseline justify-between gap-2 text-sm">
@@ -42,9 +42,9 @@ export function TrafficSourcesBlock({ sources }: { sources: Overview["traffic_so
                   <Mono>{Math.round((row.value / total) * 100)}%</Mono>
                 </span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-sm bg-muted">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className="h-full rounded-sm bg-foreground"
+                  className="h-full rounded-full bg-linear-to-r from-chart-1 to-chart-3 rtl:bg-linear-to-l"
                   // Width is the share of the total, the same number the label shows —
                   // scaling to the largest source would draw a 41% bar at full width.
                   style={{ inlineSize: `${Math.max(2, Math.round((row.value / total) * 100))}%` }}

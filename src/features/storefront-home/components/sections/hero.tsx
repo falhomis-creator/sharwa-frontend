@@ -21,7 +21,7 @@ export function HeroSection({ view, storeName }: { view: SectionView; storeName:
       <div className="mx-auto w-full max-w-7xl px-4 md:px-6">
         <div
           className={cn(
-            "store-frame grid overflow-hidden rounded-xl border-border",
+            "store-frame grid overflow-hidden rounded-xl border-border shadow-card bg-card",
             view.image ? "md:grid-cols-[5fr_7fr]" : "",
           )}
         >
@@ -29,7 +29,7 @@ export function HeroSection({ view, storeName }: { view: SectionView; storeName:
             <h1 className="text-3xl font-bold leading-tight tracking-tight text-balance md:text-5xl">{title}</h1>
             {view.subtitle ? <p className="max-w-xl text-base leading-8 text-muted-foreground md:text-lg">{view.subtitle}</p> : null}
             {view.link ? (
-              <Link href={view.link} className={cn(buttonVariants(), "mt-2 h-12 w-fit px-6 text-base")}>
+              <Link href={view.link} className={cn(buttonVariants({ variant: "cta" }), "mt-2 h-12 w-fit px-6 text-base")}>
                 {view.ctaText ?? "تسوّق الآن"}
               </Link>
             ) : null}

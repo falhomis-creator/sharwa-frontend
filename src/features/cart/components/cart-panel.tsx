@@ -91,7 +91,7 @@ function CartSummary({
         "space-y-3 bg-background",
         variant === "sheet"
           ? "border-t border-border px-5 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"
-          : "store-frame rounded-lg border-border p-5 md:sticky md:top-24",
+          : "store-frame rounded-xl border-border p-5 md:sticky md:top-24 shadow-card bg-card",
       )}
     >
       <FreeShippingNote cart={cart} />
@@ -120,7 +120,7 @@ function CartSummary({
           if (blocked) e.preventDefault();
           else onNavigate?.();
         }}
-        className={cn(buttonVariants({ variant: "default" }), "h-12 w-full text-base", blocked && "pointer-events-none opacity-50")}
+        className={cn(buttonVariants({ variant: "cta" }), "h-12 w-full text-base", blocked && "pointer-events-none opacity-50")}
       >
         إتمام الطلب
       </Link>

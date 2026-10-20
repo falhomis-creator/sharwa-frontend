@@ -24,22 +24,22 @@ export function NewOrdersBlock({ rows, storeUrl }: { rows: OverviewOrderRow[]; s
   return (
     <section
       aria-labelledby="new-orders-heading"
-      className="flex flex-col rounded-lg border border-border lg:col-span-8"
+      className="surface-card flex flex-col overflow-hidden lg:col-span-8"
     >
-      <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3">
-        <h2 id="new-orders-heading" className="text-sm font-medium">
+      <header className="flex items-center justify-between gap-2 border-b border-border/60 px-6 pt-5 pb-4">
+        <h2 id="new-orders-heading" className="text-base font-semibold">
           طلبات جديدة
         </h2>
         <Link
           href="/dashboard/orders"
-          className="inline-flex min-h-11 items-center text-sm text-muted-foreground underline-offset-4 hover:underline lg:min-h-0"
+          className="inline-flex min-h-11 items-center text-sm font-medium text-accent-ink underline-offset-4 hover:underline lg:min-h-0"
         >
           كل الطلبات
         </Link>
       </header>
 
       {rows.length === 0 ? (
-        <div className="p-4">
+        <div className="p-6">
           <EmptyState
             title="لا طلبات اليوم بعد"
             description="شارك رابط متجرك مع عملائك ليبدأ أول طلب."
@@ -51,28 +51,28 @@ export function NewOrdersBlock({ rows, storeUrl }: { rows: OverviewOrderRow[]; s
         <div className="overflow-x-auto">
           <table className="w-full min-w-[40rem] border-collapse text-sm">
             <thead>
-              <tr className="border-b border-border text-xs text-muted-foreground">
-                <th scope="col" className="h-9 px-4 text-start font-normal">
+              <tr className="border-b border-border/60 bg-muted/40 text-xs text-muted-foreground">
+                <th scope="col" className="h-10 px-4 text-start font-medium first:ps-6 last:pe-6">
                   الطلب
                 </th>
-                <th scope="col" className="h-9 px-4 text-start font-normal">
+                <th scope="col" className="h-10 px-4 text-start font-medium first:ps-6 last:pe-6">
                   العميل
                 </th>
-                <th scope="col" className="h-9 px-4 text-start font-normal">
+                <th scope="col" className="h-10 px-4 text-start font-medium first:ps-6 last:pe-6">
                   الحالة
                 </th>
-                <th scope="col" className="h-9 px-4 text-start font-normal">
+                <th scope="col" className="h-10 px-4 text-start font-medium first:ps-6 last:pe-6">
                   الدفع
                 </th>
-                <th scope="col" className="h-9 px-4 text-end font-normal">
+                <th scope="col" className="h-10 px-4 text-end font-medium first:ps-6 last:pe-6">
                   الإجمالي
                 </th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.id} className="border-b border-border last:border-0 hover:bg-muted/60">
-                  <td className="h-11 px-4">
+                <tr key={row.id} className="border-b border-border/60 transition-colors last:border-0 hover:bg-accent/60">
+                  <td className="h-14 px-4 first:ps-6 last:pe-6">
                     <Link href={`/dashboard/orders/${row.id}`} className="flex flex-col leading-tight">
                       <Mono className="text-sm">#{row.id}</Mono>
                       <span className="text-[11px] text-muted-foreground">
@@ -81,13 +81,13 @@ export function NewOrdersBlock({ rows, storeUrl }: { rows: OverviewOrderRow[]; s
                       </span>
                     </Link>
                   </td>
-                  <td className="h-11 px-4">
+                  <td className="h-14 px-4 first:ps-6 last:pe-6">
                     <span className="flex flex-col leading-tight">
                       <span className="truncate">{row.customer_name}</span>
                       <Mono className="text-[11px] text-muted-foreground">{row.customer_phone}</Mono>
                     </span>
                   </td>
-                  <td className="h-11 px-4">
+                  <td className="h-14 px-4 first:ps-6 last:pe-6">
                     <span className="flex items-center gap-1.5">
                       {row.fulfillment_status ? (
                         <span
@@ -101,10 +101,10 @@ export function NewOrdersBlock({ rows, storeUrl }: { rows: OverviewOrderRow[]; s
                       </span>
                     </span>
                   </td>
-                  <td className="h-11 px-4 text-muted-foreground">
+                  <td className="h-14 px-4 text-muted-foreground first:ps-6 last:pe-6">
                     {PAYMENT_STATUS_LABELS[row.payment_status] ?? row.payment_status}
                   </td>
-                  <td className="h-11 px-4 text-end">
+                  <td className="h-14 px-4 text-end first:ps-6 last:pe-6">
                     <Money value={row.display_total} />
                   </td>
                 </tr>

@@ -70,7 +70,7 @@ export function TrackingView({ initial, timezone }: { initial: Tracking; timezon
           </p>
         ) : null}
         {t.is_gift ? (
-          <div className="store-frame rounded-lg border-border p-4 text-sm">
+          <div className="store-frame rounded-xl border-border p-4 text-sm shadow-card bg-card">
             <p className="font-medium">هدية إلى {t.recipient_name}</p>
             {t.gift_message ? <p className="mt-1 leading-7 text-muted-foreground">«{t.gift_message}»</p> : null}
           </div>
@@ -81,7 +81,7 @@ export function TrackingView({ initial, timezone }: { initial: Tracking; timezon
 
       <ol className="space-y-4" aria-label="الشحنات">
         {t.fulfillments.map((f, i) => (
-          <li key={f.id} className="store-frame space-y-4 rounded-xl border-border p-4 md:p-5" data-testid="fulfillment">
+          <li key={f.id} className="store-frame space-y-4 rounded-xl border-border p-4 md:p-5 shadow-card bg-card" data-testid="fulfillment">
             <div className="flex items-center justify-between gap-3">
               <h2 className="font-semibold">{t.fulfillments.length > 1 ? `الشحنة ${i + 1} من ${t.fulfillments.length}` : "طلبك"}</h2>
               <span className={cn("text-sm", f.status === "delivered" ? "text-success" : f.status === "cancelled" ? "text-destructive" : "text-muted-foreground")}>
@@ -110,7 +110,7 @@ export function TrackingView({ initial, timezone }: { initial: Tracking; timezon
       </ol>
 
       {!t.is_gift && t.display_total ? (
-        <dl className="store-frame divide-y divide-border rounded-xl border-border text-sm">
+        <dl className="store-frame divide-y divide-border rounded-xl border-border text-sm shadow-card bg-card">
           <div className="flex justify-between p-4">
             <dt className="text-muted-foreground">الإجمالي</dt>
             <dd className="font-semibold">

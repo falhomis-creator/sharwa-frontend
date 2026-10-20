@@ -47,7 +47,7 @@ export function ReturnTimeline({ events, now }: { events: ReturnTimelineEvent[];
         .sort((a, b) => b.at.localeCompare(a.at))
         .map((ev) => (
           <li key={ev.id} className="relative flex gap-3 border-s border-border pb-4 ps-4 last:pb-0">
-            <span aria-hidden className="absolute -start-[3.5px] top-1.5 size-1.5 rounded-full bg-foreground" />
+            <span aria-hidden className="absolute -start-[3.5px] top-1.5 size-1.5 rounded-full bg-primary" />
             <span className="flex min-w-0 flex-col gap-0.5 text-sm">
               <span>{ev.text}</span>
               <span className="text-xs text-muted-foreground">

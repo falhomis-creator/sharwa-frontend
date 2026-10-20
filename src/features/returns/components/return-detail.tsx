@@ -208,7 +208,7 @@ function ReturnBody({
   const lines = (
     <section className="flex flex-col gap-2">
       <h3 className="text-sm font-medium">السطور ({r.line_items.length})</h3>
-      <ul className="rounded-lg border border-border" data-testid="return-lines">
+      <ul className="surface-card" data-testid="return-lines">
         {r.line_items.map((li) => (
           <li key={li.id} className="flex items-center gap-3 border-b border-border p-2.5 last:border-0">
             <span className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -262,7 +262,7 @@ function ReturnBody({
         </div>
       ) : null}
       {failure?.kind === "network" ? (
-        <div role="alert" className="flex flex-wrap items-center gap-2 rounded-lg border border-border p-3 text-sm" data-testid="return-network">
+        <div role="alert" className="flex flex-wrap items-center gap-2 surface-card p-4 text-sm" data-testid="return-network">
           <span>انقطع الاتصال بعد الإرسال — تحقق من الحالة قبل إعادة المحاولة.</span>
           <Button size="sm" variant="outline" className="h-11 lg:h-8" onClick={() => void refetch().then(() => setFailure(null))}>
             تحقق من الحالة
@@ -315,7 +315,7 @@ function ReturnBody({
 
       {mode === "approve" ? (
         <form
-          className="flex flex-col gap-3 rounded-lg border border-border p-3"
+          className="flex flex-col gap-3 surface-card p-4"
           onSubmit={(e) => {
             e.preventDefault();
             void submit(r.version);
@@ -366,7 +366,7 @@ function ReturnBody({
 
       {mode === "reject" ? (
         <form
-          className="flex flex-col gap-3 rounded-lg border border-border p-3"
+          className="flex flex-col gap-3 surface-card p-4"
           onSubmit={(e) => {
             e.preventDefault();
             void submit(r.version);

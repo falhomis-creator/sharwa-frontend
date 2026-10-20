@@ -493,6 +493,13 @@ export function createProduct(store: string | null, body: Body): MockResult<Prod
   const state = catalog(store);
   const p = blankProduct(state, store);
   applyBody(state, p, body);
+  // [NEEDS BACKEND] create-from-template / duplicate keep the blueprint link (M04 presets, 2026-10-20).
+  const blueprintId = intOrNull(body.blueprint_id);
+  const template = blueprintId ? state.templates.find((t) => t.id === blueprintId) : undefined;
+  if (template) {
+    p.blueprint_id = template.id;
+    p.variant_attribute_ids = [...template.variant_attribute_ids];
+  }
   if (!p.slug) p.slug = uniqueSlug(state, slugify(p.name_en) || `product-${p.id}`);
   state.products.unshift(p);
   return { ok: true, status: 201, data: toDetail(state, p, false) };

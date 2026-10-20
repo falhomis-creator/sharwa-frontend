@@ -97,7 +97,7 @@ function RoutingBody() {
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
           <SortableContext items={list.map((r) => r.id)} strategy={verticalListSortingStrategy}>
-            <ol className="rounded-lg border border-border" aria-label="قواعد التوجيه بالترتيب" data-testid="rules-list">
+            <ol className="surface-card" aria-label="قواعد التوجيه بالترتيب" data-testid="rules-list">
               {list.map((r, i) => (
                 <SortableRule
                   key={r.id}
@@ -170,7 +170,7 @@ function SortableRule({ rule, index, count, canManage, onUp, onDown, onEdit, onD
     <li
       ref={setNodeRef}
       style={{ transform: translateToString(transform), transition }}
-      className={cn("flex min-h-12 items-center gap-2 border-b border-border bg-background px-2 last:border-0 motion-reduce:transition-none", isDragging && "relative z-10 border border-foreground")}
+      className={cn("flex min-h-12 items-center gap-2 border-b border-border bg-card px-2 last:border-0 motion-reduce:transition-none", isDragging && "relative z-10 border border-primary ring-1 ring-primary/20")}
       data-testid="rule-row"
       data-inactive={inactive ? "true" : undefined}
     >

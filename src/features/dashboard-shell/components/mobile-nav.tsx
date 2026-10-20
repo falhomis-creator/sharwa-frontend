@@ -23,7 +23,10 @@ export function MobileDrawer({ store, storeName }: { store: string; storeName: s
 
   return (
     <Sheet open={open} onOpenChange={setDrawer}>
-      <SheetContent side="right" className="w-[17rem] p-0 sm:max-w-[17rem]">
+      <SheetContent
+        side="right"
+        className="w-[17rem] border-sidebar-border bg-sidebar p-0 text-sidebar-foreground sm:max-w-[17rem] [&_[data-slot=sheet-close]:hover]:bg-sidebar-accent [&_[data-slot=sheet-close]:hover]:text-sidebar-accent-foreground"
+      >
         <SheetTitle className="sr-only">أقسام اللوحة</SheetTitle>
         <SheetDescription className="sr-only">قائمة التنقل في لوحة {storeName}</SheetDescription>
         <Sidebar store={store} storeName={storeName} variant="drawer" onNavigate={() => setDrawer(false)} />
@@ -39,7 +42,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="تنقل سريع"
-      className="flex h-16 shrink-0 items-stretch border-t border-border bg-background lg:hidden"
+      className="sticky bottom-0 z-30 flex h-16 shrink-0 items-stretch border-t border-border bg-card lg:hidden"
     >
       {MOBILE_NAV.map((item, i) => {
         const Icon = ICONS[i] ?? LayoutDashboard;
@@ -51,7 +54,7 @@ export function MobileBottomNav() {
             aria-current={active ? "page" : undefined}
             className={cn(
               "flex flex-1 flex-col items-center justify-center gap-1 text-[11px] transition-colors",
-              active ? "text-foreground" : "text-muted-foreground",
+              active ? "font-medium text-accent-ink" : "text-muted-foreground",
             )}
           >
             <Icon className="size-5" strokeWidth={1.75} aria-hidden />

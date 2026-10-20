@@ -91,7 +91,7 @@ function DuesInner() {
             aria-selected={kind === k}
             onClick={() => switchKind(k)}
             data-testid={`dues-tab-${k}`}
-            className={cn("-mb-px min-h-11 border-b-2 px-3 text-sm lg:min-h-9", kind === k ? "border-foreground font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}
+            className={cn("-mb-px min-h-11 border-b-2 px-3 text-sm lg:min-h-9", kind === k ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
           >
             {DUE_KIND_LABELS[k]}
           </button>

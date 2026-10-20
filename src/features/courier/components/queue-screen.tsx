@@ -31,7 +31,7 @@ export function QueueScreen() {
       {sorted.length === 0 ? (
         <p className="rounded-lg border border-dashed border-border p-5 text-sm text-muted-foreground">لا إجراءات معلّقة.</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {sorted.map((a) => (
             <li key={a.uuid} className="flex flex-col gap-1 p-3" data-testid="queue-item" data-state={a.state}>
               <span className="flex items-center justify-between gap-2">

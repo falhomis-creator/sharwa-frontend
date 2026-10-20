@@ -278,7 +278,7 @@ function SessionView({ data, pollError, onRetry }: { data: SessionDetail; pollEr
             dir="auto"
             aria-label="نص الردّ"
             placeholder="اكتب ردّاً… (Shift+Enter لسطر جديد)"
-            className="max-h-40 min-h-11 flex-1 resize-none rounded-lg border border-input bg-background px-2.5 py-2.5 text-base outline-none field-sizing-content focus-visible:border-ring md:text-sm lg:min-h-9 lg:py-1.5"
+            className="max-h-40 min-h-11 flex-1 resize-none rounded-lg border border-input bg-card px-2.5 py-2.5 text-base outline-none field-sizing-content focus-visible:border-ring md:text-sm lg:min-h-9 lg:py-1.5"
             data-testid="session-reply"
           />
           <button type="button" onClick={send} disabled={!text.trim()} aria-label="إرسال" className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground disabled:opacity-40 lg:size-9" data-testid="session-send">
@@ -296,7 +296,7 @@ function SessionMessage({ t }: { t: TimelineItem }) {
   const sender = t.sender_type === "customer" ? "العميل" : t.sender_type === "bot" ? "شروة AI" : (t.sender_name ?? "أنت");
   return (
     <li className={cn("flex max-w-[85%] flex-col gap-1 md:max-w-[70%]", out ? "self-end items-end" : "self-start items-start")} data-testid="session-message" data-sender={t.sender_type}>
-      <p dir="auto" className={cn("whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-sm", out ? "bg-muted" : "border border-border bg-background")}>
+      <p dir="auto" className={cn("whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-sm", out ? "bg-muted" : "border border-border bg-card")}>
         {t.text}
       </p>
       <span className="flex gap-2 text-[11px] text-muted-foreground">

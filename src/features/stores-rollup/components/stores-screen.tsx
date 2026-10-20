@@ -121,7 +121,7 @@ function RollupTable({ data, stale }: { data: RollupData; stale: boolean }) {
   return (
     <>
       {/* ≥ md: the table */}
-      <div className={cn("hidden overflow-x-auto rounded-lg border border-border md:block", stale && "opacity-70")}>
+      <div className={cn("hidden overflow-x-auto surface-card md:block", stale && "opacity-70")}>
         <table className="w-full text-sm" data-testid="rollup-table">
           <thead className="border-b border-border text-xs text-muted-foreground">
             <tr>
@@ -179,7 +179,7 @@ function RollupTable({ data, stale }: { data: RollupData; stale: boolean }) {
       </div>
 
       {/* < md: one row per store, revenue first, the counts on a second line (§6). */}
-      <ul className="divide-y divide-border rounded-lg border border-border md:hidden" data-testid="rollup-list">
+      <ul className="divide-y divide-border/60 surface-card md:hidden overflow-hidden" data-testid="rollup-list">
         {data.stores.map((s) => (
           <li key={s.schema} className="flex flex-col gap-1 px-3 py-3">
             <div className="flex items-start justify-between gap-3">

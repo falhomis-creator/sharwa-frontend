@@ -72,7 +72,7 @@ export function BillingSettingsScreen() {
       {!canWrite ? <ReadOnlyNote /> : null}
       {settings.error ? <ErrorState error={settings.error} onRetry={() => void settings.refetch()} /> : null}
 
-      <section aria-label="المفتاحان" className="flex flex-col divide-y divide-border rounded-lg border border-border" data-testid="master-switches">
+      <section aria-label="المفتاحان" className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden" data-testid="master-switches">
         {settings.isLoading ? <Skeleton className="m-4 h-16" /> : null}
         {s
           ? (
@@ -132,7 +132,7 @@ function ResolutionTool() {
         </h2>
         <ol className="flex flex-col gap-1.5 text-sm" data-testid="resolution-steps">
           {RESOLUTION_STEPS.map((text, i) => (
-            <li key={text} data-step={i + 1} data-active={step === i + 1 ? "true" : "false"} className={cn("flex gap-3 rounded-md border px-3 py-2", step === i + 1 ? "border-foreground" : "border-transparent text-muted-foreground")}>
+            <li key={text} data-step={i + 1} data-active={step === i + 1 ? "true" : "false"} className={cn("flex gap-3 rounded-md border px-3 py-2", step === i + 1 ? "border-primary" : "border-transparent text-muted-foreground")}>
               <Mono className="text-foreground">{i + 1}</Mono>
               <span>{text}</span>
             </li>
@@ -141,7 +141,7 @@ function ResolutionTool() {
         <p className="text-xs text-muted-foreground">الحسم يجري في الخادم فقط؛ هذه الصفحة تعرضه ولا تعيد حسابه.</p>
       </div>
 
-      <div className="flex flex-col gap-4 rounded-lg border border-border p-4" data-testid="inspect-tool">
+      <div className="flex flex-col gap-4 surface-card p-5 lg:p-6" data-testid="inspect-tool">
         <h2 className="text-sm font-medium">افحص متجراً</h2>
         <Field label="الميزة" htmlFor="inspect-feature">
           <FeatureSelect id="inspect-feature" features={features.data ?? []} value={q.feature} onChange={(v) => void setQ({ feature: v || null })} testId="inspect-feature" />

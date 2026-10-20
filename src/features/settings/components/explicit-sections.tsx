@@ -310,7 +310,7 @@ function PaymentsSummary({ settings }: { settings: StoreSettings }) {
   return (
     <section data-testid="settings-payments">
       <SectionHeader section="payments" readOnlyReason={readOnlyReason} />
-      <div className="rounded-lg border border-border px-4 md:px-5">
+      <div className="surface-card px-4 md:px-5">
         {rows.map((r) => (
           <SettingRow key={r.key} label={r.label} description={r.description}>
             <span id={r.key} className="self-end text-sm" data-testid={`payments-state-${r.key}`}>

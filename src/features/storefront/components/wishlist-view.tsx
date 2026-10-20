@@ -34,7 +34,7 @@ export function WishlistView() {
   if (shopper.isPending) return <ProductGridSkeleton count={4} />;
   if (!phone) {
     return (
-      <div className="store-frame max-w-md space-y-3 rounded-lg border-border p-5" data-testid="wishlist-phone">
+      <div className="store-frame max-w-md space-y-3 rounded-xl border-border p-5 shadow-card bg-card" data-testid="wishlist-phone">
         <p className="text-sm text-muted-foreground">قائمتك محفوظة على رقم هاتفك. أدخله مرة واحدة لتجدها هنا وعلى أي جهاز.</p>
         <ShopperPhoneForm busy={setPhone.isPending} submitLabel="عرض قائمتي" onSubmit={async (p) => void (await setPhone.mutateAsync(p))} />
       </div>

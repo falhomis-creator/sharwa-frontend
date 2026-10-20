@@ -55,7 +55,7 @@ function PoInner({ poId }: { poId: number }) {
         actions={editing ? null : <Actions po={po} onConflict={() => setConflict(true)} />}
       />
       {conflict ? (
-        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-lg border border-border p-3 text-sm" data-testid="po-conflict">
+        <div role="alert" className="flex flex-wrap items-center gap-3 surface-card p-4 text-sm" data-testid="po-conflict">
           <span>حُدِّث الأمر من مستخدم آخر.</span>
           <Button
             variant="outline"
@@ -132,7 +132,7 @@ function PoInner({ poId }: { poId: number }) {
 function LinesTable({ po }: { po: PoDetail }) {
   const showProgress = po.status === "partially_received" || po.status === "received" || po.status === "approved";
   return (
-    <div className="overflow-x-auto rounded-lg border border-border">
+    <div className="overflow-x-auto surface-card">
       <table className="w-full min-w-[640px] text-sm" data-testid="po-lines-table">
         <caption className="sr-only">سطور أمر الشراء</caption>
         <thead className="border-b border-border text-xs text-muted-foreground">

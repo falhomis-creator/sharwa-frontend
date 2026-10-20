@@ -3,10 +3,10 @@
 import { useEffect, useEffectEvent, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { parseAsStringLiteral, useQueryState } from "nuqs";
+import { parseAsInteger, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Archive, ExternalLink, Trash2 } from "lucide-react";
+import { ArrowRight, Archive, Copy, ExternalLink, LayoutTemplate, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from "@/components/ui/dialog";
@@ -42,10 +42,31 @@ import {
   type ProductDetail,
   type ProductFormValues,
 } from "@/features/products/schemas";
-import { useDeleteProduct, useProduct, useSaveProduct, useTemplates } from "@/features/products/api/products";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  generateVariants,
+  productKeys,
+  saveVariants,
+  useDeleteProduct,
+  useProduct,
+  useSaveProduct,
+  useTemplates,
+  useVariantAttributes,
+} from "@/features/products/api/products";
 import { useCatalogAccess } from "@/features/products/hooks/use-catalog-access";
 import { ProductStatusText } from "@/features/products/components/status-text";
 import { EMPTY_PRODUCT_FORM, detailToForm, formToPayload } from "@/features/products/components/editor/form-mapping";
+import {
+  DUPLICATE_CARRIED,
+  DUPLICATE_RESET,
+  duplicateForm,
+  duplicateProductHref,
+  seedBlueprintId,
+  templateForm,
+  variantCopyPlan,
+  variantPriceRows,
+  type EditorSeed,
+} from "@/features/products/components/editor/prefill";
 import { MediaGallery } from "@/features/products/components/editor/media-gallery";
 import { VariantMatrix } from "@/features/products/components/editor/variant-matrix";
 import { ChangeLog } from "@/features/products/components/editor/change-log";
@@ -71,6 +92,9 @@ import {
  * the form is dirty, `⌘S`/`Ctrl+S` saves, and leaving through an in-app link asks first.
  * Separately, a LOCAL draft is auto-saved to this browser (T072 «حفظ تلقائي للمسودة») and
  * offered back on the next visit — it is never sent to the server without «حفظ».
+ *
+ * Creation presets (owner directive 2026-10-20): `/new?duplicate=<id>` opens the editor as a
+ * copy of that product and `/new?template=<id>` pre-fills it from a template (see `prefill.ts`).
  */
 const SECTIONS = [
   { id: "basic", label: "الأساسي" },
@@ -132,7 +156,22 @@ function Grid({ children, cols = 2 }: { children: ReactNode; cols?: 2 | 3 | 4 })
 // ── Loader ────────────────────────────────────────────────────────────────────────────
 export function ProductEditor({ productId }: { productId: number | null }) {
   const query = useProduct(productId);
-  if (productId !== null && query.isLoading) {
+  const [duplicateId] = useQueryState("duplicate", parseAsInteger);
+  const [templateId] = useQueryState("template", parseAsInteger);
+  const creating = productId === null;
+  const source = useProduct(creating ? duplicateId : null);
+  const templates = useTemplates();
+  const template = creating && templateId !== null ? (templates.data ?? []).find((t) => t.id === templateId) : undefined;
+  const seed = useMemo<EditorSeed | null>(() => {
+    if (!creating) return null;
+    if (duplicateId !== null && source.data) return { kind: "duplicate", source: source.data, form: duplicateForm(source.data) };
+    if (template) return { kind: "template", template, ...templateForm(template) };
+    return null;
+  }, [creating, duplicateId, source.data, template]);
+
+  const waitingForSeed =
+    (creating && duplicateId !== null && source.isLoading) || (creating && templateId !== null && templates.isLoading);
+  if ((productId !== null && query.isLoading) || waitingForSeed) {
     return (
       <div className="flex flex-col gap-4" aria-busy="true">
         <Skeleton className="h-8 w-64" />
@@ -152,11 +191,38 @@ export function ProductEditor({ productId }: { productId: number | null }) {
       />
     );
   }
-  return <EditorForm key={productId ?? "new"} product={query.data ?? null} />;
+  if (creating && duplicateId !== null && source.error) {
+    return (
+      <ErrorState
+        title={isApiError(source.error) && source.error.status === 404 ? "المنتج المطلوب نسخه غير موجود" : "تعذّر تحميل المنتج لنسخه"}
+        error={source.error}
+        onRetry={() => void source.refetch()}
+      />
+    );
+  }
+  const seedKey = seed ? `${seed.kind}-${seed.kind === "duplicate" ? seed.source.id : seed.template.id}` : "blank";
+  return (
+    <EditorForm
+      key={productId ?? `new-${seedKey}`}
+      product={query.data ?? null}
+      seed={seed}
+      missingTemplate={creating && templateId !== null && !templates.isLoading && !template}
+    />
+  );
 }
 
 // ── Form ──────────────────────────────────────────────────────────────────────────────
-function EditorForm({ product }: { product: ProductDetail | null }) {
+function EditorForm({
+  product,
+  seed,
+  missingTemplate,
+}: {
+  product: ProductDetail | null;
+  seed: EditorSeed | null;
+  missingTemplate: boolean;
+}) {
+  const qc = useQueryClient();
+  const attributes = useVariantAttributes().data ?? [];
   const router = useRouter();
   const store = useStore();
   const storeOrigin = useStoreOrigin();
@@ -172,12 +238,13 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [draftDismissed, setDraftDismissed] = useState(false);
   const [now] = useState(() => Date.now());
-  const initial = useMemo(() => (product ? detailToForm(product) : EMPTY_PRODUCT_FORM), [product]);
+  const initial = useMemo(() => (product ? detailToForm(product) : (seed?.form ?? EMPTY_PRODUCT_FORM)), [product, seed]);
   const form = useForm<ProductFormValues>({ resolver: zodResolver(productFormSchema), defaultValues: initial, mode: "onBlur" });
   const { register, handleSubmit, setValue, reset, setError, formState } = form;
   const v = { ...form.formState.defaultValues, ...useWatch({ control: form.control }) } as ProductFormValues;
   const dirty = formState.isDirty;
-  const draftKey = `${DRAFT_PREFIX}${store}:${product?.id ?? "new"}`;
+  // A preset gets its own draft slot, so a blank «منتج جديد» draft never hijacks a copy and vice versa.
+  const draftKey = `${DRAFT_PREFIX}${store}:${product?.id ?? (seed ? `new-${seed.kind}-${seed.kind === "duplicate" ? seed.source.id : seed.template.id}` : "new")}`;
 
 
   // Re-sync when the server copy changes (after save, variants, images) and nothing is pending.
@@ -226,11 +293,20 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
         async (values) => {
           setFormError("");
           try {
-            const saved = await save.mutateAsync(formToPayload(values));
+            const blueprintId = product ? null : seedBlueprintId(seed);
+            // [NEEDS BACKEND] `blueprint_id` on create: links the new product to its template (M04 US-04.6).
+            const saved = await save.mutateAsync({ ...formToPayload(values), ...(blueprintId !== null ? { blueprint_id: blueprintId } : {}) });
             clearDraft();
             setDraftDismissed(true);
             reset(detailToForm(saved));
-            toast.success(product ? "حُفظت التغييرات" : `أُنشئ المنتج «${saved.name}»`);
+            const copiedVariants = !product && seed?.kind === "duplicate" ? await copyVariants(saved.id, seed.source) : 0;
+            toast.success(
+              product
+                ? "حُفظت التغييرات"
+                : seed?.kind === "duplicate"
+                  ? `أُنشئت النسخة «${saved.name}»${copiedVariants ? ` مع ${copiedVariants} متغيراً` : ""} — مخفية عن المتجر حتى تفعّل «متاح»`
+                  : `أُنشئ المنتج «${saved.name}»`,
+            );
             if (!product) router.replace(`/dashboard/products/${saved.id}`);
             resolve(true);
           } catch (err) {
@@ -249,6 +325,22 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
         },
       )();
     });
+  /** Rebuild the source's variant set on the new copy (same combinations, same extra prices). */
+  async function copyVariants(newId: number, source: ProductDetail): Promise<number> {
+    const plan = variantCopyPlan(source, attributes);
+    if (!plan) return 0;
+    try {
+      let rows = await generateVariants(newId, plan.request);
+      const prices = variantPriceRows(rows, plan);
+      if (prices.length) rows = await saveVariants(newId, prices);
+      await qc.invalidateQueries({ queryKey: productKeys(store).detail(newId) });
+      return rows.length;
+    } catch {
+      toast.warning("أُنشئت النسخة، لكن تعذّر نسخ المتغيرات — ولّدها من قسم «المتغيرات».");
+      return 0;
+    }
+  }
+
   const onShortcutSave = useEffectEvent(() => {
     if (!readOnly) void submit();
   });
@@ -324,7 +416,9 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
           <Link href="/dashboard/products" className="inline-flex min-h-11 items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground lg:min-h-0">
             <ArrowRight className="size-4 ltr:rotate-180" aria-hidden /> المنتجات
           </Link>
-          <h1 className="truncate text-2xl font-semibold tracking-tight">{product ? product.name || "بلا اسم" : "منتج جديد"}</h1>
+          <h1 className="truncate text-2xl font-semibold tracking-tight">
+            {product ? product.name || "بلا اسم" : seed?.kind === "duplicate" ? "نسخ منتج" : seed?.kind === "template" ? "منتج جديد من قالب" : "منتج جديد"}
+          </h1>
           {product ? (
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
               <ProductStatusText status={product.status} className="text-foreground" />
@@ -335,6 +429,15 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
         </div>
         {product ? (
           <div className="flex flex-wrap items-center gap-2">
+            {!readOnly ? (
+              <Link
+                href={duplicateProductHref(product.id)}
+                className="inline-flex h-11 items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm font-medium shadow-xs hover:bg-accent hover:text-accent-foreground lg:h-9"
+                data-testid="duplicate-product"
+              >
+                <Copy className="size-4" aria-hidden /> نسخ
+              </Link>
+            ) : null}
             <a
               href={`${storeOrigin}/p/${product.slug}`}
               target="_blank"
@@ -354,8 +457,15 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
       </div>
 
       {readOnly ? (
-        <p role="note" className="rounded-lg border border-border px-4 py-3 text-sm text-muted-foreground">
+        <p role="note" className="surface-card px-4 py-3 text-sm text-muted-foreground">
           للعرض فقط: تعديل المنتجات مقصور على مالك المتجر ومدير المتجر أو الفرع.
+        </p>
+      ) : null}
+
+      {seed && !readOnly ? <SeedBanner seed={seed} /> : null}
+      {missingTemplate ? (
+        <p role="status" className="surface-card px-4 py-3 text-sm text-muted-foreground">
+          القالب المطلوب غير موجود (ربما حُذف) — يُفتح منتج جديد فارغ.
         </p>
       ) : null}
 
@@ -400,7 +510,7 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
               role="tab"
               aria-selected={tab === key}
               onClick={() => void setTab(key === "product" ? null : key)}
-              className={cn("-mb-px min-h-11 border-b px-3 text-sm", tab === key ? "border-foreground text-foreground" : "border-transparent text-muted-foreground hover:text-foreground")}
+              className={cn("-mb-px min-h-11 border-b px-3 text-sm", tab === key ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
             >
               {label}
             </button>
@@ -416,7 +526,7 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
         <div className="grid grid-cols-1 gap-x-10 lg:grid-cols-12">
           {/* Main column */}
           <div className="min-w-0 lg:col-span-8">
-            <nav aria-label="انتقال بين الأقسام" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-b border-border bg-background px-1 py-2">
+            <nav aria-label="انتقال بين الأقسام" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-b border-border bg-card px-1 py-2">
               {SECTIONS.map((s) => (
                 <a key={s.id} href={`#${s.id}`} className="inline-flex min-h-11 shrink-0 items-center rounded-md px-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground lg:min-h-8">
                   {s.label}
@@ -587,14 +697,14 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
 
             <Section id="inventory" title="المخزون">
               {v.is_serialized ? (
-                <p className="rounded-lg border border-border px-4 py-3 text-sm">
+                <p className="surface-card px-4 py-3 text-sm">
                   المخزون من الأرقام التسلسلية: <Mono>{product?.serial_available ?? 0}</Mono> متاحة ·{" "}
                   <Link href={`/dashboard/inventory?product=${product?.id ?? ""}`} className="underline underline-offset-4">
                     إدارة الأرقام التسلسلية
                   </Link>
                 </p>
               ) : hasVariants ? (
-                <p className="rounded-lg border border-border px-4 py-3 text-sm">
+                <p className="surface-card px-4 py-3 text-sm">
                   المخزون يُدار على المتغيرات — المجموع <Mono>{formatNumber(Number(product?.variants_stock_total ?? 0), 3)}</Mono> {UNIT_LABELS[v.unit]}.
                 </p>
               ) : (
@@ -642,21 +752,21 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
                   {VARIANT_DISPLAY_STYLES.map((style) => (
                     <label
                       key={style}
-                      className={cn("flex cursor-pointer flex-col gap-2 rounded-lg border p-3 text-xs", v.variant_display_style === style ? "border-foreground" : "border-border")}
+                      className={cn("flex cursor-pointer flex-col gap-2 rounded-lg border p-3 text-xs", v.variant_display_style === style ? "border-primary" : "border-border")}
                     >
                       <input type="radio" value={style} className="sr-only" disabled={readOnly} {...register("variant_display_style")} />
                       <span aria-hidden className="flex h-6 items-center gap-1">
                         {style === "swatches" ? (
                           <>
                             <span className="size-4 rounded-sm border border-border bg-foreground" />
-                            <span className="size-4 rounded-sm border border-border bg-background" />
+                            <span className="size-4 rounded-sm border border-border bg-card" />
                             <span className="size-4 rounded-sm border border-border bg-muted-foreground" />
                           </>
                         ) : style === "dropdown" ? (
                           <span className="flex h-5 w-full items-center justify-end rounded-sm border border-border px-1 text-[9px]">▾</span>
                         ) : (
                           <>
-                            <span className="size-3 rounded-full border border-foreground" />
+                            <span className="size-3 rounded-full border border-primary" />
                             <span className="size-3 rounded-full border border-border" />
                           </>
                         )}
@@ -701,7 +811,7 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
 
             <Section id="shipping" title="الشحن">
               {!physical ? (
-                <p className="rounded-lg border border-border px-4 py-3 text-sm text-muted-foreground" data-testid="no-shipping">
+                <p className="surface-card px-4 py-3 text-sm text-muted-foreground" data-testid="no-shipping">
                   لا يتطلب شحناً — {PRODUCT_TYPE_LABELS[v.product_type]}.
                 </p>
               ) : (
@@ -848,7 +958,7 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
         <div
           role="region"
           aria-label="حفظ التغييرات"
-          className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-background lg:bottom-0 lg:start-auto lg:end-0 lg:w-[calc(100%-16rem)]"
+          className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-card lg:bottom-0 lg:start-auto lg:end-0 lg:w-[calc(100%-16rem)]"
           data-testid="save-bar"
         >
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-3 px-4 py-3 lg:px-6">
@@ -952,3 +1062,39 @@ function EditorForm({ product }: { product: ProductDetail | null }) {
   );
 }
 
+
+/** What the merchant is looking at when the editor opens from a preset (and what was not copied). */
+function SeedBanner({ seed }: { seed: EditorSeed }) {
+  if (seed.kind === "duplicate") {
+    return (
+      <div role="status" className="surface-card flex gap-3 border-primary/30 bg-accent px-4 py-3 text-sm" data-testid="duplicate-banner">
+        <Copy className="mt-0.5 size-4 shrink-0 text-accent-ink" aria-hidden />
+        <div className="flex min-w-0 flex-col gap-1">
+          <p className="font-medium">
+            نسخة من{" "}
+            <Link href={`/dashboard/products/${seed.source.id}`} className="text-accent-ink underline-offset-4 hover:underline">
+              «{seed.source.name}»
+            </Link>{" "}
+            — لم تُحفظ بعد. عدّل ما يلزم ثم اضغط «حفظ» لإنشاء منتج مستقل.
+          </p>
+          <p className="text-muted-foreground">
+            يُنسخ: {DUPLICATE_CARRIED}. لا يُنسخ: {DUPLICATE_RESET}. تُحفظ النسخة مخفية عن المتجر.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div role="status" className="surface-card flex gap-3 border-primary/30 bg-accent px-4 py-3 text-sm" data-testid="template-banner">
+      <LayoutTemplate className="mt-0.5 size-4 shrink-0 text-accent-ink" aria-hidden />
+      <div className="flex min-w-0 flex-col gap-1">
+        <p className="font-medium">
+          مبني على قالب «{seed.template.name}» — عُبِّئ <Mono>{seed.filled}</Mono> حقلاً مسبقاً.
+        </p>
+        <p className="text-muted-foreground">
+          أكمل الاسم والسعر والصور ثم احفظ. {seed.template.variant_attribute_ids.length > 0 ? "سمات المتغيرات من القالب تظهر جاهزة في قسم «المتغيرات» بعد الحفظ." : ""}
+        </p>
+      </div>
+    </div>
+  );
+}

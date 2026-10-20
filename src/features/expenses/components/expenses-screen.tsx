@@ -141,7 +141,7 @@ function ExpensesInner() {
       </div>
       {!desktop ? (
         <>
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
             <Button type="button" className="h-11 w-full" onClick={() => setDrawer(true)} data-testid="new-expense-mobile">
               مصروف جديد
             </Button>
@@ -273,7 +273,7 @@ function ExpenseForm({ amountRef, autoFocus, onSaved }: { amountRef: MutableRefO
 type FilterState = { category: (typeof EXPENSE_CATEGORIES)[number] | null; currency: Currency | null; from: string; to: string };
 
 function Filters({ f, set, filterRef, filtered, clear }: { f: FilterState; set: (p: Partial<{ category: FilterState["category"]; currency: Currency | null; from: string | null; to: string | null }>) => void; filterRef: MutableRefObject<HTMLSelectElement | null>; filtered: boolean; clear: () => void }) {
-  const dateInput = "h-11 rounded-lg border border-input bg-background px-2 font-mono text-sm md:h-8";
+  const dateInput = "h-11 rounded-lg border border-input bg-card px-2 font-mono text-sm md:h-8";
   return (
     <div className="flex flex-wrap items-end gap-2" data-testid="expense-filters">
       <label className="flex flex-col gap-1">
@@ -318,7 +318,7 @@ function Filters({ f, set, filterRef, filtered, clear }: { f: FilterState; set: 
 function Ledger({ months, isLoading, isFetching, error, onRetry, filtered, clear }: { months?: ExpenseMonth[]; isLoading: boolean; isFetching: boolean; error: unknown; onRetry: () => void; filtered: boolean; clear: () => void }) {
   if (isLoading)
     return (
-      <div className="flex flex-col gap-0 rounded-lg border border-border" aria-busy>
+      <div className="flex flex-col gap-0 surface-card" aria-busy>
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex h-11 items-center border-b border-border px-3 last:border-0">
             <Skeleton className="h-3 w-full max-w-md" />
@@ -343,8 +343,8 @@ function Ledger({ months, isLoading, isFetching, error, onRetry, filtered, clear
   return (
     <div className={cn("flex flex-col gap-4", isFetching && "opacity-70 transition-opacity")} data-testid="expense-ledger">
       {months.map((m) => (
-        <section key={m.month} aria-labelledby={`m-${m.month}`} className="rounded-lg border border-border" data-testid="expense-month" data-month={m.month}>
-          <header className="sticky top-0 z-10 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-t-lg border-b border-border bg-background px-3 py-2 md:static">
+        <section key={m.month} aria-labelledby={`m-${m.month}`} className="surface-card" data-testid="expense-month" data-month={m.month}>
+          <header className="sticky top-0 z-10 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-t-lg border-b border-border bg-card px-3 py-2 md:static">
             <h3 id={`m-${m.month}`} className="text-sm font-medium">
               {monthLabel(m.month)}
             </h3>

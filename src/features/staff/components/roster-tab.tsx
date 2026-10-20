@@ -45,7 +45,7 @@ export function RosterTab({ staff }: { staff: StaffMember }) {
       ) : (
         <p className="text-sm text-muted-foreground">الجدول للعرض فقط — «الالتزام بجدول العمل» غير مفعَّل لهذا الموظف، فلا يقيّد الدخول.</p>
       )}
-      <ul className="rounded-lg border border-border">
+      <ul className="surface-card">
         {rows.map((r) => (
           <li key={r.weekday} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-3 gap-y-2 border-b border-border px-3 py-2.5 last:border-0 sm:grid-cols-[6rem_minmax(0,1fr)_minmax(0,1fr)_auto] sm:py-1.5">
             <div className="col-span-2 flex items-center justify-between gap-2 sm:col-span-1">

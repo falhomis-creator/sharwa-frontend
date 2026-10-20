@@ -19,7 +19,7 @@ export function CategoryStripSection({ view, categories }: { view: SectionView; 
         <ul id={railId} className="store-rail -mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:px-0">
           {categories.map((c) => (
             <li key={c.id} className="w-36 shrink-0 md:w-44">
-              <Link href={`/c/${c.id}`} className="store-frame group block overflow-hidden rounded-lg border-border transition-colors hover:border-foreground/30">
+              <Link href={`/c/${c.id}`} className="store-frame group block overflow-hidden rounded-xl border-border transition-colors hover:border-foreground/30 shadow-card bg-card">
                 {c.image ? <ProductImage src={c.image} alt={c.name} sizes="176px" /> : null}
                 <span className="flex min-h-14 items-center justify-between gap-2 px-3 py-3 text-sm font-medium">
                   <span className="truncate">{c.name}</span>

@@ -326,7 +326,7 @@ function ControlBar({
                 onPreset(p);
               }
             }}
-            className="h-11 rounded-md border border-border px-3 text-sm text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-foreground aria-pressed:text-foreground lg:h-8"
+            className="h-11 rounded-md border border-border px-3 text-sm text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-cta aria-pressed:bg-accent aria-pressed:text-accent-foreground lg:h-8"
             data-testid={`preset-${p}`}
           >
             {PRESET_LABELS[p]}
@@ -354,7 +354,7 @@ function ControlBar({
         type="button"
         aria-pressed={compare}
         onClick={onCompare}
-        className="h-11 rounded-md border border-border px-3 text-sm text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-foreground aria-pressed:text-foreground lg:h-8"
+        className="h-11 rounded-md border border-border px-3 text-sm text-muted-foreground transition-colors hover:text-foreground aria-pressed:border-cta aria-pressed:bg-accent aria-pressed:text-accent-foreground lg:h-8"
         data-testid="compare-toggle"
       >
         مقارنة بالفترة السابقة <Kbd>C</Kbd>
@@ -636,7 +636,7 @@ function ExportStrip({ code, canExport }: { code: string; canExport: boolean }) 
       ) : mine.length === 0 ? (
         <p className="text-sm text-muted-foreground">لا تصديرات لهذا التقرير بعد — اضغط «تصدير CSV» أو «تصدير XLSX».</p>
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {mine.map((j) => (
             <ExportStripLine key={j.job_id} job={j} canExport={canExport} />
           ))}

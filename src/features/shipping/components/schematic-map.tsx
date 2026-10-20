@@ -110,7 +110,7 @@ export function SchematicMap({ circles = [], polygons = [], points = [], highlig
       <figcaption className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
         {circles.length ? (
           <span className="inline-flex items-center gap-1.5">
-            <span aria-hidden className="size-2.5 rounded-full border border-foreground" /> منطقة شروة شيب (نصف القطر)
+            <span aria-hidden className="size-2.5 rounded-full border border-primary" /> منطقة شروة شيب (نصف القطر)
           </span>
         ) : null}
         {polygons.length ? (

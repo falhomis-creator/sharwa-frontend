@@ -82,7 +82,7 @@ export function PosFrame({ children }: { children: ReactNode }) {
                   key={n.href}
                   href={n.href}
                   aria-current={active ? "page" : undefined}
-                  className={cn("flex h-12 shrink-0 items-center rounded-md px-3 text-sm transition-colors", active ? "bg-muted font-medium text-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}
+                  className={cn("flex h-12 shrink-0 items-center rounded-md px-3 text-sm transition-colors", active ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground")}
                 >
                   {n.label}
                 </Link>

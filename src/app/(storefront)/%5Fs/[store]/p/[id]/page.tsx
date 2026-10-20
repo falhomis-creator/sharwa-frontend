@@ -109,7 +109,7 @@ export default async function ProductPage({ params, searchParams }: Props) {
           <div className="space-y-8">
             <Gallery images={images} name={product.name} videoUrl={product.video_url} variants={product.variants} attributes={product.attributes} />
             {description}
-            <div className="store-frame rounded-xl border-border p-5 md:p-6">
+            <div className="store-frame rounded-xl border-border p-5 md:p-6 shadow-card bg-card">
               <BuyBox key={product.id} product={product} compactTitle />
             </div>
           </div>

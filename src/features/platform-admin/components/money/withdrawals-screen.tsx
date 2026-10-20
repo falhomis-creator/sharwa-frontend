@@ -60,7 +60,7 @@ export function WithdrawalsScreen() {
             ) : rows.length === 0 && !list.error ? (
               <EmptyState title={f.status === "pending" ? "لا طلبات معلّقة" : "لا طلبات"} />
             ) : (
-              <ul className="flex flex-col divide-y divide-border rounded-lg border border-border" data-testid="withdrawals-list">
+              <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden" data-testid="withdrawals-list">
                 {rows.map((w) => (
                   <li key={w.id}>
                     <button
@@ -148,7 +148,7 @@ function WithdrawalDetail({ w, now }: { w: Withdrawal; now: Date }) {
         </p>
       ) : null}
 
-      <dl className="rounded-lg border border-border px-3">
+      <dl className="surface-card px-3">
         <DetailRow label="هاتف العميل">
           <Link href={`/wallets/${encodeURIComponent(w.customer_phone)}`} className="hover:underline" data-testid="wallet-link">
             <Code>{w.customer_phone}</Code>

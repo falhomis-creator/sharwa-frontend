@@ -202,11 +202,11 @@ function MovementsTable() {
             {multi ? <FilterSelect label="الموقع" value={filters.location} onChange={(v) => set({ location: v || null })} options={locations.map((l) => ({ value: String(l.id), label: l.name }))} allLabel="كل المواقع" /> : null}
             <label className="flex min-w-0 flex-col gap-1 md:flex-row md:items-center md:gap-1.5">
               <span className="text-xs text-muted-foreground md:whitespace-nowrap">من</span>
-              <input type="date" dir="ltr" value={filters.from} onChange={(e) => set({ from: e.target.value || null })} className="h-11 rounded-lg border border-border bg-background px-2 text-sm md:h-8" />
+              <input type="date" dir="ltr" value={filters.from} onChange={(e) => set({ from: e.target.value || null })} className="h-11 rounded-lg border border-border bg-card px-2 text-sm md:h-8" />
             </label>
             <label className="flex min-w-0 flex-col gap-1 md:flex-row md:items-center md:gap-1.5">
               <span className="text-xs text-muted-foreground md:whitespace-nowrap">إلى</span>
-              <input type="date" dir="ltr" value={filters.to} onChange={(e) => set({ to: e.target.value || null })} className="h-11 rounded-lg border border-border bg-background px-2 text-sm md:h-8" />
+              <input type="date" dir="ltr" value={filters.to} onChange={(e) => set({ to: e.target.value || null })} className="h-11 rounded-lg border border-border bg-card px-2 text-sm md:h-8" />
             </label>
           </FilterBar>
         }

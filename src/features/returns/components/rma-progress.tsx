@@ -44,7 +44,7 @@ export function RmaProgress({ status, visited = [] }: { status: RmaStatus; visit
                 aria-hidden
                 className={cn(
                   "absolute start-[5px] top-3 h-full w-px md:start-1/2 md:top-[5px] md:h-px md:w-full",
-                  st === "passed" ? "bg-foreground" : "bg-border",
+                  st === "passed" ? "bg-primary" : "bg-border",
                 )}
               />
             ) : null}
@@ -52,10 +52,10 @@ export function RmaProgress({ status, visited = [] }: { status: RmaStatus; visit
               aria-hidden
               className={cn(
                 "relative z-10 mt-0.5 size-[11px] shrink-0 rounded-full border md:mt-0",
-                st === "current" && "border-foreground bg-foreground ring-4 ring-foreground/10",
-                st === "passed" && "border-foreground bg-background",
-                st === "future" && "border-border bg-background",
-                st === "skipped" && "border-dashed border-border bg-background",
+                st === "current" && "border-primary bg-primary ring-4 ring-primary/15",
+                st === "passed" && "border-primary bg-card",
+                st === "future" && "border-border bg-card",
+                st === "skipped" && "border-dashed border-border bg-card",
               )}
             />
             <span

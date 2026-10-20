@@ -78,7 +78,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
         <h2 className="text-base font-medium">{title}</h2>
         {hint ? <span className="text-xs text-muted-foreground">{hint}</span> : null}
       </div>
-      <ul className="divide-y divide-border rounded-lg border border-border empty:hidden" data-testid={`roles-${title}`}>
+      <ul className="divide-y divide-border/60 surface-card empty:hidden overflow-hidden" data-testid={`roles-${title}`}>
         {children}
       </ul>
     </section>

@@ -107,7 +107,7 @@ function SettingsFormView({ market, data }: { market: Market; data: MarketSettin
             </NativeSelect>
           </Field>
         </div>
-        <div className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <div className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {toggles.map((t) => (
             <Controller
               key={t.name}
@@ -129,7 +129,7 @@ function SettingsFormView({ market, data }: { market: Market; data: MarketSettin
           </Button>
         </div>
       </div>
-      <aside className="flex flex-col gap-2 rounded-lg border border-border p-4 text-sm" aria-label="معاينة السعر" data-testid="price-preview">
+      <aside className="flex flex-col gap-2 surface-card p-5 lg:p-6 text-sm" aria-label="معاينة السعر" data-testid="price-preview">
         <span className="text-xs text-muted-foreground">معاينة سعر منتج نموذجي (من الخادم)</span>
         <span className="font-medium">{data.preview.sample_product}</span>
         <span className="flex justify-between gap-2">

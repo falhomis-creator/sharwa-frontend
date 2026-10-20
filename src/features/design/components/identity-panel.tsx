@@ -84,7 +84,7 @@ function PresetList() {
           </button>
         </p>
       ) : (
-        <div role="radiogroup" aria-labelledby="presets-title" className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <div role="radiogroup" aria-labelledby="presets-title" className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {(presets.data ?? []).map((p) => {
             const active = p.code === selected;
             return (
@@ -186,7 +186,7 @@ function StyleField() {
       <h3 id="style-title" className="text-sm font-medium">
         نمط التصميم
       </h3>
-      <div role="radiogroup" aria-labelledby="style-title" className="flex flex-col divide-y divide-border rounded-lg border border-border">
+      <div role="radiogroup" aria-labelledby="style-title" className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
         {DESIGN_STYLES.map((s) => (
           <label key={s} className="flex min-h-11 cursor-pointer items-center justify-between gap-3 px-3 text-sm has-focus-visible:bg-muted md:min-h-9">
             <span>
@@ -212,7 +212,7 @@ function LogoField() {
   return (
     <section className="flex flex-col gap-2" aria-label="الشعار">
       <SectionTitle hint={`${ALLOWED_FORMATS_MESSAGE} · حتى 5MB`}>الشعار</SectionTitle>
-      <div className="flex items-center gap-3 rounded-lg border border-border p-3">
+      <div className="flex items-center gap-3 surface-card p-4">
         <span className="flex h-12 w-24 shrink-0 items-center justify-center overflow-hidden rounded-md border border-border bg-muted/40">
           {shown ? (
             // eslint-disable-next-line @next/next/no-img-element -- a local object URL / data URL preview

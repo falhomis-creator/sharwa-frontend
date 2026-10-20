@@ -20,7 +20,7 @@ import { pendingCount, useQueueStore } from "@/features/courier/queue";
  * which sits above the tab bar.
  */
 export const touch = "min-h-12 min-w-12";
-export const primaryAction = "inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-foreground px-4 text-base font-medium text-background disabled:cursor-not-allowed disabled:opacity-50";
+export const primaryAction = "inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-cta px-4 text-base font-medium text-cta-foreground shadow-xs disabled:cursor-not-allowed disabled:opacity-50";
 export const secondaryAction = "inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg border border-border px-4 text-base disabled:cursor-not-allowed disabled:opacity-50";
 
 const TABS = [
@@ -39,7 +39,7 @@ export function CourierShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background" data-testid="courier-shell">
-      <header className="sticky top-0 z-30 border-b border-border bg-background">
+      <header className="sticky top-0 z-30 border-b border-border bg-card">
         <div className="mx-auto flex h-14 w-full max-w-[480px] items-center gap-2 px-4">
           <span className="flex min-w-0 flex-1 flex-col leading-tight">
             <span className="truncate text-sm font-medium" data-testid="agent-name">
@@ -63,7 +63,7 @@ export function CourierShell({ children }: { children: ReactNode }) {
       <main id="main" className="mx-auto flex w-full max-w-[480px] flex-1 flex-col gap-4 px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))]">
         <Gate query={me}>{children}</Gate>
       </main>
-      <nav aria-label="أقسام التطبيق" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]">
+      <nav aria-label="أقسام التطبيق" className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]">
         <ul className="mx-auto grid max-w-[480px] grid-cols-4">
           {TABS.map((t) => {
             const active = t.exact ? pathname === t.href : pathname === t.href || pathname.startsWith(`${t.href}/`);
@@ -104,7 +104,7 @@ function Gate({ query, children }: { query: ReturnType<typeof useMe>; children: 
   if (status === 401) return <p className="text-sm text-muted-foreground">جارٍ التحويل إلى تسجيل الدخول…</p>;
   if (status === 403) {
     return (
-      <div role="alert" className="flex flex-col gap-2 rounded-lg border border-border p-5" data-testid="no-agent-profile">
+      <div role="alert" className="flex flex-col gap-2 surface-card p-6" data-testid="no-agent-profile">
         <p className="text-base font-medium">{query.error instanceof Error ? query.error.message : "لا صلاحية."}</p>
         <p className="text-sm text-muted-foreground">تواصل مع مالك المتجر لربط حسابك بملف مندوب.</p>
       </div>
@@ -112,7 +112,7 @@ function Gate({ query, children }: { query: ReturnType<typeof useMe>; children: 
   }
   if (query.error) {
     return (
-      <div role="alert" className="flex flex-col gap-3 rounded-lg border border-border p-5">
+      <div role="alert" className="flex flex-col gap-3 surface-card p-6">
         <p className="text-base font-medium">تعذّر تحميل التطبيق</p>
         <button type="button" className={secondaryAction} onClick={() => void query.refetch()}>
           إعادة المحاولة
@@ -161,7 +161,7 @@ export function ActionBar({ children }: { children: ReactNode }) {
   return (
     <>
       <div aria-hidden className="shrink-0" style={{ height }} data-testid="action-bar-spacer" />
-      <div ref={ref} className="fixed inset-x-0 bottom-14 z-20 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]" data-testid="action-bar">
+      <div ref={ref} className="fixed inset-x-0 bottom-14 z-20 border-t border-border bg-card pb-[env(safe-area-inset-bottom)]" data-testid="action-bar">
         <div className="mx-auto flex max-w-[480px] flex-col gap-2 px-4 py-3">{children}</div>
       </div>
     </>

@@ -70,7 +70,7 @@ export function DeactivationTab({ schema, storeName }: { schema: string; storeNa
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-medium">الحالة الحالية</h2>
         {current ? (
-          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-lg border border-border p-4 text-sm md:grid-cols-4" data-testid="deactivation-current">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-3 surface-card p-5 lg:p-6 text-sm md:grid-cols-4" data-testid="deactivation-current">
             <div className="flex flex-col gap-1">
               <dt className="text-xs text-muted-foreground">الحالة</dt>
               <dd>
@@ -99,7 +99,7 @@ export function DeactivationTab({ schema, storeName }: { schema: string; storeNa
 
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-medium">الانتقالات</h2>
-        <ul className="flex flex-col divide-y divide-border rounded-lg border border-border">
+        <ul className="flex flex-col divide-y divide-border/60 surface-card overflow-hidden">
           {options.map((o) => (
             <li key={o.action} className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between" data-testid={`lifecycle-${o.action}`}>
               <span className="text-sm">{DEACTIVATION_ACTION_LABELS[o.action]}</span>
@@ -129,7 +129,7 @@ export function DeactivationTab({ schema, storeName }: { schema: string; storeNa
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-medium">السجل</h2>
         {history.length ? (
-          <ul className="divide-y divide-border rounded-lg border border-border text-sm">
+          <ul className="divide-y divide-border/60 surface-card text-sm overflow-hidden">
             {history.map((h) => (
               <li key={h.id} className="flex flex-col gap-1 px-4 py-2 md:flex-row md:items-center md:gap-4">
                 <StatusText tone={TONE[h.status]}>{DEACTIVATION_LABELS[h.status]}</StatusText>
