@@ -96,13 +96,13 @@
 
 | Need | Backend today | Status |
 |---|---|---|
-| قائمة القطاعات | `MarketCategory` عبر Django admin + checkboxes في قالب `register.html` | `[NEEDS BACKEND]` → `GET /api/v1/public/market-categories/` → `[{id, name}]` (النشطة مرتبة بـ `display_order`) |
-| فحص النطاق الفرعي | `GET /register/check-subdomain/?subdomain=` → `{available, reason}` | Ready (الأسباب الأربعة بالعربية) |
-| إرسال التسجيل وبدء OTP | `POST /register/` HTML (بيانات في الـ session) | `[NEEDS BACKEND]` → `POST /api/v1/public/register/` `{store_name, merchant_phone, subdomain, interested_categories[], agree_terms}` → `{otp_token, ttl_seconds, masked_phone}` أو 400 `{field:[msg]}` |
-| التحقق من الرمز وإنشاء المتجر | `POST /register/verify-otp/` HTML | `[NEEDS BACKEND]` → `POST /api/v1/public/register/verify-otp/` `{otp_token, code}` → `{status_token, status_url}` / 400 رمز خاطئ / 410 منتهٍ / 429 |
-| إعادة إرسال الرمز | غير موجود كمسار مستقل | `[NEEDS BACKEND]` → `POST /api/v1/public/register/resend-otp/` `{otp_token}` → `{ttl_seconds}` / 429 + `Retry-After` |
-| حالة التجهيز | `GET /register/status/<token>/` → `{status}` (+ `store_url`, `dashboard_url` عند `ready`) | Ready |
-| تعيين كلمة المرور الأولى | `setup_admin_password` HTML POST على نطاق المتجر | `[NEEDS BACKEND]` → `POST /api/v1/auth/merchant/setup-password/` `{password, password_confirm}` → 204 (يُوثَّق في M03) |
+| قائمة القطاعات | `MarketCategory` + `api/views_onboarding.py` (2026-10-21) | Ready — `GET /api/v1/public/market-categories/` → `[{id, name}]` (النشطة مرتبة بـ `display_order`) |
+| فحص النطاق الفرعي | `GET /register/check-subdomain/?subdomain=` → `{available, reason}` | Ready (الأسباب بالعربية + قاعدة الطول 3–50، قرار 2026-10-21) |
+| إرسال التسجيل وبدء OTP | `POST /register/` HTML + `api/views_onboarding.py` (2026-10-21) | Ready — `POST /api/v1/public/register/` `{store_name, merchant_phone, subdomain, interested_categories[], agree_terms}` → `{otp_token, ttl_seconds: 600, masked_phone}` أو 400 `{field:[msg]}` / 429 + `Retry-After` (3 إرسالات لكل رقم كل 10 دقائق) |
+| التحقق من الرمز وإنشاء المتجر | `POST /register/verify-otp/` HTML + `api/views_onboarding.py` (2026-10-21) | Ready — `POST /api/v1/public/register/verify-otp/` `{otp_token, code}` → `{status_token, status_url}` / 400 رمز خاطئ أو حقل مأخوذ / 410 منتهٍ / 429 (قفل 10 دقائق بعد 3 رموز خاطئة) |
+| إعادة إرسال الرمز | `api/views_onboarding.py` (2026-10-21) | Ready — `POST /api/v1/public/register/resend-otp/` `{otp_token}` → `{ttl_seconds}` / 429 + `Retry-After` (فاصل 30 ثانية) / 410 |
+| حالة التجهيز | `GET /register/status/<token>/` → `{status}` (+ `store_url`, `dashboard_url`, `setup_token` عند `ready`) | Ready (الروابط تتبع مضيف الواجهة من X-Forwarded-Host/Proto؛ `setup_token` قرار 2026-10-21) |
+| تعيين كلمة المرور الأولى | `setup_admin_password` HTML + `api/views_auth.py` (2026-10-21) | Ready — `POST /api/v1/auth/merchant/setup-password/` `{password, password_confirm, setup_token}` → 204 (يُوثَّق في M03) |
 | نص الشروط | ثابت في القالب | n/a — ملف محتوى في المستودع `onboarding.content.ts` |
 
 ## 8. الحالات الحدّية (Edge Cases)

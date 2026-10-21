@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { ApiClientProvider } from "@/components/providers/api-client-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
@@ -43,7 +44,8 @@ async function CsrfBootstrap() {
   // below inside the static-shell pass and flags `Date.now()` from the fetch instrumentation
   // whenever Django answers fast (or is down) — a console error on every dashboard page.
   await connection();
-  const identity = await requestIdentity();
-  const token = await getCsrfToken(identity.storeHost);
+  const [identity, cookieStore] = await Promise.all([requestIdentity(), cookies()]);
+  // The browser's cookies MUST travel: the token has to match the `csrftoken` it holds.
+  const token = await getCsrfToken(identity.storeHost, cookieStore.toString() || null);
   return <ApiClientProvider csrfToken={token}>{null}</ApiClientProvider>;
 }

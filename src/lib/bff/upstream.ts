@@ -37,7 +37,38 @@ export interface UpstreamContext {
   /** Store slug (subdomain or custom host) or `null`. */
   store: string | null;
   protocol: "http" | "https";
+  /** The visitor's IP as our own reverse proxy reported it, or `null` (see `clientIp`). */
   ip: string | null;
+}
+
+const IPV4_RE = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
+const IPV6_RE = /^[0-9a-f:]+(\.\d{1,3}){0,4}$/i;
+
+/** A bare IPv4/IPv6 address, or `null` — never a header value we would forward unchecked. */
+export function validIp(value: string | null | undefined): string | null {
+  const v = (value ?? "").trim();
+  if (!v || v.length > 45) return null;
+  if (IPV4_RE.test(v)) return v;
+  if (v.includes(":") && IPV6_RE.test(v)) return v.toLowerCase();
+  return null;
+}
+
+/**
+ * The visitor's IP for Django's per-IP limits (decision 2026-10-21 — the BFF proxy trap:
+ * without it Django sees EVERY visitor as this Next server, so one IP limit locks out the
+ * whole platform).
+ *
+ * Trust order, mirroring Django's `RealIpMiddleware`: `X-Real-IP` (our Nginx sets it from
+ * `$remote_addr`, overwriting anything the client sent), else the RIGHTMOST
+ * `X-Forwarded-For` entry — the one our own proxy appended. The leftmost entry is whatever
+ * the client typed, so it is never used. Requires Nginx in front of Next in production;
+ * a Next server exposed directly would let a visitor choose this value.
+ */
+export function clientIp(headers: Headers): string | null {
+  const real = validIp(headers.get("x-real-ip"));
+  if (real) return real;
+  const chain = (headers.get("x-forwarded-for") ?? "").split(",").map((part) => part.trim()).filter(Boolean);
+  return validIp(chain.at(-1));
 }
 
 /** Derive the tenant context of an incoming BFF request from its headers. */
@@ -45,13 +76,12 @@ export function contextFromRequest(request: Request): UpstreamContext {
   const host = normalizeHost(request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? "");
   const tenant = resolveTenant(host, env.TENANT_BASE_DOMAIN);
   const proto = request.headers.get("x-forwarded-proto");
-  const forwardedFor = request.headers.get("x-forwarded-for");
   return {
     host,
     storeHost: tenant.storeHost,
     store: tenant.store,
     protocol: proto === "https" ? "https" : "http",
-    ip: forwardedFor ? forwardedFor.split(",")[0]!.trim() : null,
+    ip: clientIp(request.headers),
   };
 }
 
@@ -89,7 +119,13 @@ export async function upstreamFetch(
   }
   headers.set("x-forwarded-host", ctx.host);
   headers.set("x-forwarded-proto", ctx.protocol);
-  if (ctx.ip) headers.set("x-real-ip", ctx.ip);
+  if (ctx.ip) {
+    // ONE entry, overwriting anything inbound: Django's RealIpMiddleware trusts it only
+    // because this Next server is in REAL_IP_TRUSTED_PROXIES (127.0.0.1/::1 by default),
+    // and with REAL_IP_PROXY_COUNT=1 it reads exactly this entry.
+    headers.set("x-forwarded-for", ctx.ip);
+    headers.set("x-real-ip", ctx.ip);
+  }
   if (ctx.storeHost && !init.omitStoreHeader) headers.set("x-store-domain", ctx.storeHost);
   // Django's CSRF referer check wants a same-site origin
   headers.set("origin", `${ctx.protocol}://${ctx.host}`);

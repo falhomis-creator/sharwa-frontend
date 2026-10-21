@@ -1,7 +1,7 @@
 import { env } from "@/env";
 import { UpstreamUnavailableError, contextFromRequest, jsonResponse, upstreamFetch } from "@/lib/bff/upstream";
 import { provisioningStatusSchema, type ProvisioningStatus } from "@/lib/schemas/provisioning";
-import { PROV_COOKIE, clearedProvCookie } from "@/features/onboarding/handoff";
+import { PROV_COOKIE, clearedProvCookie, decodeStatusToken, isSignedStatusToken } from "@/features/onboarding/handoff";
 import { provisioningMock } from "@/mocks/public/provisioning";
 import { isMocksOn, mockJson } from "@/mocks/runtime";
 
@@ -22,7 +22,9 @@ function hasProvCookie(request: Request, token: string): boolean {
 }
 
 export async function GET(request: Request, { params }: RouteContext<"/api/bff/public/provisioning/[token]">) {
-  const { token } = await params;
+  // Next passes the param still percent-encoded; encoding it again below would send
+  // Django `%253A` for every `:` in its signed token (400 on every poll).
+  const token = decodeStatusToken((await params).token);
   const ctx = contextFromRequest(request);
   const requestUrl = new URL(request.url);
 
@@ -52,8 +54,11 @@ export async function GET(request: Request, { params }: RouteContext<"/api/bff/p
       const parsed = provisioningStatusSchema.safeParse(await res.json());
       if (parsed.success) return finish(parsed.data, false);
     }
-    // Expired / forged token (400/404) or an HTML response: the fixture answers while
-    // mocks are on (Django has no row for fixture tokens); otherwise it is a 404.
+    // Django answered and rejected a token it signed itself (expired/forged): that is a
+    // real 404 — never the fixture, which would walk the merchant to the DEMO store.
+    if (isSignedStatusToken(token)) return jsonResponse(NOT_FOUND, { status: 404 });
+    // A fixture token (`st-…`, `pend…`, `ready…`) Django never issued: the fixture answers
+    // while mocks are on; otherwise it is a 404.
     return fallback();
   } catch (err) {
     if (err instanceof UpstreamUnavailableError) {

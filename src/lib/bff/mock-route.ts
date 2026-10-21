@@ -67,13 +67,19 @@ export async function readBody(request: Request): Promise<Record<string, unknown
   }
 }
 
-/** The system roles that may create/edit catalogue entities (M04 §2, M05 §2 assumption). */
+/**
+ * Who may create/edit catalogue entities (M04 products, M05 organization): the owner, or a
+ * member holding `catalog.manage` (Django migration 0210 — granted to «مدير المتجر» and
+ * «مدير الفرع» at seed time, re-assignable to any role). No role names here: the merchant
+ * controls it from «الأدوار والصلاحيات», and Django enforces the same key in live mode.
+ */
 export function canManageCatalog(session: Session): boolean {
-  if (session.kind === "merchant") return true;
-  const roles = session.staff?.roles ?? [];
-  return roles.some((r) => r === "مدير المتجر" || r === "مدير الفرع");
+  return hasPermission(
+    { kind: session.kind, features: session.features, permissions: session.staff?.permissions },
+    "catalog.manage",
+  );
 }
 
 export function forbidden(): Promise<Response> {
-  return mockJson({ detail: "إنشاء المنتجات وتعديلها مقصور على المالك ومدير المتجر أو الفرع." }, { status: 403 });
+  return mockJson({ detail: "ليست لديك صلاحية لهذا الإجراء." }, { status: 403 });
 }

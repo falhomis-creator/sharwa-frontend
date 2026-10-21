@@ -8,8 +8,8 @@
 | Module | Rows | Ready | `[NEEDS BACKEND]` | n/a / local |
 |---|---|---|---|---|
 | [M01](../modules/M01-landing-page.md) | 3 | 1 | 2 | 0 |
-| [M02](../modules/M02-merchant-onboarding.md) | 8 | 2 | 5 | 1 |
-| [M03](../modules/M03-dashboard-shell-overview.md) | 12 | 0 | 12 | 0 |
+| [M02](../modules/M02-merchant-onboarding.md) | 8 | 7 | 0 | 1 |
+| [M03](../modules/M03-dashboard-shell-overview.md) | 12 | 4 | 8 | 0 |
 | [M04](../modules/M04-products-variants.md) | 15 | 1 | 14 | 0 |
 | [M05](../modules/M05-categories-collections.md) | 9 | 2 | 6 | 1 |
 | [M06](../modules/M06-orders-fulfillment.md) | 11 | 3 | 8 | 0 |
@@ -56,7 +56,7 @@
 | [M47](../modules/M47-tenant-resolution-provisioning.md) | 11 | 7 | 1 | 3 |
 | [M48](../modules/M48-command-palette-search.md) | 8 | 0 | 5 | 3 |
 | [M49](../modules/M49-notifications-center.md) | 7 | 2 | 4 | 1 |
-| **Total** | **453** | **69** | **362** | **22** |
+| **Total** | **453** | **78** | **353** | **22** |
 
 ## Frontend additions after the module specs (owner decisions)
 
@@ -87,13 +87,13 @@
 
 | Need | Backend today | Status |
 |---|---|---|
-| قائمة القطاعات | `MarketCategory` عبر Django admin + checkboxes في قالب `register.html` | `[NEEDS BACKEND]` → `GET /api/v1/public/market-categories/` → `[{id, name}]` (النشطة مرتبة بـ `display_order`) |
-| فحص النطاق الفرعي | `GET /register/check-subdomain/?subdomain=` → `{available, reason}` | Ready (الأسباب الأربعة بالعربية) |
-| إرسال التسجيل وبدء OTP | `POST /register/` HTML (بيانات في الـ session) | `[NEEDS BACKEND]` → `POST /api/v1/public/register/` `{store_name, merchant_phone, subdomain, interested_categories[], agree_terms}` → `{otp_token, ttl_seconds, masked_phone}` أو 400 `{field:[msg]}` |
-| التحقق من الرمز وإنشاء المتجر | `POST /register/verify-otp/` HTML | `[NEEDS BACKEND]` → `POST /api/v1/public/register/verify-otp/` `{otp_token, code}` → `{status_token, status_url}` / 400 رمز خاطئ / 410 منتهٍ / 429 |
-| إعادة إرسال الرمز | غير موجود كمسار مستقل | `[NEEDS BACKEND]` → `POST /api/v1/public/register/resend-otp/` `{otp_token}` → `{ttl_seconds}` / 429 + `Retry-After` |
-| حالة التجهيز | `GET /register/status/<token>/` → `{status}` (+ `store_url`, `dashboard_url` عند `ready`) | Ready |
-| تعيين كلمة المرور الأولى | `setup_admin_password` HTML POST على نطاق المتجر | `[NEEDS BACKEND]` → `POST /api/v1/auth/merchant/setup-password/` `{password, password_confirm}` → 204 (يُوثَّق في M03) |
+| قائمة القطاعات | `MarketCategory` + `api/views_onboarding.py` (2026-10-21) | Ready — `GET /api/v1/public/market-categories/` → `[{id, name}]` (النشطة مرتبة بـ `display_order`) |
+| فحص النطاق الفرعي | `GET /register/check-subdomain/?subdomain=` → `{available, reason}` | Ready (الأسباب بالعربية + قاعدة الطول 3–50، قرار 2026-10-21) |
+| إرسال التسجيل وبدء OTP | `POST /register/` HTML + `api/views_onboarding.py` (2026-10-21) | Ready — `POST /api/v1/public/register/` `{store_name, merchant_phone, subdomain, interested_categories[], agree_terms}` → `{otp_token, ttl_seconds: 600, masked_phone}` أو 400 `{field:[msg]}` / 429 + `Retry-After` (3 إرسالات لكل رقم كل 10 دقائق) |
+| التحقق من الرمز وإنشاء المتجر | `POST /register/verify-otp/` HTML + `api/views_onboarding.py` (2026-10-21) | Ready — `POST /api/v1/public/register/verify-otp/` `{otp_token, code}` → `{status_token, status_url}` / 400 رمز خاطئ أو حقل مأخوذ / 410 منتهٍ / 429 (قفل 10 دقائق بعد 3 رموز خاطئة) |
+| إعادة إرسال الرمز | `api/views_onboarding.py` (2026-10-21) | Ready — `POST /api/v1/public/register/resend-otp/` `{otp_token}` → `{ttl_seconds}` / 429 + `Retry-After` (فاصل 30 ثانية) / 410 |
+| حالة التجهيز | `GET /register/status/<token>/` → `{status}` (+ `store_url`, `dashboard_url`, `setup_token` عند `ready`) | Ready (الروابط تتبع مضيف الواجهة من X-Forwarded-Host/Proto؛ `setup_token` قرار 2026-10-21) |
+| تعيين كلمة المرور الأولى | `setup_admin_password` HTML + `api/views_auth.py` (2026-10-21) | Ready — `POST /api/v1/auth/merchant/setup-password/` `{password, password_confirm, setup_token}` → 204 (يُوثَّق في M03) |
 | نص الشروط | ثابت في القالب | n/a — ملف محتوى في المستودع `onboarding.content.ts` |
 
 ### M03 — هيكل لوحة التاجر والنظرة العامة (Dashboard Shell + Overview)
@@ -101,12 +101,12 @@
 | Need | Backend today | Status |
 |---|---|---|
 | رمز CSRF للطلبات | `<meta name="csrf-token">` في القوالب؛ `CSRF_COOKIE_HTTPONLY=True` | `[NEEDS BACKEND]` → `GET /api/v1/auth/csrf/` → `{csrfToken}` (أو حقنه SSR من BFF) |
-| دخول المالك | `merchant_login` HTML POST | `[NEEDS BACKEND]` → `POST /api/v1/auth/merchant/login/` `{password}` → 204 + cookie جلسة / 400 |
+| دخول المالك | `merchant_login` HTML POST + `api/views_auth.py` (2026-10-20) | Ready — `POST /api/v1/auth/merchant/login/` `{phone, password}` → 204 + cookie جلسة / 400 / 409 `setup_required` / 429 قفل 15 دقيقة (قرار 2026-10-20: هاتف واتساب المتجر يبقى شرطاً كشاشة Django) |
 | دخول الموظف | `staff_login` HTML POST | `[NEEDS BACKEND]` → `POST /api/v1/auth/staff/login/` `{phone, password}` → 204 / 400 / 403 غير مفعّل |
-| الخروج | `merchant_logout`, `staff_logout` | `[NEEDS BACKEND]` → `POST /api/v1/auth/logout/` → 204 |
+| الخروج | `merchant_logout`, `staff_logout` + `api/views_auth.py` (2026-10-20) | Ready — `POST /api/v1/auth/logout/` → 204 (مالك أو موظف) |
 | نسيت/إعادة تعيين كلمة المرور | `forgot_password`, `reset_password` HTML | `[NEEDS BACKEND]` → `POST /api/v1/auth/merchant/forgot-password/` → `{otp_token, ttl_seconds}`؛ `POST /api/v1/auth/merchant/reset-password/` `{otp_token, code, password}` → 204 |
-| تعيين كلمة المرور الأولى | `setup_admin_password` HTML | `[NEEDS BACKEND]` → `POST /api/v1/auth/merchant/setup-password/` `{password, password_confirm}` → 204 |
-| الجلسة الحالية + الصلاحيات + الميزات | `request.staff`, `permission_resolver`, `feature_flags` context processor | `[NEEDS BACKEND]` → `GET /api/v1/auth/me/` → `{kind, store_name, store_host, staff?:{full_name, roles[], permissions[], locations[]}, features[]}` |
+| تعيين كلمة المرور الأولى | `setup_admin_password` HTML + `api/views_auth.py` (2026-10-21) | Ready — `POST /api/v1/auth/merchant/setup-password/` `{password, password_confirm, setup_token}` → 204 + جلسة / 400 / 403 `setup_token_invalid` / 409 `already_set` (قرار 2026-10-21: `setup_token` الموقَّع من حالة `ready` يمر عبر `?setup=` — متجر جديد لا يُفتح لمن يصله أولاً) |
+| الجلسة الحالية + الصلاحيات + الميزات | `request.staff`, `permission_resolver`, `feature_flags` + `api/views_auth.py` (2026-10-20) | Ready — `GET /api/v1/auth/me/` → `{kind, store_name, store_host, staff?:{full_name, roles[], permissions[], locations[]}, features[]}` / 401 (`behavior` لم يُبنَ بعد — اختياري في العقد) |
 | النظرة العامة | `dashboard_home` HTML | `[NEEDS BACKEND]` → `GET /api/v1/dashboard/overview/` → `{today:{orders_count, completed_orders_count, cancelled_orders_count, refunded_orders_count, display_gross_revenue, display_net_revenue, refreshed_at}, new_orders:[…M06 row], attention:{pending_approvals, unread_behavior_alerts:{warning, critical}, low_stock_products, unread_conversations}, top_products:[{id, name, image, qty, display_revenue}], traffic_sources:{tiktok, whatsapp, …}}` |
 | تحديث أرقام اليوم | `refresh_today_metrics` POST | `[NEEDS BACKEND]` → `POST /api/v1/dashboard/overview/refresh/` → نفس `today` |
 | عدّادات الشريط | ضمن قوالب الشريط | `[NEEDS BACKEND]` → `GET /api/v1/dashboard/counters/` → `{new_orders, unread_conversations, pending_approvals, unread_behavior_alerts}` |

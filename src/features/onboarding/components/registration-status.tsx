@@ -79,6 +79,7 @@ export function RegistrationStatus({ token, whatsapp }: { token: string; whatsap
       <ReadyPanel
         token={token}
         dashboardUrl={poll.data.dashboard_url}
+        setupToken={poll.data.setup_token}
         storeUrl={poll.data.store_url ?? poll.data.dashboard_url.replace(/\/dashboard\/?$/, "")}
       />
     );
@@ -162,8 +163,18 @@ function StatusDot({ tone }: { tone: "live" | "offline" | "failed" }) {
  * a visible five-second hand-over to the store's first-entry screen with `?t=` once.
  * Copying the link holds the redirect so the merchant is not pulled away mid-action.
  */
-function ReadyPanel({ token, dashboardUrl, storeUrl }: { token: string; dashboardUrl: string; storeUrl: string }) {
-  const target = firstEntryUrl(dashboardUrl, token);
+function ReadyPanel({
+  token,
+  dashboardUrl,
+  storeUrl,
+  setupToken,
+}: {
+  token: string;
+  dashboardUrl: string;
+  storeUrl: string;
+  setupToken?: string;
+}) {
+  const target = firstEntryUrl(dashboardUrl, token, setupToken);
   const [left, setLeft] = useState(REDIRECT_SECONDS);
   const [held, setHeld] = useState(false);
   const [copied, setCopied] = useState(false);

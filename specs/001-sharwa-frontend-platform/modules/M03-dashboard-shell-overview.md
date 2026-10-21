@@ -93,12 +93,12 @@
 | Need | Backend today | Status |
 |---|---|---|
 | رمز CSRF للطلبات | `<meta name="csrf-token">` في القوالب؛ `CSRF_COOKIE_HTTPONLY=True` | `[NEEDS BACKEND]` → `GET /api/v1/auth/csrf/` → `{csrfToken}` (أو حقنه SSR من BFF) |
-| دخول المالك | `merchant_login` HTML POST | `[NEEDS BACKEND]` → `POST /api/v1/auth/merchant/login/` `{password}` → 204 + cookie جلسة / 400 |
+| دخول المالك | `merchant_login` HTML POST + `api/views_auth.py` (2026-10-20) | Ready — `POST /api/v1/auth/merchant/login/` `{phone, password}` → 204 + cookie جلسة / 400 / 409 `setup_required` / 429 قفل 15 دقيقة (قرار 2026-10-20: هاتف واتساب المتجر يبقى شرطاً كشاشة Django) |
 | دخول الموظف | `staff_login` HTML POST | `[NEEDS BACKEND]` → `POST /api/v1/auth/staff/login/` `{phone, password}` → 204 / 400 / 403 غير مفعّل |
-| الخروج | `merchant_logout`, `staff_logout` | `[NEEDS BACKEND]` → `POST /api/v1/auth/logout/` → 204 |
+| الخروج | `merchant_logout`, `staff_logout` + `api/views_auth.py` (2026-10-20) | Ready — `POST /api/v1/auth/logout/` → 204 (مالك أو موظف) |
 | نسيت/إعادة تعيين كلمة المرور | `forgot_password`, `reset_password` HTML | `[NEEDS BACKEND]` → `POST /api/v1/auth/merchant/forgot-password/` → `{otp_token, ttl_seconds}`؛ `POST /api/v1/auth/merchant/reset-password/` `{otp_token, code, password}` → 204 |
-| تعيين كلمة المرور الأولى | `setup_admin_password` HTML | `[NEEDS BACKEND]` → `POST /api/v1/auth/merchant/setup-password/` `{password, password_confirm}` → 204 |
-| الجلسة الحالية + الصلاحيات + الميزات | `request.staff`, `permission_resolver`, `feature_flags` context processor | `[NEEDS BACKEND]` → `GET /api/v1/auth/me/` → `{kind, store_name, store_host, staff?:{full_name, roles[], permissions[], locations[]}, features[]}` |
+| تعيين كلمة المرور الأولى | `setup_admin_password` HTML + `api/views_auth.py` (2026-10-21) | Ready — `POST /api/v1/auth/merchant/setup-password/` `{password, password_confirm, setup_token}` → 204 + جلسة / 400 / 403 `setup_token_invalid` / 409 `already_set` (قرار 2026-10-21: `setup_token` الموقَّع من حالة `ready` يمر عبر `?setup=` — متجر جديد لا يُفتح لمن يصله أولاً) |
+| الجلسة الحالية + الصلاحيات + الميزات | `request.staff`, `permission_resolver`, `feature_flags` + `api/views_auth.py` (2026-10-20) | Ready — `GET /api/v1/auth/me/` → `{kind, store_name, store_host, staff?:{full_name, roles[], permissions[], locations[]}, features[]}` / 401 (`behavior` لم يُبنَ بعد — اختياري في العقد) |
 | النظرة العامة | `dashboard_home` HTML | `[NEEDS BACKEND]` → `GET /api/v1/dashboard/overview/` → `{today:{orders_count, completed_orders_count, cancelled_orders_count, refunded_orders_count, display_gross_revenue, display_net_revenue, refreshed_at}, new_orders:[…M06 row], attention:{pending_approvals, unread_behavior_alerts:{warning, critical}, low_stock_products, unread_conversations}, top_products:[{id, name, image, qty, display_revenue}], traffic_sources:{tiktok, whatsapp, …}}` |
 | تحديث أرقام اليوم | `refresh_today_metrics` POST | `[NEEDS BACKEND]` → `POST /api/v1/dashboard/overview/refresh/` → نفس `today` |
 | عدّادات الشريط | ضمن قوالب الشريط | `[NEEDS BACKEND]` → `GET /api/v1/dashboard/counters/` → `{new_orders, unread_conversations, pending_approvals, unread_behavior_alerts}` |
@@ -126,7 +126,7 @@
 ## 10. الافتراضات والاعتماديات (Assumptions & Dependencies)
 
 - يعتمد على: M02 (الدخول الأول و503)، M06 (صفوف الطلبات الجديدة وsheet)، M18 (الصلاحيات والموافقات والتنبيهات السلوكية)، M21 (المخزون المنخفض)، M25 (شجرة التقارير)، M27 (المحادثات غير المقروءة)، M43 (المبدّل)، M48 (⌘K)، M49 (الجرس).
-- افتراض: دخول المالك بكلمة مرور فقط لأن المتجر محلول من الـ host ولا يوجد `auth.User`؛ دخول الموظف بالهاتف لأن `StaffMember.phone` فريد.
+- قرار (2026-10-20): دخول المالك برقم واتساب المتجر + كلمة المرور كشاشة Django `merchant_login` (المتجر محلول من الـ host ولا يوجد `auth.User`)؛ دخول الموظف بالهاتف لأن `StaffMember.phone` فريد.
 - افتراض: ربط المجموعات بمفاتيح الصلاحيات (FR-03.03) قرار واجهة مستند إلى الأدوار النظامية الأربعة؛ يُؤكَّد مع الباك إند.
 - افتراض: الشريط الجانبي يُقرأ من ملف تعريف واحد `dashboard.nav.ts` يحمل لكل عنصر `feature?` و`permission?` و`counter?`.
 - افتراض: الجلسة cookie نفسها عبر BFF same-origin (rewrites) لتبقى الكوكيز صالحة؛ لا JWT.

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { env } from "@/env";
 import { RegisterForm } from "@/features/onboarding/components/register-form";
-import { PROV_COOKIE } from "@/features/onboarding/handoff";
+import { PROV_COOKIE, decodeStatusToken } from "@/features/onboarding/handoff";
 import { register as copy } from "@/features/onboarding/onboarding.content";
 import { STORE_NAME_MAX } from "@/features/onboarding/schemas";
 
@@ -20,7 +20,8 @@ export default async function RegisterPage(props: PageProps<"/register">) {
   const [params, jar] = await Promise.all([props.searchParams, cookies()]);
   const raw = params.store_name;
   const storeName = ((Array.isArray(raw) ? raw[0] : raw) ?? "").trim().slice(0, STORE_NAME_MAX);
-  const resumeToken = jar.get(PROV_COOKIE)?.value;
+  const rawResume = jar.get(PROV_COOKIE)?.value;
+  const resumeToken = rawResume ? decodeStatusToken(rawResume) : undefined;
 
   return (
     <div className="flex flex-col gap-6">

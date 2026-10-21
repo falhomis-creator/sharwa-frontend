@@ -60,6 +60,7 @@ export const MOCK_MANAGER_PERMISSIONS = [
   "discounts.manage",
   "suppliers.manage",
   "channels.inbox.access",
+  "catalog.manage",
 ] as const;
 
 export function storeNameFor(store: string | null): string {

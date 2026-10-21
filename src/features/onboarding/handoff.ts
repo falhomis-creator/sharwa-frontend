@@ -9,6 +9,8 @@
  *   link still knows the store name and the masked number. Removed on `ready`.
  * - The store origin receives the token exactly once, as `?t=` on the redirect, and keeps
  *   it in sessionStorage (M47).
+ * - The first-password proof (`setup_token` from the `ready` status) rides the same
+ *   redirect as `?setup=`; the setup-password screen posts it back to Django.
  */
 export const PROV_COOKIE = "sharwa_prov";
 export const PROV_COOKIE_MAX_AGE = 30 * 60;
@@ -20,6 +22,33 @@ export function provCookie(token: string, secure: boolean): string {
 
 export function clearedProvCookie(): string {
   return `${PROV_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`;
+}
+
+/**
+ * A status token as it arrives in a URL or cookie → its real value.
+ *
+ * Next.js hands dynamic route params over still percent-encoded (the customer routes
+ * decode `[phone]` for the same reason). Django's signed tokens carry `:` separators, so
+ * an undecoded `%3A` that is encoded again reaches Django as `%253A` and fails the
+ * signature check (400 → «لم نجد طلب التأسيس هذا»). Real tokens — Django's signed
+ * base64url + `:`, or the fixture's `st-…` — never contain `%`, so decoding until no
+ * escape is left is safe and makes every entry point idempotent.
+ */
+export function decodeStatusToken(raw: string): string {
+  let value = raw;
+  for (let i = 0; i < 3 && /%[0-9A-Fa-f]{2}/.test(value); i++) {
+    try {
+      value = decodeURIComponent(value);
+    } catch {
+      break;
+    }
+  }
+  return value;
+}
+
+/** Django's signed status tokens (`signing.dumps`) always contain `:`; fixture tokens never do. */
+export function isSignedStatusToken(token: string): boolean {
+  return token.includes(":");
 }
 
 export interface StoredStatus {
@@ -58,10 +87,12 @@ export function clearStoredStatus() {
 /**
  * Where `ready` sends a new merchant: the store's first-entry screen with the token once.
  * A brand-new store has no password, so the bare `dashboard_url` would only bounce to
- * login (US-02.6).
+ * login (US-02.6). `setupToken` is the server's proof for that screen (may be absent from
+ * an older backend; the screen then explains how to continue).
  */
-export function firstEntryUrl(dashboardUrl: string, token: string): string {
+export function firstEntryUrl(dashboardUrl: string, token: string, setupToken?: string): string {
   const url = new URL("setup-password", dashboardUrl.endsWith("/") ? dashboardUrl : `${dashboardUrl}/`);
   url.searchParams.set("t", token);
+  if (setupToken) url.searchParams.set("setup", setupToken);
   return url.toString();
 }

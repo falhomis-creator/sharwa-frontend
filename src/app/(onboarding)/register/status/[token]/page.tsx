@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { env } from "@/env";
+import { decodeStatusToken } from "@/features/onboarding/handoff";
 import { RegistrationStatus } from "@/features/onboarding/components/registration-status";
 
 export const metadata: Metadata = { title: "تجهيز المتجر" };
@@ -12,6 +13,7 @@ export const metadata: Metadata = { title: "تجهيز المتجر" };
 export const instant = false;
 
 export default async function RegistrationStatusPage(props: PageProps<"/register/status/[token]">) {
-  const { token } = await props.params;
+  // Params arrive percent-encoded: decode once here so every later encode is the only one.
+  const token = decodeStatusToken((await props.params).token);
   return <RegistrationStatus token={token} whatsapp={env.NEXT_PUBLIC_PLATFORM_WHATSAPP} />;
 }

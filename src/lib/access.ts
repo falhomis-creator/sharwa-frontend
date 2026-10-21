@@ -1,5 +1,6 @@
 /**
- * Feature keys (39 + `pos`) and permission keys (35) — verbatim from discovery 01 §7 and 02 §10.
+ * Feature keys (39 + `pos`) and permission keys — verbatim from discovery 01 §7 and 02 §10, plus
+ * `catalog.manage` (Django migration 0210, decision 2026-10-21).
  * The frontend never resolves feature gating itself; it reads the effective lists from the session.
  *
  * `pos` is the one key not in discovery 01 §7: the owner made M16 POS a subscription-gated
@@ -86,6 +87,8 @@ export const PERMISSION_KEYS = [
   "channels.inbox.access",
   "channels.marketplaces.manage",
   "channels.dropshipping.manage",
+  // M05/M04 — products & organization (Django migration 0210, decision 2026-10-21).
+  "catalog.manage",
 ] as const;
 
 export type PermissionKey = (typeof PERMISSION_KEYS)[number];

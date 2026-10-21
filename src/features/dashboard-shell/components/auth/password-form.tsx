@@ -41,6 +41,8 @@ export function PasswordForm({ mode }: { mode: "setup" | "reset" }) {
   const router = useRouter();
   const search = useSearchParams();
   const otpToken = search.get("t") ?? "";
+  /** First entry only: the signed proof from the `ready` redirect (decision 2026-10-21). */
+  const setupToken = search.get("setup") ?? "";
   const [formError, setFormError] = useState("");
 
   const isReset = mode === "reset";
@@ -63,7 +65,7 @@ export function PasswordForm({ mode }: { mode: "setup" | "reset" }) {
         });
       } else {
         await apiFetch("/api/bff/auth/setup-password", z.undefined(), {
-          json: { password: values.password, password_confirm: values.password_confirm },
+          json: { password: values.password, password_confirm: values.password_confirm, setup_token: setupToken },
         });
       }
       router.replace("/dashboard");
@@ -87,6 +89,12 @@ export function PasswordForm({ mode }: { mode: "setup" | "reset" }) {
       </div>
 
       <FormError message={formError} />
+
+      {!isReset && !setupToken ? (
+        <p className="text-sm text-warning" role="status">
+          رابط التفعيل ناقص. افتح الرابط الذي ظهر في صفحة تجهيز المتجر، أو فعّل المتجر برمز واتساب من لوحة التحكم.
+        </p>
+      ) : null}
 
       {isReset ? (
         <div className="flex flex-col gap-2">

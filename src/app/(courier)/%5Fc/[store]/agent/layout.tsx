@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense, type ReactNode } from "react";
+import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { ApiClientProvider } from "@/components/providers/api-client-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
@@ -45,6 +46,7 @@ export default async function CourierLayout({ children }: { children: ReactNode 
 
 async function Csrf({ storeHost }: { storeHost: string }) {
   await connection();
-  const token = await getCsrfToken(storeHost);
+  // The browser's cookies MUST travel: the token has to match the `csrftoken` it holds.
+  const token = await getCsrfToken(storeHost, (await cookies()).toString() || null);
   return <ApiClientProvider csrfToken={token}>{null}</ApiClientProvider>;
 }

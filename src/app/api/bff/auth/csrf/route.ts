@@ -5,8 +5,10 @@ import { isMocksOn, mockJson, notAvailable } from "@/mocks/runtime";
 
 /**
  * `GET /api/bff/auth/csrf` → `{csrfToken}` (M03 §7, M47 FR-47.06).
- * Legacy mode: the token is lifted from `Set-Cookie: csrftoken` of `GET /dashboard/login/`
- * and that cookie is forwarded verbatim, so the pair the browser holds matches the token.
+ * The token comes from Django's `GET /api/v1/auth/csrf/` with the browser's cookies
+ * forwarded (see `src/lib/csrf.ts`); any `Set-Cookie` is forwarded verbatim, so the pair
+ * the browser holds always matches the token. The mock token is ONLY for an unreachable
+ * backend — Django rejects it (wrong length), so it must never stand in for a live one.
  */
 export async function GET(request: Request) {
   const ctx = contextFromRequest(request);
@@ -21,5 +23,6 @@ export async function GET(request: Request) {
     return new Response(JSON.stringify({ csrfToken: handshake.token }), { status: 200, headers });
   }
 
-  return isMocksOn() ? mockJson({ csrfToken: MOCK_CSRF_TOKEN }) : notAvailable();
+  if (!handshake.reachable && isMocksOn()) return mockJson({ csrfToken: MOCK_CSRF_TOKEN });
+  return notAvailable();
 }

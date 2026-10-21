@@ -1,4 +1,5 @@
 import { Suspense, type ReactNode } from "react";
+import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import type { Metadata } from "next";
@@ -64,6 +65,7 @@ export default async function PosLayout({ children }: { children: ReactNode }) {
 }
 
 async function CsrfBootstrap({ storeHost }: { storeHost: string }) {
-  const token = await getCsrfToken(storeHost);
+  // The browser's cookies MUST travel: the token has to match the `csrftoken` it holds.
+  const token = await getCsrfToken(storeHost, (await cookies()).toString() || null);
   return <ApiClientProvider csrfToken={token}>{null}</ApiClientProvider>;
 }

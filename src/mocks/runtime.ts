@@ -39,6 +39,21 @@ export function mockFieldErrors(fields: Record<string, string[]>): Promise<Respo
   return mockJson(fields, { status: 400 });
 }
 
+/**
+ * Integrated modules (full-stack integration protocol): a module named in
+ * `SHARWA_LIVE_MODULES` (comma-separated, e.g. `reports`) answers from Django even while
+ * `SHARWA_MOCKS=on` — so one integrated module can be exercised live while every other
+ * module stays on its fixtures. With `SHARWA_MOCKS=off` every integrated module is live.
+ */
+export function isModuleLive(module: string): boolean {
+  if (!isMocksOn()) return true;
+  const live = (process.env.SHARWA_LIVE_MODULES ?? "")
+    .split(",")
+    .map((m) => m.trim().toLowerCase())
+    .filter(Boolean);
+  return live.includes("*") || live.includes(module.toLowerCase());
+}
+
 /** What `[NEEDS BACKEND]` adapters return when mocks are off and the real endpoint does not exist yet. */
 export function notAvailable(): Promise<Response> {
   return mockJson({ detail: "غير متاح بعد." }, { status: 501, headers: { [MOCK_HEADER]: "0" } });

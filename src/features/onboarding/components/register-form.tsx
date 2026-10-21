@@ -17,7 +17,7 @@ import { apiFetch } from "@/lib/api-client";
 import { isApiError } from "@/lib/api-error";
 import { normalizePhone } from "@/lib/format";
 import { storeKey } from "@/lib/query-keys";
-import { suggestSubdomain } from "@/lib/tenant";
+import { SUBDOMAIN_MAX, suggestSubdomain } from "@/lib/tenant";
 import { cn } from "@/lib/utils";
 import { FieldError, FormError, applyApiError } from "@/features/dashboard-shell/components/auth/form-error";
 import {
@@ -246,7 +246,7 @@ export function RegisterForm({ initialStoreName, baseDomain }: { initialStoreNam
             spellCheck={false}
             enterKeyHint="next"
             placeholder={copy.subdomain.placeholder}
-            maxLength={63}
+            maxLength={SUBDOMAIN_MAX}
             className="-my-px h-11 w-0 min-w-0 flex-1 bg-transparent ps-3 font-mono text-base outline-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 md:text-sm"
             aria-invalid={Boolean(subdomainServerError) || check.state === "taken" || check.state === "invalid"}
             aria-describedby="subdomain-status"

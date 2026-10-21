@@ -36,7 +36,7 @@ export async function tryTargetAuth(
   ctx: UpstreamContext,
   body: unknown,
 ): Promise<Response | null> {
-  const csrf = request.headers.get("x-csrftoken") ?? (await getCsrfToken(ctx.storeHost));
+  const csrf = request.headers.get("x-csrftoken") ?? (await getCsrfToken(ctx.storeHost, request.headers.get("cookie")));
   try {
     const res = await upstreamFetch(request, `/api/v1/auth/${path}/`, ctx, {
       method: "POST",

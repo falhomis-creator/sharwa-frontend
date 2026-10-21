@@ -15,6 +15,9 @@ import { registeredStatus, registeredStoreByToken } from "@/mocks/public/registe
  */
 const progress = new Map<string, number>();
 
+/** The fixture's first-password proof; `setup-password` mock accepts any non-empty token. */
+export const MOCK_SETUP_TOKEN = "setup-local-demo";
+
 export function provisioningMock(
   token: string,
   opts: { store?: string | null; baseDomain: string; port?: string | null; protocol?: "http" | "https" } = {
@@ -30,7 +33,7 @@ export function provisioningMock(
     const status = registeredStatus(registered.polls);
     if (status !== "ready") return { status };
     const origin = buildStoreUrl(registered.subdomain, opts.baseDomain, { protocol: opts.protocol, port: opts.port });
-    return { status, store_url: origin, dashboard_url: `${origin}/dashboard` };
+    return { status, store_url: origin, dashboard_url: `${origin}/dashboard`, setup_token: MOCK_SETUP_TOKEN };
   }
 
   const store = opts.store ?? "noor";
@@ -42,6 +45,7 @@ export function provisioningMock(
     status: "ready",
     store_url: origin,
     dashboard_url: `${origin}/dashboard`,
+    setup_token: MOCK_SETUP_TOKEN,
   };
 
   if (t.startsWith("pend")) return { status: "pending" };

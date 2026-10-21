@@ -23,7 +23,7 @@ Contract: `specs/001-sharwa-frontend-platform/contracts/bff-cross-cutting.md` §
 | `dashboard/me`, `dashboard/overview`, `dashboard/overview/refresh`, `dashboard/counters` | mock | M03 |
 | `account/stores` | mock | M03, M43 |
 | `products`, `products/[id]`, `products/quick`, `products/bulk`, `products/export.csv`, `products/[id]/{stock,images,variants/generate,variants/bulk,changes}`, `products/variant-attributes/**`, `products/templates/**`, `products/global-templates`, `products/import/**` | mock (`[NEEDS BACKEND]` — M04 §7) | M04 |
-| `categories/**` (incl. `reorder`, `DELETE ?reassign_to&children`), `brands/**`, `tags/**` (incl. `merge`), `collections/**` (incl. `products`, `products/[pid]`, `products/reorder`), `badges/**` | mock (`[NEEDS BACKEND]` — M05 §7) | M05 |
+| `categories/**` (incl. `reorder`, `DELETE ?reassign_to&children`), `brands/**`, `tags/**` (incl. `merge`), `collections/**` (incl. `products`, `products/[pid]`, `products/reorder`), `badges/**` | **integrated** (module `catalog`, 2026-10-21) — `liveOrMock` passthrough to `/api/v1/{categories,brands,tags,collections,badges}/…` on Django, fixture when not live. Reads: any member; writes: `catalog.manage` (owner implicit). Live writes revalidate the store tag | M05 |
 | `orders` (GET list · POST manual/B2B), `orders/[id]` (GET · PATCH pickup/gift), `orders/[id]/{fulfillment-status,status,payment/[action],refunds}` (versioned, 409 on stale `version`), `orders/counters`, `orders/form-options` (methods + pickups read from the M15 shipping state since 2026-10-19) | mock (`[NEEDS BACKEND]` — M06 §7) | M06 |
 | `order-statuses/**` (incl. `reorder`) | mock (`[NEEDS BACKEND]`) | M06 |
 | `search` (`?q&types&limit`, groups trimmed by permission) | mock (`[NEEDS BACKEND]` — M48 §7) | M48 |

@@ -1,28 +1,34 @@
+import { liveOrMock } from "@/lib/bff/live-route";
 import { mockRoute } from "@/lib/bff/mock-route";
 import { MOCK_HEADER, mockJson } from "@/mocks/runtime";
 import { reportCsv } from "@/mocks/reports/data";
 import { downloadExport } from "@/mocks/reports/exports";
 
-/** `GET /api/v1/reports/exports/<job_id>/download/?token=` — the file (a small CSV in the mock, also for `xlsx`). */
+/**
+ * `GET /api/v1/reports/exports/<job_id>/download/?token=` — the file. Live: Django streams the
+ * real CSV/XLSX (content-type + content-disposition forwarded). Mock: a small CSV, also for `xlsx`.
+ */
 export async function GET(request: Request, ctx: RouteContext<"/api/bff/reports/exports/[job]/download">) {
   const { job } = await ctx.params;
-  return mockRoute(
-    request,
-    ({ store, url }) => {
-      if (!/^\d+$/.test(job)) return mockJson({ detail: "مهمة التصدير غير موجودة." }, { status: 404 });
-      const res = downloadExport(store, Number(job), url.searchParams.get("token"));
-      if (!res.ok) return mockJson(res.body, { status: res.status });
-      const j = res.data;
-      return new Response(reportCsv(store, j.report_code, j.params), {
-        status: 200,
-        headers: {
-          "content-type": "text/csv; charset=utf-8",
-          "content-disposition": `attachment; filename="${j.report_code}-${j.id}.csv"`,
-          "cache-control": "no-store",
-          [MOCK_HEADER]: "1",
-        },
-      });
-    },
-    { permission: "reports.export" },
+  return liveOrMock(request, "reports", `/api/v1/reports/exports/${encodeURIComponent(job)}/download/`, () =>
+    mockRoute(
+      request,
+      ({ store, url }) => {
+        if (!/^\d+$/.test(job)) return mockJson({ detail: "مهمة التصدير غير موجودة." }, { status: 404 });
+        const res = downloadExport(store, Number(job), url.searchParams.get("token"));
+        if (!res.ok) return mockJson(res.body, { status: res.status });
+        const j = res.data;
+        return new Response(reportCsv(store, j.report_code, j.params), {
+          status: 200,
+          headers: {
+            "content-type": "text/csv; charset=utf-8",
+            "content-disposition": `attachment; filename="${j.report_code}-${j.id}.csv"`,
+            "cache-control": "no-store",
+            [MOCK_HEADER]: "1",
+          },
+        });
+      },
+      { permission: "reports.export" },
+    ),
   );
 }

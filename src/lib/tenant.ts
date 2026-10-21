@@ -32,8 +32,12 @@ export const RESERVED_SUBDOMAINS = [
 export type ReservedSubdomain = (typeof RESERVED_SUBDOMAINS)[number];
 
 export const SUBDOMAIN_RE = /^[a-z0-9]+$/;
+/**
+ * Decision 2026-10-21: 3–50 characters on every path, the same rule as Django's shared
+ * validator (`tenants/validators.py` SUBDOMAIN_MIN_LENGTH / SUBDOMAIN_MAX_LENGTH).
+ */
 export const SUBDOMAIN_MIN = 3;
-export const SUBDOMAIN_MAX = 63;
+export const SUBDOMAIN_MAX = 50;
 
 export type TenantKind = "platform" | "reserved" | "subdomain" | "custom_domain" | "invalid";
 
@@ -85,9 +89,11 @@ export function isReservedSubdomain(sub: string): sub is ReservedSubdomain {
 export function validateSubdomain(sub: string): { ok: true } | { ok: false; reason: string } {
   if (!sub) return { ok: false, reason: "فارغ" };
   if (!SUBDOMAIN_RE.test(sub)) return { ok: false, reason: "أحرف إنجليزية وأرقام فقط" };
+  // Reserved before length, as Django orders it: a short reserved name (`ai`) always
+  // reads «محجوز للنظام» on both sides.
+  if (isReservedSubdomain(sub)) return { ok: false, reason: "محجوز للنظام" };
   if (sub.length < SUBDOMAIN_MIN || sub.length > SUBDOMAIN_MAX)
     return { ok: false, reason: `يجب أن يكون بين ${SUBDOMAIN_MIN} و${SUBDOMAIN_MAX} حرفاً` };
-  if (isReservedSubdomain(sub)) return { ok: false, reason: "محجوز للنظام" };
   return { ok: true };
 }
 

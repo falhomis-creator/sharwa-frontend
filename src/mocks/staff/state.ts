@@ -14,7 +14,7 @@ import { FIXTURE_NOW, nextId, storeState } from "@/mocks/store-state";
  * Staff ids 2–5 are shared with the M22 assignment seed and the approvals seed; the owner
  * (فارس العمري) is not a staff row. The staff session fixture («كاشير» سارة الحربي) is id 2.
  */
-export const PERMISSION_CATEGORIES = ["الطلبات", "الموظفون", "العملاء", "المخزون", "التقارير", "الخصومات", "الموردون", "الدعم", "القنوات"] as const;
+export const PERMISSION_CATEGORIES = ["الطلبات", "الموظفون", "العملاء", "المخزون", "التقارير", "الخصومات", "الموردون", "الدعم", "القنوات", "المنتجات والكتالوج"] as const;
 
 export interface MockPermission {
   code: PermissionKey;
@@ -57,6 +57,7 @@ const PERMISSION_META: Record<PermissionKey, [string, MockPermission["category"]
   "channels.inbox.access": ["الوصول إلى صندوق المحادثات", "القنوات"],
   "channels.marketplaces.manage": ["إدارة الأسواق", "القنوات"],
   "channels.dropshipping.manage": ["إدارة الدروبشيبينج", "القنوات"],
+  "catalog.manage": ["إدارة الكتالوج (التصنيفات والعلامات والوسوم والتشكيلات والشارات)", "المنتجات والكتالوج"],
 };
 
 export const PERMISSIONS: MockPermission[] = PERMISSION_KEYS.map((code) => ({ code, name: PERMISSION_META[code][0], category: PERMISSION_META[code][1] }));
