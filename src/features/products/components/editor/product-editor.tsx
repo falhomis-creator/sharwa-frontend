@@ -41,19 +41,24 @@ import {
   productFormSchema,
   type ProductDetail,
   type ProductFormValues,
+  type ProductTemplate,
+  type VariantAttribute,
 } from "@/features/products/schemas";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   generateVariants,
   productKeys,
   saveVariants,
+  uploadImagesSequential,
   useDeleteProduct,
+  useGlobalTemplates,
   useProduct,
   useSaveProduct,
   useTemplates,
   useVariantAttributes,
 } from "@/features/products/api/products";
 import { useCatalogAccess } from "@/features/products/hooks/use-catalog-access";
+import { useProductEditorStore } from "@/stores/product-editor";
 import { ProductStatusText } from "@/features/products/components/status-text";
 import { EMPTY_PRODUCT_FORM, detailToForm, formToPayload } from "@/features/products/components/editor/form-mapping";
 import {
@@ -61,14 +66,26 @@ import {
   DUPLICATE_RESET,
   duplicateForm,
   duplicateProductHref,
-  seedBlueprintId,
   templateForm,
   variantCopyPlan,
   variantPriceRows,
   type EditorSeed,
 } from "@/features/products/components/editor/prefill";
 import { MediaGallery } from "@/features/products/components/editor/media-gallery";
+import { PendingMedia, type PendingImage } from "@/features/products/components/editor/pending-media";
 import { VariantMatrix } from "@/features/products/components/editor/variant-matrix";
+import {
+  EMPTY_PLAN,
+  VariantBuilder,
+  attrsFromTemplate,
+  mergeTemplateAttrs,
+  persistVariantPlan,
+  planCombos,
+  planIsActive,
+  validatePlan,
+  type VariantPlan,
+} from "@/features/products/components/editor/variant-builder";
+import { CardGroup, CollapsibleCard, EditorCard } from "@/features/products/components/editor/editor-cards";
 import { ChangeLog } from "@/features/products/components/editor/change-log";
 import { AdvancedPanels } from "@/features/products/components/editor/advanced-panels";
 import { FormulaPreview } from "@/features/products/components/editor/formula-preview";
@@ -83,31 +100,52 @@ import {
 /**
  * Full product editor (US-04.3, T072) — `/dashboard/products/new` and `/[id]`.
  *
- * Main column: الأساسي · الوسائط · التسعير · المخزون · المتغيرات · المحتوى · الشحن · SEO.
- * Side column: الحالة والنشر · التنظيم · الأعلام. Sections are separated by 1px rules, not
- * cards (M04 §11 I). Conditional fields are HIDDEN, never disabled (FR-04.04); digital and
- * service products drop the shipping group for «لا يتطلب شحناً» (FR-04.05).
+ * Layout (owner directive 2026-10-22, Shopify-style): ONE scrollable page of vertical cards —
+ * no top tabs and no section nav (they raised the cognitive load).
+ *   Main column: ① المعلومات الأساسية · ② الوسائط · ③ التنظيم والقالب · ④ المتغيرات والتسعير
+ *   (dynamic: the chosen template's attributes appear as tag inputs and build the variants
+ *   table) · ⑤ الشحن (collapsible, closed) · ⑥ SEO (collapsible, closed) · and, for a saved
+ *   product, «الأنماط المتقدمة» and «سجل التغييرات» as closed cards (`?tab=advanced|history`
+ *   opens them, so old links keep working).
+ *   Side column: حالة النشر + خصائص المنتج (on phones the status card comes first).
+ * Conditional fields are HIDDEN, never disabled (FR-04.04); digital and service products drop
+ * the shipping group for «لا يتطلب شحناً» (FR-04.05).
  *
- * Saving is explicit (FR-04.11): a sticky bar appears with «تغييرات غير محفوظة» whenever
- * the form is dirty, `⌘S`/`Ctrl+S` saves, and leaving through an in-app link asks first.
- * Separately, a LOCAL draft is auto-saved to this browser (T072 «حفظ تلقائي للمسودة») and
- * offered back on the next visit — it is never sent to the server without «حفظ».
+ * A new product can get its images and variants BEFORE the first save: both stay in the
+ * browser and are sent right after the product is created (same endpoints as a saved product).
+ *
+ * Saving is explicit (FR-04.11): the sticky footer always carries «حفظ» and «إلغاء», `⌘S` /
+ * `Ctrl+S` saves, and leaving through an in-app link with unsaved changes asks first. A LOCAL
+ * draft of the form is auto-saved to this browser (T072) and offered back on the next visit.
  *
  * Creation presets (owner directive 2026-10-20): `/new?duplicate=<id>` opens the editor as a
- * copy of that product and `/new?template=<id>` pre-fills it from a template (see `prefill.ts`).
+ * copy of that product and `/new?template=<id>` pre-selects a template (see `prefill.ts`).
  */
-const SECTIONS = [
-  { id: "basic", label: "الأساسي" },
-  { id: "media", label: "الوسائط" },
-  { id: "pricing", label: "التسعير" },
-  { id: "inventory", label: "المخزون" },
-  { id: "variants", label: "المتغيرات" },
-  { id: "content", label: "المحتوى" },
-  { id: "shipping", label: "الشحن" },
-  { id: "seo", label: "SEO" },
-] as const;
-
 const DRAFT_PREFIX = "sharwa:product-draft:";
+const SHIPPING_FIELDS = ["delivery_duration", "weight", "length", "width", "height", "hazard_class"] as const;
+const SEO_FIELDS = ["meta_title", "meta_description", "meta_keywords"] as const;
+/** Blueprint keys a template must never overwrite in the form. */
+const TEMPLATE_SKIP = new Set(["name", "sku", "slug"]);
+/** Labels for the «أكمل الحقول المطلوبة: …» summary next to «حفظ» (schema audit 2026-10-23). */
+const REQUIRED_LABELS: Partial<Record<keyof ProductFormValues, string>> = {
+  name: "اسم المنتج",
+  price: "السعر",
+  category_id: "التصنيف",
+  unit: "الوحدة",
+};
+
+/** After a failed save: open, scroll to and focus the first field that shows an error. */
+function focusFirstError() {
+  // Two frames: a collapsed card (الشحن، SEO) opens on its error first, then the field exists.
+  requestAnimationFrame(() =>
+    requestAnimationFrame(() => {
+      const alert = document.querySelector<HTMLElement>('[data-testid="product-editor"] [data-field-error]');
+      const control = alert?.parentElement?.querySelector<HTMLElement>("input:not([type=hidden]), select, textarea, button");
+      (control ?? alert)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      control?.focus({ preventScroll: true });
+    }),
+  );
+}
 
 function subscribeStorage(onChange: () => void) {
   window.addEventListener("storage", onChange);
@@ -120,29 +158,6 @@ function readStorage(key: string): string | null {
   } catch {
     return null;
   }
-}
-
-function Section({ id, title, description, children }: { id: string; title: string; description?: string; children: ReactNode }) {
-  return (
-    <section id={id} aria-labelledby={`${id}-title`} className="scroll-mt-28 border-b border-border py-6 last:border-0">
-      <div className="mb-4 flex flex-col gap-1">
-        <h2 id={`${id}-title`} className="text-base font-medium">
-          {title}
-        </h2>
-        {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
-      </div>
-      <div className="flex flex-col gap-4">{children}</div>
-    </section>
-  );
-}
-
-function SideBlock({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="flex flex-col gap-3 border-b border-border py-5 first:pt-0 last:border-0">
-      <h2 className="text-sm font-medium">{title}</h2>
-      {children}
-    </section>
-  );
 }
 
 function Grid({ children, cols = 2 }: { children: ReactNode; cols?: 2 | 3 | 4 }) {
@@ -161,6 +176,7 @@ export function ProductEditor({ productId }: { productId: number | null }) {
   const creating = productId === null;
   const source = useProduct(creating ? duplicateId : null);
   const templates = useTemplates();
+  const attributes = useVariantAttributes();
   const template = creating && templateId !== null ? (templates.data ?? []).find((t) => t.id === templateId) : undefined;
   const seed = useMemo<EditorSeed | null>(() => {
     if (!creating) return null;
@@ -169,15 +185,21 @@ export function ProductEditor({ productId }: { productId: number | null }) {
     return null;
   }, [creating, duplicateId, source.data, template]);
 
+  // A template seed needs the dictionary too: its attributes open as named tag inputs.
   const waitingForSeed =
-    (creating && duplicateId !== null && source.isLoading) || (creating && templateId !== null && templates.isLoading);
+    (creating && duplicateId !== null && source.isLoading) ||
+    (creating && templateId !== null && (templates.isLoading || attributes.isLoading));
   if ((productId !== null && query.isLoading) || waitingForSeed) {
     return (
       <div className="flex flex-col gap-4" aria-busy="true">
         <Skeleton className="h-8 w-64" />
         <div className="grid gap-6 lg:grid-cols-12">
-          <Skeleton className="h-[32rem] lg:col-span-8" />
-          <Skeleton className="h-80 lg:col-span-4" />
+          <div className="flex flex-col gap-5 lg:col-span-8">
+            <Skeleton className="h-72 rounded-2xl" />
+            <Skeleton className="h-48 rounded-2xl" />
+            <Skeleton className="h-64 rounded-2xl" />
+          </div>
+          <Skeleton className="h-64 rounded-2xl lg:col-span-4" />
         </div>
       </div>
     );
@@ -206,6 +228,7 @@ export function ProductEditor({ productId }: { productId: number | null }) {
       key={productId ?? `new-${seedKey}`}
       product={query.data ?? null}
       seed={seed}
+      initialAttributes={attributes.data ?? []}
       missingTemplate={creating && templateId !== null && !templates.isLoading && !template}
     />
   );
@@ -215,14 +238,17 @@ export function ProductEditor({ productId }: { productId: number | null }) {
 function EditorForm({
   product,
   seed,
+  initialAttributes,
   missingTemplate,
 }: {
   product: ProductDetail | null;
   seed: EditorSeed | null;
+  initialAttributes: VariantAttribute[];
   missingTemplate: boolean;
 }) {
   const qc = useQueryClient();
-  const attributes = useVariantAttributes().data ?? [];
+  const attributesQuery = useVariantAttributes();
+  const attributes = useMemo(() => attributesQuery.data ?? [], [attributesQuery.data]);
   const router = useRouter();
   const store = useStore();
   const storeOrigin = useStoreOrigin();
@@ -232,20 +258,45 @@ function EditorForm({
   const save = useSaveProduct(product?.id ?? null);
   const remove = useDeleteProduct();
   const templates = useTemplates().data ?? [];
-  const [tab, setTab] = useQueryState("tab", parseAsStringLiteral(["product", "advanced", "history"]).withDefault("product"));
+  const globals = useGlobalTemplates(!product);
+  // Old deep links (`?tab=advanced|history`) now open the matching card instead of a tab.
+  const [openPanel] = useQueryState("tab", parseAsStringLiteral(["advanced", "history"]));
   const [formError, setFormError] = useState("");
+  const [finishing, setFinishing] = useState<string | null>(null);
   const [leaveTo, setLeaveTo] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [draftDismissed, setDraftDismissed] = useState(false);
   const [now] = useState(() => Date.now());
+
+  // New-product only state (kept in the browser until «حفظ»).
+  const [blueprintId, setBlueprintId] = useState<number | null>(seed?.kind === "template" ? seed.template.id : null);
+  const [plan, setPlan] = useState<VariantPlan>(() =>
+    seed?.kind === "template" ? { attrs: attrsFromTemplate(seed.template, initialAttributes), rows: {} } : EMPTY_PLAN,
+  );
+  const [pendingImages, setPendingImages] = useState<PendingImage[]>([]);
+  /** Bumped by «تجاهل التغييرات» so the saved product's variant matrix drops its local edits. */
+  const [matrixKey, setMatrixKey] = useState(0);
+  const [templateNote, setTemplateNote] = useState<string | null>(
+    seed?.kind === "template" ? `عُبِّئ ${seed.filled} حقلاً من «${seed.template.name}» — أكمل الاسم والسعر والصور ثم احفظ.` : null,
+  );
+
   const initial = useMemo(() => (product ? detailToForm(product) : (seed?.form ?? EMPTY_PRODUCT_FORM)), [product, seed]);
   const form = useForm<ProductFormValues>({ resolver: zodResolver(productFormSchema), defaultValues: initial, mode: "onBlur" });
   const { register, handleSubmit, setValue, reset, setError, formState } = form;
   const v = { ...form.formState.defaultValues, ...useWatch({ control: form.control }) } as ProductFormValues;
-  const dirty = formState.isDirty;
+  const formDirty = formState.isDirty;
+  const extraDirty = !product && (pendingImages.length > 0 || plan.attrs.some((a) => a.values.length > 0));
+  // Saved product: edited variant rows and a not-yet-generated matrix are unsaved changes too —
+  // «حفظ» persists them (schema audit 2026-10-23). Images of a saved product upload at once.
+  const variantDirty = useProductEditorStore((s) =>
+    product ? Object.keys(s.variantDrafts[product.id] ?? {}).length > 0 || Boolean(s.variantPending[product.id]) : false,
+  );
+  const dirty = formDirty || extraDirty || variantDirty;
   // A preset gets its own draft slot, so a blank «منتج جديد» draft never hijacks a copy and vice versa.
   const draftKey = `${DRAFT_PREFIX}${store}:${product?.id ?? (seed ? `new-${seed.kind}-${seed.kind === "duplicate" ? seed.source.id : seed.template.id}` : "new")}`;
 
+  const duplicateWithVariants = !product && seed?.kind === "duplicate" && seed.source.variants.length > 0;
+  const builderActive = !product && !duplicateWithVariants && planIsActive(plan);
 
   // Re-sync when the server copy changes (after save, variants, images) and nothing is pending.
   useEffect(() => {
@@ -267,7 +318,7 @@ function EditorForm({
   const serialized = JSON.stringify(v);
 
   useEffect(() => {
-    if (!dirty) return;
+    if (!formDirty) return;
     const t = window.setTimeout(() => {
       try {
         window.localStorage.setItem(draftKey, JSON.stringify({ at: new Date().toISOString(), values: JSON.parse(serialized) }));
@@ -276,7 +327,7 @@ function EditorForm({
       }
     }, 800);
     return () => window.clearTimeout(t);
-  }, [serialized, dirty, draftKey]);
+  }, [serialized, formDirty, draftKey]);
 
   const clearDraft = () => {
     try {
@@ -286,26 +337,81 @@ function EditorForm({
     }
   };
 
+  /**
+   * Template selector (new product): the blueprint fields fill the form at once and the
+   * template's attributes appear in «المتغيرات والتسعير». Values the merchant already typed
+   * for variants are kept; name, SKU and slug are never touched.
+   */
+  function chooseTemplate(next: ProductTemplate | null) {
+    setBlueprintId(next?.id ?? null);
+    setPlan((p) => ({ ...p, attrs: mergeTemplateAttrs(p.attrs, next ? attrsFromTemplate(next, attributes) : []) }));
+    if (!next) {
+      setTemplateNote(null);
+      return;
+    }
+    const filled = templateForm(next).form as unknown as Record<string, unknown>;
+    let n = 0;
+    for (const key of Object.keys(next.fields)) {
+      if (!(key in EMPTY_PRODUCT_FORM) || TEMPLATE_SKIP.has(key) || Array.isArray(filled[key])) continue;
+      setValue(key as keyof ProductFormValues, filled[key] as never, { shouldDirty: true, shouldValidate: false });
+      n += 1;
+    }
+    const note = `طُبِّق القالب «${next.name}»: ${n} حقلاً و${next.variant_attribute_ids.length} سمة`;
+    setTemplateNote(`${note}.`);
+    toast.success(note);
+  }
+
   /** Validate + save; resolves `true` when the server accepted the product. */
   const submit = () =>
     new Promise<boolean>((resolve) => {
       void handleSubmit(
         async (values) => {
           setFormError("");
+          const planError = builderActive ? validatePlan(plan) : null;
+          if (planError) {
+            setFormError(planError);
+            document.getElementById("pricing")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            resolve(false);
+            return;
+          }
           try {
-            const blueprintId = product ? null : seedBlueprintId(seed);
+            const blueprintForCreate = product ? null : seed?.kind === "duplicate" ? seed.source.blueprint_id : blueprintId;
             // [NEEDS BACKEND] `blueprint_id` on create: links the new product to its template (M04 US-04.6).
-            const saved = await save.mutateAsync({ ...formToPayload(values), ...(blueprintId !== null ? { blueprint_id: blueprintId } : {}) });
+            const payload: Record<string, unknown> = {
+              ...formToPayload(values),
+              ...(blueprintForCreate !== null ? { blueprint_id: blueprintForCreate } : {}),
+            };
+            // With variants the stock lives on each variant (FR-04.09).
+            if (builderActive) payload.stock = "0";
+            const saved = await save.mutateAsync(payload);
             clearDraft();
             setDraftDismissed(true);
             reset(detailToForm(saved));
-            const copiedVariants = !product && seed?.kind === "duplicate" ? await copyVariants(saved.id, seed.source) : 0;
+            let variantsCount = 0;
+            let imagesCount = 0;
+            const flushVariants = product ? useProductEditorStore.getState().variantFlush[product.id] : undefined;
+            if (product && variantDirty && flushVariants) {
+              setFinishing("جارٍ حفظ المتغيرات…");
+              try {
+                variantsCount = await flushVariants();
+              } catch (e) {
+                const msg = isApiError(e) ? e.userMessage : e instanceof Error ? e.message : "";
+                toast.warning(`حُفظ المنتج، لكن تعذّر حفظ المتغيرات${msg ? `: ${msg}` : ""}`);
+              }
+            }
+            if (!product) {
+              if (seed?.kind === "duplicate") variantsCount = await copyVariants(saved.id, seed.source);
+              else if (builderActive && planCombos(plan.attrs).length > 0) variantsCount = await createPlannedVariants(saved.id);
+              if (pendingImages.length > 0) imagesCount = await uploadPending(saved.id);
+              if (variantsCount || imagesCount) await qc.invalidateQueries({ queryKey: productKeys(store).detail(saved.id) });
+            }
+            const extras = [variantsCount ? `${variantsCount} متغيراً` : "", imagesCount ? `${imagesCount} صور` : ""].filter(Boolean).join(" و");
             toast.success(
               product
-                ? "حُفظت التغييرات"
+                ? `حُفظت التغييرات${variantsCount ? ` مع ${variantsCount} متغيراً` : ""}`
                 : seed?.kind === "duplicate"
-                  ? `أُنشئت النسخة «${saved.name}»${copiedVariants ? ` مع ${copiedVariants} متغيراً` : ""} — مخفية عن المتجر حتى تفعّل «متاح»`
-                  : `أُنشئ المنتج «${saved.name}»`,
+                  ? `أُنشئت النسخة «${saved.name}»${extras ? ` مع ${extras}` : ""} — مخفية عن المتجر حتى تفعّل «متاح»`
+                  : `أُنشئ المنتج «${saved.name}»${extras ? ` مع ${extras}` : ""}`,
             );
             if (!product) router.replace(`/dashboard/products/${saved.id}`);
             resolve(true);
@@ -316,29 +422,72 @@ function EditorForm({
               }
             }
             setFormError(isApiError(err) ? (err.detail ?? (err.fields ? "تحقق من الحقول المعلّمة." : err.userMessage)) : "تعذّر الحفظ.");
+            if (isApiError(err) && err.fields) focusFirstError();
             resolve(false);
+          } finally {
+            setFinishing(null);
           }
         },
-        () => {
-          setFormError("تحقق من الحقول المعلّمة.");
+        (invalid) => {
+          // Never a silent button: say what is missing, then take the merchant to the first field.
+          const keys = Object.keys(invalid) as Array<keyof ProductFormValues>;
+          const missing = keys.map((k) => REQUIRED_LABELS[k]).filter(Boolean);
+          const others = keys.length - missing.length;
+          setFormError(
+            missing.length
+              ? `أكمل الحقول المطلوبة: ${missing.join("، ")}${others ? ` — وصحّح ${others} حقلاً آخر معلّماً بالأحمر` : ""}.`
+              : `صحّح ${keys.length === 1 ? "الحقل المعلّم" : `${keys.length} حقول معلّمة`} بالأحمر.`,
+          );
+          focusFirstError();
           resolve(false);
         },
       )();
     });
+
   /** Rebuild the source's variant set on the new copy (same combinations, same extra prices). */
   async function copyVariants(newId: number, source: ProductDetail): Promise<number> {
-    const plan = variantCopyPlan(source, attributes);
-    if (!plan) return 0;
+    const copy = variantCopyPlan(source, attributes);
+    if (!copy) return 0;
+    setFinishing("جارٍ نسخ المتغيرات…");
     try {
-      let rows = await generateVariants(newId, plan.request);
-      const prices = variantPriceRows(rows, plan);
+      let rows = await generateVariants(newId, copy.request);
+      const prices = variantPriceRows(rows, copy);
       if (prices.length) rows = await saveVariants(newId, prices);
-      await qc.invalidateQueries({ queryKey: productKeys(store).detail(newId) });
       return rows.length;
     } catch {
-      toast.warning("أُنشئت النسخة، لكن تعذّر نسخ المتغيرات — ولّدها من قسم «المتغيرات».");
+      toast.warning("أُنشئت النسخة، لكن تعذّر نسخ المتغيرات — ولّدها من بطاقة «المتغيرات والتسعير».");
       return 0;
     }
+  }
+
+  /** The variants typed before the first save (tag inputs + table), created on the new product. */
+  async function createPlannedVariants(newId: number): Promise<number> {
+    setFinishing("جارٍ إنشاء المتغيرات…");
+    try {
+      const fresh = (await attributesQuery.refetch()).data ?? attributes;
+      const n = await persistVariantPlan(newId, plan, fresh);
+      void qc.invalidateQueries({ queryKey: productKeys(store).attributes });
+      return n;
+    } catch (err) {
+      const msg = err instanceof Error && err.message ? err.message : isApiError(err) ? err.userMessage : "";
+      toast.warning(`أُنشئ المنتج، لكن تعذّر إنشاء المتغيرات${msg ? `: ${msg}` : ""} — أكملها من بطاقة «المتغيرات والتسعير».`);
+      return 0;
+    }
+  }
+
+  /** Pending images go up one per request (Nginx 8 MB per request), in the order shown. */
+  async function uploadPending(newId: number): Promise<number> {
+    const files = pendingImages.map((i) => i.file);
+    const result = await uploadImagesSequential(newId, files, (done, total) =>
+      setFinishing(done < total ? `جارٍ رفع الصور ${done + 1}/${total}…` : "جارٍ إنهاء الحفظ…"),
+    );
+    setPendingImages([]);
+    if (result.failed.length > 0) {
+      toast.warning(
+        `أُنشئ المنتج، لكن تعذّر رفع ${result.failed.length} من ${files.length} صور (${result.failed.map((f) => f.name).join("، ")}) — ارفعها من بطاقة «الوسائط».`,
+      );
+    }
+    return result.uploaded;
   }
 
   const onShortcutSave = useEffectEvent(() => {
@@ -381,10 +530,34 @@ function EditorForm({
     };
   }, [dirty]);
 
+  /** Drop every unsaved change (form, pre-save variants and images). */
+  function discardAll() {
+    reset(initial);
+    clearDraft();
+    setFormError("");
+    if (product) {
+      useProductEditorStore.getState().setVariantDrafts(product.id, undefined);
+      useProductEditorStore.getState().setVariantPending(product.id, false);
+      setMatrixKey((k) => k + 1);
+    }
+    if (!product) {
+      setPendingImages([]);
+      setPlan(seed?.kind === "template" ? { attrs: attrsFromTemplate(seed.template, attributes), rows: {} } : EMPTY_PLAN);
+      setBlueprintId(seed?.kind === "template" ? seed.template.id : null);
+      setTemplateNote(null);
+    }
+  }
+
   const physical = v.product_type === "physical";
   const hasVariants = (product?.variants.length ?? 0) > 0;
+  const variantsOwnStock = hasVariants || builderActive || duplicateWithVariants;
   const errors = formState.errors;
   const err = (k: keyof ProductFormValues) => errors[k]?.message as string | undefined;
+  // A sector's own template is named exactly like the sector (Django `seed_variant_templates`).
+  const sectorNames = new Set((globals.data ?? []).map((g) => g.name));
+  const isSectorTemplate = (t: ProductTemplate) => sectorNames.has(t.name);
+  const linkedTemplate = product?.blueprint_id ? templates.find((t) => t.id === product.blueprint_id) : undefined;
+  const busy = save.isPending || finishing !== null;
 
   // Estimate (labelled «تقديري»): price incl. tax. The formula result is ASKED from the server (M37 FR-37.02).
   const taxEstimate = v.is_taxable && isDecimal(v.price) && isDecimal(v.tax_rate) ? addDecimal(v.price, percentOf(v.price, v.tax_rate)) : null;
@@ -402,6 +575,13 @@ function EditorForm({
     return "تخفيض نشط";
   })();
 
+  const shippingSummary = !physical
+    ? `لا يتطلب شحناً — ${PRODUCT_TYPE_LABELS[v.product_type]}`
+    : [v.is_free_shipping ? "شحن مجاني" : "", v.weight ? `${v.weight} كغ` : "", v.delivery_duration, v.is_hazardous ? "مادة خطرة" : ""]
+        .filter(Boolean)
+        .join(" · ") || "الوزن والأبعاد ومدة التوصيل";
+  const seoSummary = v.meta_title || "يُستخدم اسم المنتج ووصفه افتراضياً في نتائج البحث";
+
   const bool = (k: keyof ProductFormValues) => ({
     checked: Boolean(v[k]),
     onCheckedChange: (next: boolean) => setValue(k, next as never, { shouldDirty: true }),
@@ -409,15 +589,15 @@ function EditorForm({
   });
 
   return (
-    <form onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate className="flex flex-col gap-4 pb-24" data-testid="product-editor">
+    <form onSubmit={(e) => { e.preventDefault(); void submit(); }} noValidate className="flex flex-col gap-5 pb-28" data-testid="product-editor">
       {/* Header */}
-      <div className="flex flex-col gap-3 border-b border-border pb-4 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div className="flex min-w-0 flex-col gap-1.5">
           <Link href="/dashboard/products" className="inline-flex min-h-11 items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground lg:min-h-0">
             <ArrowRight className="size-4 ltr:rotate-180" aria-hidden /> المنتجات
           </Link>
           <h1 className="truncate text-2xl font-semibold tracking-tight">
-            {product ? product.name || "بلا اسم" : seed?.kind === "duplicate" ? "نسخ منتج" : seed?.kind === "template" ? "منتج جديد من قالب" : "منتج جديد"}
+            {product ? product.name || "بلا اسم" : seed?.kind === "duplicate" ? "نسخ منتج" : blueprintId !== null ? "منتج جديد من قالب" : "منتج جديد"}
           </h1>
           {product ? (
             <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
@@ -462,7 +642,7 @@ function EditorForm({
         </p>
       ) : null}
 
-      {seed && !readOnly ? <SeedBanner seed={seed} /> : null}
+      {seed?.kind === "duplicate" && !readOnly ? <DuplicateBanner seed={seed} /> : null}
       {missingTemplate ? (
         <p role="status" className="surface-card px-4 py-3 text-sm text-muted-foreground">
           القالب المطلوب غير موجود (ربما حُذف) — يُفتح منتج جديد فارغ.
@@ -470,7 +650,7 @@ function EditorForm({
       ) : null}
 
       {draftOffer && !readOnly ? (
-        <div role="status" className="flex flex-wrap items-center gap-3 rounded-lg border border-warning/40 px-4 py-3 text-sm">
+        <div role="status" className="surface-card flex flex-wrap items-center gap-3 border-warning/40 px-4 py-3 text-sm">
           <span className="flex-1">
             لديك مسودة محلية غير محفوظة من <Mono>{formatDateTime(draftOffer.at)}</Mono>.
           </span>
@@ -495,87 +675,226 @@ function EditorForm({
         </div>
       ) : null}
 
-      {product ? (
-        <div role="tablist" aria-label="أقسام المنتج" className="flex gap-1 border-b border-border">
-          {(
-            [
-              ["product", "المنتج"],
-              ["advanced", "الأنماط المتقدمة"],
-              ["history", "السجل"],
-            ] as const
-          ).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={tab === key}
-              onClick={() => void setTab(key === "product" ? null : key)}
-              className={cn("-mb-px min-h-11 border-b px-3 text-sm", tab === key ? "border-cta font-medium text-primary" : "border-transparent text-muted-foreground hover:text-foreground")}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:items-start">
+        {/* Side: publish status (first on phones, end column on desktop). */}
+        <aside className="flex flex-col gap-5 lg:col-span-4 lg:col-start-9 lg:row-start-1" aria-label="حالة النشر">
+          <EditorCard id="status" title="حالة النشر" testId="card-status">
+            <div className="-my-3 divide-y divide-border/60">
+              <ToggleRow id="pe-available" label="متاح للبيع" description="إيقافه يجعل المنتج مسودة لا تظهر في المتجر." {...bool("is_available")} testId="pe-available" />
+              <ToggleRow id="pe-featured" label="منتج مميز" description="يظهر في قسم المنتجات المميزة." {...bool("is_featured")} />
+            </div>
+            <Field label="تاريخ النشر" htmlFor="pe-pub" hint="اتركه فارغاً للنشر فوراً؛ تاريخ مستقبلي = مجدول.">
+              <input id="pe-pub" type="datetime-local" dir="ltr" className={inputClass} readOnly={readOnly} {...register("published_at")} />
+            </Field>
+            {product?.archived_at ? (
+              <p className="text-sm text-muted-foreground">
+                مؤرشف منذ <Mono>{formatDateTime(product.archived_at)}</Mono>
+              </p>
+            ) : null}
+            {product?.active_badges.length ? (
+              <div className="flex flex-col gap-1.5">
+                <p className="text-xs text-muted-foreground">شارات تلقائية</p>
+                <ul className="flex flex-col gap-1">
+                  {product.active_badges.map((b) => (
+                    <li key={b.name} className="flex items-start gap-2 text-sm">
+                      <span aria-hidden className="mt-1.5 size-2 shrink-0 rounded-full" style={{ backgroundColor: b.color }} />
+                      <span>
+                        {b.name} <span className="text-xs text-muted-foreground">— {b.reason}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            {product ? (
+              <p className="text-xs text-muted-foreground">
+                مشاهدات <Mono className="text-foreground">{formatNumber(product.views_count)}</Mono> · أُضيف للسلة{" "}
+                <Mono className="text-foreground">{formatNumber(product.add_to_cart_count)}</Mono>
+              </p>
+            ) : null}
+          </EditorCard>
+        </aside>
 
-      {product && tab === "history" ? (
-        <ChangeLog productId={product.id} />
-      ) : product && tab === "advanced" ? (
-        <AdvancedPanels product={product} readOnly={readOnly} />
-      ) : (
-        <div className="grid grid-cols-1 gap-x-10 lg:grid-cols-12">
-          {/* Main column */}
-          <div className="min-w-0 lg:col-span-8">
-            <nav aria-label="انتقال بين الأقسام" className="sticky top-0 z-10 -mx-1 flex gap-1 overflow-x-auto border-b border-border bg-card px-1 py-2">
-              {SECTIONS.map((s) => (
-                <a key={s.id} href={`#${s.id}`} className="inline-flex min-h-11 shrink-0 items-center rounded-md px-2.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground lg:min-h-8">
-                  {s.label}
-                </a>
-              ))}
-            </nav>
-
-            <Section id="basic" title="الأساسي">
-              <Field label="اسم المنتج" htmlFor="pe-name" required error={err("name")} counter={{ value: v.name.length, max: 200 }}>
-                <input id="pe-name" className={inputClass} readOnly={readOnly} aria-invalid={Boolean(errors.name)} {...register("name")} />
+        {/* Main column */}
+        <div className="flex min-w-0 flex-col gap-5 lg:col-span-8 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+          {/* ① Basic info */}
+          <EditorCard id="basic" title="المعلومات الأساسية" description="الحقول المعلّمة بـ * مطلوبة، والباقي اختياري ويمكن تركه فارغاً." testId="card-basic">
+            <Field label="اسم المنتج" htmlFor="pe-name" required error={err("name")} counter={{ value: v.name.length, max: 200 }}>
+              <input id="pe-name" className={inputClass} readOnly={readOnly} maxLength={200} aria-invalid={Boolean(errors.name)} {...register("name")} />
+            </Field>
+            <Grid>
+              <Field label="الاسم بالإنجليزية" htmlFor="pe-name-en" error={err("name_en")}>
+                <input id="pe-name-en" dir="ltr" className={inputClass} readOnly={readOnly} maxLength={200} {...register("name_en")} />
               </Field>
-              <Grid>
-                <Field label="الاسم بالإنجليزية" htmlFor="pe-name-en" error={err("name_en")}>
-                  <input id="pe-name-en" dir="ltr" className={inputClass} readOnly={readOnly} {...register("name_en")} />
-                </Field>
-                <Field label="نوع المنتج" htmlFor="pe-type">
-                  <NativeSelect id="pe-type" className="h-11 md:h-8" disabled={readOnly} {...register("product_type")}>
-                    {PRODUCT_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {PRODUCT_TYPE_LABELS[t]}
-                      </option>
+              <Field label="نوع المنتج" htmlFor="pe-type">
+                <NativeSelect id="pe-type" className="h-11 md:h-8" disabled={readOnly} {...register("product_type")}>
+                  {PRODUCT_TYPES.map((t) => (
+                    <option key={t} value={t}>
+                      {PRODUCT_TYPE_LABELS[t]}
+                    </option>
+                  ))}
+                </NativeSelect>
+              </Field>
+            </Grid>
+            <Grid cols={3}>
+              <Field label="الرابط (slug)" htmlFor="pe-slug" error={err("slug")} hint="اختياري — يُولَّد تلقائياً إن تُرك فارغاً، وأي نص تكتبه يُحوَّل إلى رابط صالح.">
+                <input id="pe-slug" dir="ltr" className={cn(inputClass, "font-mono")} readOnly={readOnly} maxLength={255} {...register("slug")} />
+              </Field>
+              <Field label="SKU" htmlFor="pe-sku" error={err("sku")} hint={product ? undefined : "يُولَّد تلقائياً (SHW-…)"}>
+                <input id="pe-sku" dir="ltr" className={cn(inputClass, "font-mono")} readOnly={readOnly} placeholder="SHW-XXXXXXXX" maxLength={64} {...register("sku")} />
+              </Field>
+              <Field label="الباركود" htmlFor="pe-barcode" error={err("barcode")}>
+                <input id="pe-barcode" dir="ltr" inputMode="numeric" className={cn(inputClass, "font-mono")} readOnly={readOnly} maxLength={64} {...register("barcode")} />
+              </Field>
+            </Grid>
+            <Field label="الوصف" htmlFor="pe-desc">
+              <Textarea id="pe-desc" rows={6} readOnly={readOnly} {...register("description")} />
+            </Field>
+            <Field label="الوصف بالإنجليزية" htmlFor="pe-desc-en">
+              <Textarea id="pe-desc-en" dir="ltr" rows={3} readOnly={readOnly} {...register("description_en")} />
+            </Field>
+            <Field label="تخطيط صفحة المنتج" htmlFor="pe-tpl" className="sm:max-w-xs">
+              <NativeSelect id="pe-tpl" className="h-11 md:h-8" disabled={readOnly} {...register("product_template")}>
+                {PRODUCT_TEMPLATES.map((t) => (
+                  <option key={t} value={t}>
+                    {PRODUCT_TEMPLATE_LABELS[t]}
+                  </option>
+                ))}
+              </NativeSelect>
+            </Field>
+          </EditorCard>
+
+          {/* ② Media */}
+          <EditorCard id="media" title="الوسائط" description="الصورة الأولى هي الرئيسية في المتجر." testId="card-media">
+            {product ? (
+              <MediaGallery product={product} readOnly={readOnly} />
+            ) : (
+              <PendingMedia images={pendingImages} onChange={setPendingImages} disabled={readOnly} />
+            )}
+            <Grid>
+              <Field label="رابط صورة خارجية" htmlFor="pe-iurl" error={err("image_url")}>
+                <input id="pe-iurl" dir="ltr" className={cn(inputClass, "font-mono")} readOnly={readOnly} placeholder="https://" {...register("image_url")} />
+              </Field>
+              <Field label="رابط فيديو" htmlFor="pe-vurl" error={err("video_url")}>
+                <input id="pe-vurl" dir="ltr" className={cn(inputClass, "font-mono")} readOnly={readOnly} placeholder="https://" {...register("video_url")} />
+              </Field>
+            </Grid>
+          </EditorCard>
+
+          {/* ③ Organization & template */}
+          <EditorCard id="organization" title="التنظيم والقالب" testId="card-organization">
+            {product ? (
+              <p className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/50 px-3 py-2.5 text-sm" data-testid="linked-template">
+                <LayoutTemplate className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+                {product.blueprint_id ? (
+                  <span>
+                    مبني على قالب «{linkedTemplate?.name ?? product.blueprint_id}»
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">غير مرتبط بقالب.</span>
+                )}
+                <Link href="/dashboard/products/templates" className="ms-auto text-primary underline-offset-4 hover:underline">
+                  إدارة القوالب
+                </Link>
+              </p>
+            ) : seed?.kind === "duplicate" ? null : (
+              <Field
+                label={
+                  <span className="inline-flex items-center gap-1.5">
+                    <LayoutTemplate className="size-4 text-primary" aria-hidden /> قالب المنتج
+                  </span>
+                }
+                htmlFor="pe-blueprint"
+                hint={
+                  templates.length === 0 ? (
+                    <>
+                      لا قوالب بعد —{" "}
+                      <Link href="/dashboard/products/templates" className="text-primary underline-offset-4 hover:underline">
+                        أنشئ قالباً
+                      </Link>{" "}
+                      للحقول والسمات المتكررة.
+                    </>
+                  ) : (
+                    "يملأ الحقول المتكررة فوراً، وتظهر سماته (المقاس، اللون…) في بطاقة «المتغيرات والتسعير»."
+                  )
+                }
+              >
+                <NativeSelect
+                  id="pe-blueprint"
+                  value={blueprintId === null ? "" : String(blueprintId)}
+                  onChange={(e) => chooseTemplate(templates.find((t) => String(t.id) === e.target.value) ?? null)}
+                  disabled={readOnly || templates.length === 0}
+                  className="h-11 md:h-9"
+                  data-testid="template-select"
+                >
+                  <option value="">بلا قالب</option>
+                  {(
+                    [
+                      ["قوالبي", templates.filter((t) => t.global_template_id === null || !isSectorTemplate(t))],
+                      ["قوالب القطاعات المركزية", templates.filter((t) => t.global_template_id !== null && isSectorTemplate(t))],
+                    ] as const
+                  )
+                    .filter(([, list]) => list.length > 0)
+                    .map(([label, list]) => (
+                      <optgroup key={label} label={label}>
+                        {list.map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name} — {Object.keys(t.fields).length} حقلاً، {t.variant_attribute_ids.length} سمة
+                          </option>
+                        ))}
+                      </optgroup>
                     ))}
-                  </NativeSelect>
-                </Field>
-              </Grid>
-              <Grid cols={3}>
-                <Field label="الرابط (slug)" htmlFor="pe-slug" error={err("slug")} hint="يُولَّد من الاسم الإنجليزي إن تُرك فارغاً.">
-                  <input id="pe-slug" dir="ltr" className={cn(inputClass, "font-mono")} readOnly={readOnly} {...register("slug")} />
-                </Field>
-                <Field label="SKU" htmlFor="pe-sku" error={err("sku")} hint={product ? undefined : "يُولَّد تلقائياً (SHW-…)"}>
-                  <input id="pe-sku" dir="ltr" className={cn(inputClass, "font-mono")} readOnly={readOnly} placeholder="SHW-XXXXXXXX" {...register("sku")} />
-                </Field>
-                <Field label="الباركود" htmlFor="pe-barcode" error={err("barcode")}>
-                  <input id="pe-barcode" dir="ltr" inputMode="numeric" className={cn(inputClass, "font-mono")} readOnly={readOnly} {...register("barcode")} />
-                </Field>
-              </Grid>
-            </Section>
+                </NativeSelect>
+                {templateNote ? (
+                  <p role="status" className="rounded-lg bg-accent px-3 py-2 text-xs text-accent-ink" data-testid="template-banner">
+                    {templateNote}
+                  </p>
+                ) : null}
+              </Field>
+            )}
+            <Grid>
+              <Field label="التصنيف" htmlFor="pe-category" required error={err("category_id")}>
+                <CategoryPicker
+                  value={v.category_id}
+                  onChange={(next) => setValue("category_id", next, { shouldDirty: true, shouldValidate: formState.isSubmitted })}
+                  disabled={readOnly}
+                  invalid={Boolean(errors.category_id)}
+                  placeholder="اختر التصنيف…"
+                />
+              </Field>
+              <Field label="الماركة" htmlFor="pe-brand">
+                <BrandPicker value={v.brand_id} onChange={(next) => setValue("brand_id", next, { shouldDirty: true })} disabled={readOnly} />
+              </Field>
+            </Grid>
+            <Field label="الوسوم">
+              <TagPicker value={v.tag_ids} onChange={(next) => setValue("tag_ids", next, { shouldDirty: true })} disabled={readOnly} />
+            </Field>
+            <Grid>
+              <Field label="الشارات">
+                <BadgesPicker value={v.badge_ids} onChange={(next) => setValue("badge_ids", next, { shouldDirty: true })} disabled={readOnly} />
+              </Field>
+              <Field label="المجموعات">
+                <CollectionsPicker value={v.collection_ids} onChange={(next) => setValue("collection_ids", next, { shouldDirty: true })} disabled={readOnly} />
+              </Field>
+            </Grid>
+          </EditorCard>
 
-            <Section id="media" title="الوسائط" description="الصورة الأولى هي الرئيسية في المتجر.">
-              {product ? (
-                <MediaGallery product={product} readOnly={readOnly} />
-              ) : (
-                <p className="rounded-lg border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">احفظ المنتج أولاً لرفع الصور وترتيبها.</p>
-              )}
-            </Section>
-
-            <Section id="pricing" title="التسعير">
+          {/* ④ Variants & pricing (dynamic) */}
+          <EditorCard
+            id="pricing"
+            title="المتغيرات والتسعير"
+            description={variantsOwnStock ? "السعر الأساسي + سعر إضافي لكل متغير، والمخزون لكل متغير." : "سعر ومخزون واحد — أضف سمات لتوليد المتغيرات."}
+            testId="card-pricing"
+          >
+            <CardGroup title="السعر">
               <Grid cols={3}>
-                <Field label="السعر" htmlFor="pe-price" required error={err("price")}>
+                <Field
+                  label={variantsOwnStock ? "السعر الأساسي" : "السعر"}
+                  htmlFor="pe-price"
+                  required={v.pricing_type !== "formula"}
+                  error={err("price")}
+                  hint={v.pricing_type === "formula" ? "يُحسب من المعادلة أدناه عند الحفظ." : undefined}
+                >
                   <input id="pe-price" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly || v.pricing_type === "formula"} aria-invalid={Boolean(errors.price)} {...register("price")} />
                 </Field>
                 <Field label="السعر القديم" htmlFor="pe-old" error={err("old_price")} hint={discountsReadOnly && !readOnly ? "يتطلب صلاحية إدارة الخصومات." : saleState ?? undefined}>
@@ -595,6 +914,123 @@ function EditorForm({
                   </Field>
                 </Grid>
               ) : null}
+              {product ? (
+                <p className="text-sm text-muted-foreground">
+                  السعر المعروض في المتجر: <Money value={product.display_price} className="text-foreground" />
+                  {product.display_price_with_tax ? (
+                    <>
+                      {" "}· شامل الضريبة <Money value={product.display_price_with_tax} className="text-foreground" />
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
+            </CardGroup>
+
+            <CardGroup
+              title="المتغيرات"
+              description={product ? "المقاس واللون وغيرها من قاموس سمات المتجر." : "سمات القالب تظهر هنا؛ اكتب القيم ليتولّد جدول المتغيرات."}
+            >
+              {product ? (
+                <VariantMatrix key={matrixKey} product={product} readOnly={readOnly} price={v.price} />
+              ) : duplicateWithVariants && seed?.kind === "duplicate" ? (
+                <p className="rounded-lg border border-dashed border-border px-4 py-5 text-sm text-muted-foreground">
+                  تُنسخ متغيرات «{seed.source.name}» (<Mono>{seed.source.variants.length}</Mono>) وأسعارها الإضافية عند الحفظ، بمخزون يبدأ من 0.
+                </p>
+              ) : (
+                <VariantBuilder plan={plan} onChange={setPlan} dictionary={attributes} basePrice={v.price} readOnly={readOnly} />
+              )}
+              {product || variantsOwnStock ? (
+                <Field label="نمط عرض المتغيرات في المتجر" htmlFor="pe-vds">
+                  <div id="pe-vds" role="radiogroup" className="grid grid-cols-3 gap-2">
+                    {VARIANT_DISPLAY_STYLES.map((style) => (
+                      <label
+                        key={style}
+                        className={cn("flex cursor-pointer flex-col gap-2 rounded-lg border p-3 text-xs", v.variant_display_style === style ? "border-primary" : "border-border")}
+                      >
+                        <input type="radio" value={style} className="sr-only" disabled={readOnly} {...register("variant_display_style")} />
+                        <span aria-hidden className="flex h-6 items-center gap-1">
+                          {style === "swatches" ? (
+                            <>
+                              <span className="size-4 rounded-sm border border-border bg-foreground" />
+                              <span className="size-4 rounded-sm border border-border bg-card" />
+                              <span className="size-4 rounded-sm border border-border bg-muted-foreground" />
+                            </>
+                          ) : style === "dropdown" ? (
+                            <span className="flex h-5 w-full items-center justify-end rounded-sm border border-border px-1 text-[9px]">▾</span>
+                          ) : (
+                            <>
+                              <span className="size-3 rounded-full border border-primary" />
+                              <span className="size-3 rounded-full border border-border" />
+                            </>
+                          )}
+                        </span>
+                        {VARIANT_DISPLAY_STYLE_LABELS[style]}
+                      </label>
+                    ))}
+                  </div>
+                </Field>
+              ) : null}
+            </CardGroup>
+
+            <CardGroup title="المخزون">
+              {v.is_serialized ? (
+                <p className="rounded-lg bg-muted/50 px-4 py-3 text-sm">
+                  المخزون من الأرقام التسلسلية: <Mono>{product?.serial_available ?? 0}</Mono> متاحة
+                  {product ? (
+                    <>
+                      {" "}·{" "}
+                      <Link href={`/dashboard/inventory?product=${product.id}`} className="underline underline-offset-4">
+                        إدارة الأرقام التسلسلية
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
+              ) : hasVariants ? (
+                <p className="rounded-lg bg-muted/50 px-4 py-3 text-sm">
+                  المخزون يُدار على المتغيرات — المجموع <Mono>{formatNumber(Number(product?.variants_stock_total ?? 0), 3)}</Mono> {UNIT_LABELS[v.unit]}.
+                </p>
+              ) : variantsOwnStock ? (
+                <p className="rounded-lg bg-muted/50 px-4 py-3 text-sm">المخزون يُدار على المتغيرات — أدخله لكل متغير في الجدول أعلاه.</p>
+              ) : null}
+              <Grid cols={3}>
+                {!v.is_serialized && !variantsOwnStock ? (
+                  <Field
+                    label="المخزون"
+                    htmlFor="pe-stock"
+                    error={err("stock")}
+                    hint={v.is_auction ? "المزاد قطعة واحدة دائماً." : !access.canAdjustStock && !readOnly ? "يتطلب صلاحية تعديل المخزون." : "فارغ = 0"}
+                  >
+                    <input id="pe-stock" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly || v.is_auction || !access.canAdjustStock} {...register("stock")} />
+                  </Field>
+                ) : null}
+                <Field label="الوحدة" htmlFor="pe-unit" required error={err("unit")}>
+                  <NativeSelect id="pe-unit" className="h-11 md:h-8" disabled={readOnly} {...register("unit")}>
+                    {UNITS.map((u) => (
+                      <option key={u} value={u}>
+                        {UNIT_LABELS[u]}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <Field label="حد المخزون المنخفض" htmlFor="pe-low" error={err("low_stock_threshold")} hint="الافتراضي 3">
+                  <input id="pe-low" dir="ltr" inputMode="numeric" className={numericInputClass} readOnly={readOnly} {...register("low_stock_threshold")} />
+                </Field>
+              </Grid>
+              <Grid>
+                <Field label="الحد الأدنى للكمية" htmlFor="pe-min" error={err("min_quantity")} hint={v.allow_variable_quantity ? `بوحدة ${UNIT_LABELS[v.unit]} — تقبل كسوراً (مثال: 0.5).` : undefined}>
+                  <input id="pe-min" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("min_quantity")} />
+                </Field>
+                <Field label="الحد الأعلى للكمية" htmlFor="pe-max" error={err("max_quantity")}>
+                  <input id="pe-max" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("max_quantity")} />
+                </Field>
+              </Grid>
+              <div className="divide-y divide-border/60 border-y border-border/60">
+                <ToggleRow id="pe-backorder" label="السماح بالطلب عند نفاد المخزون" description="يُقبل الطلب ويُعلَّم «طلب مسبق»." {...bool("allow_backorder")} />
+                <ToggleRow id="pe-varqty" label="كمية متغيرة" description="يحدد المشتري كمية عشرية (مثل 1.5 كغ)." {...bool("allow_variable_quantity")} />
+              </div>
+            </CardGroup>
+
+            <CardGroup title="الدفع والضريبة">
               <Grid>
                 <Field
                   label="العملة"
@@ -624,8 +1060,7 @@ function EditorForm({
                   <input id="pe-deposit" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("deposit_required")} data-testid="deposit-required" />
                 </Field>
               ) : null}
-
-              <div className="divide-y divide-border border-y border-border">
+              <div className="divide-y divide-border/60 border-y border-border/60">
                 <ToggleRow id="pe-taxable" label="خاضع للضريبة" description="تُضاف الضريبة إلى السعر عند الدفع." {...bool("is_taxable")}>
                   <div className="flex flex-wrap items-end gap-4">
                     <Field label="نسبة الضريبة %" htmlFor="pe-tax" required error={err("tax_rate")} className="w-40">
@@ -646,16 +1081,24 @@ function EditorForm({
                   onCheckedChange={(on) => setValue("pricing_type", on ? "formula" : "fixed", { shouldDirty: true })}
                   disabled={readOnly}
                 >
-                  <Field label="مرجع السعر الحيّ" htmlFor="pe-rate">
-                    <NativeSelect id="pe-rate" className="h-11 md:h-8" disabled={readOnly} {...register("live_rate_ref")}>
-                      <option value="">بلا مرجع</option>
-                      {(product?.live_rate_refs ?? []).map((r) => (
-                        <option key={r.key} value={r.key}>
-                          {r.label} — {r.display_rate}
-                        </option>
-                      ))}
-                    </NativeSelect>
-                  </Field>
+                  {(product?.live_rate_refs ?? []).length > 0 ? (
+                    <Field label="مرجع السعر الحيّ" htmlFor="pe-rate">
+                      <NativeSelect id="pe-rate" className="h-11 md:h-8" disabled={readOnly} {...register("live_rate_ref")}>
+                        <option value="">بلا مرجع</option>
+                        {(product?.live_rate_refs ?? []).map((r) => (
+                          <option key={r.key} value={r.key}>
+                            {r.label} — {r.display_rate}
+                          </option>
+                        ))}
+                      </NativeSelect>
+                    </Field>
+                  ) : (
+                    // Decision D4: no live-rate feed yet — the reference is kept as free text, so an
+                    // existing value (e.g. `gold_21`) is never lost behind an empty list.
+                    <Field label="مرجع السعر الحيّ" htmlFor="pe-rate" error={err("live_rate_ref")} hint="لا تغذية أسعار حيّة بعد — يُحفظ المرجع نصاً ويُربط حين تتوفر.">
+                      <input id="pe-rate" dir="ltr" className={cn(inputClass, "font-mono sm:max-w-xs")} readOnly={readOnly} placeholder="gold_21" maxLength={50} {...register("live_rate_ref")} />
+                    </Field>
+                  )}
                   <Grid cols={3}>
                     <Field label="سعر الوحدة" htmlFor="pe-fu" required error={err("formula_unit_price")}>
                       <input id="pe-fu" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("formula_unit_price")} />
@@ -683,300 +1126,150 @@ function EditorForm({
                   </Grid>
                 </ToggleRow>
               </div>
-              {product ? (
-                <p className="text-sm text-muted-foreground">
-                  السعر المعروض في المتجر: <Money value={product.display_price} className="text-foreground" />
-                  {product.display_price_with_tax ? (
-                    <>
-                      {" "}· شامل الضريبة <Money value={product.display_price_with_tax} className="text-foreground" />
-                    </>
-                  ) : null}
-                </p>
-              ) : null}
-            </Section>
+            </CardGroup>
+          </EditorCard>
 
-            <Section id="inventory" title="المخزون">
-              {v.is_serialized ? (
-                <p className="surface-card px-4 py-3 text-sm">
-                  المخزون من الأرقام التسلسلية: <Mono>{product?.serial_available ?? 0}</Mono> متاحة ·{" "}
-                  <Link href={`/dashboard/inventory?product=${product?.id ?? ""}`} className="underline underline-offset-4">
-                    إدارة الأرقام التسلسلية
-                  </Link>
-                </p>
-              ) : hasVariants ? (
-                <p className="surface-card px-4 py-3 text-sm">
-                  المخزون يُدار على المتغيرات — المجموع <Mono>{formatNumber(Number(product?.variants_stock_total ?? 0), 3)}</Mono> {UNIT_LABELS[v.unit]}.
-                </p>
-              ) : (
-                <Grid cols={3}>
-                  <Field
-                    label="المخزون"
-                    htmlFor="pe-stock"
-                    required
-                    error={err("stock")}
-                    hint={v.is_auction ? "المزاد قطعة واحدة دائماً." : !access.canAdjustStock && !readOnly ? "يتطلب صلاحية تعديل المخزون." : undefined}
-                  >
-                    <input id="pe-stock" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly || v.is_auction || !access.canAdjustStock} {...register("stock")} />
+          {/* ⑤ Shipping (collapsible, closed by default) */}
+          <CollapsibleCard
+            id="shipping"
+            title="الشحن"
+            summary={shippingSummary}
+            forceOpen={SHIPPING_FIELDS.some((k) => errors[k])}
+            testId="card-shipping"
+          >
+            {!physical ? (
+              <p className="rounded-lg bg-muted/50 px-4 py-3 text-sm text-muted-foreground" data-testid="no-shipping">
+                لا يتطلب شحناً — {PRODUCT_TYPE_LABELS[v.product_type]}.
+              </p>
+            ) : (
+              <>
+                <div className="divide-y divide-border/60 border-y border-border/60">
+                  <ToggleRow id="pe-free" label="شحن مجاني" description="لا تُحتسب رسوم توصيل على هذا المنتج." {...bool("is_free_shipping")} />
+                  <ToggleRow id="pe-hazard" label="مادة خطرة" description="بعض شركات الشحن لا تقبل المواد الخطرة." {...bool("is_hazardous")}>
+                    <Field label="فئة الخطورة" htmlFor="pe-hc" required error={err("hazard_class")} className="sm:max-w-xs">
+                      <NativeSelect id="pe-hc" className="h-11 md:h-8" disabled={readOnly} {...register("hazard_class")}>
+                        {HAZARD_CLASSES.filter((h) => h !== "none").map((h) => (
+                          <option key={h} value={h}>
+                            {HAZARD_CLASS_LABELS[h]}
+                          </option>
+                        ))}
+                        <option value="none">{HAZARD_CLASS_LABELS.none}</option>
+                      </NativeSelect>
+                    </Field>
+                  </ToggleRow>
+                </div>
+                <Field label="مدة التوصيل" htmlFor="pe-dd" error={err("delivery_duration")} className="sm:max-w-xs">
+                  <input id="pe-dd" className={inputClass} readOnly={readOnly} placeholder="2-4 أيام" maxLength={100} {...register("delivery_duration")} />
+                </Field>
+                <Grid cols={4}>
+                  <Field label="الوزن (كغ)" htmlFor="pe-w" error={err("weight")}>
+                    <input id="pe-w" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("weight")} />
                   </Field>
-                  <Field label="الوحدة" htmlFor="pe-unit">
-                    <NativeSelect id="pe-unit" className="h-11 md:h-8" disabled={readOnly} {...register("unit")}>
-                      {UNITS.map((u) => (
-                        <option key={u} value={u}>
-                          {UNIT_LABELS[u]}
-                        </option>
-                      ))}
-                    </NativeSelect>
+                  <Field label="الطول (سم)" htmlFor="pe-l" error={err("length")}>
+                    <input id="pe-l" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("length")} />
                   </Field>
-                  <Field label="حد المخزون المنخفض" htmlFor="pe-low" error={err("low_stock_threshold")} hint="الافتراضي 3">
-                    <input id="pe-low" dir="ltr" inputMode="numeric" className={numericInputClass} readOnly={readOnly} {...register("low_stock_threshold")} />
+                  <Field label="العرض (سم)" htmlFor="pe-wd" error={err("width")}>
+                    <input id="pe-wd" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("width")} />
+                  </Field>
+                  <Field label="الارتفاع (سم)" htmlFor="pe-h" error={err("height")}>
+                    <input id="pe-h" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("height")} />
                   </Field>
                 </Grid>
-              )}
-              <Grid>
-                <Field label="الحد الأدنى للكمية" htmlFor="pe-min" error={err("min_quantity")}>
-                  <input id="pe-min" dir="ltr" inputMode="numeric" className={numericInputClass} readOnly={readOnly} {...register("min_quantity")} />
-                </Field>
-                <Field label="الحد الأعلى للكمية" htmlFor="pe-max" error={err("max_quantity")}>
-                  <input id="pe-max" dir="ltr" inputMode="numeric" className={numericInputClass} readOnly={readOnly} {...register("max_quantity")} />
-                </Field>
-              </Grid>
-              <div className="divide-y divide-border border-y border-border">
-                <ToggleRow id="pe-backorder" label="السماح بالطلب عند نفاد المخزون" description="يُقبل الطلب ويُعلَّم «طلب مسبق»." {...bool("allow_backorder")} />
-                <ToggleRow id="pe-varqty" label="كمية متغيرة" description="يحدد المشتري كمية عشرية (مثل 1.5 كغ)." {...bool("allow_variable_quantity")} />
-              </div>
-            </Section>
+              </>
+            )}
+          </CollapsibleCard>
 
-            <Section id="variants" title="المتغيرات" description="المقاس واللون وغيرها من قاموس سمات المتجر.">
-              <Field label="نمط عرض المتغيرات في المتجر" htmlFor="pe-vds">
-                <div id="pe-vds" role="radiogroup" className="grid grid-cols-3 gap-2">
-                  {VARIANT_DISPLAY_STYLES.map((style) => (
-                    <label
-                      key={style}
-                      className={cn("flex cursor-pointer flex-col gap-2 rounded-lg border p-3 text-xs", v.variant_display_style === style ? "border-primary" : "border-border")}
-                    >
-                      <input type="radio" value={style} className="sr-only" disabled={readOnly} {...register("variant_display_style")} />
-                      <span aria-hidden className="flex h-6 items-center gap-1">
-                        {style === "swatches" ? (
-                          <>
-                            <span className="size-4 rounded-sm border border-border bg-foreground" />
-                            <span className="size-4 rounded-sm border border-border bg-card" />
-                            <span className="size-4 rounded-sm border border-border bg-muted-foreground" />
-                          </>
-                        ) : style === "dropdown" ? (
-                          <span className="flex h-5 w-full items-center justify-end rounded-sm border border-border px-1 text-[9px]">▾</span>
-                        ) : (
-                          <>
-                            <span className="size-3 rounded-full border border-primary" />
-                            <span className="size-3 rounded-full border border-border" />
-                          </>
-                        )}
-                      </span>
-                      {VARIANT_DISPLAY_STYLE_LABELS[style]}
-                    </label>
-                  ))}
-                </div>
-              </Field>
-              {product ? (
-                <VariantMatrix product={product} readOnly={readOnly} price={v.price} />
-              ) : (
-                <p className="rounded-lg border border-dashed border-border px-4 py-6 text-sm text-muted-foreground">احفظ المنتج أولاً لتوليد المتغيرات.</p>
-              )}
-            </Section>
+          {/* ⑥ SEO (collapsible, closed by default) */}
+          <CollapsibleCard id="seo" title="تحسين محركات البحث (SEO)" summary={seoSummary} forceOpen={SEO_FIELDS.some((k) => errors[k])} testId="card-seo">
+            <Field label="عنوان الصفحة" htmlFor="pe-mt" error={err("meta_title")} counter={{ value: v.meta_title.length, max: 70 }}>
+              <input id="pe-mt" className={inputClass} readOnly={readOnly} maxLength={70} {...register("meta_title")} />
+            </Field>
+            <Field label="الوصف" htmlFor="pe-md" error={err("meta_description")} counter={{ value: v.meta_description.length, max: 160 }}>
+              <Textarea id="pe-md" rows={3} readOnly={readOnly} maxLength={160} {...register("meta_description")} />
+            </Field>
+            <Field label="الكلمات المفتاحية" htmlFor="pe-mk" error={err("meta_keywords")} counter={{ value: v.meta_keywords.length, max: 255 }}>
+              <input id="pe-mk" className={inputClass} readOnly={readOnly} maxLength={255} {...register("meta_keywords")} />
+            </Field>
+          </CollapsibleCard>
 
-            <Section id="content" title="المحتوى">
-              <Field label="الوصف" htmlFor="pe-desc">
-                <Textarea id="pe-desc" rows={5} readOnly={readOnly} {...register("description")} />
-              </Field>
-              <Field label="الوصف بالإنجليزية" htmlFor="pe-desc-en">
-                <Textarea id="pe-desc-en" dir="ltr" rows={3} readOnly={readOnly} {...register("description_en")} />
-              </Field>
-              <Grid>
-                <Field label="رابط صورة خارجية" htmlFor="pe-iurl" error={err("image_url")}>
-                  <input id="pe-iurl" dir="ltr" className={cn(inputClass, "font-mono")} readOnly={readOnly} placeholder="https://" {...register("image_url")} />
-                </Field>
-                <Field label="رابط فيديو" htmlFor="pe-vurl" error={err("video_url")}>
-                  <input id="pe-vurl" dir="ltr" className={cn(inputClass, "font-mono")} readOnly={readOnly} placeholder="https://" {...register("video_url")} />
-                </Field>
-              </Grid>
-              <Field label="قالب صفحة المنتج" htmlFor="pe-tpl">
-                <NativeSelect id="pe-tpl" className="h-11 md:h-8 sm:max-w-xs" disabled={readOnly} {...register("product_template")}>
-                  {PRODUCT_TEMPLATES.map((t) => (
-                    <option key={t} value={t}>
-                      {PRODUCT_TEMPLATE_LABELS[t]}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-            </Section>
-
-            <Section id="shipping" title="الشحن">
-              {!physical ? (
-                <p className="surface-card px-4 py-3 text-sm text-muted-foreground" data-testid="no-shipping">
-                  لا يتطلب شحناً — {PRODUCT_TYPE_LABELS[v.product_type]}.
-                </p>
-              ) : (
-                <>
-                  <div className="divide-y divide-border border-y border-border">
-                    <ToggleRow id="pe-free" label="شحن مجاني" description="لا تُحتسب رسوم توصيل على هذا المنتج." {...bool("is_free_shipping")} />
-                    <ToggleRow id="pe-hazard" label="مادة خطرة" description="بعض شركات الشحن لا تقبل المواد الخطرة." {...bool("is_hazardous")}>
-                      <Field label="فئة الخطورة" htmlFor="pe-hc" required error={err("hazard_class")} className="sm:max-w-xs">
-                        <NativeSelect id="pe-hc" className="h-11 md:h-8" disabled={readOnly} {...register("hazard_class")}>
-                          {HAZARD_CLASSES.filter((h) => h !== "none").map((h) => (
-                            <option key={h} value={h}>
-                              {HAZARD_CLASS_LABELS[h]}
-                            </option>
-                          ))}
-                          <option value="none">{HAZARD_CLASS_LABELS.none}</option>
-                        </NativeSelect>
-                      </Field>
-                    </ToggleRow>
-                  </div>
-                  <Field label="مدة التوصيل" htmlFor="pe-dd" error={err("delivery_duration")} className="sm:max-w-xs">
-                    <input id="pe-dd" className={inputClass} readOnly={readOnly} placeholder="2-4 أيام" {...register("delivery_duration")} />
-                  </Field>
-                  <Grid cols={4}>
-                    <Field label="الوزن (كغ)" htmlFor="pe-w" error={err("weight")}>
-                      <input id="pe-w" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("weight")} />
-                    </Field>
-                    <Field label="الطول (سم)" htmlFor="pe-l" error={err("length")}>
-                      <input id="pe-l" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("length")} />
-                    </Field>
-                    <Field label="العرض (سم)" htmlFor="pe-wd" error={err("width")}>
-                      <input id="pe-wd" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("width")} />
-                    </Field>
-                    <Field label="الارتفاع (سم)" htmlFor="pe-h" error={err("height")}>
-                      <input id="pe-h" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("height")} />
-                    </Field>
-                  </Grid>
-                </>
-              )}
-            </Section>
-
-            <Section id="seo" title="تحسين محركات البحث (SEO)">
-              <Field label="عنوان الصفحة" htmlFor="pe-mt" error={err("meta_title")} counter={{ value: v.meta_title.length, max: 70 }}>
-                <input id="pe-mt" className={inputClass} readOnly={readOnly} {...register("meta_title")} />
-              </Field>
-              <Field label="الوصف" htmlFor="pe-md" error={err("meta_description")} counter={{ value: v.meta_description.length, max: 160 }}>
-                <Textarea id="pe-md" rows={3} readOnly={readOnly} {...register("meta_description")} />
-              </Field>
-              <Field label="الكلمات المفتاحية" htmlFor="pe-mk" error={err("meta_keywords")} counter={{ value: v.meta_keywords.length, max: 255 }}>
-                <input id="pe-mk" className={inputClass} readOnly={readOnly} {...register("meta_keywords")} />
-              </Field>
-            </Section>
-          </div>
-
-          {/* Side column */}
-          <aside className="flex flex-col border-t border-border pt-6 lg:col-span-4 lg:border-t-0 lg:border-s lg:ps-8 lg:pt-14">
-            <SideBlock title="الحالة والنشر">
-              <div className="divide-y divide-border border-y border-border">
-                <ToggleRow id="pe-available" label="متاح للبيع" description="إيقافه يجعل المنتج مسودة لا تظهر في المتجر." {...bool("is_available")} testId="pe-available" />
-                <ToggleRow id="pe-featured" label="منتج مميز" description="يظهر في قسم المنتجات المميزة." {...bool("is_featured")} />
-              </div>
-              <Field label="تاريخ النشر" htmlFor="pe-pub" hint="اتركه فارغاً للنشر فوراً؛ تاريخ مستقبلي = مجدول.">
-                <input id="pe-pub" type="datetime-local" dir="ltr" className={inputClass} readOnly={readOnly} {...register("published_at")} />
-              </Field>
-              {product?.archived_at ? (
-                <p className="text-sm text-muted-foreground">
-                  مؤرشف منذ <Mono>{formatDateTime(product.archived_at)}</Mono>
-                </p>
-              ) : null}
-              {product?.active_badges.length ? (
-                <div className="flex flex-col gap-1.5">
-                  <p className="text-xs text-muted-foreground">شارات تلقائية</p>
-                  <ul className="flex flex-col gap-1">
-                    {product.active_badges.map((b) => (
-                      <li key={b.name} className="flex items-start gap-2 text-sm">
-                        <span aria-hidden className="mt-1.5 size-2 shrink-0 rounded-full" style={{ backgroundColor: b.color }} />
-                        <span>
-                          {b.name} <span className="text-xs text-muted-foreground">— {b.reason}</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ) : null}
-              {product ? (
-                <p className="text-xs text-muted-foreground">
-                  مشاهدات <Mono className="text-foreground">{formatNumber(product.views_count)}</Mono> · أُضيف للسلة{" "}
-                  <Mono className="text-foreground">{formatNumber(product.add_to_cart_count)}</Mono>
-                </p>
-              ) : null}
-            </SideBlock>
-
-            <SideBlock title="التنظيم">
-              <Field label="التصنيف" htmlFor="pe-category">
-                <CategoryPicker value={v.category_id} onChange={(next) => setValue("category_id", next, { shouldDirty: true })} disabled={readOnly} />
-              </Field>
-              <Field label="الماركة" htmlFor="pe-brand">
-                <BrandPicker value={v.brand_id} onChange={(next) => setValue("brand_id", next, { shouldDirty: true })} disabled={readOnly} />
-              </Field>
-              <Field label="الوسوم">
-                <TagPicker value={v.tag_ids} onChange={(next) => setValue("tag_ids", next, { shouldDirty: true })} disabled={readOnly} />
-              </Field>
-              <Field label="الشارات">
-                <BadgesPicker value={v.badge_ids} onChange={(next) => setValue("badge_ids", next, { shouldDirty: true })} disabled={readOnly} />
-              </Field>
-              <Field label="المجموعات">
-                <CollectionsPicker value={v.collection_ids} onChange={(next) => setValue("collection_ids", next, { shouldDirty: true })} disabled={readOnly} />
-              </Field>
-              {product?.blueprint_id ? (
-                <p className="text-xs text-muted-foreground">
-                  مبني على قالب «{templates.find((t) => t.id === product.blueprint_id)?.name ?? product.blueprint_id}»
-                </p>
-              ) : null}
-            </SideBlock>
-
-            <SideBlock title="الأعلام">
-              <div className="divide-y divide-border border-y border-border">
-                <ToggleRow id="pe-serial" label="أرقام تسلسلية" description="كل قطعة برقم مستقل (IMEI، رقم الضمان)." {...bool("is_serialized")} />
-                <ToggleRow id="pe-bundle" label="حزمة" description="مكوّناتها وقواعد توافقها في تبويب «الأنماط المتقدمة»." {...bool("is_bundle")}>
-                  <Field label="رسوم التجميع" htmlFor="pe-bfee" error={err("bundle_build_fee")}>
-                    <input id="pe-bfee" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("bundle_build_fee")} />
-                  </Field>
-                </ToggleRow>
-                <ToggleRow
-                  id="pe-auction"
-                  label="مزاد"
-                  description={product?.auction_status === "active" ? "مزاد نشط: السعر والمخزون محجوبان حتى انتهائه." : "قطعة واحدة لأعلى مزايد؛ إعداداته في تبويب «الأنماط المتقدمة»."}
-                  {...bool("is_auction")}
-                  disabled={readOnly || product?.auction_status === "active"}
-                />
-                <ToggleRow id="pe-personal" label="قابل للتخصيص" description="حقول التخصيص في تبويب «الأنماط المتقدمة»." {...bool("is_personalizable")} />
-                <ToggleRow id="pe-bookable" label="قابل للحجز" description="يُباع كموعد في تقويم الحجوزات (M26)." {...bool("is_bookable")}>
-                  <Field label="مدة الحجز (دقيقة)" htmlFor="pe-bdur" required error={err("booking_duration_minutes")}>
-                    <input id="pe-bdur" dir="ltr" inputMode="numeric" className={numericInputClass} readOnly={readOnly} {...register("booking_duration_minutes")} />
-                  </Field>
-                </ToggleRow>
-              </div>
-            </SideBlock>
-          </aside>
+          {/* Saved product only: the former «الأنماط المتقدمة» / «السجل» tabs. */}
+          {product ? (
+            <>
+              <CollapsibleCard
+                id="advanced"
+                title="الأنماط المتقدمة"
+                summary="الحزم والمزاد والتخصيص وقواعد التوافق"
+                defaultOpen={openPanel === "advanced"}
+                testId="card-advanced"
+              >
+                <AdvancedPanels product={product} readOnly={readOnly} />
+              </CollapsibleCard>
+              <CollapsibleCard id="history" title="سجل التغييرات" summary="من غيّر ماذا ومتى" defaultOpen={openPanel === "history"} testId="card-history">
+                <ChangeLog productId={product.id} />
+              </CollapsibleCard>
+            </>
+          ) : null}
         </div>
-      )}
 
-      {/* Sticky save bar */}
-      {!readOnly && (dirty || !product) ? (
+        {/* Side: product flags (after the main cards on phones). */}
+        <div className="flex flex-col gap-5 lg:col-span-4 lg:col-start-9 lg:row-start-2">
+          <EditorCard id="flags" title="خصائص المنتج" testId="card-flags">
+            <div className="-my-3 divide-y divide-border/60">
+              <ToggleRow id="pe-serial" label="أرقام تسلسلية" description="كل قطعة برقم مستقل (IMEI، رقم الضمان)." {...bool("is_serialized")} />
+              <ToggleRow id="pe-bundle" label="حزمة" description="مكوّناتها وقواعد توافقها في بطاقة «الأنماط المتقدمة»." {...bool("is_bundle")}>
+                <Field label="رسوم التجميع" htmlFor="pe-bfee" error={err("bundle_build_fee")}>
+                  <input id="pe-bfee" dir="ltr" inputMode="decimal" className={numericInputClass} readOnly={readOnly} {...register("bundle_build_fee")} />
+                </Field>
+              </ToggleRow>
+              <ToggleRow
+                id="pe-auction"
+                label="مزاد"
+                description={product?.auction_status === "active" ? "مزاد نشط: السعر والمخزون محجوبان حتى انتهائه." : "قطعة واحدة لأعلى مزايد؛ إعداداته في بطاقة «الأنماط المتقدمة»."}
+                {...bool("is_auction")}
+                disabled={readOnly || product?.auction_status === "active"}
+              />
+              <ToggleRow id="pe-personal" label="قابل للتخصيص" description="حقول التخصيص في بطاقة «الأنماط المتقدمة»." {...bool("is_personalizable")} />
+              <ToggleRow id="pe-bookable" label="قابل للحجز" description="يُباع كموعد في تقويم الحجوزات (M26)." {...bool("is_bookable")}>
+                <Field label="مدة الحجز (دقيقة)" htmlFor="pe-bdur" required error={err("booking_duration_minutes")}>
+                  <input id="pe-bdur" dir="ltr" inputMode="numeric" className={numericInputClass} readOnly={readOnly} {...register("booking_duration_minutes")} />
+                </Field>
+              </ToggleRow>
+            </div>
+          </EditorCard>
+        </div>
+      </div>
+
+      {/* Sticky footer: «حفظ» and «إلغاء» always in reach. */}
+      {!readOnly ? (
         <div
           role="region"
-          aria-label="حفظ التغييرات"
-          className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-card lg:bottom-0 lg:start-auto lg:end-0 lg:w-[calc(100%-16rem)]"
+          aria-label="حفظ المنتج"
+          className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 lg:bottom-0 lg:start-auto lg:end-0 lg:w-[calc(100%-16rem)]"
           data-testid="save-bar"
         >
           <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-3 px-4 py-3 lg:px-6">
-            <p className="flex-1 text-sm">
-              {dirty ? "تغييرات غير محفوظة" : "منتج جديد غير محفوظ"}
+            <p className="min-w-0 flex-1 text-sm" aria-live="polite">
+              <span className={cn(!dirty && product && "text-muted-foreground")}>
+                {finishing ?? (dirty ? "تغييرات غير محفوظة" : product ? "لا تغييرات غير محفوظة" : "منتج جديد غير محفوظ")}
+              </span>
               {formError ? <span className="ms-2 text-destructive">{formError}</span> : null}
             </p>
-            {product ? (
-              <Button type="button" variant="ghost" size="lg" className="h-11 lg:h-9" onClick={() => {
-                reset(initial);
-                clearDraft();
-                setFormError("");
-              }}>
-                تجاهل
+            {dirty ? (
+              <Button type="button" variant="ghost" size="lg" className="h-11 lg:h-9" disabled={busy} onClick={discardAll}>
+                تجاهل التغييرات
               </Button>
             ) : null}
-            <Button type="submit" size="lg" className="h-11 gap-1.5 lg:h-9" disabled={save.isPending} data-testid="product-save">
-              {save.isPending ? "جارٍ الحفظ…" : "حفظ"} <Mono className="hidden text-[11px] opacity-70 lg:inline">Ctrl+S</Mono>
+            <Link
+              href="/dashboard/products"
+              className="inline-flex h-11 items-center rounded-lg border border-border bg-card px-4 text-sm font-medium shadow-xs hover:bg-muted lg:h-9"
+              data-testid="product-cancel"
+            >
+              إلغاء
+            </Link>
+            {/* Always clickable (schema audit 2026-10-23): an invalid form answers with the missing
+                fields; only a save already in flight blocks a second click. */}
+            <Button type="submit" size="lg" className="h-11 gap-1.5 lg:h-9" disabled={busy} aria-busy={busy} data-testid="product-save">
+              {save.isPending ? "جارٍ الحفظ…" : finishing ? "لحظة…" : "حفظ"} <Mono className="hidden text-[11px] opacity-70 lg:inline">Ctrl+S</Mono>
             </Button>
           </div>
         </div>
@@ -995,8 +1288,7 @@ function EditorForm({
               className="h-11 lg:h-9"
               onClick={() => {
                 const to = leaveTo;
-                reset(initial);
-                clearDraft();
+                discardAll();
                 setLeaveTo(null);
                 if (to) router.push(to);
               }}
@@ -1062,37 +1354,21 @@ function EditorForm({
   );
 }
 
-
-/** What the merchant is looking at when the editor opens from a preset (and what was not copied). */
-function SeedBanner({ seed }: { seed: EditorSeed }) {
-  if (seed.kind === "duplicate") {
-    return (
-      <div role="status" className="surface-card flex gap-3 border-primary/30 bg-accent px-4 py-3 text-sm" data-testid="duplicate-banner">
-        <Copy className="mt-0.5 size-4 shrink-0 text-accent-ink" aria-hidden />
-        <div className="flex min-w-0 flex-col gap-1">
-          <p className="font-medium">
-            نسخة من{" "}
-            <Link href={`/dashboard/products/${seed.source.id}`} className="text-accent-ink underline-offset-4 hover:underline">
-              «{seed.source.name}»
-            </Link>{" "}
-            — لم تُحفظ بعد. عدّل ما يلزم ثم اضغط «حفظ» لإنشاء منتج مستقل.
-          </p>
-          <p className="text-muted-foreground">
-            يُنسخ: {DUPLICATE_CARRIED}. لا يُنسخ: {DUPLICATE_RESET}. تُحفظ النسخة مخفية عن المتجر.
-          </p>
-        </div>
-      </div>
-    );
-  }
+/** What the merchant is looking at when the editor opens as a copy (and what was not copied). */
+function DuplicateBanner({ seed }: { seed: Extract<EditorSeed, { kind: "duplicate" }> }) {
   return (
-    <div role="status" className="surface-card flex gap-3 border-primary/30 bg-accent px-4 py-3 text-sm" data-testid="template-banner">
-      <LayoutTemplate className="mt-0.5 size-4 shrink-0 text-accent-ink" aria-hidden />
+    <div role="status" className="surface-card flex gap-3 border-primary/30 bg-accent px-4 py-3 text-sm" data-testid="duplicate-banner">
+      <Copy className="mt-0.5 size-4 shrink-0 text-accent-ink" aria-hidden />
       <div className="flex min-w-0 flex-col gap-1">
         <p className="font-medium">
-          مبني على قالب «{seed.template.name}» — عُبِّئ <Mono>{seed.filled}</Mono> حقلاً مسبقاً.
+          نسخة من{" "}
+          <Link href={`/dashboard/products/${seed.source.id}`} className="text-accent-ink underline-offset-4 hover:underline">
+            «{seed.source.name}»
+          </Link>{" "}
+          — لم تُحفظ بعد. عدّل ما يلزم ثم اضغط «حفظ» لإنشاء منتج مستقل.
         </p>
         <p className="text-muted-foreground">
-          أكمل الاسم والسعر والصور ثم احفظ. {seed.template.variant_attribute_ids.length > 0 ? "سمات المتغيرات من القالب تظهر جاهزة في قسم «المتغيرات» بعد الحفظ." : ""}
+          يُنسخ: {DUPLICATE_CARRIED}. لا يُنسخ: {DUPLICATE_RESET}. تُحفظ النسخة مخفية عن المتجر.
         </p>
       </div>
     </div>

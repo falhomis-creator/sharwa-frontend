@@ -35,6 +35,14 @@ export async function liveOrMock(
   mock: () => Promise<Response>,
 ): Promise<Response> {
   if (!isModuleLive(module)) return mock();
+  return forwardLive(request, upstreamPath);
+}
+
+/**
+ * The live half of `liveOrMock`, also used by the products table (`live-products.ts`):
+ * a transparent passthrough of `request` to `upstreamPath` on Django.
+ */
+export async function forwardLive(request: Request, upstreamPath: string): Promise<Response> {
   const ctx = contextFromRequest(request);
   const { search } = new URL(request.url);
   // Buffer the body: a streamed body goes out chunked with no Content-Length, and Django

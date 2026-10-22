@@ -9,11 +9,17 @@ import { GripVertical, ImagePlus, Link2, Trash2, Video } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Mono } from "@/components/shared/mono";
-import { isApiError } from "@/lib/api-error";
 import { useStore } from "@/features/dashboard-shell/components/store-context";
 import { hasImageExtension, IMAGE_EXTENSIONS_MESSAGE } from "@/features/organization/schemas";
 import type { ProductDetail, ProductImage } from "@/features/products/schemas";
-import { deleteImage, productKeys, reorderImages, uploadImages } from "@/features/products/api/products";
+import {
+  MAX_IMAGE_BYTES,
+  MAX_IMAGE_MESSAGE,
+  deleteImage,
+  productKeys,
+  reorderImages,
+  uploadImagesSequential,
+} from "@/features/products/api/products";
 import { useProductEditorStore } from "@/stores/product-editor";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +92,8 @@ export function MediaGallery({ product, readOnly }: { product: ProductDetail; re
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [hidden, setHidden] = useState<number[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const [progress, setProgress] = useState("");
   const order = useProductEditorStore((s) => s.galleryOrder[product.id]);
   const setOrder = useProductEditorStore((s) => s.setGalleryOrder);
   const sensors = useSensors(
@@ -101,7 +109,7 @@ export function MediaGallery({ product, readOnly }: { product: ProductDetail; re
   const writeImages = (images: ProductImage[]) =>
     qc.setQueryData<ProductDetail>(productKeys(store).detail(product.id), (old) => (old ? { ...old, images } : old));
 
-  async function onFiles(files: FileList | null) {
+  async function onFiles(files: FileList | File[] | null) {
     setError("");
     const list = Array.from(files ?? []);
     if (list.length === 0) return;
@@ -110,15 +118,21 @@ export function MediaGallery({ product, readOnly }: { product: ProductDetail; re
       setError(IMAGE_EXTENSIONS_MESSAGE);
       return;
     }
+    if (list.some((f) => f.size > MAX_IMAGE_BYTES)) {
+      setError(`${MAX_IMAGE_MESSAGE} (${list.filter((f) => f.size > MAX_IMAGE_BYTES).map((f) => f.name).join("، ")})`);
+      return;
+    }
+    // One file per request (Nginx caps a request at 8 MB) — the gallery fills in as each lands.
     setUploading(true);
     try {
-      writeImages(await uploadImages(product.id, list));
+      const result = await uploadImagesSequential(product.id, list, (done, total) => setProgress(done < total ? `${done + 1}/${total}` : ""));
+      if (result.images) writeImages(result.images);
       setOrder(product.id, undefined);
-      toast.success(list.length === 1 ? "رُفعت الصورة" : `رُفعت ${list.length} صور`);
-    } catch (err) {
-      setError(isApiError(err) ? err.userMessage : "تعذّر رفع الصور.");
+      if (result.uploaded > 0) toast.success(result.uploaded === 1 ? "رُفعت الصورة وحُفظت مع المنتج" : `رُفعت ${result.uploaded} صور وحُفظت مع المنتج`);
+      if (result.failed.length > 0) setError(result.failed.map((f) => `${f.name}: ${f.message}`).join(" · "));
     } finally {
       setUploading(false);
+      setProgress("");
       if (inputRef.current) inputRef.current.value = "";
     }
   }
@@ -165,6 +179,23 @@ export function MediaGallery({ product, readOnly }: { product: ProductDetail; re
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Files dropped from the desktop upload at once (UI/UX overhaul 2026-10-22). */}
+      <div
+        onDragOver={(e) => {
+          if (readOnly || !e.dataTransfer.types.includes("Files")) return;
+          e.preventDefault();
+          setDragOver(true);
+        }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          if (readOnly || e.dataTransfer.files.length === 0) return;
+          e.preventDefault();
+          setDragOver(false);
+          void onFiles(e.dataTransfer.files);
+        }}
+        className={cn("rounded-xl border-2 border-dashed p-2 transition-colors", dragOver ? "border-primary bg-primary/5" : "border-transparent")}
+        data-testid="gallery-dropzone"
+      >
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => void onDragEnd(e)} accessibility={{ announcements: ANNOUNCE }}>
         <SortableContext items={ordered.map((i) => i.id)} strategy={rectSortingStrategy}>
           <ul className="grid grid-cols-3 gap-2 sm:grid-cols-4 lg:grid-cols-5">
@@ -180,13 +211,15 @@ export function MediaGallery({ product, readOnly }: { product: ProductDetail; re
                   className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-xs text-muted-foreground hover:bg-muted"
                 >
                   <ImagePlus className="size-5" strokeWidth={1.5} aria-hidden />
-                  {uploading ? "جارٍ الرفع…" : "إضافة صور"}
+                  {uploading ? `جارٍ الرفع${progress ? ` ${progress}` : ""}…` : "إضافة صور"}
+                  {!uploading ? <span className="text-[10px]">أو أفلتها هنا</span> : null}
                 </button>
               </li>
             ) : null}
           </ul>
         </SortableContext>
       </DndContext>
+      </div>
       <input
         ref={inputRef}
         type="file"

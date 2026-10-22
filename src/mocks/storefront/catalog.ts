@@ -13,7 +13,7 @@ import type {
 import { PAGE_SIZE_DEFAULT, PAGE_SIZE_MAX } from "@/features/storefront/schemas/catalog";
 import { seeded, int, pick, fullName } from "@/mocks/_fixtures";
 import { effectivePrice, productStatus } from "@/mocks/catalog/products";
-import type { MockProduct } from "@/mocks/catalog/seed";
+import { quantityNumber, type MockProduct } from "@/mocks/catalog/seed";
 import { catalog, type CatalogState } from "@/mocks/catalog/state";
 import { FIXTURE_NOW, storeState } from "@/mocks/store-state";
 import { LEGACY_OPTIONS, OFFERS, REVIEW_TEXTS } from "@/mocks/storefront/extensions";
@@ -258,8 +258,8 @@ export function productDetail(store: string | null, id: number, currency: Curren
     images: p.images.map((img) => ({ url: img.url, alt: p.name, sort_order: img.sort_order })),
     video_url: p.video_url || null,
     unit: p.unit,
-    min_quantity: p.min_quantity,
-    max_quantity: p.max_quantity,
+    min_quantity: quantityNumber(p.min_quantity),
+    max_quantity: quantityNumber(p.max_quantity),
     allow_variable_quantity: p.allow_variable_quantity,
     low_stock_threshold: p.low_stock_threshold ?? LOW_STOCK_DEFAULT,
     allow_backorder: p.allow_backorder,

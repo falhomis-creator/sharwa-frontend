@@ -32,9 +32,12 @@ export function Field({
         <label htmlFor={htmlFor} className="text-sm font-medium">
           {label}
           {required ? (
-            <span aria-hidden className="ms-0.5 text-muted-foreground">
-              *
-            </span>
+            <>
+              <span aria-hidden className="ms-0.5 text-destructive">
+                *
+              </span>
+              <span className="sr-only"> (مطلوب)</span>
+            </>
           ) : null}
         </label>
         {counter ? (
@@ -52,7 +55,7 @@ export function Field({
       </div>
       {children}
       {error ? (
-        <p role="alert" id={htmlFor ? `${htmlFor}-error` : undefined} className="text-xs text-destructive">
+        <p role="alert" id={htmlFor ? `${htmlFor}-error` : undefined} data-field-error="" className="text-xs text-destructive">
           {error}
         </p>
       ) : hint ? (

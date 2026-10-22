@@ -6,7 +6,7 @@ import { displayMoney, type Currency } from "@/mocks/_fixtures";
 import { FIXTURE_NOW, storeState } from "@/mocks/store-state";
 import { catalog } from "@/mocks/catalog/state";
 import { effectivePrice, toVariant } from "@/mocks/catalog/products";
-import type { MockProduct } from "@/mocks/catalog/seed";
+import { quantityNumber, type MockProduct } from "@/mocks/catalog/seed";
 import { locationsState } from "@/mocks/locations/state";
 import { approvalsState, createApproval } from "@/mocks/approvals/state";
 import { insertStorefrontOrder } from "@/mocks/orders/state";
@@ -481,8 +481,8 @@ function productView(store: string | null, p: MockProduct) {
     out_of_stock: !p.allow_backorder && compareDecimal(stock, "0") <= 0,
     has_variants: variants.length > 0,
     variants: variants.map((v) => ({ id: v.id, label: v.label, sku: v.sku, display_price: v.display_effective_price, stock: v.stock, out_of_stock: !p.allow_backorder && compareDecimal(v.stock, "0") <= 0 })),
-    min_quantity: p.min_quantity,
-    max_quantity: p.max_quantity,
+    min_quantity: quantityNumber(p.min_quantity),
+    max_quantity: quantityNumber(p.max_quantity),
     is_serialized: p.is_serialized,
   };
 }
@@ -538,8 +538,10 @@ function price(store: string | null, body: Body) {
     let error: string | null = null;
     if (pct === "invalid") error = "نسبة خصم غير صحيحة.";
     const stock = v ? v.stock : p.stock;
-    if (p.min_quantity && qty < p.min_quantity) error = `الحد الأدنى للكمية ${p.min_quantity}.`;
-    if (p.max_quantity && qty > p.max_quantity) error = `الحد الأقصى للكمية ${p.max_quantity}.`;
+    const minQty = quantityNumber(p.min_quantity);
+    const maxQty = quantityNumber(p.max_quantity);
+    if (minQty && qty < minQty) error = `الحد الأدنى للكمية ${minQty}.`;
+    if (maxQty && qty > maxQty) error = `الحد الأقصى للكمية ${maxQty}.`;
     if (p.is_serialized && qty > 1) error = "منتج بأرقام تسلسلية: أضِف كل قطعة سطراً مستقلاً.";
     if (!p.allow_backorder && compareDecimal(String(qty), stock) > 0) error = "الكمية أكبر من المتوفر في هذا الفرع.";
     if (!v && state.variants.some((x) => x.product_id === p.id)) error = "اختر المتغير.";

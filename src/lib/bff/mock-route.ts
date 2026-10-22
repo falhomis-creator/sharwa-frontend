@@ -6,6 +6,7 @@ import { sessionFromRequest, storeHostFor } from "@/features/dashboard-shell/api
 import type { Session } from "@/features/dashboard-shell/schemas";
 import { hasPermission, type PermissionKey } from "@/lib/access";
 import { isMocksOn, mockJson, notAvailable, type MockInit } from "@/mocks/runtime";
+import { dispatchLiveProducts } from "@/lib/bff/live-products";
 
 /**
  * Shared skeleton of the dashboard `[NEEDS BACKEND]` adapters (M04/M05/M06/M48/M49), in
@@ -14,7 +15,8 @@ import { isMocksOn, mockJson, notAvailable, type MockInit } from "@/mocks/runtim
  * the fixture. With `SHARWA_MOCKS=off` every row answers 501 «غير متاح بعد».
  *
  * The day Django ships the `/api/v1/<resource>` row, the handler body becomes a
- * passthrough and the UI does not change.
+ * passthrough and the UI does not change. M04 products does it centrally: a live products
+ * route is answered by `dispatchLiveProducts` (see `live-products.ts`) before any mock gate.
  */
 export interface MockRouteContext {
   store: string | null;
@@ -28,6 +30,9 @@ export async function mockRoute(
   handler: (ctx: MockRouteContext) => Promise<Response> | Response,
   opts: { permission?: PermissionKey } = {},
 ): Promise<Response> {
+  // Integrated products routes (module `products`) answer from Django before any mock gate.
+  const live = await dispatchLiveProducts(request);
+  if (live) return live;
   const upstream = contextFromRequest(request);
   const storeHost = storeHostFor(upstream.store, upstream.storeHost);
   const session = await sessionFromRequest(request, { store: upstream.store, storeHost });

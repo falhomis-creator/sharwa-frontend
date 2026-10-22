@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -16,11 +16,13 @@ import { cn } from "@/lib/utils";
 import { useStore } from "@/features/dashboard-shell/components/store-context";
 import {
   VARIANT_MATRIX_WARN,
+  normalizeNumberText,
   type ProductDetail,
   type ProductVariant,
   type VariantAttribute,
 } from "@/features/products/schemas";
-import { generateVariants, productKeys, saveVariants, useVariantAttributes } from "@/features/products/api/products";
+import { attributeApi, generateVariants, productKeys, saveVariants, useTemplates, useVariantAttributes } from "@/features/products/api/products";
+import { normalizeAttributeName } from "@/features/products/constants/standard-taxonomy";
 import { useProductEditorStore, type VariantDraftRow } from "@/stores/product-editor";
 
 /**
@@ -53,6 +55,8 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
   const drafts = useProductEditorStore((s) => s.variantDrafts[product.id]);
   const setDraft = useProductEditorStore((s) => s.setVariantDraft);
   const setDrafts = useProductEditorStore((s) => s.setVariantDrafts);
+  const setPending = useProductEditorStore((s) => s.setVariantPending);
+  const setFlush = useProductEditorStore((s) => s.setVariantFlush);
 
   const usedOptionIds = useMemo(() => new Set(product.variants.flatMap((v) => v.option_ids)), [product.variants]);
   const [attrIds, setAttrIds] = useState<number[]>(product.variant_attribute_ids);
@@ -60,8 +64,42 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<"generate" | "save" | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  /** The merchant changed attributes/values/exclusions since the last generation. */
+  const [touched, setTouched] = useState(false);
 
   const dict = useMemo(() => attributes.data ?? [], [attributes.data]);
+  const templates = useTemplates().data;
+  /** Attributes the merchant reached through «إضافة سمة» on this screen. */
+  const [extraIds, setExtraIds] = useState<number[]>([]);
+  const [search, setSearch] = useState("");
+  const listId = useId();
+  /**
+   * Scope (integration Step 2, same rule as Django's 2026-09-13 fix): the store dictionary
+   * holds every sector's attributes (177 in a seeded store), so the chips show only this
+   * product's own — its template's attributes, the ones its variants use, and any the
+   * merchant added here — never the whole dictionary.
+   */
+  const scopeIds = useMemo(() => {
+    const blueprint = templates?.find((t) => t.id === product.blueprint_id)?.variant_attribute_ids ?? [];
+    const used = dict.filter((a) => a.options.some((o) => usedOptionIds.has(o.id))).map((a) => a.id);
+    return new Set([...blueprint, ...product.variant_attribute_ids, ...used, ...attrIds, ...extraIds]);
+  }, [templates, product.blueprint_id, product.variant_attribute_ids, dict, usedOptionIds, attrIds, extraIds]);
+  const scoped = dict.filter((a) => scopeIds.has(a.id));
+  const outside = dict.filter((a) => !scopeIds.has(a.id));
+
+  function addFromDictionary(raw: string) {
+    const key = normalizeAttributeName(raw);
+    const found = dict.find((a) => a.name === raw.trim()) ?? dict.find((a) => normalizeAttributeName(a.name) === key);
+    if (!found) {
+      toast.error("لا توجد سمة بهذا الاسم في القاموس — أضفها أولاً من «قاموس المتغيرات».");
+      return;
+    }
+    setExtraIds((ids) => (ids.includes(found.id) ? ids : [...ids, found.id]));
+    setAttrIds((ids) => (ids.includes(found.id) ? ids : [...ids, found.id]));
+    setExcluded(new Set());
+    setTouched(true);
+    setSearch("");
+  }
   const selectedAttrs = dict.filter((a) => attrIds.includes(a.id)).sort((a, b) => a.sort_order - b.sort_order);
   const effectiveOptions = (a: VariantAttribute) =>
     a.options.filter((o) => (optionIds ? optionIds.has(o.id) : usedOptionIds.size ? usedOptionIds.has(o.id) : true));
@@ -82,6 +120,7 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
   function toggleAttr(id: number) {
     setAttrIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
     setExcluded(new Set());
+    setTouched(true);
   }
 
   function toggleOption(a: VariantAttribute, id: number) {
@@ -90,6 +129,33 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
     else base.add(id);
     setOptionIds(base);
     setExcluded(new Set());
+    setTouched(true);
+  }
+
+  /** A value typed in «أضف قيمة» joins the dictionary at once and is switched on here. */
+  async function addValue(a: VariantAttribute, raw: string): Promise<boolean> {
+    const value = raw.trim().replace(/\s+/g, " ");
+    if (!value) return false;
+    const existing = a.options.find((o) => o.value === value);
+    const base = new Set(optionIds ?? new Set(dict.flatMap((x) => effectiveOptions(x).map((o) => o.id))));
+    if (existing) {
+      base.add(existing.id);
+      setOptionIds(base);
+      setTouched(true);
+      return true;
+    }
+    try {
+      const opt = await attributeApi.addOption(a.id, { value });
+      await qc.invalidateQueries({ queryKey: productKeys(store).attributes });
+      base.add(opt.id);
+      setOptionIds(base);
+      setExcluded(new Set());
+      setTouched(true);
+      return true;
+    } catch (err) {
+      toast.error(isApiError(err) ? err.userMessage : "تعذّرت إضافة القيمة.");
+      return false;
+    }
   }
 
   function writeVariants(variants: ProductVariant[]) {
@@ -99,18 +165,25 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
     void qc.invalidateQueries({ queryKey: [...productKeys(store).all, "list"] });
   }
 
+  /** Regenerate the set on the server (throws — the callers report the error). */
+  async function generateNow(): Promise<number> {
+    const allowed = selectedAttrs.flatMap((a) => effectiveOptions(a).map((o) => o.id));
+    const rows = await generateVariants(product.id, {
+      attribute_ids: selectedAttrs.map((a) => a.id),
+      option_ids: allowed,
+      exclude: [...excluded].map((k) => k.split(",").map(Number)),
+    });
+    writeVariants(rows);
+    setDrafts(product.id, undefined);
+    setTouched(false);
+    return rows.length;
+  }
+
   async function generate() {
     setBusy("generate");
     try {
-      const allowed = selectedAttrs.flatMap((a) => effectiveOptions(a).map((o) => o.id));
-      const rows = await generateVariants(product.id, {
-        attribute_ids: selectedAttrs.map((a) => a.id),
-        option_ids: allowed,
-        exclude: [...excluded].map((k) => k.split(",").map(Number)),
-      });
-      writeVariants(rows);
-      setDrafts(product.id, undefined);
-      toast.success(rows.length ? `وُلِّد ${rows.length} متغيراً` : "أُزيلت المتغيرات");
+      const count = await generateNow();
+      toast.success(count ? `وُلِّد ${count} متغيراً` : "أُزيلت المتغيرات");
     } catch (err) {
       toast.error(isApiError(err) ? err.userMessage : "تعذّر التوليد.");
     } finally {
@@ -141,34 +214,80 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
 
   const dirtyIds = Object.keys(drafts ?? {}).map(Number);
 
-  async function save() {
+  /**
+   * Save the edited rows (throws — the callers report the error). Empty price/stock = 0 and an
+   * empty SKU keeps the current one, so a half-filled row never blocks the save; Arabic digits
+   * are accepted.
+   */
+  async function saveRowsNow(): Promise<number> {
     const rows = product.variants
       .filter((v) => dirtyIds.includes(v.id))
-      .map((v) => ({ id: v.id, ...rowOf(v) }));
+      .map((v) => {
+        const r = rowOf(v);
+        const extra = normalizeNumberText(r.extra_price) || "0";
+        const stock = normalizeNumberText(r.stock) || "0";
+        return { id: v.id, extra_price: extra, stock, ...(r.sku.trim() ? { sku: r.sku.trim() } : {}) };
+      });
+    if (rows.length === 0) return 0;
     const errs: Record<string, string> = {};
     for (const r of rows) {
       if (!isDecimal(r.extra_price)) errs[`${r.id}.extra_price`] = "رقم غير صالح";
       if (!/^\d+(\.\d{1,3})?$/.test(r.stock)) errs[`${r.id}.stock`] = "رقم غير صالح";
-      if (!r.sku.trim()) errs[`${r.id}.sku`] = "مطلوب";
     }
     setErrors(errs);
-    if (Object.keys(errs).length) return;
-    setBusy("save");
+    if (Object.keys(errs).length) throw new Error("صحّح الخانات المعلّمة في جدول المتغيرات.");
     try {
       writeVariants(await saveVariants(product.id, rows));
-      setDrafts(product.id, undefined);
-      toast.success("حُفظت المتغيرات");
     } catch (err) {
       if (isApiError(err) && err.fields) {
         const mapped: Record<string, string> = {};
         for (const [k, v] of Object.entries(err.fields)) mapped[k.replace(/^variants\./, "")] = v[0] ?? "";
         setErrors(mapped);
       }
-      toast.error(isApiError(err) ? err.userMessage : "تعذّر الحفظ.");
+      throw err;
+    }
+    setDrafts(product.id, undefined);
+    return rows.length;
+  }
+
+  async function save() {
+    setBusy("save");
+    try {
+      await saveRowsNow();
+      toast.success("حُفظت المتغيرات");
+    } catch (err) {
+      toast.error(isApiError(err) ? err.userMessage : err instanceof Error && err.message ? err.message : "تعذّر الحفظ.");
     } finally {
       setBusy(null);
     }
   }
+
+  // ── Unsaved-change bridge with the editor's «حفظ» (schema audit 2026-10-23) ──
+  const existingKeys = new Set(product.variants.map((v) => comboKey(v.option_ids)));
+  const pendingGenerate =
+    !readOnly &&
+    touched &&
+    (selectedAttrs.length === 0
+      ? product.variants.length > 0
+      : kept.length > 0 && (kept.length !== existingKeys.size || kept.some((c) => !existingKeys.has(comboKey(c.map((o) => o.id))))));
+  useEffect(() => {
+    setPending(product.id, pendingGenerate);
+  }, [pendingGenerate, product.id, setPending]);
+  useEffect(() => () => setPending(product.id, false), [product.id, setPending]);
+
+  /** Rows first (on the current ids), then the regeneration — kept combinations keep their rows. */
+  const flushRef = useRef<() => Promise<number>>(async () => 0);
+  useEffect(() => {
+    flushRef.current = async () => {
+      let n = await saveRowsNow();
+      if (pendingGenerate) n = await generateNow();
+      return n;
+    };
+  });
+  useEffect(() => {
+    setFlush(product.id, () => flushRef.current());
+    return () => setFlush(product.id, undefined);
+  }, [product.id, setFlush]);
 
   if (attributes.isLoading) return <Skeleton className="h-32 w-full" />;
 
@@ -178,16 +297,23 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
         <div className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <p className="text-sm font-medium">السمات</p>
-            {dict.length === 0 ? (
+            {scoped.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                لا سمات في قاموس المتجر بعد.{" "}
-                <Link href="/dashboard/products/variants" className="underline underline-offset-4">
-                  أضف سمة
-                </Link>
+                لا سمات لهذا المنتج بعد — ابحث في القاموس أدناه وأضف سمة
+                {dict.length === 0 ? (
+                  <>
+                    {" "}(القاموس فارغ:{" "}
+                    <Link href="/dashboard/products/variants" className="underline underline-offset-4">
+                      أضف سمة
+                    </Link>
+                    )
+                  </>
+                ) : null}
+                .
               </p>
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {dict.map((a) => (
+              <div className="flex flex-wrap gap-2" data-testid="variant-matrix-chips">
+                {scoped.map((a) => (
                   <label
                     key={a.id}
                     className={cn(
@@ -202,6 +328,33 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
                 ))}
               </div>
             )}
+            {outside.length > 0 ? (
+              <div className="flex max-w-md gap-2">
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      if (search.trim()) addFromDictionary(search);
+                    }
+                  }}
+                  list={listId}
+                  placeholder={`ابحث في القاموس (${outside.length}) لإضافة سمة`}
+                  aria-label="إضافة سمة من القاموس"
+                  className="h-11 min-w-0 flex-1 rounded-lg border border-input bg-card px-2.5 text-sm outline-none focus-visible:border-ring lg:h-8"
+                  data-testid="variant-matrix-search"
+                />
+                <datalist id={listId}>
+                  {outside.map((a) => (
+                    <option key={a.id} value={a.name} />
+                  ))}
+                </datalist>
+                <Button type="button" variant="outline" size="lg" className="h-11 lg:h-8" disabled={!search.trim()} onClick={() => addFromDictionary(search)}>
+                  إضافة
+                </Button>
+              </div>
+            ) : null}
           </div>
 
           {selectedAttrs.map((a) => (
@@ -226,6 +379,7 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
                     </button>
                   );
                 })}
+                <AddValueInput label={a.name} onAdd={(value) => addValue(a, value)} />
               </div>
             </fieldset>
           ))}
@@ -255,14 +409,15 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
                       <label className={cn("flex min-h-11 cursor-pointer items-center gap-1.5 rounded-md border px-2 text-xs lg:min-h-7", on ? "border-border" : "border-dashed border-border text-muted-foreground")}>
                         <Checkbox
                           checked={on}
-                          onCheckedChange={(v) =>
+                          onCheckedChange={(v) => {
+                            setTouched(true);
                             setExcluded((s) => {
                               const n = new Set(s);
                               if (v) n.delete(key);
                               else n.add(key);
                               return n;
-                            })
-                          }
+                            });
+                          }}
                           aria-label={c.map((o) => o.value).join(" / ")}
                         />
                         {c.map((o) => o.value).join(" / ")}
@@ -406,11 +561,39 @@ export function VariantMatrix({ product, readOnly, price }: { product: ProductDe
               >
                 {busy === "save" ? "جارٍ الحفظ…" : `حفظ المتغيرات${dirtyIds.length ? ` (${dirtyIds.length})` : ""}`}
               </Button>
-              <p className="text-xs text-muted-foreground">الصق عموداً من جدول بيانات في أي خانة لتعبئة ما تحتها.</p>
+              <p className="text-xs text-muted-foreground">تُحفظ أيضاً مع زر «حفظ» أسفل الصفحة · الصق عموداً من جدول بيانات في أي خانة لتعبئة ما تحتها.</p>
             </div>
           ) : null}
         </div>
       ) : null}
     </div>
+  );
+}
+
+function AddValueInput({ label, onAdd }: { label: string; onAdd: (value: string) => Promise<boolean> }) {
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+  async function submit() {
+    if (!value.trim() || busy) return;
+    setBusy(true);
+    if (await onAdd(value)) setValue("");
+    setBusy(false);
+  }
+  return (
+    <input
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          void submit();
+        }
+      }}
+      disabled={busy}
+      placeholder="+ أضف قيمة"
+      aria-label={`أضف قيمة إلى ${label}`}
+      maxLength={100}
+      className="h-11 w-32 rounded-md border border-dashed border-border bg-transparent px-2.5 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring lg:h-8"
+    />
   );
 }

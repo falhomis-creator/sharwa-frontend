@@ -22,10 +22,16 @@ export function CategoryPicker({
   value,
   onChange,
   disabled,
+  invalid,
+  placeholder = "بلا تصنيف",
 }: {
   value: string;
   onChange: (next: string) => void;
   disabled?: boolean;
+  /** The editor's validation failed on this field (mandatory since the 2026-10-23 audit). */
+  invalid?: boolean;
+  /** Label of the empty option — «اختر التصنيف…» where a category is mandatory. */
+  placeholder?: string;
 }) {
   const query = useCategories();
   const categories = useMemo(() => query.data ?? [], [query.data]);
@@ -42,10 +48,11 @@ export function CategoryPicker({
           value={value}
           disabled={disabled}
           onChange={(e) => onChange(e.target.value)}
-          className="h-11 md:h-8"
+          aria-invalid={invalid || undefined}
+          className={cn("h-11 md:h-8", invalid && "border-destructive")}
           data-testid="product-category"
         >
-          <option value="">بلا تصنيف</option>
+          <option value="">{placeholder}</option>
           {options.map((o) => (
             <option key={o.id} value={o.id}>
               {o.label}

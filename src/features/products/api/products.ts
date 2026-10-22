@@ -3,6 +3,7 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiFetch, apiFetchRaw } from "@/lib/api-client";
+import { isApiError } from "@/lib/api-error";
 import { storeKey } from "@/lib/query-keys";
 import { useStore } from "@/features/dashboard-shell/components/store-context";
 import {
@@ -25,6 +26,7 @@ import {
   variantAttributeSchema,
   variantOptionSchema,
   type ProductBulkAction,
+  type ProductImage,
   type ProductListResponse,
 } from "@/features/products/schemas";
 
@@ -189,6 +191,36 @@ export function uploadImages(id: number, files: File[]) {
   const fd = new FormData();
   for (const f of files) fd.append("images", f);
   return apiFetch(`${BASE}/${id}/images`, imagesSchema, { method: "POST", body: fd });
+}
+
+/** Per-image ceiling, checked in the browser before any request (Django enforces the same). */
+export const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+export const MAX_IMAGE_MESSAGE = "حجم الصورة أكبر من 5MB.";
+
+/**
+ * Uploads ONE file per request, in order (integration Step 2): production Nginx caps a request
+ * at 8 MB (`client_max_body_size 8M`), so several photos in one multipart body would be refused.
+ * A failed file does not stop the others; the result carries the latest gallery and the failures.
+ */
+export async function uploadImagesSequential(
+  id: number,
+  files: File[],
+  onProgress?: (done: number, total: number) => void,
+): Promise<{ images: ProductImage[] | null; uploaded: number; failed: Array<{ name: string; message: string }> }> {
+  let images: ProductImage[] | null = null;
+  let uploaded = 0;
+  const failed: Array<{ name: string; message: string }> = [];
+  for (const [i, file] of files.entries()) {
+    onProgress?.(i, files.length);
+    try {
+      images = await uploadImages(id, [file]);
+      uploaded += 1;
+    } catch (err) {
+      failed.push({ name: file.name, message: isApiError(err) ? err.userMessage : "تعذّر رفع الصورة." });
+    }
+  }
+  onProgress?.(files.length, files.length);
+  return { images, uploaded, failed };
 }
 
 export function deleteImage(id: number, imageId: number) {

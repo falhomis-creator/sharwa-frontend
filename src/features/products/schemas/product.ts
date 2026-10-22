@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { compareDecimal, isDecimal } from "@/lib/decimal";
+import { toWesternDigits } from "@/lib/format";
 import { paginated } from "@/lib/schemas/pagination";
 import {
   CURRENCY_CODES,
@@ -128,8 +129,9 @@ export const productDetailSchema = z.object({
   unit: z.enum(UNITS),
   low_stock_threshold: z.number().int().nullable(),
   allow_backorder: z.boolean(),
-  min_quantity: z.number().int().nullable(),
-  max_quantity: z.number().int().nullable(),
+  // Decimal(12,3) text — fractional for weight/length products (decision D3, 2026-10-22).
+  min_quantity: nullableDecimal,
+  max_quantity: nullableDecimal,
   allow_variable_quantity: z.boolean(),
   // content
   description: z.string(),
@@ -184,15 +186,45 @@ export const productDetailSchema = z.object({
 export type ProductDetail = z.infer<typeof productDetailSchema>;
 
 // ── Form (RHF + Zod). Conditional fields are validated only when they apply (FR-04.04). ─
-const optionalDecimal = z.string().refine((v) => v === "" || isDecimal(v), "أدخل رقماً صحيحاً (مثال: 120.00)");
-const optionalInt = z.string().refine((v) => v === "" || /^\d+$/.test(v), "أدخل عدداً صحيحاً.");
+/**
+ * Numbers as the merchant types them: Arabic-Indic digits (١٢٠), the Arabic decimal mark (٫)
+ * and thousands separators (٬ ,) are accepted and normalised before any check — an Arabic
+ * keyboard must never block the save (schema audit 2026-10-23). `formToPayload` sends the
+ * same normalised text.
+ */
+export function normalizeNumberText(v: string): string {
+  return toWesternDigits(v).replace(/٫/g, ".").replace(/[٬,\s]/g, "").trim();
+}
+const n = (v: string) => normalizeNumberText(v);
+const optionalDecimal = z.string().refine((v) => v.trim() === "" || isDecimal(n(v)), "أدخل رقماً صحيحاً (مثال: 120.00)");
+const optionalInt = z.string().refine((v) => v.trim() === "" || /^\d+$/.test(n(v)), "أدخل عدداً صحيحاً.");
+/** Quantity as decimal text, up to 3 places (Decimal(12,3) in Django — decision D3). */
+const optionalQuantity = z
+  .string()
+  .refine((v) => v.trim() === "" || /^\d+(\.\d{1,3})?$/.test(n(v)), "أدخل كمية (حتى 3 خانات عشرية، مثال: 1.5).");
+const isFractional = (v: string) => v.trim() !== "" && Number(n(v)) % 1 !== 0;
+/** An optional link: empty, or a web address — a bare «www.…» is completed with https:// on save. */
+const optionalUrl = z
+  .string()
+  .max(500, "الرابط 500 حرف على الأكثر.")
+  .refine((v) => v.trim() === "" || /^(https?:\/\/)?[^\s/$.?#][^\s]*\.[^\s]+$/i.test(v.trim()), "أدخل رابطاً صحيحاً (مثال: https://example.com).");
+
+/**
+ * Mandatory on «إضافة منتج» (schema audit 2026-10-23, owner directive): the name, the base
+ * price (unless a formula computes it), the category and the unit. Everything else —
+ * description, slug, SKU, barcode, tags, media, SEO, shipping — is optional and may stay
+ * empty. Conditional fields (deposit, tax rate, formula terms…) are required only while their
+ * toggle is on, which is also the only time they are shown.
+ */
+export const PRODUCT_REQUIRED_FIELDS = ["name", "price", "category_id", "unit"] as const;
 
 export const productFormSchema = z
   .object({
     name: z.string().trim().min(1, "أدخل اسم المنتج.").max(200, "الاسم 200 حرف على الأكثر."),
-    name_en: z.string().max(200),
-    slug: z.string().regex(/^[a-z0-9-]*$/, "أحرف إنجليزية صغيرة وأرقام وشرطات فقط."),
-    sku: z.string().max(64),
+    name_en: z.string().max(200, "الاسم بالإنجليزية 200 حرف على الأكثر."),
+    // Optional and never blocking: whatever is typed becomes a valid slug on save.
+    slug: z.string().max(255, "الرابط 255 حرفاً على الأكثر."),
+    sku: z.string().max(64, "SKU حتى 64 حرفاً."),
     barcode: z.string().max(64, "الباركود 64 حرفاً على الأكثر."),
     product_type: z.enum(PRODUCT_TYPES),
     category_id: z.string(),
@@ -200,7 +232,8 @@ export const productFormSchema = z
     tag_ids: z.array(z.number().int()),
     badge_ids: z.array(z.number().int()),
     collection_ids: z.array(z.number().int()),
-    price: z.string().refine(isDecimal, "أدخل السعر كرقم (مثال: 120.00)."),
+    // Required unless a formula computes the price (superRefine).
+    price: z.string(),
     old_price: optionalDecimal,
     sale_start_at: z.string(),
     sale_end_at: z.string(),
@@ -211,7 +244,7 @@ export const productFormSchema = z
     is_taxable: z.boolean(),
     tax_rate: optionalDecimal,
     pricing_type: z.enum(PRICING_TYPES),
-    live_rate_ref: z.string(),
+    live_rate_ref: z.string().max(50, "المرجع 50 حرفاً على الأكثر."),
     formula_unit_price: optionalDecimal,
     formula_coefficient: optionalDecimal,
     formula_fixed_extra: optionalDecimal,
@@ -226,24 +259,25 @@ export const productFormSchema = z
     is_personalizable: z.boolean(),
     is_bookable: z.boolean(),
     booking_duration_minutes: optionalInt,
-    stock: z.string().refine((v) => /^\d+(\.\d{1,3})?$/.test(v), "المخزون رقم حتى 3 خانات عشرية."),
+    // Optional: empty = 0.
+    stock: z.string().refine((v) => v.trim() === "" || /^\d+(\.\d{1,3})?$/.test(n(v)), "المخزون رقم حتى 3 خانات عشرية."),
     unit: z.enum(UNITS),
     low_stock_threshold: optionalInt,
     allow_backorder: z.boolean(),
-    min_quantity: optionalInt,
-    max_quantity: optionalInt,
+    min_quantity: optionalQuantity,
+    max_quantity: optionalQuantity,
     allow_variable_quantity: z.boolean(),
     description: z.string(),
     description_en: z.string(),
-    image_url: z.string().refine((v) => v === "" || /^https?:\/\//.test(v), "رابط يبدأ بـ http:// أو https://"),
-    video_url: z.string().refine((v) => v === "" || /^https?:\/\//.test(v), "رابط يبدأ بـ http:// أو https://"),
+    image_url: optionalUrl,
+    video_url: optionalUrl,
     variant_display_style: z.enum(VARIANT_DISPLAY_STYLES),
     product_template: z.enum(PRODUCT_TEMPLATES),
     is_available: z.boolean(),
     published_at: z.string(),
     is_featured: z.boolean(),
     is_free_shipping: z.boolean(),
-    delivery_duration: z.string().max(100),
+    delivery_duration: z.string().max(100, "مدة التوصيل 100 حرف على الأكثر."),
     weight: optionalDecimal,
     length: optionalDecimal,
     width: optionalDecimal,
@@ -255,29 +289,44 @@ export const productFormSchema = z
     meta_keywords: z.string().max(255, "الكلمات 255 حرفاً على الأكثر."),
   })
   .superRefine((v, ctx) => {
-    if (v.old_price && isDecimal(v.price) && compareDecimal(v.old_price, v.price) <= 0) {
+    // ── Mandatory ──
+    if (v.pricing_type !== "formula" || v.price.trim() !== "") {
+      if (!isDecimal(n(v.price))) {
+        ctx.addIssue({ code: "custom", path: ["price"], message: v.price.trim() ? "أدخل السعر كرقم (مثال: 120.00)." : "أدخل سعر المنتج." });
+      }
+    }
+    if (!v.category_id) ctx.addIssue({ code: "custom", path: ["category_id"], message: "اختر تصنيف المنتج (أو أنشئ تصنيفاً بزر +)." });
+    // ── Optional, but consistent when filled ──
+    if (v.old_price.trim() && isDecimal(n(v.old_price)) && isDecimal(n(v.price)) && compareDecimal(n(v.old_price), n(v.price)) <= 0) {
       ctx.addIssue({ code: "custom", path: ["old_price"], message: "السعر القديم يجب أن يكون أكبر من السعر الحالي." });
     }
-    if (v.payment_policy === "deposit" && !v.deposit_required) {
+    if (v.payment_policy === "deposit" && !v.deposit_required.trim()) {
       ctx.addIssue({ code: "custom", path: ["deposit_required"], message: "أدخل قيمة العربون المطلوب." });
     }
-    if (v.is_taxable && !v.tax_rate) {
+    if (v.is_taxable && !v.tax_rate.trim()) {
       ctx.addIssue({ code: "custom", path: ["tax_rate"], message: "أدخل نسبة الضريبة." });
     }
     if (v.pricing_type === "formula") {
-      if (!v.formula_unit_price) ctx.addIssue({ code: "custom", path: ["formula_unit_price"], message: "أدخل سعر الوحدة." });
-      if (!v.formula_coefficient) ctx.addIssue({ code: "custom", path: ["formula_coefficient"], message: "أدخل المعامل." });
+      if (!v.formula_unit_price.trim()) ctx.addIssue({ code: "custom", path: ["formula_unit_price"], message: "أدخل سعر الوحدة." });
+      if (!v.formula_coefficient.trim()) ctx.addIssue({ code: "custom", path: ["formula_coefficient"], message: "أدخل المعامل." });
     }
-    if (v.has_refundable_deposit && !v.refundable_deposit_amount) {
+    if (v.has_refundable_deposit && !v.refundable_deposit_amount.trim()) {
       ctx.addIssue({ code: "custom", path: ["refundable_deposit_amount"], message: "أدخل مبلغ العربون القابل للاسترجاع." });
     }
-    if (v.is_bookable && !v.booking_duration_minutes) {
+    if (v.is_bookable && !v.booking_duration_minutes.trim()) {
       ctx.addIssue({ code: "custom", path: ["booking_duration_minutes"], message: "أدخل مدة الحجز بالدقائق." });
     }
-    if (v.is_hazardous && v.hazard_class === "none") {
+    // Shipping fields exist only for physical products — a hidden field must never block the save.
+    if (v.product_type === "physical" && v.is_hazardous && v.hazard_class === "none") {
       ctx.addIssue({ code: "custom", path: ["hazard_class"], message: "اختر فئة الخطورة." });
     }
-    if (v.min_quantity && v.max_quantity && Number(v.min_quantity) > Number(v.max_quantity)) {
+    // A fractional limit (1.5 كغ) only makes sense when the buyer may order fractions.
+    if (!v.allow_variable_quantity) {
+      for (const k of ["min_quantity", "max_quantity"] as const) {
+        if (isFractional(v[k])) ctx.addIssue({ code: "custom", path: [k], message: "الكمية الكسرية تتطلب تفعيل «كمية متغيرة»." });
+      }
+    }
+    if (v.min_quantity.trim() && v.max_quantity.trim() && Number(n(v.min_quantity)) > Number(n(v.max_quantity))) {
       ctx.addIssue({ code: "custom", path: ["max_quantity"], message: "الحد الأعلى أقل من الحد الأدنى." });
     }
     if (v.sale_start_at && v.sale_end_at && v.sale_start_at > v.sale_end_at) {

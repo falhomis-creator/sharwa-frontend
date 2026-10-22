@@ -28,7 +28,9 @@ export default function DashboardGroupLayout({ children }: { children: ReactNode
           <CsrfBootstrap />
         </Suspense>
         {children}
-        <Toaster position="bottom-left" />
+        {/* Above the sticky save bars (product editor, settings…) so a toast never covers «حفظ»:
+            the bar sits at the bottom on desktop and above the 4rem mobile nav on phones. */}
+        <Toaster position="bottom-left" offset={{ bottom: "5rem" }} mobileOffset={{ bottom: "9.5rem" }} />
         {process.env.NODE_ENV === "production" ? null : <MockIndicator />}
       </TooltipProvider>
     </QueryProvider>

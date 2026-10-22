@@ -1,6 +1,7 @@
 import type { Currency } from "@/lib/schemas/money";
 import type { Cart, CartActionResult } from "@/features/storefront/schemas/cart";
 import { catalog } from "@/mocks/catalog/state";
+import { quantityNumber } from "@/mocks/catalog/seed";
 import { readSettings } from "@/mocks/settings/state";
 import { storeState } from "@/mocks/store-state";
 import { findVisible, nowMs, unitPrice } from "@/mocks/storefront/catalog";
@@ -221,7 +222,7 @@ export function serializeCart(store: string | null, cart: MockCart): Cart {
         variant_id: l.line.variant_id,
         variant_label: variantLabel(store, l.line.variant_id),
         product_slug: p?.slug ?? null,
-        max_quantity: p?.max_quantity ?? null,
+        max_quantity: quantityNumber(p?.max_quantity),
         stock,
         is_auction: p?.is_auction ?? false,
         start_datetime: l.line.start_datetime,
@@ -289,7 +290,8 @@ export function cartAction(store: string | null, cartId: string, body: Record<st
     const otherLines = productQty(cart, productId) - line.quantity;
     let target = line.quantity + requested;
     if (p.is_auction) target = 1;
-    if (p.max_quantity) target = Math.min(target, p.max_quantity);
+    const maxQty = quantityNumber(p.max_quantity);
+    if (maxQty) target = Math.min(target, maxQty);
     target = Math.min(target, Math.max(0, (variant ? available : available - otherLines)));
     line.quantity = target;
     if (line.quantity <= 0) cart.lines = cart.lines.filter((l) => l !== line);

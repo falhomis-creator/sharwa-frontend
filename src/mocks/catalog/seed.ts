@@ -1,5 +1,7 @@
 import type { Brand, Category, Collection, Tag } from "@/features/organization/schemas";
 import type {
+  DataType,
+  FieldType,
   GlobalTemplate,
   HazardClass,
   PaymentPolicy,
@@ -13,11 +15,13 @@ import type {
 } from "@/features/products/schemas";
 import { int, pick, seeded, sku as makeSku } from "@/mocks/_fixtures";
 import { FIXTURE_NOW } from "@/mocks/store-state";
+import { CENTRAL_SECTORS } from "@/mocks/catalog/sectors";
 
 /**
  * Catalogue fixtures for M04/M05 (`[NEEDS BACKEND]`): 16 categories over three levels,
- * 6 brands, 10 tags, 3 manual collections, 4 merchant badges, the three variant
- * attributes of T070 (المقاس · اللون · الخامة), 2 blueprints, the 35 central sectors and
+ * 6 brands, 10 tags, 3 manual collections, 4 merchant badges, the REAL 35 central sectors
+ * with the store dictionary they seed (177 attributes, `sectors.ts`), one product template
+ * per sector plus the merchant's own 2, and
  * 60 Arabic products that between them switch on every conditional field the editor has
  * (deposit, formula pricing, taxes, sale window, serialized, bundle, auction, bookable,
  * digital, hazardous) so SC-04.3 can be checked against real rows.
@@ -25,6 +29,13 @@ import { FIXTURE_NOW } from "@/mocks/store-state";
  * Raw hex values are DATA (what Django stores for `ProductBadge.color` and swatches),
  * consumed as data by the UI — never as styling.
  */
+
+/** Decimal-text quantity (D3) → the number the POS/storefront contracts carry. */
+export function quantityNumber(v: string | number | null | undefined): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
 
 export interface MockProduct {
   id: number;
@@ -70,8 +81,9 @@ export interface MockProduct {
   unit: Unit;
   low_stock_threshold: number | null;
   allow_backorder: boolean;
-  min_quantity: number | null;
-  max_quantity: number | null;
+  /** Decimal(12,3) as text — fractional for variable-quantity products (decision D3). */
+  min_quantity: string | null;
+  max_quantity: string | null;
   allow_variable_quantity: boolean;
   description: string;
   description_en: string;
@@ -195,7 +207,7 @@ export const BADGE_SEED: MockBadge[] = [
   { id: 4, name: "فاتح", color: "#fde68a" },
 ];
 
-// ── Variant dictionary (T070: 3 attributes) ──────────────────────────────────────────
+// ── Variant dictionary — every attribute the 35 sectors seed (Django `seed_variant_templates`) ──
 function option(id: number, attribute_id: number, value: string, extra: Partial<VariantOption> = {}): VariantOption {
   return {
     id,
@@ -212,129 +224,133 @@ function option(id: number, attribute_id: number, value: string, extra: Partial<
   };
 }
 
-export const ATTRIBUTE_SEED: Omit<VariantAttribute, "products_count">[] = [
-  {
-    id: 1,
-    name: "المقاس",
-    field_type: "select",
-    data_type: "text",
-    unit: "",
-    min_value: null,
-    max_value: null,
-    is_required: true,
-    sort_order: 0,
-    options: [option(1, 1, "S"), option(2, 1, "M"), option(3, 1, "L"), option(4, 1, "XL")],
-  },
-  {
-    id: 2,
-    name: "اللون",
-    field_type: "swatches",
-    data_type: "text",
-    unit: "",
-    min_value: null,
-    max_value: null,
-    is_required: true,
-    sort_order: 1,
-    options: [
-      option(5, 2, "أسود", { color: "#18181b" }),
-      option(6, 2, "أبيض", { color: "#fafafa" }),
-      option(7, 2, "أحمر", { color: "#b91c1c" }),
-      option(8, 2, "كحلي", { color: "#1e3a8a" }),
-    ],
-  },
-  {
-    id: 3,
-    name: "الخامة",
-    field_type: "select",
-    data_type: "text",
-    unit: "",
-    min_value: null,
-    max_value: null,
-    is_required: false,
-    sort_order: 2,
-    options: [option(9, 3, "قطن"), option(10, 3, "كتان"), option(11, 3, "صوف")],
-  },
-];
-
-// ── Templates ─────────────────────────────────────────────────────────────────────────
-export const GLOBAL_SECTORS = [
-  "ملابس",
-  "أحذية",
-  "عطور",
-  "إلكترونيات",
-  "هواتف وإكسسواراتها",
-  "مجوهرات",
-  "ساعات",
-  "أثاث",
-  "مستلزمات مطبخ",
-  "أغذية",
-  "تمور",
-  "قهوة وشاي",
-  "حلويات",
-  "مستحضرات تجميل",
-  "عناية بالبشرة",
-  "ألعاب",
-  "كتب",
-  "قرطاسية",
-  "رياضة",
-  "قطع غيار السيارات",
-  "أدوات منزلية",
-  "إضاءة",
-  "سجاد",
-  "أقمشة",
-  "حقائب",
-  "نظارات",
-  "هدايا",
-  "زهور",
-  "مستلزمات الحيوانات الأليفة",
-  "أطفال ورضّع",
-  "صحة",
-  "أدوات بناء",
-  "زراعة",
-  "تكييف وتبريد",
-  "خدمات",
-] as const;
-
-export function globalTemplates(): GlobalTemplate[] {
-  return GLOBAL_SECTORS.map((name, i) => {
-    const id = i + 1;
-    if (name === "ملابس" || name === "أقمشة") {
-      return {
-        id,
-        name,
-        attributes: [
-          { name: "المقاس", field_type: "select", data_type: "text", values: ["S", "M", "L", "XL", "XXL"] },
-          { name: "اللون", field_type: "swatches", data_type: "text", values: ["أسود", "أبيض", "رمادي"] },
-          { name: "الخامة", field_type: "select", data_type: "text", values: ["قطن", "بوليستر"] },
-        ],
-      };
-    }
-    if (name === "أحذية") {
-      return {
-        id,
-        name,
-        attributes: [
-          { name: "مقاس الحذاء", field_type: "select", data_type: "number", values: ["40", "41", "42", "43", "44"] },
-          { name: "اللون", field_type: "swatches", data_type: "text", values: ["أسود", "بني"] },
-        ],
-      };
-    }
-    if (name === "عطور") {
-      return {
-        id,
-        name,
-        attributes: [{ name: "الحجم", field_type: "radio", data_type: "unit", values: ["30", "50", "100"] }],
-      };
-    }
-    return {
-      id,
-      name,
-      attributes: [{ name: "اللون", field_type: "swatches", data_type: "text", values: ["أسود", "أبيض"] }],
-    };
-  });
+/** Django `VariantAttribute.FIELD_TYPE_TO_DATA_TYPE` (numeric → number, date → date, else text). */
+export function dataTypeForField(fieldType: FieldType): DataType {
+  return fieldType === "numeric" ? "number" : fieldType === "date" ? "date" : "text";
 }
 
-export const TEMPLATE_SEED: Omit<ProductTemplate, "products_count">[] = [
+/**
+ * Values the demo merchant (`noor`) added by hand. Django seeds «اللون» and «الخامة/القماش»
+ * with NO values (open, per-merchant), so a real store fills them itself; the seeded products'
+ * variants point at these ids, which is why attributes 1–3 and options 1–11 are fixed.
+ */
+const FIXED_ATTRIBUTE_IDS: Record<string, number> = { "المقاس (S/M/L/XL أو رقمي)": 1, "اللون": 2, "الخامة/القماش": 3 };
+const MERCHANT_VALUES: Record<number, VariantOption[]> = {
+  2: [
+    option(5, 2, "أسود", { color: "#18181b" }),
+    option(6, 2, "أبيض", { color: "#fafafa" }),
+    option(7, 2, "أحمر", { color: "#b91c1c" }),
+    option(8, 2, "كحلي", { color: "#1e3a8a" }),
+  ],
+  3: [option(9, 3, "قطن"), option(10, 3, "كتان"), option(11, 3, "صوف")],
+};
+/** Option ids the demo merchant added by hand — absent from a freshly provisioned store. */
+export const MERCHANT_OPTION_IDS: ReadonlySet<number> = new Set(Object.values(MERCHANT_VALUES).flatMap((list) => list.map((o) => o.id)));
+const FIXED_OPTION_IDS: Record<string, number> = { "1:S": 1, "1:M": 2, "1:L": 3, "1:XL": 4 };
+
+/**
+ * The store dictionary exactly as `seed_variant_templates` leaves it in every tenant: one
+ * attribute per unique name across the 35 sectors (an attribute shared by sectors, like
+ * «اللون», exists once), with every closed value the seed creates as a `VariantOption`.
+ */
+function buildDictionary(): Omit<VariantAttribute, "products_count">[] {
+  const byName = new Map<string, Omit<VariantAttribute, "products_count">>();
+  let nextAttribute = 4;
+  let nextOption = 12;
+  for (const sector of CENTRAL_SECTORS) {
+    for (const v of sector.variants) {
+      let attr = byName.get(v.name);
+      if (!attr) {
+        const id = FIXED_ATTRIBUTE_IDS[v.name] ?? nextAttribute++;
+        attr = {
+          id,
+          name: v.name,
+          field_type: v.field_type,
+          data_type: dataTypeForField(v.field_type),
+          unit: "",
+          min_value: null,
+          max_value: null,
+          is_required: false,
+          sort_order: byName.size,
+          options: [...(MERCHANT_VALUES[id] ?? [])],
+        };
+        byName.set(v.name, attr);
+      }
+      for (const value of v.options ?? []) {
+        if (attr.options.some((o) => o.value === value)) continue;
+        const id = FIXED_OPTION_IDS[`${attr.id}:${value}`] ?? nextOption++;
+        attr.options.push(
+          attr.data_type === "number"
+            ? option(id, attr.id, value, { text_value: null, numeric_value: value })
+            : option(id, attr.id, value),
+        );
+      }
+    }
+  }
+  return [...byName.values()].sort((a, b) => a.id - b.id);
+}
+
+export const ATTRIBUTE_SEED: Omit<VariantAttribute, "products_count">[] = buildDictionary();
+const attributeIdByName = new Map(ATTRIBUTE_SEED.map((a) => [a.name, a.id]));
+
+// ── Central sectors + product templates ───────────────────────────────────────────────
+/** `GlobalVariantTemplate` rows: id = the sector number, attributes in seed order. */
+export function globalTemplates(): GlobalTemplate[] {
+  return CENTRAL_SECTORS.map((s) => ({
+    id: s.number,
+    name: s.name,
+    attributes: s.variants.map((v) => ({
+      attribute_id: attributeIdByName.get(v.name),
+      name: v.name,
+      field_type: v.field_type,
+      data_type: dataTypeForField(v.field_type),
+      values: [...(v.options ?? [])],
+    })),
+  }));
+}
+
+/**
+ * The scalar blueprint of a seeded `ProductTemplate` = the model's own defaults
+ * (`BLUEPRINT_SCALAR_FIELDS` that are not null/blank by default).
+ */
+export const MODEL_DEFAULT_BLUEPRINT = {
+  product_type: "physical",
+  unit: "piece",
+  currency: "SAR",
+  payment_policy: "cod",
+  is_taxable: false,
+  low_stock_threshold: 3,
+  allow_backorder: false,
+  min_quantity: "1",
+  allow_variable_quantity: false,
+  is_free_shipping: false,
+  is_bookable: false,
+  variant_display_style: "dropdown",
+  product_template: "standard",
+  is_available: true,
+  is_featured: false,
+} satisfies ProductTemplate["fields"];
+
+/** Template ids 1–2 are the demo merchant's own; the 35 sector templates follow (3–37). */
+export const SECTOR_TEMPLATE_ID_OFFSET = 2;
+
+/**
+ * One «نموذج منتج» per sector, named like the sector and linked to it, with the sector's
+ * attributes copied — what `seed_variant_templates` creates in every store (zero-config).
+ */
+export function sectorTemplateSeed(): Omit<ProductTemplate, "products_count">[] {
+  return CENTRAL_SECTORS.map((s) => ({
+    id: s.number + SECTOR_TEMPLATE_ID_OFFSET,
+    name: s.name,
+    global_template_id: s.number,
+    variant_attribute_ids: s.variants.map((v) => attributeIdByName.get(v.name)!),
+    fields: { ...MODEL_DEFAULT_BLUEPRINT },
+    updated_at: iso(60),
+  }));
+}
+
+/** The demo merchant's own two templates (built on sectors 1 and 3). */
+const MERCHANT_TEMPLATES: Omit<ProductTemplate, "products_count">[] = [
   {
     id: 1,
     name: "ملابس قطنية",
@@ -376,11 +392,7 @@ export const TEMPLATE_SEED: Omit<ProductTemplate, "products_count">[] = [
   },
 ];
 
-export const LIVE_RATE_REFS = [
-  { key: "gold_21", label: "ذهب عيار 21 (غرام)", display_rate: "245.30 ر.س" },
-  { key: "gold_24", label: "ذهب عيار 24 (غرام)", display_rate: "280.35 ر.س" },
-  { key: "saffron_g", label: "زعفران (غرام)", display_rate: "18.00 ر.س" },
-];
+export const TEMPLATE_SEED: Omit<ProductTemplate, "products_count">[] = [...MERCHANT_TEMPLATES, ...sectorTemplateSeed()];
 
 // ── Products ──────────────────────────────────────────────────────────────────────────
 interface ProductSeedRow {
@@ -602,8 +614,8 @@ export function seedProducts(): { products: MockProduct[]; variants: MockVariant
     unit: "gram",
     stock: "420.500",
     allow_variable_quantity: true,
-    min_quantity: 1,
-    max_quantity: 50,
+    min_quantity: "0.5",
+    max_quantity: "50",
   } satisfies Partial<MockProduct>);
 
   const watch = byName("ساعة ذكية");

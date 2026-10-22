@@ -9,7 +9,9 @@ import {
   CATEGORY_SEED,
   COLLECTION_SEED,
   TAG_SEED,
+  MERCHANT_OPTION_IDS,
   TEMPLATE_SEED,
+  sectorTemplateSeed,
   seedChanges,
   seedProducts,
   type MockBadge,
@@ -67,8 +69,12 @@ function seed(store: string | null): CatalogState {
     badges: empty ? [] : clone(BADGE_SEED),
     products,
     variants,
-    attributes: clone(ATTRIBUTE_SEED),
-    templates: empty ? [] : clone(TEMPLATE_SEED),
+    // The sector dictionary is a store default; only `noor` has its own colour/fabric values.
+    attributes: empty
+      ? clone(ATTRIBUTE_SEED).map((a) => ({ ...a, options: a.options.filter((o) => !MERCHANT_OPTION_IDS.has(o.id)) }))
+      : clone(ATTRIBUTE_SEED),
+    // Every store gets the 35 sector templates (Django seeds them per tenant); only `noor` has its own two.
+    templates: empty ? sectorTemplateSeed() : clone(TEMPLATE_SEED),
     changes: empty ? [] : seedChanges(products),
     imports: new Map(),
     ids: {
@@ -79,8 +85,8 @@ function seed(store: string | null): CatalogState {
       badge: 100,
       product: 2000,
       variant: 9000,
-      attribute: 100,
-      option: 500,
+      attribute: 1000,
+      option: 5000,
       template: 100,
       change: 1000,
       image: 1,

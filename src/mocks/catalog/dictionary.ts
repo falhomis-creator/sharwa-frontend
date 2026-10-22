@@ -1,6 +1,6 @@
 import type { MockResult } from "@/lib/bff/mock-route";
 import { DATA_TYPES, FIELD_TYPES, type VariantAttribute, type VariantOption } from "@/features/products/schemas";
-import type { ApplyTemplateResult, ProductTemplate } from "@/features/products/schemas";
+import { defaultBlueprintFields, type ApplyTemplateResult, type ProductTemplate } from "@/features/products/schemas";
 import { globalTemplates } from "@/mocks/catalog/seed";
 import { applyTemplateFields } from "@/mocks/catalog/products";
 import { catalog, nextCatalogId } from "@/mocks/catalog/state";
@@ -182,13 +182,19 @@ export function createTemplate(store: string | null, body: Body): MockResult<Pro
   const name = str(body.name).trim();
   if (!name) return { ok: false, status: 400, body: { name: ["أدخل اسم القالب."] } };
   if (state.templates.some((t) => t.name === name)) return { ok: false, status: 400, body: { name: ["قالب بهذا الاسم موجود."] } };
-  let fields = templateFieldsFrom(body);
-  let attributeIds = Array.isArray(body.variant_attribute_ids) ? body.variant_attribute_ids.map(Number) : [];
+  const posted = templateFieldsFrom(body);
+  // A template always carries a blueprint: from scratch it starts from the defaults, and the
+  // fields the merchant posted win over them. [NEEDS BACKEND] same rule in Django.
+  let fields: Record<string, string | boolean | number | null> = { ...defaultBlueprintFields(), ...posted };
+  let attributeIds = Array.isArray(body.variant_attribute_ids)
+    ? [...new Set(body.variant_attribute_ids.map(Number).filter((id) => state.attributes.some((a) => a.id === id)))]
+    : [];
   const fromProduct = Number(body.from_product_id);
   if (fromProduct) {
     const p = state.products.find((x) => x.id === fromProduct);
     if (p) {
       fields = {
+        ...posted,
         product_type: p.product_type,
         unit: p.unit,
         currency: p.currency,

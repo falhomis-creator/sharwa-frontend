@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import Link from "next/link";
 import { useQueryClient } from "@tanstack/react-query";
-import { Copy, Layers, PackagePlus, Pencil, Plus, Sparkles, Trash2, Wand2 } from "lucide-react";
+import { Copy, Layers, PackagePlus, Pencil, Plus, Sparkles, Trash2, Wand2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,31 @@ import { PageHeader } from "@/components/shared/page-header";
 import { isApiError } from "@/lib/api-error";
 import { formatRelative } from "@/lib/format";
 import { useStore } from "@/features/dashboard-shell/components/store-context";
-import { BLUEPRINT_FIELD_LABELS, type ProductTemplate } from "@/features/products/schemas";
+import { CURRENCY_LABELS } from "@/lib/schemas/money";
+import {
+  BLUEPRINT_FIELD_DEFAULTS,
+  BLUEPRINT_FIELD_LABELS,
+  CURRENCY_CODES,
+  HAZARD_CLASSES,
+  HAZARD_CLASS_LABELS,
+  PAYMENT_POLICIES,
+  PAYMENT_POLICY_LABELS,
+  PRICING_TYPES,
+  PRICING_TYPE_LABELS,
+  PRODUCT_TEMPLATES,
+  PRODUCT_TEMPLATE_LABELS,
+  PRODUCT_TYPES,
+  PRODUCT_TYPE_LABELS,
+  UNITS,
+  UNIT_LABELS,
+  VARIANT_DISPLAY_STYLES,
+  VARIANT_DISPLAY_STYLE_LABELS,
+  defaultBlueprintFields,
+  type BlueprintValue,
+  type DataType,
+  type FieldType,
+  type ProductTemplate,
+} from "@/features/products/schemas";
 import {
   attributeApi,
   productKeys,
@@ -33,12 +57,7 @@ import {
 } from "@/features/products/api/products";
 import { useCatalogAccess } from "@/features/products/hooks/use-catalog-access";
 import { DUPLICATE_SUFFIX, productFromTemplateHref } from "@/features/products/components/editor/prefill";
-import {
-  STANDARD_TAXONOMY_GROUPS,
-  attributeCreateType,
-  normalizeAttributeName,
-  standardCategory,
-} from "@/features/products/constants/standard-taxonomy";
+import { attributeCreateType, normalizeAttributeName } from "@/features/products/constants/standard-taxonomy";
 
 /**
  * `/dashboard/products/templates` — merchant blueprints (`ProductTemplate`, US-04.6, T073).
@@ -50,10 +69,12 @@ import {
  * the template — the primary use, so it leads the row — and «نسخ» opens the template form as
  * an unsaved copy named «… (نسخة)».
  *
- * Zero-Config (owner directive 2026-10-20): the «قالب جديد» form opens with «تعبئة من قسم قياسي»,
- * a grouped picker over `STANDARD_TAXONOMY`. Picking a category checks its attributes and names the
- * template. Attributes missing from the store dictionary are listed as new and created on save,
- * so a store with no products and no dictionary can still build its first template.
+ * Zero-Config (owner directive 2026-10-20, real data 2026-10-22): the «قالب جديد» form opens with
+ * «تعبئة من قسم قياسي», a picker over the 35 REAL central sectors (`GlobalVariantTemplate`, the
+ * same list Django's `seed_variant_templates` creates). Picking one selects its exact attributes
+ * from the store dictionary, names the template, and links it to the sector (`global_template_id`
+ * → the «من قطاع مركزي» badge). A sector attribute the merchant deleted is listed as new and
+ * re-created on save with the sector's values.
  */
 type Editing = { mode: "new" } | { mode: "edit"; template: ProductTemplate } | { mode: "duplicate"; template: ProductTemplate };
 export function TemplatesScreen() {
@@ -66,6 +87,10 @@ export function TemplatesScreen() {
   const [applying, setApplying] = useState<ProductTemplate | null>(null);
   const [sectorFor, setSectorFor] = useState<ProductTemplate | null>(null);
   const [deleting, setDeleting] = useState<ProductTemplate | null>(null);
+  const globals = useGlobalTemplates();
+  const sectorName = (id: number) => (globals.data ?? []).find((g) => g.id === id)?.name ?? null;
+  const attrNames = (t: ProductTemplate) =>
+    t.variant_attribute_ids.map((id) => attributes.find((a) => a.id === id)?.name).filter((n): n is string => Boolean(n));
   const refresh = () =>
     Promise.all([
       qc.invalidateQueries({ queryKey: productKeys(store).templates }),
@@ -100,13 +125,22 @@ export function TemplatesScreen() {
           {(templates.data ?? []).map((t) => (
             <li key={t.id} className="flex flex-col gap-3 p-4 md:flex-row md:items-start md:justify-between" data-testid="template-row">
               <div className="flex min-w-0 flex-col gap-1">
-                <p className="font-medium">{t.name}</p>
+                <p className="flex flex-wrap items-center gap-2 font-medium">
+                  {t.name}
+                  {t.global_template_id !== null ? (
+                    <Badge variant="secondary" className="gap-1" title={sectorName(t.global_template_id) ?? undefined} data-testid="template-sector-badge">
+                      <Layers aria-hidden /> من قطاع مركزي
+                    </Badge>
+                  ) : null}
+                </p>
                 <p className="flex flex-wrap gap-x-3 text-xs text-muted-foreground">
-                  <span>
-                    <Mono>{Object.keys(t.fields).length}</Mono> حقلاً
+                  <span data-testid="template-fields-count">
+                    <Mono>{Object.keys(t.fields).length}</Mono> حقلاً · <Mono>{t.variant_attribute_ids.length}</Mono> سمة
                   </span>
-                  <span>
-                    السمات: {t.variant_attribute_ids.map((id) => attributes.find((a) => a.id === id)?.name).filter(Boolean).join("، ") || "—"}
+                  {t.global_template_id !== null && sectorName(t.global_template_id) ? <span>القطاع: {sectorName(t.global_template_id)}</span> : null}
+                  <span className="basis-full truncate md:basis-auto" title={attrNames(t).join("، ")}>
+                    السمات: {attrNames(t).slice(0, 4).join("، ") || "—"}
+                    {attrNames(t).length > 4 ? ` +${attrNames(t).length - 4}` : ""}
                   </span>
                   <span>
                     مستخدم في <Mono>{t.products_count}</Mono> منتجات
@@ -200,7 +234,12 @@ export function TemplatesScreen() {
   );
 }
 
-type NewAttribute = { name: string; on: boolean };
+/**
+ * An attribute picked for the template that is not in this store's dictionary (e.g. the
+ * merchant deleted a sector attribute, or typed a new name). Created on save — with the
+ * sector's field type and closed values when it came from a sector.
+ */
+type NewAttribute = { name: string; field_type?: FieldType; data_type?: DataType; values?: readonly string[] };
 type PresetTrace = { ids: number[]; names: string[]; autoName: string };
 const EMPTY_PRESET: PresetTrace = { ids: [], names: [], autoName: "" };
 
@@ -223,99 +262,101 @@ function TemplateForm({
   const products = useProducts({ page_size: 100, ordering: "name" }).data?.results ?? [];
   const seed = template ?? copyOf;
   const creating = !template && !copyOf;
+  const globals = useGlobalTemplates(creating);
+  const sectors = globals.data ?? [];
   const [name, setName] = useState(template?.name ?? (copyOf ? `${copyOf.name}${DUPLICATE_SUFFIX}` : ""));
   const [fromProduct, setFromProduct] = useState("");
   const [attrIds, setAttrIds] = useState<number[]>(seed?.variant_attribute_ids ?? []);
-  /** Attributes not in the store dictionary yet, created on save. `on` = checked. */
   const [newAttrs, setNewAttrs] = useState<NewAttribute[]>([]);
-  const [category, setCategory] = useState("");
+  /** The central sector (`GlobalVariantTemplate`) this template is built on — the «من قطاع مركزي» badge. */
+  const [sectorId, setSectorId] = useState<number | null>(seed?.global_template_id ?? null);
   /** What the current preset added and the merchant has not touched since: a switch removes only these. */
   const [preset, setPreset] = useState<PresetTrace>(EMPTY_PRESET);
   const [customAttr, setCustomAttr] = useState("");
-  const [fields, setFields] = useState<Record<string, string | number | boolean | null>>(seed ? { ...seed.fields } : {});
+  // A new template starts from the default blueprint (bug fix 2026-10-22: it used to start `{}`).
+  const [fields, setFields] = useState<Record<string, BlueprintValue>>(() => (seed ? { ...seed.fields } : defaultBlueprintFields()));
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const listId = useId();
+  const byExact = useMemo(() => new Map(attributes.map((a) => [a.name, a])), [attributes]);
   const byName = useMemo(() => new Map(attributes.map((a) => [normalizeAttributeName(a.name), a])), [attributes]);
-  const checkedNew = newAttrs.filter((a) => a.on).length;
+  const selected = attrIds.map((id) => attributes.find((a) => a.id === id)).filter((a): a is NonNullable<typeof a> => Boolean(a));
+  const sector = sectors.find((g) => g.id === sectorId);
+  const findAttr = (n: string) => byExact.get(n) ?? byName.get(normalizeAttributeName(n));
 
-  function pickCategory(id: string) {
-    setCategory(id);
-    const cat = standardCategory(id);
+  /**
+   * «تعبئة من قسم قياسي»: the sector's EXACT attributes (as Django seeds them) are picked —
+   * matched by name in the store dictionary, or listed as new (with the sector's values)
+   * when the merchant removed them — and the template is named after the sector.
+   */
+  function pickSector(value: string) {
+    const next = sectors.find((g) => String(g.id) === value) ?? null;
+    setSectorId(next?.id ?? null);
     const ids = attrIds.filter((x) => !preset.ids.includes(x));
-    const pending = newAttrs.filter((a) => !preset.names.includes(a.name)).map((a) => ({ ...a }));
-    const added: PresetTrace = { ids: [], names: [], autoName: cat ? `قالب ${cat.label}` : "" };
-    for (const label of cat?.attributes ?? []) {
-      const key = normalizeAttributeName(label);
-      const existing = byName.get(key);
+    const pending = newAttrs.filter((a) => !preset.names.includes(a.name));
+    const added: PresetTrace = { ids: [], names: [], autoName: next ? `قالب ${next.name}` : "" };
+    for (const ga of next?.attributes ?? []) {
+      const existing = (ga.attribute_id !== undefined ? attributes.find((a) => a.id === ga.attribute_id) : undefined) ?? findAttr(ga.name);
       if (existing) {
         if (!ids.includes(existing.id)) {
           ids.push(existing.id);
           added.ids.push(existing.id);
         }
-      } else {
-        const listed = pending.find((a) => normalizeAttributeName(a.name) === key);
-        if (listed) listed.on = true;
-        else {
-          pending.push({ name: label, on: true });
-          added.names.push(label);
-        }
+      } else if (!pending.some((a) => normalizeAttributeName(a.name) === normalizeAttributeName(ga.name))) {
+        pending.push({ name: ga.name, field_type: ga.field_type, data_type: ga.data_type, values: ga.values });
+        added.names.push(ga.name);
       }
     }
     setAttrIds(ids);
     setNewAttrs(pending);
-    // Name the template after the category unless the merchant typed a name of their own.
+    // Name the template after the sector unless the merchant typed a name of their own.
     if (!name.trim() || name === preset.autoName) setName(added.autoName);
     setPreset(added);
   }
 
-  function toggleExisting(id: number, on: boolean) {
-    setAttrIds((ids) => (on ? [...ids, id] : ids.filter((x) => x !== id)));
+  function removeExisting(id: number) {
+    setAttrIds((list) => list.filter((x) => x !== id));
     setPreset((p) => ({ ...p, ids: p.ids.filter((x) => x !== id) }));
   }
 
-  function toggleNew(label: string, on: boolean) {
-    setNewAttrs((list) => list.map((a) => (a.name === label ? { ...a, on } : a)));
+  function removeNew(label: string) {
+    setNewAttrs((list) => list.filter((a) => a.name !== label));
     setPreset((p) => ({ ...p, names: p.names.filter((x) => x !== label) }));
   }
 
   function addCustom() {
     const label = customAttr.trim().replace(/\s+/g, " ");
     if (!label) return;
-    const key = normalizeAttributeName(label);
-    const existing = byName.get(key);
-    if (existing) setAttrIds((ids) => (ids.includes(existing.id) ? ids : [...ids, existing.id]));
-    else
-      setNewAttrs((list) =>
-        list.some((a) => normalizeAttributeName(a.name) === key)
-          ? list.map((a) => (normalizeAttributeName(a.name) === key ? { ...a, on: true } : a))
-          : [...list, { name: label, on: true }],
-      );
+    const existing = findAttr(label);
+    if (existing) setAttrIds((list) => (list.includes(existing.id) ? list : [...list, existing.id]));
+    else if (!newAttrs.some((a) => normalizeAttributeName(a.name) === normalizeAttributeName(label))) setNewAttrs((list) => [...list, { name: label }]);
     setCustomAttr("");
   }
 
   /**
-   * Creates the checked new attributes in the store dictionary and returns their ids. It first
-   * re-reads the dictionary so a name that appeared meanwhile is reused, not duplicated. Each
-   * resolved name moves into `attrIds` at once, so a failed save retried later never creates
-   * the same attribute twice.
+   * Creates the new attributes in the store dictionary (with their sector values) and returns
+   * their ids. It first re-reads the dictionary so a name that appeared meanwhile is reused,
+   * not duplicated. Each resolved name moves into `attrIds` at once, so a failed save retried
+   * later never creates the same attribute twice.
    */
   async function resolveNewAttributes(): Promise<number[]> {
-    const pending = newAttrs.filter((a) => a.on);
-    if (pending.length === 0) return [];
+    if (newAttrs.length === 0) return [];
     const fresh = (await attributeQuery.refetch()).data ?? attributes;
     const known = new Map(fresh.map((a) => [normalizeAttributeName(a.name), a.id]));
     const resolved: { name: string; id: number }[] = [];
     try {
-      for (const [i, attr] of pending.entries()) {
+      for (const [i, attr] of newAttrs.entries()) {
         const existingId = known.get(normalizeAttributeName(attr.name));
         if (existingId !== undefined) {
           resolved.push({ name: attr.name, id: existingId });
           continue;
         }
+        const guessed = attributeCreateType(attr.name);
         try {
           const created = await attributeApi.create({
             name: attr.name,
-            ...attributeCreateType(attr.name),
+            field_type: attr.field_type ?? guessed.field_type,
+            data_type: attr.data_type ?? guessed.data_type,
             unit: "",
             min_value: null,
             max_value: null,
@@ -323,6 +364,7 @@ function TemplateForm({
             sort_order: String(fresh.length + i),
           });
           resolved.push({ name: attr.name, id: created.id });
+          for (const value of attr.values ?? []) await attributeApi.addOption(created.id, { value }).catch(() => undefined);
         } catch (err) {
           throw new Error(`تعذّر إنشاء السمة «${attr.name}»${isApiError(err) ? `: ${err.userMessage}` : "."}`);
         }
@@ -331,7 +373,7 @@ function TemplateForm({
       if (resolved.length > 0) {
         const done = new Set(resolved.map((r) => r.name));
         setNewAttrs((list) => list.filter((a) => !done.has(a.name)));
-        setAttrIds((ids) => [...new Set([...ids, ...resolved.map((r) => r.id)])]);
+        setAttrIds((list) => [...new Set([...list, ...resolved.map((r) => r.id)])]);
         setPreset((p) => ({ ...p, names: p.names.filter((x) => !done.has(x)) }));
         void qc.invalidateQueries({ queryKey: productKeys(store).attributes });
       }
@@ -345,7 +387,11 @@ function TemplateForm({
     try {
       const createdIds = await resolveNewAttributes();
       const variantAttributeIds = [...new Set([...attrIds, ...createdIds])];
-      const body = { name, variant_attribute_ids: variantAttributeIds, fields, from_product_id: fromProduct ? Number(fromProduct) : undefined };
+      const link = template ? {} : { global_template_id: sectorId };
+      // Copying from a product: the server reads that product's fields, so ours are not sent.
+      const body = fromProduct
+        ? { name, variant_attribute_ids: variantAttributeIds, from_product_id: Number(fromProduct), ...link }
+        : { name, variant_attribute_ids: variantAttributeIds, fields, ...link };
       if (template) await templateApi.update(template.id, body);
       else await templateApi.create(body);
       toast.success(template ? "حُفظ القالب" : copyOf ? `أُنشئت نسخة القالب «${name}»` : `أُنشئ القالب «${name}»`);
@@ -356,6 +402,9 @@ function TemplateForm({
       setBusy(false);
     }
   }
+
+  const available = attributes.filter((a) => !attrIds.includes(a.id));
+  const total = selected.length + newAttrs.length;
 
   return (
     <>
@@ -375,38 +424,44 @@ function TemplateForm({
                 </span>
               }
               htmlFor="tp-category"
-              hint="اختر نشاط متجرك لتحديد السمات المعتادة تلقائياً — يمكنك تعديلها بعد ذلك."
+              hint={
+                globals.isLoading
+                  ? "جارٍ تحميل القطاعات المركزية…"
+                  : `اختر قطاع متجرك من القطاعات المركزية الـ ${sectors.length} لتُحدَّد سماته تلقائياً — يمكنك تعديلها بعد ذلك.`
+              }
             >
               <NativeSelect
                 id="tp-category"
-                value={category}
-                onChange={(e) => pickCategory(e.target.value)}
+                value={sectorId === null ? "" : String(sectorId)}
+                onChange={(e) => pickSector(e.target.value)}
                 className="h-11 bg-card md:h-9"
+                disabled={globals.isLoading}
+                data-testid="sector-select"
               >
                 <option value="">بلا — سأختار السمات بنفسي</option>
-                {STANDARD_TAXONOMY_GROUPS.map((group) => (
-                  <optgroup key={group.label} label={group.label}>
-                    {group.ids.map((id) => (
-                      <option key={id} value={id}>
-                        {standardCategory(id)?.label}
-                      </option>
-                    ))}
-                  </optgroup>
+                {sectors.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.id}. {g.name} ({g.attributes.length} سمات)
+                  </option>
                 ))}
               </NativeSelect>
             </Field>
-            {category ? (
+            {sector ? (
               <p className="text-xs text-muted-foreground" role="status">
-                حُدّدت سمات «{standardCategory(category)?.label}».
-                {checkedNew > 0 ? (
+                حُدّدت سمات «{sector.name}» (<Mono>{sector.attributes.length}</Mono>).
+                {newAttrs.length > 0 ? (
                   <>
                     {" "}
-                    السمات المعلَّمة «جديدة» (<Mono>{checkedNew}</Mono>) تُضاف إلى قاموس المتجر عند الحفظ.
+                    السمات المعلَّمة «جديدة» (<Mono>{newAttrs.length}</Mono>) تُضاف إلى قاموس المتجر عند الحفظ.
                   </>
                 ) : null}
               </p>
             ) : null}
           </div>
+        ) : sector ? (
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Layers className="size-3.5" aria-hidden /> مبني على القطاع المركزي «{sector.name}».
+          </p>
         ) : null}
         <Field label="اسم القالب" htmlFor="tp-name" required error={error && !name ? "أدخل اسم القالب." : undefined}>
           <input id="tp-name" autoFocus={!creating} value={name} onChange={(e) => setName(e.target.value)} className={inputClass} />
@@ -423,26 +478,56 @@ function TemplateForm({
             </NativeSelect>
           </Field>
         ) : null}
-        <fieldset className="flex flex-col gap-1" data-testid="template-attributes">
-          <legend className="mb-1 text-sm font-medium">السمات</legend>
-          {newAttrs.map((a) => (
-            <label key={`new-${a.name}`} className="flex min-h-11 items-center gap-2 text-sm lg:min-h-8">
-              <Checkbox checked={a.on} onCheckedChange={(on) => toggleNew(a.name, on === true)} />
-              <span className="flex-1">{a.name}</span>
-              <Badge variant="secondary" title="غير موجودة في قاموس المتجر — تُنشأ عند الحفظ">
-                جديدة
-              </Badge>
-            </label>
-          ))}
-          {attributes.map((a) => (
-            <label key={a.id} className="flex min-h-11 items-center gap-2 text-sm lg:min-h-8">
-              <Checkbox checked={attrIds.includes(a.id)} onCheckedChange={(on) => toggleExisting(a.id, on === true)} />
-              {a.name}
-            </label>
-          ))}
-          {attributes.length === 0 && newAttrs.length === 0 && !attributeQuery.isLoading ? (
-            <p className="text-sm text-muted-foreground">لا سمات في قاموس المتجر بعد — اختر قسماً قياسياً أو أضف سمة.</p>
+        <fieldset className="flex flex-col gap-1.5" data-testid="template-attributes">
+          <legend className="mb-1 flex w-full items-baseline justify-between gap-2 text-sm font-medium">
+            <span>السمات</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              <Mono>{total}</Mono> سمة
+            </span>
+          </legend>
+          {total === 0 && !attributeQuery.isLoading ? (
+            <p className="text-sm text-muted-foreground">لا سمات بعد — اختر قطاعاً مركزياً أو ابحث في قاموس المتجر وأضف سمة.</p>
           ) : null}
+          <ul className="flex flex-col divide-y divide-border/60 rounded-lg border border-border empty:hidden">
+            {selected.map((a) => (
+              <li key={a.id} className="flex min-h-11 items-center gap-2 px-3 text-sm lg:min-h-9" data-testid="template-attr">
+                <span className="min-w-0 flex-1 truncate">{a.name}</span>
+                <span className="shrink-0 text-xs text-muted-foreground" title={a.options.map((o) => o.value).join("، ") || undefined}>
+                  {a.options.length ? (
+                    <>
+                      <Mono>{a.options.length}</Mono> قيمة
+                    </>
+                  ) : (
+                    "قيم حرة"
+                  )}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => removeExisting(a.id)}
+                  aria-label={`إزالة ${a.name}`}
+                  className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted lg:size-7"
+                >
+                  <X className="size-4" aria-hidden />
+                </button>
+              </li>
+            ))}
+            {newAttrs.map((a) => (
+              <li key={`new-${a.name}`} className="flex min-h-11 items-center gap-2 px-3 text-sm lg:min-h-9" data-testid="template-attr">
+                <span className="min-w-0 flex-1 truncate">{a.name}</span>
+                <Badge variant="secondary" title="غير موجودة في قاموس المتجر — تُنشأ عند الحفظ">
+                  جديدة
+                </Badge>
+                <button
+                  type="button"
+                  onClick={() => removeNew(a.name)}
+                  aria-label={`إزالة ${a.name}`}
+                  className="flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted lg:size-7"
+                >
+                  <X className="size-4" aria-hidden />
+                </button>
+              </li>
+            ))}
+          </ul>
           <div className="mt-1 flex gap-2">
             <input
               value={customAttr}
@@ -453,37 +538,29 @@ function TemplateForm({
                   addCustom();
                 }
               }}
-              placeholder="أضف سمة (مثال: الطول)"
-              aria-label="اسم سمة جديدة"
+              list={listId}
+              placeholder={`ابحث في القاموس (${attributes.length}) أو اكتب سمة جديدة`}
+              aria-label="سمة لإضافتها"
               maxLength={100}
               className={inputClass}
             />
+            <datalist id={listId}>
+              {available.map((a) => (
+                <option key={a.id} value={a.name} />
+              ))}
+            </datalist>
             <Button type="button" variant="outline" size="lg" className="h-11 shrink-0 gap-1 lg:h-9" disabled={!customAttr.trim()} onClick={addCustom}>
               <Plus className="size-4" aria-hidden /> إضافة
             </Button>
           </div>
         </fieldset>
-        {Object.keys(fields).length > 0 ? (
-          <fieldset className="flex flex-col gap-2">
-            <legend className="mb-1 text-sm font-medium">الحقول المنسوخة</legend>
-            {Object.entries(fields).map(([k, val]) => (
-              <label key={k} className="grid grid-cols-2 items-center gap-2 text-sm">
-                <span className="text-muted-foreground">{BLUEPRINT_FIELD_LABELS[k] ?? k}</span>
-                {typeof val === "boolean" ? (
-                  <Checkbox checked={val} onCheckedChange={(on) => setFields((f) => ({ ...f, [k]: Boolean(on) }))} aria-label={BLUEPRINT_FIELD_LABELS[k] ?? k} />
-                ) : (
-                  <input
-                    dir="ltr"
-                    value={val === null ? "" : String(val)}
-                    onChange={(e) => setFields((f) => ({ ...f, [k]: typeof val === "number" ? Number(e.target.value) || 0 : e.target.value }))}
-                    className={`${inputClass} font-mono`}
-                    aria-label={BLUEPRINT_FIELD_LABELS[k] ?? k}
-                  />
-                )}
-              </label>
-            ))}
-          </fieldset>
-        ) : null}
+        {fromProduct ? (
+          <p className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground" role="status">
+            تُنسخ حقول القالب (النوع، الوحدة، الضريبة، الشحن…) من المنتج المختار عند الحفظ.
+          </p>
+        ) : (
+          <BlueprintFieldsEditor fields={fields} onChange={setFields} />
+        )}
         {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
         <div className="sticky bottom-0 -mx-4 mt-auto flex gap-2 border-t border-border bg-popover p-4">
           <Button size="lg" className="h-11 flex-1" disabled={busy || !name.trim()} onClick={() => void save()}>
@@ -621,5 +698,113 @@ function SectorDialog({ template, onClose, onDone }: { template: ProductTemplate
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Choices for the enum blueprint fields — the same lists the product editor offers. */
+const BLUEPRINT_CHOICES: Record<string, ReadonlyArray<readonly [string, string]>> = {
+  product_type: PRODUCT_TYPES.map((v) => [v, PRODUCT_TYPE_LABELS[v]] as const),
+  unit: UNITS.map((v) => [v, UNIT_LABELS[v]] as const),
+  currency: CURRENCY_CODES.map((v) => [v, CURRENCY_LABELS[v]] as const),
+  payment_policy: PAYMENT_POLICIES.map((v) => [v, PAYMENT_POLICY_LABELS[v]] as const),
+  pricing_type: PRICING_TYPES.map((v) => [v, PRICING_TYPE_LABELS[v]] as const),
+  variant_display_style: VARIANT_DISPLAY_STYLES.map((v) => [v, VARIANT_DISPLAY_STYLE_LABELS[v]] as const),
+  product_template: PRODUCT_TEMPLATES.map((v) => [v, PRODUCT_TEMPLATE_LABELS[v]] as const),
+  hazard_class: HAZARD_CLASSES.map((v) => [v, HAZARD_CLASS_LABELS[v]] as const),
+};
+
+/**
+ * The template's blueprint (`fields`): typed controls per value, remove a field, or add any
+ * other blueprint field. These are the values copied into a product created from the template.
+ */
+function BlueprintFieldsEditor({
+  fields,
+  onChange,
+}: {
+  fields: Record<string, BlueprintValue>;
+  onChange: (next: Record<string, BlueprintValue>) => void;
+}) {
+  const [adding, setAdding] = useState("");
+  const missing = Object.keys(BLUEPRINT_FIELD_LABELS).filter((k) => !(k in fields));
+  const set = (k: string, val: BlueprintValue) => onChange({ ...fields, [k]: val });
+  const label = (k: string) => BLUEPRINT_FIELD_LABELS[k] ?? k;
+
+  return (
+    <fieldset className="flex flex-col gap-2" data-testid="template-fields">
+      <legend className="mb-1 flex w-full items-baseline justify-between gap-2 text-sm font-medium">
+        <span>حقول القالب</span>
+        <span className="text-xs font-normal text-muted-foreground">
+          <Mono>{Object.keys(fields).length}</Mono> حقلاً
+        </span>
+      </legend>
+      {Object.keys(fields).length === 0 ? (
+        <p className="text-sm text-muted-foreground">لا حقول — أضف ما يتكرر في منتجاتك (الوحدة، الضريبة، الشحن…).</p>
+      ) : null}
+      {Object.entries(fields).map(([k, val]) => {
+        const choices = BLUEPRINT_CHOICES[k];
+        return (
+          <div key={k} className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2 text-sm">
+            <span className="truncate text-muted-foreground">{label(k)}</span>
+            {typeof val === "boolean" ? (
+              <Checkbox checked={val} onCheckedChange={(on) => set(k, on === true)} aria-label={label(k)} />
+            ) : choices ? (
+              <NativeSelect value={String(val ?? "")} onChange={(e) => set(k, e.target.value)} className="h-11 md:h-8" aria-label={label(k)}>
+                {choices.map(([value, text]) => (
+                  <option key={value} value={value}>
+                    {text}
+                  </option>
+                ))}
+              </NativeSelect>
+            ) : (
+              <input
+                dir="ltr"
+                inputMode={typeof val === "number" ? "numeric" : undefined}
+                value={val === null ? "" : String(val)}
+                onChange={(e) => set(k, typeof val === "number" ? Number(e.target.value.replace(/\D/g, "")) || 0 : e.target.value)}
+                className={`${inputClass} font-mono`}
+                aria-label={label(k)}
+              />
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                const next = { ...fields };
+                delete next[k];
+                onChange(next);
+              }}
+              aria-label={`إزالة حقل ${label(k)}`}
+              className="flex size-11 items-center justify-center rounded-md text-muted-foreground hover:bg-muted lg:size-7"
+            >
+              <X className="size-4" aria-hidden />
+            </button>
+          </div>
+        );
+      })}
+      {missing.length > 0 ? (
+        <div className="mt-1 flex gap-2">
+          <NativeSelect value={adding} onChange={(e) => setAdding(e.target.value)} className="h-11 md:h-9" aria-label="حقل لإضافته">
+            <option value="">اختر حقلاً لإضافته</option>
+            {missing.map((k) => (
+              <option key={k} value={k}>
+                {label(k)}
+              </option>
+            ))}
+          </NativeSelect>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="h-11 shrink-0 gap-1 lg:h-9"
+            disabled={!adding}
+            onClick={() => {
+              set(adding, BLUEPRINT_FIELD_DEFAULTS[adding] ?? "");
+              setAdding("");
+            }}
+          >
+            <Plus className="size-4" aria-hidden /> حقل
+          </Button>
+        </div>
+      ) : null}
+    </fieldset>
   );
 }

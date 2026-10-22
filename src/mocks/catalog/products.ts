@@ -14,7 +14,7 @@ import {
   type ProductSummary,
   type ProductVariant,
 } from "@/features/products/schemas";
-import { LIVE_RATE_REFS, type MockProduct, type MockVariant } from "@/mocks/catalog/seed";
+import type { MockProduct, MockVariant } from "@/mocks/catalog/seed";
 import { catalog, nextCatalogId, type CatalogState } from "@/mocks/catalog/state";
 
 /**
@@ -162,7 +162,11 @@ export function toDetail(state: CatalogState, p: MockProduct, hasOrders: boolean
     serial_available: p.is_serialized ? (p.serial_available ?? 0) : null,
     auction_status: p.is_auction ? (p.auction_status ?? "draft") : null,
     has_orders: hasOrders,
-    live_rate_refs: LIVE_RATE_REFS,
+    // Decision D4: no live-rate feed yet — Django returns [] and so does the fixture.
+    live_rate_refs: [],
+    // Old template blueprints may still carry numbers (D3: quantities are decimal text).
+    min_quantity: p.min_quantity === null || p.min_quantity === undefined ? null : String(p.min_quantity),
+    max_quantity: p.max_quantity === null || p.max_quantity === undefined ? null : String(p.max_quantity),
   };
 }
 
@@ -345,8 +349,8 @@ function applyBody(state: CatalogState, p: MockProduct, body: Body) {
   set("unit", (str(body.unit) || p.unit) as MockProduct["unit"]);
   set("low_stock_threshold", intOrNull(body.low_stock_threshold));
   set("allow_backorder", bool(body.allow_backorder));
-  set("min_quantity", intOrNull(body.min_quantity));
-  set("max_quantity", intOrNull(body.max_quantity));
+  set("min_quantity", decOrNull(body.min_quantity));
+  set("max_quantity", decOrNull(body.max_quantity));
   set("allow_variable_quantity", bool(body.allow_variable_quantity));
   set("description", str(body.description));
   set("description_en", str(body.description_en));

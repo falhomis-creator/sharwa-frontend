@@ -1,5 +1,9 @@
 import type { ProductDetail, ProductFormValues, ProductTemplate, ProductVariant, VariantAttribute } from "@/features/products/schemas";
-import { EMPTY_PRODUCT_FORM, detailToForm } from "@/features/products/components/editor/form-mapping";
+import { EMPTY_PRODUCT_FORM, detailToForm, isoToLocalInput } from "@/features/products/components/editor/form-mapping";
+
+/** Blueprint keys stored as ISO datetimes (Django) but edited as `datetime-local`. */
+const DATETIME_KEYS = new Set(["sale_start_at", "sale_end_at", "published_at"]);
+const QUANTITY_KEYS = new Set(["min_quantity", "max_quantity"]);
 
 /**
  * Creation presets for M04 — «إنشاء من قالب» and «نسخ» (owner directive 2026-10-20,
@@ -68,6 +72,8 @@ export function templateForm(template: ProductTemplate): { form: ProductFormValu
     const current = target[key];
     if (typeof current === "boolean") target[key] = Boolean(value);
     else if (Array.isArray(current)) continue;
+    else if (DATETIME_KEYS.has(key)) target[key] = typeof value === "string" ? isoToLocalInput(value) : "";
+    else if (QUANTITY_KEYS.has(key) && typeof value === "string" && value.includes(".")) target[key] = value.replace(/\.?0+$/, "");
     else target[key] = value === null || value === undefined ? "" : String(value);
     filled += 1;
   }
