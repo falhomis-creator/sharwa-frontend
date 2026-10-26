@@ -4,7 +4,7 @@ import { findClient } from "@/mocks/platform/state";
 import { storeNameFor } from "@/mocks/dashboard/me";
 
 /**
- * M43 fixture (`[NEEDS BACKEND]`): one `MerchantAccount` owning noor, shop and pending1 —
+ * M43 fixture (live = Django `tenants/merchant_rollup.py`, INT-049): one `MerchantAccount` owning noor, shop and pending1 —
  * the same three stores M03's switcher lists — with 90 days of `TenantStatsSnapshot` rows
  * for the two ready stores and none for pending1 (provisioning, §8 «غير متاح» + «لا بيانات
  * مجمَّعة بعد»). Any other store has no account (`has_account=false`, US-43.3).

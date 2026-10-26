@@ -106,7 +106,10 @@ function OfferForm({ offer }: { offer: Offer | null }) {
       is_active: d.is_active,
     };
     if (d.offer_type === "discount") Object.assign(fields, { discount_type: d.discount_type, discount_value: d.discount_value ?? "" });
-    if (bx) Object.assign(fields, { buy_quantity: d.buy_quantity ?? "", buy_condition_type: d.buy_condition_type, buy_category_id: d.buy_category_id ?? "", buy_product_id: d.buy_product_id ?? "", min_total_items: d.min_total_items ?? "", get_product_id: d.get_product_id ?? "", get_quantity: d.get_quantity ?? "", get_discount_percent: d.get_discount_percent ?? "" });
+    // The condition fields serve every type (INT-019): Django stores them as `condition_type`/`category`/`product`
+    // for a discount or free shipping, and as the «buy X» condition for buy_x_get_y.
+    Object.assign(fields, { buy_condition_type: d.buy_condition_type, buy_category_id: d.buy_category_id ?? "", buy_product_id: d.buy_product_id ?? "", min_total_items: d.min_total_items ?? "" });
+    if (bx) Object.assign(fields, { buy_quantity: d.buy_quantity ?? "", get_product_id: d.get_product_id ?? "", get_quantity: d.get_quantity ?? "", get_discount_percent: d.get_discount_percent ?? "" });
     let payload: Record<string, unknown> | FormData = fields;
     if (imageFile) {
       const fd = new FormData();
@@ -165,6 +168,24 @@ function OfferForm({ offer }: { offer: Offer | null }) {
             </Field>
           ) : null}
 
+          {v.offer_type !== "buy_x_get_y" ? (
+            <fieldset className="flex flex-col gap-4 surface-card p-5 lg:p-6" data-testid="condition-fields">
+              <legend className="px-1 text-xs text-muted-foreground">شرط التطبيق</legend>
+              <Field label="يُطبَّق على" htmlFor="buy_condition_type" required>
+                <NativeSelect id="buy_condition_type" {...register("buy_condition_type")} className="h-11 lg:h-9" data-testid="condition_type">
+                  {BUY_CONDITIONS.map((c) => <option key={c} value={c}>{c === "all" ? "كامل الطلب" : BUY_CONDITION_LABELS[c]}</option>)}
+                </NativeSelect>
+              </Field>
+              {v.buy_condition_type === "category" ? <Controller control={control} name="buy_category_id" render={({ field }) => <CategorySelect id="buy_category_id" value={field.value ?? ""} onChange={field.onChange} error={errors.buy_category_id?.message} required />} /> : null}
+              {v.buy_condition_type === "product" ? <Controller control={control} name="buy_product_id" render={({ field }) => <ProductPicker id="buy_product_id" label="المنتج" value={field.value ?? ""} onChange={field.onChange} error={errors.buy_product_id?.message} required />} /> : null}
+              {v.buy_condition_type === "min_items" ? (
+                <Field label="الحد الأدنى من القطع في السلة" htmlFor="min_total_items" error={errors.min_total_items?.message} required>
+                  <input id="min_total_items" {...register("min_total_items")} inputMode="numeric" className={numericInputClass} dir="ltr" aria-invalid={!!errors.min_total_items} />
+                </Field>
+              ) : null}
+            </fieldset>
+          ) : null}
+
           {v.offer_type === "buy_x_get_y" ? (
             <fieldset className="flex flex-col gap-4 surface-card p-5 lg:p-6" data-testid="bxgy-fields">
               <legend className="px-1 text-xs text-muted-foreground">اشترِ X</legend>
@@ -205,7 +226,7 @@ function OfferForm({ offer }: { offer: Offer | null }) {
             <Field label="نص الزر" htmlFor="cta_text" error={errors.cta_text?.message} counter={{ value: (v.cta_text ?? "").length, max: 40 }} hint="فارغ = «تسوّق».">
               <input id="cta_text" {...register("cta_text")} className={inputClass} aria-invalid={!!errors.cta_text} />
             </Field>
-            <Field label="الأولوية" htmlFor="priority" error={errors.priority?.message} required hint="الأعلى أولوية (الرقم الأصغر) يُطبَّق أولاً.">
+            <Field label="الأولوية" htmlFor="priority" error={errors.priority?.message} required hint="الرقم الأكبر يظهر أولاً في واجهة المتجر.">
               <input id="priority" {...register("priority")} inputMode="numeric" className={numericInputClass} dir="ltr" aria-invalid={!!errors.priority} data-testid="priority" />
             </Field>
           </div>

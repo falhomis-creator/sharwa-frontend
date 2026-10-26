@@ -224,7 +224,7 @@ function BulkEditor({ features, initialFeature, onClose }: { features: Feature[]
             ))}
           </fieldset>
           <Field label="ملاحظة" htmlFor="bulk-notes">
-            <Input id="bulk-notes" className={INPUT} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={300} placeholder="سبب الاستثناء — يراه فريق المنصة" />
+            <Input id="bulk-notes" className={INPUT} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={255} placeholder="سبب الاستثناء — يراه فريق المنصة" />
           </Field>
           {summary ? (
             <p role="status" data-testid="bulk-summary" className="rounded-md border border-border px-3 py-2 text-sm">

@@ -17,7 +17,7 @@ export { normalizeCustomerPhone };
 import { reviewsSummary, stockOf } from "@/mocks/storefront/catalog";
 
 /**
- * M07 `[NEEDS BACKEND]` state. There is no `Customer` model upstream (FR-07.01): a customer
+ * M07 fixture (Django since INT-017: `api/views_customers.py`, module `customers`). There is no `Customer` model upstream (FR-07.01): a customer
  * is DERIVED, keyed by the normalised `customer_phone`, from
  *   1. the live M06 order fixture (`ordersState`) — the source of every recent order, and
  *   2. `customers:history` — the aggregate of OLDER orders (before the M06 fixture window)
@@ -220,7 +220,9 @@ function aggregates(store: string | null): Map<string, Aggregate> {
   }
   for (const o of orders) {
     if (o.status === "pending_payment") continue; // not a placed order yet
-    const { total, refunded } = orderTotals(o);
+    const { total: gross, refunded } = orderTotals(o);
+    // Django (INT-017): the spend counts placed orders that were not cancelled.
+    const total = o.status === "cancelled" ? "0" : gross;
     const marketplace = o.traffic_source === "amazon" || o.traffic_source === "noon";
     const cur = map.get(o.customer_phone);
     if (!cur) {
@@ -549,12 +551,19 @@ export function reviewsTab(store: string | null, rawPhone: string) {
 export function replyToReview(store: string | null, id: number, body: Record<string, unknown>) {
   const row = storefrontReviews(store).find((r) => r.id === id);
   if (!row) return { ok: false as const, status: 404, body: { detail: "التقييم غير موجود." } };
-  if (!("admin_reply" in body) || (body.admin_reply !== null && typeof body.admin_reply !== "string")) {
+  // INT-029: `{approved}` approves (or hides) a storefront review — alone or with a reply.
+  const hasApproval = "approved" in body;
+  if (hasApproval && typeof body.approved !== "boolean") return { ok: false as const, status: 400, body: { approved: ["قيمة غير صالحة."] } };
+  if (!hasApproval && (!("admin_reply" in body) || (body.admin_reply !== null && typeof body.admin_reply !== "string"))) {
     return { ok: false as const, status: 400, body: { admin_reply: ["نص الرد مطلوب."] } };
   }
-  const reply = typeof body.admin_reply === "string" ? body.admin_reply.trim() : "";
-  if (reply.length > 1000) return { ok: false as const, status: 400, body: { admin_reply: ["الرد أطول من 1000 حرف."] } };
-  row.admin_reply = reply || null;
+  if ("admin_reply" in body) {
+    if (body.admin_reply !== null && typeof body.admin_reply !== "string") return { ok: false as const, status: 400, body: { admin_reply: ["نص الرد مطلوب."] } };
+    const reply = typeof body.admin_reply === "string" ? body.admin_reply.trim() : "";
+    if (reply.length > 1000) return { ok: false as const, status: 400, body: { admin_reply: ["الرد أطول من 1000 حرف."] } };
+    row.admin_reply = reply || null;
+  }
+  if (hasApproval) row.approved = body.approved === true;
   const products = catalog(store).products;
   return {
     ok: true as const,

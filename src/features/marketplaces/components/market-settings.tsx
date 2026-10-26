@@ -36,6 +36,7 @@ function toForm(d: MarketSettings): SettingsForm {
     inventory_sync: d.inventory_sync,
     stock_buffer: String(d.stock_buffer),
     order_pull: d.order_pull,
+    import_marketplace_fulfilled: d.import_marketplace_fulfilled,
     default_order_status_id: d.default_order_status_id ? String(d.default_order_status_id) : "",
   };
 }
@@ -61,10 +62,12 @@ function SettingsFormView({ market, data }: { market: Market; data: MarketSettin
     }
   });
 
-  const toggles: Array<{ name: "auto_push" | "inventory_sync" | "order_pull"; label: string }> = [
-    { name: "auto_push", label: "النشر الآلي للمنتجات الجديدة" },
+  // Labels = Django's meaning of each flag (INT-038): auto_push re-sends price/stock changes of published listings.
+  const toggles: Array<{ name: "auto_push" | "inventory_sync" | "order_pull" | "import_marketplace_fulfilled"; label: string }> = [
+    { name: "auto_push", label: "دفع تغيّرات السعر والمخزون تلقائياً" },
     { name: "inventory_sync", label: "مزامنة المخزون" },
     { name: "order_pull", label: "سحب الطلبات تلقائياً" },
+    { name: "import_marketplace_fulfilled", label: "استيراد طلبات يشحنها السوق (FBA/FBN) للتقارير" },
   ];
 
   return (
@@ -122,7 +125,7 @@ function SettingsFormView({ market, data }: { market: Market; data: MarketSettin
             />
           ))}
         </div>
-        {autoPush ? <p className="text-sm text-muted-foreground" data-testid="auto-push-note">ستُنشر المنتجات الجديدة المؤهلة تلقائياً.</p> : null}
+        {autoPush ? <p className="text-sm text-muted-foreground" data-testid="auto-push-note">تُدفع تغيّرات السعر والمخزون للقوائم المنشورة تلقائياً.</p> : null}
         <div>
           <Button type="submit" className="h-11 lg:h-9" disabled={save.isPending} data-testid="settings-save">
             {save.isPending ? "جارٍ الحفظ…" : "حفظ الإعدادات"}

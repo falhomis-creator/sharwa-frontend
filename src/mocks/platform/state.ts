@@ -201,9 +201,9 @@ export interface ZoneRow {
   price: string;
   currency: Currency;
   volumetric_divisor: number;
-  center_latitude: string;
-  center_longitude: string;
-  radius_km: string;
+  center_latitude: string | null;
+  center_longitude: string | null;
+  radius_km: string | null;
   is_active: boolean;
   sort_order: number;
 }
@@ -238,6 +238,8 @@ export interface DeactivationRow {
   created_at: string;
   updated_at: string;
   by: string;
+  /** Set by «إعادة التفعيل» — the record stays in the history (Django keeps it too, INT-030). */
+  reinstated_at: string | null;
 }
 
 export interface ActionRow {
@@ -552,15 +554,18 @@ function seed(): PlatformState {
     { code: "sms_gateway", name: "بوابة SMS", description: "رسائل نصية للعملاء.", icon: "smartphone", is_listed: true, is_free: false, price: "9.00", currency: "USD", billing_interval: "monthly", billing_enabled: true },
     { code: "live_chat", name: "دردشة مباشرة", description: "نافذة دردشة في المتجر — قيد المراجعة.", icon: "messages-square", is_listed: false, is_free: true, price: "0.00", currency: "SAR", billing_interval: "monthly", billing_enabled: true },
   ];
+  // Subscription ends are compared with the REAL clock by the screens (`installationState`), so they are anchored
+  // on it — anchored on FIXTURE_NOW they silently expired a few days after the fixture date (Sharwa AI first).
+  const fromNow = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
   const install = (schema: string, app_code: string, hoursAgo: number, o: Partial<InstallationRowM> = {}) => {
-    const row: InstallationRowM = { id: nextPlatformId(state, "install"), schema_name: schema, app_code, is_active: true, suspended_by_platform: false, subscription_expires_at: ahead(24 * 20), installed_at: at(hoursAgo), ...o };
+    const row: InstallationRowM = { id: nextPlatformId(state, "install"), schema_name: schema, app_code, is_active: true, suspended_by_platform: false, subscription_expires_at: fromNow(24 * 20), installed_at: at(hoursAgo), ...o };
     state.installations.push(row);
     return row;
   };
   const noorBot = install("noor", "whatsapp_bot", 24 * 120);
-  const noorInvoice = install("noor", "invoice_pro", 24 * 200, { subscription_expires_at: ahead(24 * 150) });
+  const noorInvoice = install("noor", "invoice_pro", 24 * 200, { subscription_expires_at: fromNow(24 * 150) });
   install("noor", "google_shopping", 24 * 90, { subscription_expires_at: null });
-  install("noor", "sharwa_ai", 24 * 60, { subscription_expires_at: ahead(24 * 5) });
+  install("noor", "sharwa_ai", 24 * 60, { subscription_expires_at: fromNow(24 * 5) });
   const atyabBot = install("atyab", "whatsapp_bot", 24 * 80);
   const zahraLoyalty = install("zahra", "loyalty_plus", 24 * 50, { suspended_by_platform: true, is_active: false });
   install("techy", "sms_gateway", 24 * 40, { subscription_expires_at: at(24 * 3) });
@@ -675,8 +680,8 @@ function seed(): PlatformState {
   ev("jeeb", "payment.failed", "techy", "discarded", "حدث مكرر.", { reference: "ORD-12" }, 200);
 
   // ── deactivation lifecycle ─────────────────────────────────────────────────────────
-  state.deactivations.push({ id: nextPlatformId(state, "deactivation"), schema_name: "closed", status: "closed", reason: "طلب التاجر إغلاق المتجر.", grace_period_ends_at: at(24 * 30), settled_custody: true, created_at: at(24 * 60), updated_at: at(24 * 20), by: "admin" });
-  state.deactivations.push({ id: nextPlatformId(state, "deactivation"), schema_name: "kidswear", status: "suspended", reason: "مخالفة سياسة المحتوى — بانتظار رد التاجر.", grace_period_ends_at: ahead(24 * 9), settled_custody: false, created_at: at(24 * 5), updated_at: at(24 * 5), by: "admin" });
+  state.deactivations.push({ id: nextPlatformId(state, "deactivation"), schema_name: "closed", status: "closed", reason: "طلب التاجر إغلاق المتجر.", grace_period_ends_at: at(24 * 30), settled_custody: true, created_at: at(24 * 60), updated_at: at(24 * 20), by: "admin", reinstated_at: null });
+  state.deactivations.push({ id: nextPlatformId(state, "deactivation"), schema_name: "kidswear", status: "suspended", reason: "مخالفة سياسة المحتوى — بانتظار رد التاجر.", grace_period_ends_at: ahead(24 * 9), settled_custody: false, created_at: at(24 * 5), updated_at: at(24 * 5), by: "admin", reinstated_at: null });
   const kidswear = state.clients.find((c) => c.schema_name === "kidswear");
   if (kidswear) kidswear.is_active = false;
 
@@ -725,9 +730,12 @@ export function tickJobs(c: ClientRow): void {
   c.pending_job = null;
 }
 
+/** Django's sweeper thresholds (`retry_stalled_tenant_provisioning`): pending > 5 min, provisioning > 20 min. */
 export function isStalled(c: ClientRow): boolean {
+  if (c.pending_job) return false;
+  if (c.provisioning_status === "pending") return FIXTURE_NOW - Date.parse(c.created_on) > 5 * 60_000;
   if (c.provisioning_status !== "provisioning" || !c.provisioning_started_at) return false;
-  return FIXTURE_NOW - Date.parse(c.provisioning_started_at) > 30 * 60_000 && !c.pending_job;
+  return FIXTURE_NOW - Date.parse(c.provisioning_started_at) > 20 * 60_000;
 }
 
 /**

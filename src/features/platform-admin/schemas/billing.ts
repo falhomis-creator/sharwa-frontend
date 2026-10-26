@@ -129,7 +129,8 @@ export const bulkOverrideInputSchema = z.object({
   schema_names: z.array(z.string()).min(1, "اختر متجراً واحداً على الأقل."),
   /** `null` removes the override for the selected stores (back to «موروثة»). */
   is_enabled: z.boolean().nullable(),
-  notes: z.string().max(300),
+  /** Django's `TenantFeatureOverride.notes` is a 255-char column (INT-030). */
+  notes: z.string().max(255),
 });
 export type BulkOverrideInput = z.infer<typeof bulkOverrideInputSchema>;
 
@@ -189,6 +190,6 @@ export const assignInputSchema = z.object({
   plan_id: z.number().int().positive("اختر باقة."),
   status: z.enum(["active", "cancelled", "expired"]).default("active"),
   current_period_end: z.string().optional(),
-  notes: z.string().max(300).default(""),
+  notes: z.string().max(255).default(""),
 });
 export type AssignInput = z.infer<typeof assignInputSchema>;

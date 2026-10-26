@@ -132,7 +132,7 @@ export function FeaturesTab({ schema, storeName }: { schema: string; storeName: 
                       <Input
                         value={d.notes}
                         onChange={(e) => setDraft(f.code, { notes: e.target.value }, serverDraft(f))}
-                        maxLength={300}
+                        maxLength={255}
                         placeholder="ملاحظة الاستثناء"
                         aria-label={`ملاحظة استثناء ${f.name}`}
                         className="h-11 w-full md:w-64 lg:h-8"

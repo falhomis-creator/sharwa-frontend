@@ -2,7 +2,7 @@ import { storefrontAdapter } from "@/lib/bff/storefront-adapter";
 import { mockJson } from "@/mocks/runtime";
 import { publicOrder } from "@/mocks/storefront/checkout";
 
-/** `[NEEDS BACKEND]` `GET /api/v1/orders/public/<public_uuid>/` — success page and gateway return (M12 §7). */
+/** `GET /api/v1/orders/public/<public_uuid>/` (Django, INT-014) — success page and gateway return (M12 §7). */
 export async function GET(request: Request, { params }: RouteContext<"/api/bff/orders/public/[uuid]">) {
   const { uuid } = await params;
   return storefrontAdapter(request, `/api/v1/orders/public/${encodeURIComponent(uuid)}/`, ({ store }) => {

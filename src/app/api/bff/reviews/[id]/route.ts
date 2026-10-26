@@ -1,3 +1,4 @@
+import { liveOrMock } from "@/lib/bff/live-route";
 import { mockRoute, readBody, respond } from "@/lib/bff/mock-route";
 import { replyToReview } from "@/mocks/customers/state";
 
@@ -7,5 +8,7 @@ import { replyToReview } from "@/mocks/customers/state";
  */
 export async function PATCH(request: Request, { params }: RouteContext<"/api/bff/reviews/[id]">) {
   const { id } = await params;
-  return mockRoute(request, async ({ store }) => respond(replyToReview(store, Number(id), await readBody(request))), { permission: "customers.edit_profile" });
+  return liveOrMock(request, "customers", `/api/v1/reviews/${encodeURIComponent(id)}/`, () =>
+    mockRoute(request, async ({ store }) => respond(replyToReview(store, Number(id), await readBody(request))), { permission: "customers.edit_profile" }),
+  );
 }

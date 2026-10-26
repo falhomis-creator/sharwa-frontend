@@ -1,5 +1,6 @@
 import "server-only";
 import { UpstreamUnavailableError, upstreamFetch, type UpstreamContext } from "@/lib/bff/upstream";
+import { getCsrfToken } from "@/lib/csrf";
 import { mockJson } from "@/mocks/runtime";
 
 /**
@@ -28,6 +29,32 @@ export async function tryTarget(
         ? { body: JSON.stringify(init.json ?? {}), headers: { "content-type": "application/json" } }
         : {}),
     });
+    return notShipped(res.status) ? null : res;
+  } catch (err) {
+    if (err instanceof UpstreamUnavailableError) return null;
+    throw err;
+  }
+}
+
+/**
+ * Store-scoped `target → fixture` (M03 dashboard rows, INT-003): same rule as {@link tryTarget},
+ * but on the store's URLConf — `X-Store-Domain`, the session cookie and, for a write, the CSRF
+ * header are forwarded, so Django answers 401/403/429 itself. `null` only while the route does
+ * not exist upstream (404/405/501 — also an unknown fixture store) or Django is unreachable.
+ */
+export async function tryStoreTarget(
+  request: Request,
+  path: string,
+  ctx: UpstreamContext,
+  method: "GET" | "POST" = "GET",
+): Promise<Response | null> {
+  const headers: Record<string, string> = {};
+  if (method === "POST" && !request.headers.get("x-csrftoken") && ctx.storeHost) {
+    const csrf = await getCsrfToken(ctx.storeHost, request.headers.get("cookie"));
+    if (csrf) headers["x-csrftoken"] = csrf;
+  }
+  try {
+    const res = await upstreamFetch(request, path, ctx, { method, headers, ...(method === "POST" ? { body: null } : {}) });
     return notShipped(res.status) ? null : res;
   } catch (err) {
     if (err instanceof UpstreamUnavailableError) return null;

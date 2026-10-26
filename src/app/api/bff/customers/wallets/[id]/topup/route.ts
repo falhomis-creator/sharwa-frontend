@@ -1,3 +1,4 @@
+import { liveOrMock } from "@/lib/bff/live-route";
 import { mockRoute, readBody } from "@/lib/bff/mock-route";
 import { actorName } from "@/mocks/catalog/products";
 import { mockJson } from "@/mocks/runtime";
@@ -8,7 +9,7 @@ import { MANUAL_WALLET_REASONS, appendWalletTransaction, transactionView, wallet
  * → `{display_balance, transaction}` (M35 US-35.2). Only the three manual reasons are
  * accepted (FR-35.03); a repeated `idempotency_key` returns the first transaction (FR-35.09).
  */
-export async function POST(request: Request, { params }: RouteContext<"/api/bff/customers/wallets/[id]/topup">) {
+async function mockPOST(request: Request, { params }: RouteContext<"/api/bff/customers/wallets/[id]/topup">) {
   const { id } = await params;
   return mockRoute(
     request,
@@ -34,4 +35,16 @@ export async function POST(request: Request, { params }: RouteContext<"/api/bff/
     },
     { permission: "customers.edit_profile" },
   );
+}
+
+// INT-028: `liveOrMock` module `wallets` → Django `api/views_wallets.py`; the fixture handlers above otherwise.
+type Ctx = RouteContext<"/api/bff/customers/wallets/[id]/topup">;
+
+async function upstream(ctx: Ctx) {
+  const p = await ctx.params;
+  return `/api/v1/customers/wallets/${encodeURIComponent(p.id)}/topup/`;
+}
+
+export async function POST(request: Request, ctx: Ctx) {
+  return liveOrMock(request, "wallets", await upstream(ctx), () => mockPOST(request, ctx));
 }

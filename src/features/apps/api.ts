@@ -132,6 +132,16 @@ export function useSaveAiSettings() {
   });
 }
 
+/** INT-041: a fresh pairing (new QR) after a dropped or expired WhatsApp session — owner only. */
+export function useAiReconnect() {
+  const store = useStore();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiFetch("/api/bff/apps/sharwa-ai/reconnect", aiStatusSchema, { method: "POST" }),
+    onSuccess: (data) => qc.setQueryData(appKeys(store).aiStatus, data),
+  });
+}
+
 /** FR-31.08: requested on click, used once, never stored. */
 export function fetchConsoleToken() {
   return apiFetch("/api/bff/apps/sharwa-ai/console-token", consoleTokenSchema, { method: "POST" });

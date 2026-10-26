@@ -19,7 +19,7 @@ import { useDeleteZone, useSaveZone, useZones } from "@/features/platform-admin/
 import { useCanWrite } from "@/features/platform-admin/components/admin-session";
 import { Code, ConfirmDialog, ReadOnlyNote, StatusText, toastError } from "@/features/platform-admin/components/bits";
 import { ZoneMap } from "@/features/platform-admin/components/zones/zone-map";
-import { zoneInputSchema, type Zone } from "@/features/platform-admin/schemas";
+import { zoneInputSchema, zoneUpdateSchema, type Zone } from "@/features/platform-admin/schemas";
 import { toast } from "sonner";
 
 /**
@@ -48,9 +48,9 @@ const fromZone = (z: Zone): FormValues => ({
   price: z.price,
   currency: z.currency,
   volumetric_divisor: String(z.volumetric_divisor),
-  center_latitude: z.center_latitude,
-  center_longitude: z.center_longitude,
-  radius_km: z.radius_km,
+  center_latitude: z.center_latitude ?? "",
+  center_longitude: z.center_longitude ?? "",
+  radius_km: z.radius_km ?? "",
   is_active: z.is_active,
   sort_order: String(z.sort_order),
 });
@@ -74,12 +74,16 @@ export function ZonesScreen() {
         id: "center",
         header: headerLabel("المركز"),
         cell: ({ row }) => (
-          <Mono className="whitespace-nowrap text-xs text-muted-foreground">
-            {row.original.center_latitude}, {row.original.center_longitude}
-          </Mono>
+          row.original.center_latitude && row.original.center_longitude ? (
+            <Mono className="whitespace-nowrap text-xs text-muted-foreground">
+              {row.original.center_latitude}, {row.original.center_longitude}
+            </Mono>
+          ) : (
+            <span className="text-xs text-muted-foreground">بلا حدود</span>
+          )
         ),
       },
-      { id: "radius", meta: { numeric: true }, header: headerLabel("نصف القطر (كم)"), cell: ({ row }) => <Mono>{row.original.radius_km}</Mono> },
+      { id: "radius", meta: { numeric: true }, header: headerLabel("نصف القطر (كم)"), cell: ({ row }) => <Mono>{row.original.radius_km ?? "—"}</Mono> },
       { id: "active", header: headerLabel("الحالة"), cell: ({ row }) => (row.original.is_active ? <StatusText tone="success">نشطة</StatusText> : <StatusText tone="muted">غير نشطة</StatusText>) },
       { id: "sort", meta: { numeric: true }, header: headerLabel("الترتيب"), cell: ({ row }) => <Mono className="text-muted-foreground">{row.original.sort_order}</Mono> },
       {
@@ -190,7 +194,8 @@ function ZoneSheet({ zone, onClose }: { zone: Zone | "new" | null; onClose: () =
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = zoneInputSchema.safeParse(v);
+    // An existing zone keeps its code (issued waybills reference it — Django refuses a change).
+    const parsed = isNew ? zoneInputSchema.safeParse(v) : zoneUpdateSchema.safeParse(v);
     if (!parsed.success) {
       const next: typeof errors = {};
       for (const issue of parsed.error.issues) {
@@ -202,7 +207,7 @@ function ZoneSheet({ zone, onClose }: { zone: Zone | "new" | null; onClose: () =
     }
     try {
       await save.mutateAsync(parsed.data);
-      toast.success(isNew ? `أُضيفت المنطقة ${parsed.data.code}.` : `حُفظت المنطقة ${parsed.data.code}.`);
+      toast.success(isNew ? `أُضيفت المنطقة ${v.code}.` : `حُفظت المنطقة ${existing?.code ?? v.code}.`);
       onClose();
     } catch (err) {
       if (isApiError(err) && err.fields) {
@@ -213,7 +218,7 @@ function ZoneSheet({ zone, onClose }: { zone: Zone | "new" | null; onClose: () =
     }
   }
 
-  const field = (k: keyof FormValues, label: string, opts: { dir?: "ltr"; mono?: boolean; inputMode?: "decimal" | "numeric"; placeholder?: string } = {}) => (
+  const field = (k: keyof FormValues, label: string, opts: { dir?: "ltr"; mono?: boolean; inputMode?: "decimal" | "numeric"; placeholder?: string; disabled?: boolean } = {}) => (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={`zone-${k}`}>{label}</Label>
       <Input
@@ -221,6 +226,7 @@ function ZoneSheet({ zone, onClose }: { zone: Zone | "new" | null; onClose: () =
         dir={opts.dir}
         inputMode={opts.inputMode}
         placeholder={opts.placeholder}
+        disabled={opts.disabled}
         className={opts.mono ? "h-11 font-mono lg:h-9" : "h-11 lg:h-9"}
         value={String(v[k])}
         onChange={(e) => set(k, e.target.value as never)}
@@ -243,7 +249,7 @@ function ZoneSheet({ zone, onClose }: { zone: Zone | "new" | null; onClose: () =
           <SheetDescription>السعر لكل شحنة بالعملة المختارة؛ المقسوم الحجمي الافتراضي 5000.</SheetDescription>
         </SheetHeader>
         <form onSubmit={(e) => void submit(e)} noValidate className="flex flex-col gap-4 px-4" id="zone-form">
-          {field("code", "الكود", { dir: "ltr", mono: true, placeholder: "SAN-01" })}
+          {field("code", "الكود", { dir: "ltr", mono: true, placeholder: "SAN-01", disabled: !isNew })}
           {field("name", "الاسم")}
           <div className="grid grid-cols-2 gap-3">
             {field("price", "السعر", { dir: "ltr", mono: true, inputMode: "decimal" })}
@@ -263,7 +269,7 @@ function ZoneSheet({ zone, onClose }: { zone: Zone | "new" | null; onClose: () =
             {field("center_longitude", "خط الطول", { dir: "ltr", mono: true, inputMode: "decimal" })}
           </div>
           <div className="grid grid-cols-3 gap-3">
-            {field("radius_km", "نصف القطر (كم)", { dir: "ltr", mono: true, inputMode: "decimal" })}
+            {field("radius_km", "نصف القطر (كم) — اختياري", { dir: "ltr", mono: true, inputMode: "decimal" })}
             {field("volumetric_divisor", "المقسوم الحجمي", { dir: "ltr", mono: true, inputMode: "numeric" })}
             {field("sort_order", "الترتيب", { dir: "ltr", mono: true, inputMode: "numeric" })}
           </div>

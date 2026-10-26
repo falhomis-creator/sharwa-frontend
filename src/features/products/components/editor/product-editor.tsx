@@ -383,6 +383,11 @@ function EditorForm({
             };
             // With variants the stock lives on each variant (FR-04.09).
             if (builderActive) payload.stock = "0";
+            // INT-005: a saved product sends `stock` only when the merchant changed it. Django shows
+            // a backordered (negative) stock as 0, so echoing the loaded value back would reset the
+            // backorder to 0 on every unrelated save — and is refused outright for products whose
+            // stock lives on variants, serial numbers or locations.
+            if (product && Number(payload.stock ?? 0) === Number(initial.stock || 0)) delete payload.stock;
             const saved = await save.mutateAsync(payload);
             clearDraft();
             setDraftDismissed(true);

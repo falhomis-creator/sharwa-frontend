@@ -4,6 +4,10 @@ import { z } from "zod";
 export const SUPPLIER_CODES = ["cj", "makhazen", "knawat", "flat_feed"] as const;
 export type SupplierCode = (typeof SUPPLIER_CODES)[number];
 export const SUPPLIER_LABELS: Record<SupplierCode, string> = { cj: "CJ Dropshipping", makhazen: "مخازن", knawat: "كنوات", flat_feed: "ملف مسطّح" };
+/** INT-039: a job may span every supplier (`price_sync` after a global rule change → `all`). */
+export const JOB_SUPPLIER_CODES = [...SUPPLIER_CODES, "all"] as const;
+export type JobSupplierCode = (typeof JOB_SUPPLIER_CODES)[number];
+export const JOB_SUPPLIER_LABELS: Record<JobSupplierCode, string> = { ...SUPPLIER_LABELS, all: "كل الموردين" };
 
 export const ROUNDINGS = ["none", "nearest_1", "end_99", "end_95", "end_00"] as const;
 export type Rounding = (typeof ROUNDINGS)[number];
@@ -62,6 +66,10 @@ export const FEED_FIELD_LABELS: Record<string, string> = {
 
 const page = <T extends z.ZodTypeAny>(item: T) => z.object({ count: z.number(), next: z.number().nullable().optional(), previous: z.number().nullable().optional(), results: z.array(item) });
 
+/** INT-039: Django's order-forwarding knobs per supplier (`SupplierConnection`). */
+export const orderSettingsSchema = z.object({ forward_enabled: z.boolean(), forward_cod: z.boolean(), default_country_code: z.string(), shipping_method: z.string() });
+export type OrderSettings = z.infer<typeof orderSettingsSchema>;
+
 export const syncSettingsSchema = z.object({
   sync_products: z.boolean(),
   sync_prices: z.boolean(),
@@ -69,6 +77,7 @@ export const syncSettingsSchema = z.object({
   intervals: z.object({ products_minutes: z.number(), prices_minutes: z.number(), inventory_minutes: z.number() }),
   stock_buffer: z.number(),
   hide_when_out_of_stock: z.boolean(),
+  orders: orderSettingsSchema.optional(),
 });
 export type SyncSettings = z.infer<typeof syncSettingsSchema>;
 
@@ -83,6 +92,11 @@ export const connectionSchema = z.object({
   webhook_configured: z.boolean(),
   attention_count: z.number(),
   products_count: z.number(),
+  // INT-039 — what Django's adapter registry says about this supplier (optional so older fixtures still parse).
+  reauth_required: z.boolean().optional(),
+  webhook_supported: z.boolean().optional(),
+  inventory_sync_supported: z.boolean().optional(),
+  credential_fields: z.array(z.object({ name: z.string(), label: z.string(), type: z.string(), help: z.string() })).optional(),
 });
 export type Connection = z.infer<typeof connectionSchema>;
 export const connectionsSchema = z.object({ results: z.array(connectionSchema), attention_total: z.number() });
@@ -97,6 +111,10 @@ export const settingsFormSchema = z.object({
   inventory_minutes: z.string().regex(/^\d+$/, "عدد دقائق صحيح."),
   stock_buffer: z.string().regex(/^\d+$/, "عدد صحيح غير سالب."),
   hide_when_out_of_stock: z.boolean(),
+  forward_enabled: z.boolean(),
+  forward_cod: z.boolean(),
+  default_country_code: z.string().regex(/^([A-Za-z]{2})?$/, "رمز دولة من حرفين لاتينيين (مثل YE أو SA)."),
+  shipping_method: z.string().max(100, "100 حرف كحد أقصى."),
 });
 export type SettingsForm = z.infer<typeof settingsFormSchema>;
 
@@ -111,8 +129,13 @@ export const ruleSchema = z.object({
   fx_rate: z.string(),
   priority: z.number(),
   is_active: z.boolean(),
+  // INT-039 — Django's pricing engine terms (`PricingRule`): added before the markup, after it, and the margin floor.
+  fixed_add: z.string().optional(),
+  shipping_estimate: z.string().optional(),
+  min_margin_percent: z.string().optional(),
 });
 export type PricingRule = z.infer<typeof ruleSchema>;
+const optionalMoney = z.string().regex(/^(\d{1,6}(\.\d{1,2})?)?$/, "رقم حتى خانتين.");
 
 export const ruleFormSchema = z
   .object({
@@ -125,6 +148,9 @@ export const ruleFormSchema = z
     fx_rate: z.string(),
     priority: z.string().regex(/^[1-9]\d*$/, "عدد صحيح موجب."),
     is_active: z.boolean(),
+    fixed_add: optionalMoney,
+    shipping_estimate: optionalMoney,
+    min_margin_percent: z.string().regex(/^(\d{1,3}(\.\d{1,2})?)?$/, "نسبة حتى خانتين."),
   })
   .superRefine((v, ctx) => {
     if (v.scope_type !== "all" && !v.scope_value) ctx.addIssue({ code: "custom", path: ["scope_value"], message: v.scope_type === "supplier" ? "اختر المورد." : "اختر الفئة." });
@@ -141,7 +167,8 @@ export const simulationSchema = z.object({
 export type Simulation = z.infer<typeof simulationSchema>;
 
 export const catalogItemSchema = z.object({
-  id: z.number(),
+  /** A row id; a live-search hit not stored yet (CJ) is `ext:<pid>` (INT-039). */
+  id: z.union([z.number(), z.string()]),
   name: z.string(),
   image: z.string().nullable(),
   category: z.string(),
@@ -157,7 +184,7 @@ export const catalogListSchema = page(catalogItemSchema);
 
 export const jobSchema = z.object({
   id: z.number(),
-  supplier_code: z.enum(SUPPLIER_CODES),
+  supplier_code: z.enum(JOB_SUPPLIER_CODES),
   job_type: z.enum(JOB_TYPES),
   status: z.enum(JOB_STATUSES),
   created_at: z.string(),

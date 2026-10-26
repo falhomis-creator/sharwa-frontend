@@ -4,7 +4,8 @@
  *   - client validation («قيمة المصروف موجبة دائماً») sends nothing;
  *   - keyboard entry: `N` → amount, Enter saves, toast, the form empties but keeps date/currency;
  *   - `category`/`from` in the URL reproduce the same rows in a new tab;
- *   - no edit/delete affordance; staff get the owner-only state and a 403;
+ *   - no edit/delete affordance; access = owner or `expenses.manage` (INT-043): the manager
+ *     enters an expense under her own name, the cashier gets the forbidden state and a 403;
  *   - 390px: «مصروف جديد» opens the bottom drawer.
  * Writes go to `glow` so the `noor` screenshots stay stable.
  *
@@ -113,11 +114,21 @@ async function main() {
   await tab.waitForSelector("[data-testid=expense-row]");
   check((await tab.locator("[data-testid=expense-row]").count()) === rentRows.length, "the same link in a new tab gives the same rows");
 
-  // ── staff (§10) ──────────────────────────────────────────────────────────────────
-  const staff = await page(browser, { store: "noor", session: "manager" });
-  await staff.goto(`${NOOR}/dashboard/wallet/expenses`, { waitUntil: "load" });
-  await staff.waitForSelector("[data-testid=forbidden]");
-  check((await api(staff, "GET", "/api/bff/expenses")).status === 403, "staff: owner-only screen and a 403 from the BFF");
+  // ── staff (§10 → INT-043: `expenses.manage`) ─────────────────────────────────────
+  const manager = await page(browser, { store: "glow", session: "manager" });
+  await manager.goto(`${GLOW}/dashboard/wallet/expenses`, { waitUntil: "load" });
+  await manager.waitForSelector("[data-testid=expense-form]");
+  const byManager = await api(manager, "POST", "/api/bff/expenses/", { category: "salaries", amount: "300", currency: "SAR", expense_date: date, note: "قيد المدير" });
+  check(byManager.status === 201 && (byManager.json as { created_by_name: string | null }).created_by_name === "منى القحطاني", "manager (expenses.manage): 201 and «أدخله» = her name");
+  const ownerRow = ((await api(writer, "GET", "/api/bff/expenses")).json as { months: Array<{ rows: Array<{ note: string; created_by_name: string | null }> }> }).months
+    .flatMap((m) => m.rows)
+    .find((r) => r.note === "فحص لوحة المفاتيح");
+  check(ownerRow?.created_by_name === null, "owner's entry: created_by_name null («المالك»)");
+  const cashier = await page(browser, { store: "noor", session: "staff" });
+  await cashier.goto(`${NOOR}/dashboard/wallet/expenses`, { waitUntil: "load" });
+  await cashier.waitForLoadState("networkidle");
+  check((await cashier.locator("[data-testid=expense-form]").count()) === 0, "cashier (no expenses.manage): no entry form");
+  check((await api(cashier, "GET", "/api/bff/expenses")).status === 403, "cashier: a 403 from the BFF");
 
   // ── visual: mobile drawer, tablet, dark, empty ──────────────────────────────────
   const mobile = await page(browser, { store: "noor", width: 390 });

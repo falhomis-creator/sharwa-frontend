@@ -37,6 +37,7 @@ export interface MarketSettings {
   inventory_sync: boolean;
   stock_buffer: number;
   order_pull: boolean;
+  import_marketplace_fulfilled: boolean;
   default_order_status_id: number | null;
 }
 
@@ -118,8 +119,8 @@ function seed(store: string | null): MarketsState {
     noon: { marketplace: "noon", connected: false, needs_reauth: false, account_label: null, connected_at: null },
   };
   const settings: Record<Market, MarketSettings> = {
-    amazon: { currency: "SAR", markup_percent: "15.00", fx_rate: "1.0000", auto_push: false, inventory_sync: true, stock_buffer: 2, order_pull: true, default_order_status_id: null },
-    noon: { currency: "AED", markup_percent: "12.00", fx_rate: "0.9790", auto_push: false, inventory_sync: true, stock_buffer: 0, order_pull: true, default_order_status_id: null },
+    amazon: { currency: "SAR", markup_percent: "15.00", fx_rate: "1.0000", auto_push: false, inventory_sync: true, stock_buffer: 2, order_pull: true, import_marketplace_fulfilled: true, default_order_status_id: null },
+    noon: { currency: "AED", markup_percent: "12.00", fx_rate: "0.9790", auto_push: false, inventory_sync: true, stock_buffer: 0, order_pull: true, import_marketplace_fulfilled: true, default_order_status_id: null },
   };
   const state: MarketsState = { conns, settings, listings: [], jobs: [], orders: [] };
   if (empty) return state;
@@ -316,6 +317,7 @@ export function saveSettings(store: string | null, m: Market, b: Body): MockResu
     inventory_sync: b.inventory_sync === true,
     stock_buffer: buffer,
     order_pull: b.order_pull === true,
+    ...(b.import_marketplace_fulfilled === undefined ? {} : { import_marketplace_fulfilled: b.import_marketplace_fulfilled === true }),
     default_order_status_id: statusId,
   });
   return { ok: true, data: settingsView(store, m) };
@@ -517,10 +519,18 @@ export function confirmShipment(store: string | null, orderId: number, actor: st
 }
 
 export function connectNoon(store: string | null, b: Body): MockResult<ReturnType<typeof hubView>[number]> {
+  // Django (INT-038): API key + seller id + country (SA → SAR, AE → AED, the market's currency follows).
   const key = str(b.api_key);
-  if (key.length < 16) return { ok: false, status: 400, body: { api_key: ["مفتاح API غير صالح (16 حرفاً على الأقل)."] } };
+  const seller = str(b.seller_id);
+  const country = str(b.marketplace_country).toUpperCase();
+  const errors: Record<string, string[]> = {};
+  if (!key) errors.api_key = ["أدخل مفتاح API."];
+  if (!seller) errors.seller_id = ["أدخل معرّف البائع."];
+  if (country !== "SA" && country !== "AE") errors.marketplace_country = ["اختر دولة نون (السعودية أو الإمارات)."];
+  if (Object.keys(errors).length) return { ok: false, status: 400, body: errors };
   const c = marketsState(store).conns.noon;
-  Object.assign(c, { connected: true, needs_reauth: false, account_label: `noon partner ••••${key.slice(-4)}`, connected_at: new Date().toISOString() });
+  Object.assign(c, { connected: true, needs_reauth: false, account_label: `${seller} · ${country}`, connected_at: new Date().toISOString() });
+  marketsState(store).settings.noon.currency = country === "AE" ? "AED" : "SAR";
   return { ok: true, data: hubView(store).find((x) => x.marketplace === "noon")! };
 }
 

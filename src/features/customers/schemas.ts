@@ -1,9 +1,10 @@
 import { z } from "zod";
 
 /**
- * M07 data contracts (spec §7). Every row is `[NEEDS BACKEND]` — there is no `Customer`
- * model upstream: the customer is DERIVED from orders and keyed by the normalised phone
- * (FR-07.01). Served today by `/api/bff/customers/*` from `src/mocks/customers/*`.
+ * M07 data contracts (spec §7). There is no `Customer` model upstream: the customer is
+ * DERIVED from orders and keyed by the normalised phone (FR-07.01). Served by Django
+ * `api/views_customers.py` since INT-017 (`liveOrMock` module `customers`), the fixture
+ * `src/mocks/customers/*` otherwise.
  * Money is always a server string (`display_*`); the UI never formats or sums it (FR-07.04).
  */
 

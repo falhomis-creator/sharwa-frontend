@@ -53,8 +53,9 @@ export function patchTracking(store: string | null, body: Record<string, unknown
   for (const f of TRACKING_ID_FIELDS) {
     if (!(f in body)) continue;
     const v = String(body[f] ?? "").trim();
-    if (v.length > 64) errors[f] = ["64 حرفاً كحد أقصى."];
-    else if (/\s|<|>|"/.test(v)) errors[f] = ["المعرّف لا يحتوي مسافات أو رموز HTML."];
+    const limit = f === "google_ads_conversion_label" ? 100 : 50; // Django column limits (INT-023)
+    if (v.length > limit) errors[f] = [`${limit} حرفاً كحد أقصى.`];
+    else if (/\s|<|>|"|'/.test(v)) errors[f] = ["المعرّف لا يحتوي مسافات أو رموز HTML."];
     else nextIds[f] = v;
   }
   const nextTokens = { ...r.tokens };
@@ -64,6 +65,7 @@ export function patchTracking(store: string | null, body: Record<string, unknown
     if (v === null) nextTokens[f] = null;
     else if (typeof v === "string" && v.trim()) {
       if (v.trim().length < 10) errors[f] = ["الرمز أقصر من المعتاد — انسخه كاملاً من مدير الأعمال."];
+      else if (v.trim().length > 255) errors[f] = ["الرمز أطول من المسموح (255)."];
       else nextTokens[f] = v.trim();
     }
   }

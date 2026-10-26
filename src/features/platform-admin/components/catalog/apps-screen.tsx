@@ -319,7 +319,7 @@ function AppOverrides({ apps, canWrite }: { apps: App[]; canWrite: boolean }) {
           <Switch checked={billed} onCheckedChange={setBilled} data-testid="ov-billed" />
         </label>
         <Field label="ملاحظة" htmlFor="ov-notes">
-          <Input id="ov-notes" className={INPUT} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={300} />
+          <Input id="ov-notes" className={INPUT} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={255} />
         </Field>
         <div className="md:col-span-2">
           <Button className={BTN} onClick={() => void submit()} disabled={create.isPending} data-testid="ov-submit">

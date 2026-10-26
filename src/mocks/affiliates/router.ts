@@ -5,8 +5,8 @@ import { createPartner, getPartner, listPartners, listSales, markPaid, partnerSu
 
 /**
  * `/api/bff/{affiliates,influencers}/*` → the proposed `/api/v1/{affiliates,influencers}/*`
- * (M17 §7, every row `[NEEDS BACKEND]`). The path after the resource is the upstream path
- * verbatim, so the day Django ships it this becomes a passthrough.
+ * (M17 §7 — live provider: Django `api/views_partners.py`, INT-034, module `affiliates`). The path
+ * after the resource is the upstream path verbatim.
  *
  * Gates: the plan feature (`affiliates` / `influencers`, FR-17.01) for every row; writes
  * (create, edit, stop, mark paid) are the OWNER's — none of the 35 permission keys covers

@@ -5,6 +5,7 @@ import { mockJson } from "@/mocks/runtime";
 import { categoryTree, listPublicProducts, productDetail } from "@/mocks/storefront/catalog";
 import { cartAction, clearCart, getCart, serializeCart, setCurrency } from "@/mocks/storefront/cart";
 import { storeState } from "@/mocks/store-state";
+import { orderByUuid } from "@/mocks/orders/state";
 
 /**
  * Passthrough fixtures for the READY storefront rows of `/api/v1/*` (ready-api-v1 #2–#7,
@@ -106,7 +107,8 @@ registerPassthroughMock("pwa/install-event/", async (req, ctx) => {
   const log = pwa(ctx.store);
   const now = Date.now();
   log.hits = log.hits.filter((t) => now - t < 60_000);
-  if (log.hits.length >= 30) return mockJson({ detail: "طلبات كثيرة جداً، حاول لاحقاً." }, { status: 429 });
+  // Django (INT-016): a very loose per-IP ceiling (300/min) — Yemeni CGNAT shares one IP.
+  if (log.hits.length >= 300) return mockJson({ detail: "طلبات كثيرة جداً، حاول لاحقاً." }, { status: 429 });
   log.hits.push(now);
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   if (!INSTALL_EVENTS.includes(String(body.event_type))) return mockJson({ event_type: ["قيمة غير صالحة."] }, { status: 400 });
@@ -129,13 +131,27 @@ registerPassthroughMock("push/vapid-public-key/", (req) => {
 
 registerPassthroughMock("push/subscribe/", async (req, ctx) => {
   if (req.method !== "POST") return undefined;
-  const body = (await req.json().catch(() => ({}))) as { endpoint?: string; keys?: { p256dh?: string; auth?: string }; customer_phone?: string };
+  const body = (await req.json().catch(() => ({}))) as {
+    endpoint?: string;
+    keys?: { p256dh?: string; auth?: string };
+    customer_phone?: string;
+    order_uuid?: string | null;
+  };
   if (!body.endpoint || !body.keys?.p256dh || !body.keys?.auth) return mockJson({ detail: "بيانات الاشتراك ناقصة." }, { status: 400 });
-  pwa(ctx.store).subscriptions.set(body.endpoint, {
+  // Like Django (INT-016): the phone comes from the order (`order_uuid`), never from the client;
+  // an anonymous re-subscribe keeps the phone an earlier order linked.
+  let phone: string | null = null;
+  if (body.order_uuid) {
+    const order = orderByUuid(ctx.store, body.order_uuid);
+    if (!order) return mockJson({ order_uuid: ["لم نجد هذا الطلب."] }, { status: 400 });
+    phone = order.customer_phone;
+  }
+  const subs = pwa(ctx.store).subscriptions;
+  subs.set(body.endpoint, {
     endpoint: body.endpoint,
     p256dh: body.keys.p256dh,
     auth: body.keys.auth,
-    customer_phone: body.customer_phone ?? null,
+    customer_phone: phone ?? subs.get(body.endpoint)?.customer_phone ?? null,
     is_active: true,
   });
   return mockJson({ ok: true }, { status: 201 });
@@ -150,7 +166,35 @@ registerPassthroughMock("push/unsubscribe/", async (req, ctx) => {
   return mockJson({ ok: true });
 });
 
-/** Read-only view for the storefront check script and future M25/M34 stats. */
+/** Read-only view for the storefront check script and the merchant push card (M44 US-44.5). */
 export function pwaLog(store: string | null) {
   return pwa(store);
+}
+
+/** M44 US-44.5 fixture for `GET /api/v1/push/stats/`. */
+export function pushStats(store: string | null) {
+  return { active_subscribers: [...pwa(store).subscriptions.values()].filter((s) => s.is_active).length };
+}
+
+const lastBroadcast = new Map<string, number>();
+
+/** M44 US-44.5 fixture for `POST /api/v1/push/test/` — same checks and messages as Django (`api/views_push.py`). */
+export function pushTest(store: string | null, body: Record<string, unknown>) {
+  const title = String(body.title ?? "").trim();
+  const text = String(body.body ?? "").trim();
+  const errors: Record<string, string[]> = {};
+  if (!title) errors.title = ["أدخل عنوان الإشعار."];
+  else if ([...title].length > 60) errors.title = ["العنوان 60 حرفاً على الأكثر."];
+  if (!text) errors.body = ["أدخل نص الإشعار."];
+  else if ([...text].length > 200) errors.body = ["النص 200 حرف على الأكثر."];
+  if (Object.keys(errors).length) return { ok: false as const, status: 400, body: errors };
+  const count = pushStats(store).active_subscribers;
+  if (count === 0) return { ok: false as const, status: 400, body: { detail: "لا يوجد مشتركون نشطون لإشعارات المتصفح بعد." } };
+  const key = store ?? "";
+  const now = Date.now();
+  if (now - (lastBroadcast.get(key) ?? 0) < 60_000) {
+    return { ok: false as const, status: 429, body: { detail: "أُرسل إشعار قبل قليل — انتظر دقيقة قبل الإرسال مجدداً." } };
+  }
+  lastBroadcast.set(key, now);
+  return { ok: true as const, status: 202, data: { queued_for: count } };
 }

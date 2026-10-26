@@ -5,7 +5,8 @@ import { findClient, nextPlatformId, platformState, type WalletRow, type WalletT
 import { storeState } from "@/mocks/store-state";
 
 /**
- * M40 «محفظة شروة» — customer side (T181). Every row is `[NEEDS BACKEND]` (M40 §7).
+ * M40 «محفظة شروة» — customer side (T181). Fixtures behind `/api/bff/sharwa-pay/*` when the
+ * `sharwa_pay` module is not live (INT-048: Django `sharwapay/customer_api.py`).
  *
  * ONE source of truth with the platform console (M20 US-20.5): wallets, top-up and
  * withdrawal requests are the rows of `platformState()` — a top-up made here is the one

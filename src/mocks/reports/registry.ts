@@ -2,9 +2,10 @@ import { reportPermission } from "@/features/reports/permissions";
 
 /**
  * `REPORT_REGISTRY` (M25 §5, discovery 02 §12) — 42 reports in 10 categories, in registry
- * order. Arabic titles are the spec's display labels. §5 marks 6 codes with `*`
- * (`not_yet_available`); `whatsapp_costs` is the one `coming_soon` row, so the index shows
- * 7 disabled rows (US-25.1 Independent Test) and all three statuses.
+ * order. Arabic titles are the spec's display labels. Statuses follow Django's registry
+ * (`products/services/reports_registry.py`, INT-027): 5 `not_yet_available` rows and
+ * `ai_forecasting` as the one `coming_soon` row (`whatsapp_costs` has a real builder there), so
+ * the index shows 6 disabled rows and all three statuses.
  *
  * Each entry also describes how the mock generates its data: `shape: "time"` reports are a
  * daily series (line chart, one table row per day); `shape: "breakdown"` reports rank a
@@ -108,7 +109,7 @@ export const REPORT_REGISTRY: readonly ReportDef[] = [
   t("customer_service", "operations", "خدمة العملاء", "المحادثات وزمن الرد الأول", [m("conversations", "المحادثات", "count", 22), m("resolved", "المحلولة", "count", 19)]),
   t("system_performance", "operations", "أداء النظام", "زمن تحميل المتجر وتوفره", [m("uptime", "التوفر", "percent", 99)], "not_yet_available"),
   b("marketing_utm", "operations", "مصادر التسويق (UTM)", "الطلبات والإيراد حسب مصدر الزيارة", { label: "المصدر", items: ["tiktok", "whatsapp", "instagram", "snapchat", "direct", "google"] }, [m("orders_count", "الطلبات", "count", 50), REVENUE_BREAKDOWN()]),
-  t("ai_forecasting", "operations", "التنبؤ الذكي", "توقع المبيعات والطلب على المخزون", [REVENUE], "not_yet_available"),
+  t("ai_forecasting", "operations", "التنبؤ الذكي", "توقع المبيعات والطلب على المخزون", [REVENUE], "coming_soon"),
   // ── local_market ──
   b("currencies", "local_market", "العملات", "المبيعات حسب عملة الدفع", { label: "العملة", items: ["ريال سعودي", "ريال يمني جديد", "ريال يمني قديم", "دولار أمريكي"] }, [m("orders_count", "الطلبات", "count", 40), REVENUE_BREAKDOWN()]),
   t("pos", "local_market", "نقاط البيع", "مبيعات نقاط البيع في الفروع يومياً", [m("sales", "المبيعات", "money", 1300), m("tickets", "الفواتير", "count", 6)]),
@@ -124,7 +125,7 @@ export const REPORT_REGISTRY: readonly ReportDef[] = [
   // ── infrastructure ──
   t("export_engine", "infrastructure", "محرك التصدير", "مهام التصدير المكتملة والفاشلة يومياً", [m("jobs", "المهام", "count", 4), m("failed", "الفاشلة", "count", 0)]),
   t("scheduled_reports", "infrastructure", "التقارير المجدولة", "التقارير المرسلة بالبريد يومياً", [m("sent", "المرسلة", "count", 3)]),
-  t("whatsapp_costs", "infrastructure", "تكاليف واتساب", "رسائل واتساب المرسلة وتكلفتها", [m("messages", "الرسائل", "count", 140), m("cost", "التكلفة", "money", 60)], "coming_soon"),
+  t("whatsapp_costs", "infrastructure", "تكاليف واتساب", "رسائل واتساب المرسلة وتكلفتها", [m("messages", "الرسائل", "count", 140), m("cost", "التكلفة", "money", 60)]),
 ];
 
 function ORDERS_BY_ZONE(): MetricDef {

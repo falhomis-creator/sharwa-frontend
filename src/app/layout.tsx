@@ -64,6 +64,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="ar"
       dir="rtl"
+      // globals.css sets `scroll-behavior: smooth`; this tells Next to switch it off during
+      // route transitions so a new page starts at the top instantly (Next.js «missing-data-scroll-behavior»).
+      data-scroll-behavior="smooth"
       suppressHydrationWarning
       className={`${ibmPlexArabic.variable} ${geistMono.variable} h-full`}
     >

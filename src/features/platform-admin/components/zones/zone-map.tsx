@@ -31,6 +31,8 @@ export function ZoneMap({ zones, highlight }: { zones: Zone[]; highlight?: strin
           <line key={`h${i}`} y1={y(BOX.minLat + i)} y2={y(BOX.minLat + i)} x1={0} x2={W} className="stroke-border" strokeWidth={0.5} />
         ))}
         {zones.map((z) => {
+          // A zone without geo bounds (allowed by Django, INT-031) has nothing to draw.
+          if (z.center_latitude === null || z.center_longitude === null || z.radius_km === null) return null;
           const cx = x(Number(z.center_longitude));
           const cy = y(Number(z.center_latitude));
           const on = z.is_active;

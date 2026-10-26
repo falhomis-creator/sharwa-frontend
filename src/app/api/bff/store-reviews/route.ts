@@ -2,7 +2,7 @@ import { respondMock, storefrontAdapter } from "@/lib/bff/storefront-adapter";
 import { mockJson } from "@/mocks/runtime";
 import { addStoreReview, storeReviewsView } from "@/mocks/engagement/state";
 
-/** `[NEEDS BACKEND]` `GET/POST /api/v1/store-reviews/` — `StoreReview` (M42 US-42.6). */
+/** Live (INT-029, Django `api/views_engagement.py`): `GET/POST /api/v1/store-reviews/` — `StoreReview` (M42 US-42.6). */
 export function GET(request: Request) {
   return storefrontAdapter(request, "/api/v1/store-reviews/", ({ store }) => mockJson(storeReviewsView(store), { delay: 100 }));
 }

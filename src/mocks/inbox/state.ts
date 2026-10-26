@@ -16,6 +16,9 @@ import { staffState } from "@/mocks/staff/state";
  */
 export const CONNECTIONS = ["meta", "tiktok", "telegram"] as const;
 export type ConnectionCode = (typeof CONNECTIONS)[number];
+/** Staff access also covers WhatsApp (Django `StaffChannelAccess`, INT-037). */
+export const ACCESS_CODES = [...CONNECTIONS, "whatsapp"] as const;
+export type AccessCode = (typeof ACCESS_CODES)[number];
 export const CONVERSATION_CHANNELS = ["facebook", "instagram", "tiktok", "telegram"] as const;
 export type ConversationChannel = (typeof CONVERSATION_CHANNELS)[number];
 export type ConversationStatus = "open" | "pending" | "resolved";
@@ -102,7 +105,7 @@ export interface MockProductLink {
 
 export interface MockAccess {
   staff_id: number;
-  channel_code: ConnectionCode;
+  channel_code: AccessCode;
   can_view: boolean;
   can_reply: boolean;
 }
@@ -267,7 +270,7 @@ function seed(store: string | null): InboxState {
   const cats = catalog(store).categories;
   state.mapping = cats.map((c, idx) => ({ category_id: c.id, external_category_id: idx === 0 ? "601226" : c.name.includes("عطور") ? "604206" : c.name.includes("إلكترونيات") ? "601739" : null }));
   for (const s of staff) {
-    for (const code of CONNECTIONS) {
+    for (const code of ACCESS_CODES) {
       // منى (id 4) may read TikTok but not reply there — the read-only reply box fixture.
       state.access.push({ staff_id: s.id, channel_code: code, can_view: !(s.id === 6 && code === "telegram"), can_reply: !(s.id === 4 && code === "tiktok") && !(s.id === 6 && code === "telegram") });
     }
@@ -569,7 +572,8 @@ export function saveKeyword(store: string | null, id: number | null, body: Recor
   if (!["text", "product_card", "catalog_link"].includes(reply)) e.reply_type = ["نوع ردّ غير صحيح."];
   if (reply === "text" && !String(merged.reply_text ?? "").trim()) e.reply_text = ["اكتب نص الردّ."];
   if (reply === "product_card" && !catalog(store).products.some((p) => p.id === Number(merged.product_id))) e.product_id = ["اختر المنتج."];
-  if (st.keywords.some((k) => k.id !== id && k.keyword === keyword && k.match_type === match)) e.keyword = ["يوجد محفّز بنفس الكلمة ونوع المطابقة."];
+  // Django: the keyword is unique whatever the match type (INT-037).
+  if (st.keywords.some((k) => k.id !== id && k.keyword.toLowerCase() === keyword.toLowerCase())) e.keyword = ["يوجد محفّز بالكلمة نفسها."];
   if (Object.keys(e).length) return { ok: false, status: 400, body: e };
   const row: MockKeyword = {
     id: existing?.id ?? st.ids.keyword++,
@@ -729,8 +733,8 @@ export function saveAccess(store: string | null, body: unknown): MockResult<Retu
   if (!Array.isArray(body)) return { ok: false, status: 400, body: { detail: "صيغة غير صحيحة." } };
   const st = inboxState(store);
   for (const row of body as Array<Record<string, unknown>>) {
-    const code = String(row.channel_code) as ConnectionCode;
-    if (!CONNECTIONS.includes(code)) return { ok: false, status: 400, body: { detail: "قناة غير معروفة." } };
+    const code = String(row.channel_code) as AccessCode;
+    if (!ACCESS_CODES.includes(code)) return { ok: false, status: 400, body: { detail: "قناة غير معروفة." } };
     const a = st.access.find((x) => x.staff_id === Number(row.staff_id) && x.channel_code === code);
     if (!a) return { ok: false, status: 400, body: { detail: "الموظف غير موجود." } };
     a.can_view = Boolean(row.can_view);

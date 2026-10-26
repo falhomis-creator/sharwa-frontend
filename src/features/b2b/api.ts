@@ -8,8 +8,8 @@ import { orderKeys } from "@/features/orders/api";
 import { b2bCreatedSchema, b2bDraftListSchema, b2bOptionsSchema, b2bResolvedSchema, type B2bDecision } from "@/features/b2b/schemas";
 
 /**
- * M36 hooks — keys `[tenant, 'b2b', …]`. The drafts are READY (`/api/v1/orders/b2b-*`,
- * transparent passthrough); only the form's choices come from `/api/bff/b2b/options`.
+ * M36 hooks — keys `[tenant, 'b2b', …]`. The drafts are Django's (`/api/v1/orders/b2b-*`,
+ * transparent passthrough); the form's choices come from `/api/bff/b2b/options` (INT-044).
  */
 export function b2bKeys(store: string) {
   return { all: storeKey(store, "b2b"), drafts: storeKey(store, "b2b", "drafts"), options: storeKey(store, "b2b", "options") };

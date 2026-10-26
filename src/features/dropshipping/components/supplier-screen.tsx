@@ -50,21 +50,32 @@ function Inner({ code }: { code: SupplierCode }) {
       {c.connected ? (
         <>
           <SettingsFormView key={JSON.stringify(c.settings)} code={code} c={c} />
-          {code !== "flat_feed" ? <WebhookSection code={code} configured={c.webhook_configured} /> : null}
+          {code !== "flat_feed" && c.webhook_supported !== false ? <WebhookSection code={code} configured={c.webhook_configured} /> : null}
           <DisconnectSection code={code} />
         </>
       ) : (
-        <ConnectForm code={code} />
+        <>
+          {c.reauth_required ? (
+            <p className="max-w-md text-sm text-destructive" role="alert" data-testid="reauth-required">
+              انتهى الربط أو أُلغي{c.last_error ? ` — ${c.last_error}` : ""}. أعد الربط بمفتاح جديد.
+            </p>
+          ) : null}
+          <ConnectForm code={code} fields={c.credential_fields} />
+        </>
       )}
     </div>
   );
 }
 
-function ConnectForm({ code }: { code: SupplierCode }) {
+type CredentialField = NonNullable<Connection["credential_fields"]>[number];
+const DEFAULT_FIELDS: CredentialField[] = [{ name: "api_key", label: "مفتاح API", type: "password", help: "" }];
+
+/** The credential inputs come from Django's supplier registry (`credential_fields`, INT-039); never shown back. */
+function ConnectForm({ code, fields: declared }: { code: SupplierCode; fields?: CredentialField[] }) {
   const id = useId();
   const connect = useConnect(code);
-  const [apiKey, setApiKey] = useState("");
-  const [storeId, setStoreId] = useState("");
+  const fields = declared ?? (code === "flat_feed" ? [] : DEFAULT_FIELDS);
+  const [values, setValues] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   return (
     <form
@@ -73,28 +84,32 @@ function ConnectForm({ code }: { code: SupplierCode }) {
       onSubmit={async (e) => {
         e.preventDefault();
         try {
-          await connect.mutateAsync(code === "flat_feed" ? {} : { api_key: apiKey.trim(), ...(code === "makhazen" ? { store_id: storeId.trim() } : {}) });
+          await connect.mutateAsync(Object.fromEntries(fields.map((f) => [f.name, (values[f.name] ?? "").trim()])));
           toast.success(`رُبط ${SUPPLIER_LABELS[code]}`);
-          setApiKey("");
+          setValues({});
         } catch (err) {
           if (isApiError(err) && err.fields) setErrors(Object.fromEntries(Object.entries(err.fields).map(([k, v]) => [k.replace("credentials.", ""), v[0] ?? ""])));
           else toast.error(isApiError(err) ? err.userMessage : "تعذّر الربط");
         }
       }}
     >
-      {code === "flat_feed" ? (
+      {!fields.length ? (
         <p className="text-sm text-muted-foreground">الملف المسطّح لا يحتاج بيانات اعتماد — يُنشأ الاتصال ثم تُرفع الملفات من «الملفات».</p>
       ) : (
-        <>
-          <Field label="مفتاح API" htmlFor={`${id}-key`} required error={errors.api_key} hint="يُحفظ مشفّراً ولا يُعرض مجدداً.">
-            <input id={`${id}-key`} type="password" autoComplete="off" dir="ltr" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className={cn(inputClass, "font-mono")} data-testid="connect-key" />
+        fields.map((f, i) => (
+          <Field key={f.name} label={f.label} htmlFor={`${id}-${f.name}`} required error={errors[f.name]} hint={[f.help, "يُحفظ مشفّراً ولا يُعرض مجدداً."].filter(Boolean).join(" ")}>
+            <input
+              id={`${id}-${f.name}`}
+              type={f.type === "password" ? "password" : "text"}
+              autoComplete="off"
+              dir="ltr"
+              value={values[f.name] ?? ""}
+              onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
+              className={cn(inputClass, "font-mono")}
+              data-testid={i === 0 ? "connect-key" : `connect-${f.name}`}
+            />
           </Field>
-          {code === "makhazen" ? (
-            <Field label="معرّف المتجر لدى مخازن" htmlFor={`${id}-store`} required error={errors.store_id}>
-              <input id={`${id}-store`} dir="ltr" value={storeId} onChange={(e) => setStoreId(e.target.value)} className={cn(inputClass, "font-mono")} />
-            </Field>
-          ) : null}
-        </>
+        ))
       )}
       <div>
         <Button type="submit" className="h-11 lg:h-9" disabled={connect.isPending} data-testid="connect-save">
@@ -120,6 +135,10 @@ function SettingsFormView({ code, c }: { code: SupplierCode; c: Connection }) {
       inventory_minutes: String(s.intervals.inventory_minutes),
       stock_buffer: String(s.stock_buffer),
       hide_when_out_of_stock: s.hide_when_out_of_stock,
+      forward_enabled: s.orders?.forward_enabled ?? true,
+      forward_cod: s.orders?.forward_cod ?? false,
+      default_country_code: s.orders?.default_country_code ?? "",
+      shipping_method: s.orders?.shipping_method ?? "",
     },
   });
   const { register, control, handleSubmit, formState, setError } = form;
@@ -135,17 +154,18 @@ function SettingsFormView({ code, c }: { code: SupplierCode; c: Connection }) {
         intervals: { products_minutes: Number(v.products_minutes), prices_minutes: Number(v.prices_minutes), inventory_minutes: Number(v.inventory_minutes) },
         stock_buffer: Number(v.stock_buffer),
         hide_when_out_of_stock: v.hide_when_out_of_stock,
+        ...(s.orders ? { orders: { forward_enabled: v.forward_enabled, forward_cod: v.forward_cod, default_country_code: v.default_country_code.toUpperCase(), shipping_method: v.shipping_method.trim() } } : {}),
       });
       toast.success("حُفظت إعدادات المزامنة");
     } catch (e) {
-      if (isApiError(e) && e.fields) for (const [k, m] of Object.entries(e.fields)) setError(k.replace("intervals.", "") as FieldPath<SettingsForm>, { message: m[0] });
+      if (isApiError(e) && e.fields) for (const [k, m] of Object.entries(e.fields)) setError(k.replace("intervals.", "").replace("orders.", "") as FieldPath<SettingsForm>, { message: m[0] });
       else toast.error(isApiError(e) ? e.userMessage : "تعذّر الحفظ");
     }
   });
-  const rows: Array<{ toggle: "sync_products" | "sync_prices" | "sync_inventory"; interval: "products_minutes" | "prices_minutes" | "inventory_minutes"; label: string }> = [
-    { toggle: "sync_products", interval: "products_minutes", label: "مزامنة المنتجات" },
-    { toggle: "sync_prices", interval: "prices_minutes", label: "مزامنة الأسعار" },
-    { toggle: "sync_inventory", interval: "inventory_minutes", label: "مزامنة المخزون" },
+  const rows: Array<{ toggle: "sync_products" | "sync_prices" | "sync_inventory"; interval: "products_minutes" | "prices_minutes" | "inventory_minutes"; label: string; hint: string }> = [
+    { toggle: "sync_products", interval: "products_minutes", label: "مزامنة المنتجات", hint: "60 دقيقة على الأقل" },
+    { toggle: "sync_prices", interval: "prices_minutes", label: "مزامنة الأسعار", hint: "إعادة تسعير دورية — 60 دقيقة على الأقل" },
+    { toggle: "sync_inventory", interval: "inventory_minutes", label: "مزامنة المخزون", hint: "15 دقيقة على الأقل" },
   ];
   return (
     <form
@@ -162,7 +182,10 @@ function SettingsFormView({ code, c }: { code: SupplierCode; c: Connection }) {
         {rows.map((r) => (
           <li key={r.toggle} className="flex flex-wrap items-center gap-3 p-3">
             <Controller control={control} name={r.toggle} render={({ field }) => <Switch checked={field.value} onCheckedChange={field.onChange} aria-label={r.label} />} />
-            <span className="min-w-32 flex-1 text-sm">{r.label}</span>
+            <span className="flex min-w-32 flex-1 flex-col text-sm">
+              {r.label}
+              <span className="text-xs text-muted-foreground">{r.hint}</span>
+            </span>
             <Field label="كل (دقيقة)" htmlFor={`${id}-${r.interval}`} error={err(r.interval)} className="w-32">
               <input id={`${id}-${r.interval}`} inputMode="numeric" dir="ltr" {...register(r.interval, digits)} className={numericInputClass} />
             </Field>
@@ -185,6 +208,37 @@ function SettingsFormView({ code, c }: { code: SupplierCode; c: Connection }) {
         />
       </div>
       {hide ? <p className="text-sm text-muted-foreground" data-testid="hide-oos-hint">سيُخفى المنتج من المتجر عند نفاد مخزون المورد.</p> : null}
+      {s.orders && code !== "flat_feed" ? (
+        <fieldset className="flex flex-col gap-3 border-t border-border pt-4" data-testid="order-settings">
+          <legend className="text-base font-medium">إحالة الطلبات</legend>
+          {(
+            [
+              { name: "forward_enabled", label: "إرسال الطلبات للمورد آلياً" },
+              { name: "forward_cod", label: "إرسال طلبات الدفع عند الاستلام آلياً (وإلا تنتظر مراجعتك)" },
+            ] as const
+          ).map((t) => (
+            <Controller
+              key={t.name}
+              control={control}
+              name={t.name}
+              render={({ field }) => (
+                <label className="flex min-h-11 items-center justify-between gap-3 text-sm">
+                  <span>{t.label}</span>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} aria-label={t.label} />
+                </label>
+              )}
+            />
+          ))}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="دولة الشحن الافتراضية (ISO)" htmlFor={`${id}-country`} error={err("default_country_code")} hint="مثل YE أو SA — حين لا يحدد العنوان دولة.">
+              <input id={`${id}-country`} dir="ltr" maxLength={2} {...register("default_country_code")} className={cn(inputClass, "font-mono uppercase")} />
+            </Field>
+            <Field label="طريقة شحن المورد" htmlFor={`${id}-ship`} error={err("shipping_method")} hint="فارغ = الأرخص المتاح وقت الإرسال.">
+              <input id={`${id}-ship`} dir="ltr" {...register("shipping_method")} className={inputClass} />
+            </Field>
+          </div>
+        </fieldset>
+      ) : null}
       <div>
         <Button type="submit" className="h-11 lg:h-9" disabled={save.isPending} data-testid="sync-save">
           حفظ
@@ -197,35 +251,24 @@ function SettingsFormView({ code, c }: { code: SupplierCode; c: Connection }) {
 function WebhookSection({ code, configured }: { code: SupplierCode; configured: boolean }) {
   const rotate = useRotateWebhook(code);
   const [confirm, setConfirm] = useState(false);
-  const [url, setUrl] = useState<string | null>(null);
+  const [rotated, setRotated] = useState<{ url: string; secret: string | null; baseMissing: boolean } | null>(null);
   return (
     <section className="flex max-w-2xl flex-col gap-3 border-t border-border pt-6" aria-labelledby="wh">
       <h2 id="wh" className="text-base font-medium">
         Webhook المورد
       </h2>
       <p className="text-sm text-muted-foreground">{configured ? "الرمز الحالي مخفي. التدوير يُبطل الرابط القديم فوراً." : "لا رابط بعد — دوّر الرمز لإنشائه."}</p>
-      {url ? (
+      {rotated ? (
         <div className="flex flex-col gap-2 surface-card p-4" data-testid="webhook-url">
           <span className="text-xs text-muted-foreground">انسخه الآن — لن يُعرض مرة أخرى.</span>
-          <span className="flex items-center gap-2">
-            <Mono className="min-w-0 flex-1 break-all text-xs">{url}</Mono>
-            <Button
-              variant="outline"
-              size="icon"
-              className="size-11 lg:size-8"
-              aria-label="نسخ الرابط"
-              onClick={async () => {
-                try {
-                  await navigator.clipboard.writeText(url);
-                  toast.success("نُسخ الرابط");
-                } catch {
-                  toast.error("تعذّر النسخ");
-                }
-              }}
-            >
-              <Copy className="size-4" aria-hidden />
-            </Button>
-          </span>
+          <CopyLine label="نسخ الرابط" value={rotated.url} done="نُسخ الرابط" />
+          {rotated.secret ? (
+            <>
+              <span className="text-xs text-muted-foreground">سرّ التوقيع — يُلصق لدى المورد مع الرابط.</span>
+              <CopyLine label="نسخ السر" value={rotated.secret} done="نُسخ السر" testId="webhook-secret" />
+            </>
+          ) : null}
+          {rotated.baseMissing ? <span className="text-xs text-destructive">نطاق Webhooks العام غير مضبوط على الخادم — الرابط نسبي.</span> : null}
         </div>
       ) : null}
       <div>
@@ -248,7 +291,7 @@ function WebhookSection({ code, configured }: { code: SupplierCode; configured: 
                 setConfirm(false);
                 try {
                   const r = await rotate.mutateAsync();
-                  setUrl(r.webhook_url);
+                  setRotated({ url: r.webhook_url, secret: r.webhook_secret ?? null, baseMissing: r.base_url_missing ?? false });
                 } catch (e) {
                   toast.error(isApiError(e) ? e.userMessage : "تعذّر التدوير");
                 }
@@ -260,6 +303,30 @@ function WebhookSection({ code, configured }: { code: SupplierCode; configured: 
         </DialogContent>
       </Dialog>
     </section>
+  );
+}
+
+function CopyLine({ label, value, done, testId }: { label: string; value: string; done: string; testId?: string }) {
+  return (
+    <span className="flex items-center gap-2" data-testid={testId}>
+      <Mono className="min-w-0 flex-1 break-all text-xs">{value}</Mono>
+      <Button
+        variant="outline"
+        size="icon"
+        className="size-11 lg:size-8"
+        aria-label={label}
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(value);
+            toast.success(done);
+          } catch {
+            toast.error("تعذّر النسخ");
+          }
+        }}
+      >
+        <Copy className="size-4" aria-hidden />
+      </Button>
+    </span>
   );
 }
 

@@ -6,7 +6,7 @@ import { ordersState } from "@/mocks/orders/state";
 import { FIXTURE_NOW, seedOf, storeState } from "@/mocks/store-state";
 
 /**
- * M17 mock state (T145) — `Affiliate`/`AffiliateClick`/`AffiliateSale` and
+ * M17 mock state (T145) — the mock-mode server; live provider = Django `api/views_partners.py` (INT-034) — `Affiliate`/`AffiliateClick`/`AffiliateSale` and
  * `Influencer`/`InfluencerSale` (discovery 02 §5), per store. Sales point at REAL orders of
  * the M06 fixture, so «رقم الطلب» opens an order that exists. Influencer coupons are read
  * from the M13 state (`Coupon.influencer`) — one source, never copied.
@@ -168,13 +168,16 @@ function totals(state: PartnersState, p: MockPartner) {
   const sales = state.sales.filter((s) => s.partner_id === p.id && s.kind === p.kind);
   const sum = (rows: MockSale[], f: (s: MockSale) => number) => rows.reduce((a, s) => a + f(s), 0);
   const counted = sales.filter((s) => s.order_state === "active");
-  const pending = sales.filter((s) => s.payout_status === "pending");
+  // Django (INT-034): only a pending sale of a live order is owed; a commission already paid for an
+  // order refunded later is a debt taken off what is owed (may go negative).
+  const pending = sales.filter((s) => s.payout_status === "pending" && s.order_state === "active");
   const paid = sales.filter((s) => s.payout_status === "paid");
+  const clawback = sum(paid.filter((s) => s.order_state === "refunded"), (s) => s.commission);
   const last = sales.reduce<string | null>((a, s) => (a && a > s.created_at ? a : s.created_at), null);
   return {
     sales_count: sales.length,
     sales_total: sum(counted, (s) => s.order_total),
-    pending: sum(pending, (s) => s.commission),
+    pending: sum(pending, (s) => s.commission) - clawback,
     paid: sum(paid, (s) => s.commission),
     last_sale_at: last,
   };
@@ -260,7 +263,10 @@ export function partnerSummary(store: string | null, kind: Kind) {
   monthStart.setUTCHours(0, 0, 0, 0);
   const since30 = FIXTURE_NOW - 30 * DAY;
   return {
-    display_pending_total: money(sales.filter((s) => s.payout_status === "pending").reduce((a, s) => a + s.commission, 0)),
+    display_pending_total: money(
+      sales.filter((s) => s.payout_status === "pending" && s.order_state === "active").reduce((a, s) => a + s.commission, 0) -
+        sales.filter((s) => s.payout_status === "paid" && s.order_state === "refunded").reduce((a, s) => a + s.commission, 0),
+    ),
     display_paid_this_month: money(sales.filter((s) => s.payout_status === "paid" && s.paid_at && new Date(s.paid_at) >= monthStart).reduce((a, s) => a + s.commission, 0)),
     attributed_orders_30d: sales.filter((s) => new Date(s.created_at).getTime() >= since30).length,
   };
@@ -294,7 +300,18 @@ export function markPaid(store: string | null, kind: Kind, id: number, body: Rec
   if (!state.partners.some((p) => p.kind === kind && p.id === id)) return { ok: false, status: 404, body: { detail: "غير موجود." } };
   const ids = Array.isArray(body.sale_ids) ? body.sale_ids.map(Number).filter(Number.isFinite) : [];
   if (!ids.length) return { ok: false, status: 400, body: { sale_ids: ["اختر عملية واحدة على الأقل."] } };
-  const rows = state.sales.filter((s) => s.kind === kind && s.partner_id === id && ids.includes(s.id) && s.payout_status === "pending");
+  // Django (INT-034): eligible sales only (live order), oldest first, within what is owed net of debt.
+  const mine = state.sales.filter((s) => s.kind === kind && s.partner_id === id);
+  const eligible = mine.filter((s) => s.payout_status === "pending" && s.order_state === "active").sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id - b.id);
+  const debt = mine.filter((s) => s.payout_status === "paid" && s.order_state === "refunded").reduce((a, s) => a + s.commission, 0);
+  let allowance = Math.max(eligible.reduce((a, s) => a + s.commission, 0) - debt, 0);
+  const rows: MockSale[] = [];
+  for (const s of eligible) {
+    if (!ids.includes(s.id)) continue;
+    if (s.commission > allowance + 1e-9) break;
+    rows.push(s);
+    allowance -= s.commission;
+  }
   const total = money(rows.reduce((a, s) => a + s.commission, 0));
   if (body.dry_run === true) return { ok: true, data: { updated: rows.length, display_total: total, dry_run: true } };
   const at = nowIso();
@@ -303,6 +320,14 @@ export function markPaid(store: string | null, kind: Kind, id: number, body: Rec
     s.paid_at = at;
   });
   return { ok: true, data: { updated: rows.length, display_total: total } };
+}
+
+/** Mock of `POST /api/v1/storefront/referral/`: an active affiliate's code counts one click. */
+export function recordReferralClick(store: string | null, code: unknown): boolean {
+  const p = partnersState(store).partners.find((x) => x.kind === "affiliates" && x.is_active && x.referral_code === code);
+  if (!p) return false;
+  p.clicks_count += 1;
+  return true;
 }
 
 // ── Writes ────────────────────────────────────────────────────────────────────────────

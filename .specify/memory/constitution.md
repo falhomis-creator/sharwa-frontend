@@ -1,6 +1,10 @@
 <!--
 Sync Impact Report
-- Version change: (template, unversioned) → 1.0.0 → 2.0.0 (2026-10-17) → 3.0.0 (2026-10-20, owner-directed)
+- Version change: (template, unversioned) → 1.0.0 → 2.0.0 (2026-10-17) → 3.0.0 (2026-10-20, owner-directed) → 3.1.0 (2026-10-24)
+- 3.1.0 MINOR (2026-10-24, retroactive audit T195): new section «Dashboard Shell & Theme Architecture»
+  documents the layout and token rules already shipped (shell grid, sidebar, breakpoints, the two-layer
+  brand → semantic token system, white-label surface, dark mode, storefront exclusion). The guideline
+  example sidebar hex is superseded by the real token `--sidebar-color: #0f1e45`. No rule removed.
 - 3.0.0 (+2026-10-20 clarification): chart area/bar fills may use a soft vertical royal-blue gradient.
 - 3.0.0 BREAKING: Principle I-ب redefined — the product surfaces (dashboard, admin) leave the zinc-only,
   hairline, no-brand-hue, no-shadow rule. New section «UI/UX & Design Guidelines (Updated)»: deep navy
@@ -219,6 +223,62 @@ git reset --hard <tag>   # الوسم المذكور، وإلا آخر وسم *-
 
 > نطاق هذا القسم: `(dashboard)` و`(admin)` وما يشاركهما الهوية (`(pos)`، `(courier)`، `(onboarding)`، `sharwa-pay`).
 > التطبيق عبر الرموز وفق المبدأ VII. المتجر يتبع ثيم التاجر (I-ب)، والصفحة الترويجية تتبع I-أ.
+> القيم الفعلية الملزِمة هي رموز `globals.css` (القسم التالي)؛ الأمثلة أعلاه (`#1a2642`…) توصيف للاتجاه فقط.
+
+## Dashboard Shell & Theme Architecture (v3.1.0) — هيكل اللوحة ونظام الثيم
+
+> توثيق رجعي (T195، 2026-10-24) لما هو مشحون فعلاً في `src/app/(dashboard)/%5Fd/[store]/dashboard/(shell)/layout.tsx`،
+> `src/features/dashboard-shell/**`، و`src/app/globals.css`. أي تغيير لهذه القواعد يمر بتعديل دستوري.
+
+### أ. هيكل الـ Shell
+
+- **بوابة واحدة**: `requireSession()` و`requestIdentity()` تُنتظَران في جسم التخطيط نفسه، **خارج** أي `<Suspense>`،
+  مع `export const instant = false` و`await connection()`. الغاية: حالات HTTP حقيقية (404 متجر مجهول،
+  403 موقوف، 503 أثناء التجهيز، 307 للدخول) بدل shell ثابت يُرسَل بـ 200 ثم يُعاد توجيهه. الـ skeletons
+  في ملفات `loading.tsx` فقط.
+- **الترتيب**: `SessionProvider` ← `StoreProvider` ← (`ShellHydrator`, `ShellShortcuts`, `SkipLink`) ← شبكة `flex min-h-dvh`
+  ← ثم خارج الشبكة: `MobileDrawer`، `ShortcutsDialog`، `CommandPalette` (`Ctrl+K`).
+- **الشريط الجانبي**: `sticky top-0 h-dvh`، ظاهر من `lg` (1024px) فقط. عرضه **256px** (`w-64`) موسّعاً أو
+  **64px** (`w-16`) شريطاً ضيقاً (rail) — اختيار التاجر المحفوظ في `useShellStore`. منطقة التمرير الداخلية `min-h-0`
+  إلزامية (بدونها تخرج العناصر عن الـ 100dvh).
+- **تحت `lg`**: لا rail؛ دُرج من جهة البداية (`Sidebar variant="drawer"`) + شريط سفلي (`MobileBottomNav`).
+- **الشريط العلوي**: ارتفاع **48px** (`h-12`) على سطح البطاقة، ومحاذاة رأس الشريط الجانبي بنفس الارتفاع.
+- **المحتوى**: `<main id="main">` بسقف **1440px** ومسافات `px-4 py-6` (16/24px) ثم `lg:px-8 lg:py-8` (32px)، على أرضية
+  `bg-background`. الـ `SkipLink` يقفز إلى `#main`.
+
+### ب. الشريط الجانبي والصلاحيات
+
+- السطح `bg-sidebar text-sidebar-foreground` بحد `border-sidebar-border`؛ العنصر النشط **كتلة شفافة فاتحة**
+  (`--sidebar-primary`) لا خط سفلي؛ الأيقونات `--sidebar-icon`؛ مربع الشعار `bg-cta text-cta-foreground shadow-button`.
+- **بوابات التنقل**: المجموعة تُخفى إذا كانت ميزتها مغلقة، أو كل ميزات عناصرها مغلقة، أو لا صلاحية لأي
+  عنصر فيها. مجموعة **مختلطة** تبقى ظاهرة وعناصرها الممنوعة معطَّلة مع تلميح
+  «ليست لديك صلاحية لهذا القسم». عناصر «للمالك فقط» تُحذف للموظفين (لا تُعطَّل). البوابة تقبل صلاحية
+  واحدة أو قائمة «أيٌّ من» (`PermissionGate`).
+
+### ج. نظام الرموز ذو الطبقتين (أساس الـ White-label)
+
+1. **طبقة العلامة (Brand layer)** — ستة مدخلات خام على `:root` هي **السطح الوحيد** الذي يجوز لثيم المستأجر
+   تجاوزه: `--primary-color` (#0066ff)، `--sidebar-color` (#0f1e45)، `--accent-color` (#0066ff)،
+   `--bg-main` (#f8fafc)، `--surface-color` (#ffffff)، `--ink-color` (#0f1b33).
+2. **الطبقة الدلالية (Semantic layer)** — رموز shadcn/Tailwind (`--primary`، `--accent`، `--sidebar*`، `--cta`،
+   `--accent-ink`، `--chart-1..5`…) **مشتقة** من طبقة العلامة عبر `var()` و`color-mix()`، ولا تُتجاوَز لكل مستأجر.
+   المكوّنات تستهلك هذه الطبقة فقط (`bg-primary`، `bg-sidebar`، `bg-cta`، `text-accent-ink`، `shadow-card`).
+- **Tailwind v4 بلا `tailwind.config.ts`**: كتلة `@theme inline` في `globals.css` هي الـ config الوحيد.
+- **العمق**: `--elevation-card` / `--elevation-card-hover` (ظلال محايدة ناعمة واسعة) و`--elevation-button` (رفعة زرقاء
+  خفيفة تحت الـ CTA فقط). الحواف: `--radius: 0.75rem` ومشتقاته (`rounded-2xl` = 1.5rem للبطاقات).
+- **التباين المقيس (AA على #F5F7FA)**: النص 16:1، النص الخافت 5.1:1، الأبيض على الأزرق 4.8:1، `--accent-ink` 6.3:1،
+  نص الشريط الجانبي 8.5:1، أيقوناته 5.1:1. أي تغيير في طبقة العلامة يُعاد قياس تباينه.
+
+### د. الوضع الداكن واستثناء المتجر
+
+- `next-themes` بـ `attribute="class"` و`defaultTheme="system"`؛ الـ `ThemeProvider` المغلّف يحوّل سكربت منع الوميض
+  إلى كتلة بيانات عند العرض من جهة العميل (صفحة خطأ `notFound()`)؛ `suppressHydrationWarning` على `<html>`.
+- `.dark` يتجاوز **طبقة العلامة** (كحلي أعمق + أزرق #4d8dff) والقليل من الرموز الدلالية غير المشتقة؛
+  الباقي يُشتق تلقائياً.
+- `@custom-variant dark` يستثني أي صفحة تحمل `[data-store-theme]`: **المتجر لا يتبع الوضع الداكن للزائر**،
+  بل يُرسَم بألوان التاجر (المبدأ VII).
+- الخطوط مستضافة ذاتياً عبر `next/font/local` (IBM Plex Sans Arabic 400/500/600، Geist Mono 400/500/600 مُحمّلة مسبقاً).
+  `themeColor` في الـ viewport مأخوذ من `TOKENS.background` لا قيمة خام.
 
 ## Design System Constraints — قيود نظام التصميم
 
@@ -273,4 +333,4 @@ Playwright · Git.
 - **الاستثناءات**: أي استثناء مؤقت يُسجَّل في `plan.md` للوحدة تحت «Complexity Tracking» مع المبرر وتاريخ الإزالة.
 - الإرشاد التشغيلي أثناء التطوير: `.specify/memory/constitution.md` (هذا الملف) ثم `AGENTS.md` لقواعد Next.js الإصدارية.
 
-**Version**: 3.0.0 | **Ratified**: 2026-10-17 | **Last Amended**: 2026-10-20
+**Version**: 3.1.0 | **Ratified**: 2026-10-17 | **Last Amended**: 2026-10-24

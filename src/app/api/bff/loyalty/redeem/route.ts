@@ -3,7 +3,7 @@ import { mockJson } from "@/mocks/runtime";
 import { verifyOtp } from "@/mocks/storefront/otp";
 
 /**
- * `[NEEDS BACKEND]` `POST /api/v1/loyalty/redeem/` `{phone, otp, points}` (M12 §7). The mock
+ * Live (INT-028, Django `api/views_wallets.py`): `POST /api/v1/loyalty/redeem/` `{phone, otp, points}` (M12 §7). The mock
  * verifies the OTP; the discount itself is applied by the next `checkout/quote` with
  * `redeem_points`, so the invoice stays the single source of every amount.
  */

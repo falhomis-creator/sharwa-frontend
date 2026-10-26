@@ -20,12 +20,13 @@ import { useDeliveryMethods, useMethodWrites, useShippingSettings } from "@/feat
 import { methodFormSchema, type DeliveryMethod, type MethodForm } from "@/features/shipping/schemas";
 import { ActiveDot, ConfirmDelete, FormSheet, OWNER_ONLY_TITLE, SharwaTag, SheetActions, ghostButton, primaryButton, useIsOwner } from "@/features/shipping/components/bits";
 
-const OFFICIAL_TITLE = "طرق شروة شيب الرسمية للقراءة فقط — تُدار من المنصة";
+const OFFICIAL_TITLE = "طريقة «شروة شيب» الرسمية لا تُحذف — يمكنك تعديل سعرها ومدتها أو تعطيلها";
 
 /**
  * Delivery methods (US-15.1.2/3): name, price as the server formats it with its currency
- * (YER_NEW), estimated time, active. `is_sharwa_official` rows carry «شروة شيب» and are
- * read-only. The form opens in a Sheet whose id lives in the URL (`?method=<id|new>`).
+ * (YER_NEW), estimated time, active. `is_sharwa_official` rows carry «شروة شيب»: Django lets the
+ * merchant edit their price, time and active flag only — the name is fixed and they cannot be
+ * deleted; a disabled one leaves the merchant's list (INT-021, `shipping_companies_view`). The form opens in a Sheet whose id lives in the URL (`?method=<id|new>`).
  * One component serves `/dashboard/shipping` and `/dashboard/shipping/delivery-methods`.
  */
 export function DeliveryMethodsPanel({ withPreview = false }: { withPreview?: boolean }) {
@@ -90,7 +91,7 @@ export function DeliveryMethodsPanel({ withPreview = false }: { withPreview?: bo
       isFetching={query.isFetching}
       error={query.error}
       onRetry={() => void query.refetch()}
-      onRowOpen={(m) => (m.is_sharwa_official ? undefined : void setOpenId(String(m.id)))}
+      onRowOpen={(m) => void setOpenId(String(m.id))}
       emptyState={<EmptyState title="لا طرق توصيل — أضف طريقة ليتمكن العميل من الطلب" description="كل طريقة باسمها وسعرها بالريال اليمني الجديد ومدتها المتوقعة؛ تظهر النشطة فقط في صفحة الدفع." action={isOwner ? addButton : undefined} />}
       renderMobileCard={(m) => (
         <div className="flex flex-col gap-1.5 p-3" data-testid="method-card">
@@ -160,13 +161,14 @@ function PriceCell({ m }: { m: DeliveryMethod }) {
 }
 
 function RowActions({ m, isOwner, onEdit, onDelete }: { m: DeliveryMethod; isOwner: boolean; onEdit: () => void; onDelete: () => void }) {
-  const blocked = !isOwner ? OWNER_ONLY_TITLE : m.is_sharwa_official ? OFFICIAL_TITLE : undefined;
+  const blocked = !isOwner ? OWNER_ONLY_TITLE : undefined;
+  const deleteBlocked = blocked ?? (m.is_sharwa_official ? OFFICIAL_TITLE : undefined);
   return (
     <span className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
       <button type="button" className={ghostButton} disabled={Boolean(blocked)} title={blocked} onClick={onEdit} data-testid="method-edit">
         تعديل
       </button>
-      <button type="button" className={`${ghostButton} text-destructive`} disabled={Boolean(blocked)} title={blocked} onClick={onDelete} data-testid="method-delete">
+      <button type="button" className={`${ghostButton} text-destructive`} disabled={Boolean(deleteBlocked)} title={deleteBlocked} onClick={onDelete} data-testid="method-delete">
         حذف
       </button>
     </span>
@@ -218,6 +220,7 @@ const EMPTY: MethodForm = { name: "", price: "", estimated_time: "", is_active: 
 
 function MethodSheet({ open, method, onOpenChange }: { open: boolean; method?: DeliveryMethod; onOpenChange: (o: boolean) => void }) {
   const writes = useMethodWrites();
+  const official = Boolean(method?.is_sharwa_official);
   const form = useForm<MethodForm>({ resolver: zodResolver(methodFormSchema), defaultValues: EMPTY });
   const { register, control, handleSubmit, reset, formState } = form;
   useEffect(() => {
@@ -237,8 +240,9 @@ function MethodSheet({ open, method, onOpenChange }: { open: boolean; method?: D
   return (
     <FormSheet open={open} onOpenChange={onOpenChange} title={method ? "تعديل طريقة التوصيل" : "طريقة توصيل جديدة"} description="السعر يُخزَّن بالريال اليمني الجديد (YER_NEW) ويُحوَّل للعميل حسب أسعار الصرف." testId="method-form">
       <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4" noValidate>
-        <Field label="الاسم" htmlFor="method-name" required error={formState.errors.name?.message}>
-          <input id="method-name" className={inputClass} placeholder="توصيل سريع" aria-invalid={Boolean(formState.errors.name)} {...register("name")} />
+        <Field label="الاسم" htmlFor="method-name" required error={formState.errors.name?.message} hint={official ? "اسم «شروة شيب» الرسمية ثابت — يُدار من المنصة." : undefined}>
+          {/* readOnly (not disabled): a disabled field drops out of the submitted values and fails the schema. */}
+          <input id="method-name" className={inputClass} placeholder="توصيل سريع" readOnly={official} aria-readonly={official || undefined} aria-invalid={Boolean(formState.errors.name)} {...register("name")} />
         </Field>
         <Field label="السعر" htmlFor="method-price" required error={formState.errors.price?.message} hint="مثال: 1500.00">
           <div className="flex items-center gap-2">
@@ -250,7 +254,7 @@ function MethodSheet({ open, method, onOpenChange }: { open: boolean; method?: D
           <input id="method-eta" className={inputClass} aria-invalid={Boolean(formState.errors.estimated_time)} {...register("estimated_time")} />
         </Field>
         <div className="surface-card px-3">
-          <Controller control={control} name="is_active" render={({ field }) => <ToggleRow id="method-active" label="نشطة" description="المعطّلة لا تظهر في صفحة الدفع." checked={field.value} onCheckedChange={field.onChange} />} />
+          <Controller control={control} name="is_active" render={({ field }) => <ToggleRow id="method-active" label="نشطة" description={official ? "تعطيل «شروة شيب» يخفيها من صفحة الدفع ومن هذه القائمة؛ تُعاد من المنصة." : "المعطّلة لا تظهر في صفحة الدفع."} checked={field.value} onCheckedChange={field.onChange} />} />
         </div>
         <SheetActions onCancel={() => onOpenChange(false)} submitLabel={method ? "حفظ" : "إضافة"} pending={formState.isSubmitting} testId="method-submit" />
       </form>

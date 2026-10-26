@@ -10,7 +10,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isApiError } from "@/lib/api-error";
 import { useCategoryMapping, useSaveAccess, useSaveMapping, useStaffAccess, useTiktokCategories } from "@/features/channels/api";
-import { CONNECTIONS, CONNECTION_SHORT, type AccessRow, type MappingRow } from "@/features/channels/schemas";
+import { ACCESS_CHANNELS, ACCESS_SHORT, type AccessRow, type MappingRow } from "@/features/channels/schemas";
 import { ChannelsShell } from "@/features/channels/components/channels-shell";
 
 /** `/dashboard/channels/social/tiktok-categories` (US-27.5): store category → TikTok category. */
@@ -84,7 +84,7 @@ function MappingForm({ mapping, external }: { mapping: MappingRow[]; external: A
 export function StaffAccessScreen() {
   const q = useStaffAccess();
   const save = useSaveAccess();
-  const cell = (staffId: number, code: (typeof CONNECTIONS)[number]) => q.data?.rows.find((r) => r.staff_id === staffId && r.channel_code === code);
+  const cell = (staffId: number, code: (typeof ACCESS_CHANNELS)[number]) => q.data?.rows.find((r) => r.staff_id === staffId && r.channel_code === code);
   const toggle = (row: AccessRow, field: "can_view" | "can_reply", value: boolean) => {
     const next: AccessRow = { ...row, [field]: value };
     if (field === "can_view" && !value) next.can_reply = false;
@@ -106,9 +106,9 @@ export function StaffAccessScreen() {
             <thead className="border-b border-border text-xs text-muted-foreground">
               <tr>
                 <th className="py-2 text-start font-normal">الموظف</th>
-                {CONNECTIONS.map((c) => (
+                {ACCESS_CHANNELS.map((c) => (
                   <th key={c} className="py-2 text-start font-normal">
-                    {CONNECTION_SHORT[c]}
+                    {ACCESS_SHORT[c]}
                   </th>
                 ))}
               </tr>
@@ -117,7 +117,7 @@ export function StaffAccessScreen() {
               {q.data.staff.map((s) => (
                 <tr key={s.id} className="border-b border-border" data-testid="access-row" data-staff={s.id}>
                   <td className="py-2 pe-3 font-medium">{s.name}</td>
-                  {CONNECTIONS.map((c) => {
+                  {ACCESS_CHANNELS.map((c) => {
                     const row = cell(s.id, c);
                     if (!row) return <td key={c} className="text-muted-foreground">—</td>;
                     return (

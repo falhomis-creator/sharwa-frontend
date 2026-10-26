@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 /**
- * M40 contracts (§7 — every row `[NEEDS BACKEND]`, the proposed `/api/v1/sharwa-pay/*`
- * shapes served by `/api/bff/sharwa-pay/*`). Balances arrive formatted per currency and are
+ * M40 contracts — `/api/v1/sharwa-pay/*` served by `/api/bff/sharwa-pay/*`. Integrated (INT-048):
+ * Django `api/views_sharwa_pay.py` + `sharwapay/customer_api.py` (public schema) when `sharwa_pay`
+ * is in SHARWA_LIVE_MODULES, the fixtures otherwise. Balances arrive formatted per currency and are
  * shown as they are: four rows, never converted, never summed (FR-40.03, SC-40.3).
  */
 export const PAY_CURRENCIES = ["SAR", "USD", "YER_OLD", "YER_NEW"] as const;

@@ -1,3 +1,4 @@
+import { liveOrMock } from "@/lib/bff/live-route";
 import { hasPermission } from "@/lib/access";
 import { mockRoute, readBody, respond } from "@/lib/bff/mock-route";
 import { mockJson } from "@/mocks/runtime";
@@ -5,7 +6,7 @@ import { resolveApproval } from "@/mocks/approvals/state";
 import { audit, sessionActor } from "@/mocks/staff/state";
 
 /** `POST /api/v1/approvals/<id>/resolve/` `{decision, note?, version}` → 200 / 409 / 403 self (FR-18.06). */
-export async function POST(request: Request, { params }: RouteContext<"/api/bff/approvals/[id]/resolve">) {
+async function mockPOST(request: Request, { params }: RouteContext<"/api/bff/approvals/[id]/resolve">) {
   const id = Number((await params).id);
   return mockRoute(
     request,
@@ -22,4 +23,16 @@ export async function POST(request: Request, { params }: RouteContext<"/api/bff/
     },
     { permission: "staff.view" },
   );
+}
+
+// INT-022: `liveOrMock` module `staff` → Django `api/views_staff.py`; the fixture handlers above otherwise.
+type Ctx = RouteContext<"/api/bff/approvals/[id]/resolve">;
+
+async function upstream(ctx: Ctx) {
+  const p = await ctx.params;
+  return `/api/v1/approvals/${encodeURIComponent(p.id)}/resolve/`;
+}
+
+export async function POST(request: Request, ctx: Ctx) {
+  return liveOrMock(request, "staff", await upstream(ctx), () => mockPOST(request, ctx));
 }

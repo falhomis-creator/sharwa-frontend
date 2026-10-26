@@ -2,7 +2,8 @@ import { z } from "zod";
 
 /**
  * M23 — الموردون وأوامر الشراء (T148). Enum values verbatim from discovery 02 §14.D;
- * labels Arabic. Every `/api/bff/{suppliers,purchase-orders}/*` response is parsed here.
+ * labels Arabic. Every `/api/bff/{suppliers,purchase-orders}/*` response is parsed here — served by
+ * Django `api/views_procurement.py` (INT-035) when `procurement` is in `SHARWA_LIVE_MODULES`.
  */
 export const PO_STATUSES = ["draft", "pending_approval", "approved", "partially_received", "received", "cancelled"] as const;
 export type PoStatus = (typeof PO_STATUSES)[number];

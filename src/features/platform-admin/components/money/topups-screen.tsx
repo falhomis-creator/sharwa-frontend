@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryStates } from "nuqs";
 import { Button } from "@/components/ui/button";
@@ -223,14 +224,25 @@ function TopupDetail({ topup: t, onShow }: { topup: Topup; onShow: (id: number) 
   );
 }
 
+/** Django's upload is a same-origin `/media/…` path (proxied to Django, INT-031); the mock carries a key. */
+function receiptUrl(value: string): string | null {
+  return value.startsWith("/media/") || /^https?:\/\//.test(value) ? value : null;
+}
+
 /**
- * The mock carries a receipt KEY, not an image (`receipt-1`). A neutral bordered figure
- * stands in for the uploaded photo — nothing external is fetched — and «تكبير» enlarges it
- * so the transfer id and amount can be compared side by side (US-20.5 a1).
+ * The uploaded receipt photo when there is one (live), else a neutral bordered figure with the
+ * bank, amount and transfer id (mock key, or a bank-webhook top-up with no photo). «تكبير»
+ * enlarges it so the transfer id and amount can be compared side by side (US-20.5 a1).
  */
 function Receipt({ topup: t, zoom, onToggle }: { topup: Topup; zoom: boolean; onToggle: () => void }) {
+  const url = receiptUrl(t.receipt_image);
   return (
     <figure className="flex flex-col gap-2" data-testid="receipt">
+      {url ? (
+        <div className={cn("relative overflow-hidden rounded-md border border-border bg-muted/40 transition-[height]", zoom ? "h-96" : "h-40")} data-testid="receipt-figure" data-zoom={zoom}>
+          <Image src={url} alt={`إيصال التحويل ${t.bank_transaction_id || `#${t.id}`}`} fill sizes="(min-width: 1024px) 28rem, 100vw" className="object-contain" unoptimized data-testid="receipt-image" />
+        </div>
+      ) : (
       <div className={cn("flex flex-col justify-between rounded-md border border-border bg-muted/40 p-4 transition-[height]", zoom ? "h-96" : "h-40")} data-testid="receipt-figure" data-zoom={zoom}>
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>{t.bank_name}</span>
@@ -242,8 +254,9 @@ function Receipt({ topup: t, zoom, onToggle }: { topup: Topup; zoom: boolean; on
         </div>
         <span className="self-end text-[11px] text-muted-foreground">{formatDateTime(t.created_at)}</span>
       </div>
+      )}
       <figcaption className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-        <span>صورة الإيصال المرفوعة (receipt_image)</span>
+        <span>{url || t.receipt_image ? "صورة الإيصال المرفوعة" : "لا صورة إيصال — حوالة بنكية آلية أو بلا مرفق"}</span>
         <Button variant="ghost" size="sm" className="h-11 lg:h-7" onClick={onToggle} aria-pressed={zoom} data-testid="receipt-zoom">
           {zoom ? "تصغير" : "تكبير"}
         </Button>

@@ -9,10 +9,14 @@ export type ConversationStatus = (typeof CONVERSATION_STATUSES)[number];
 export const CONVERSATION_STATUS_LABELS: Record<ConversationStatus, string> = { open: "مفتوحة", pending: "معلّقة", resolved: "محلولة" };
 export const CONVERSATION_STATUS_TONE: Record<ConversationStatus, "info" | "warning" | "muted"> = { open: "info", pending: "warning", resolved: "muted" };
 
-export const CONVERSATION_CHANNELS = ["facebook", "instagram", "tiktok", "telegram"] as const;
+/**
+ * `whatsapp` (INT-037): Django's unified inbox also receives WhatsApp (connected from the App Store, M30) —
+ * without it a single WhatsApp conversation would fail the whole list's Zod parse.
+ */
+export const CONVERSATION_CHANNELS = ["facebook", "instagram", "tiktok", "telegram", "whatsapp"] as const;
 export type ConversationChannel = (typeof CONVERSATION_CHANNELS)[number];
 /** Short text names (§11 I: the channel is small text, never a big coloured logo). */
-export const CHANNEL_SHORT: Record<ConversationChannel, string> = { facebook: "فيسبوك", instagram: "إنستغرام", tiktok: "تيك توك", telegram: "تيليجرام" };
+export const CHANNEL_SHORT: Record<ConversationChannel, string> = { facebook: "فيسبوك", instagram: "إنستغرام", tiktok: "تيك توك", telegram: "تيليجرام", whatsapp: "واتساب" };
 
 export const MESSAGE_STATUS_LABELS = { sent: "مُرسَلة", delivered: "تم التوصيل", read: "مقروءة", failed: "فشلت" } as const;
 

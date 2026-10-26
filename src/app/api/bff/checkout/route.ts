@@ -3,10 +3,11 @@ import { mockJson } from "@/mocks/runtime";
 import { placeOrder } from "@/mocks/storefront/checkout";
 
 /**
- * `[NEEDS BACKEND]` `POST /api/v1/checkout/` (multipart, every FR-12.02 field) →
+ * `POST /api/v1/checkout/` (multipart, every FR-12.02 field) — Django since INT-014
+ * (`api/views_checkout.py` over the legacy `checkout_service`) →
  * `{order_id, public_uuid, status, payment_status, display_total, next_action}`
- * / 400 `{field:[msg]}` / 409 when the cart changed. Idempotent on `client_uuid`
- * (FR-12.04): a retry answers the order the first attempt created.
+ * / 400 `{field:[msg]}` / 409 when the cart changed / 429 within a minute of the last order.
+ * Idempotent on `client_uuid` (FR-12.04, stored as `Order.idempotency_key`).
  */
 export function POST(request: Request) {
   return storefrontAdapter(
@@ -16,8 +17,8 @@ export function POST(request: Request) {
       const { fields, files } = await body();
       const receipt = files.receipt_image;
       if (receipt) {
-        const ok = /\.(jpe?g|png|webp|pdf)$/i.test(receipt.name) && receipt.size <= 5 * 1024 * 1024;
-        if (!ok) return mockJson({ receipt_image: ["الإيصال: صورة أو PDF حتى 5MB."] }, { status: 400 });
+        const ok = /\.(jpe?g|png)$/i.test(receipt.name) && receipt.size <= 5 * 1024 * 1024;
+        if (!ok) return mockJson({ receipt_image: ["الإيصال: صورة JPEG أو PNG حتى 5MB."] }, { status: 400 });
       }
       return respondMock(placeOrder(store, cartId, fields, Boolean(receipt)), 420);
     },

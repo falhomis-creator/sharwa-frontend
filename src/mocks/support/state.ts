@@ -6,7 +6,8 @@ import { staffState } from "@/mocks/staff/state";
 import type { Viewer } from "@/mocks/inbox/state";
 
 /**
- * M31 live support sessions + M32 support tickets (§7, all `[NEEDS BACKEND]`).
+ * M31 live support sessions + M32 support tickets (§7 — Django since INT-042; this mock mirrors it: system event rows
+ * for takeover/release/close, an opaque `cursor`, ticket phone/closed_at/inactive assignee).
  * Session transitions (M31 §5): bot_active → human_locked (takeover) · bot_active →
  * escalated (system) · escalated → human_locked · human_locked → bot_active (release) ·
  * * → closed. Every write carries `version`; a stale one answers 409 with the fresh row.
@@ -18,7 +19,7 @@ export type TicketStatus = "open" | "in_progress" | "closed";
 interface TimelineItem {
   id: number;
   kind: "message" | "tool_call";
-  sender_type?: "customer" | "bot" | "staff";
+  sender_type?: "customer" | "bot" | "staff" | "system";
   sender_name?: string | null;
   text?: string;
   tool_name?: string;
@@ -48,6 +49,8 @@ interface MockTicket {
   description: string;
   status: TicketStatus;
   assigned_to: { id: number; name: string } | null;
+  customer_phone: string | null;
+  closed_at: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -112,6 +115,8 @@ function seed(store: string | null): SupportState {
       description: "وصف المشكلة كما سجّله الفريق، مع الخطوات المتبعة ونتيجتها.",
       status,
       assigned_to: assignee ? { id: assignee.id, name: assignee.full_name } : null,
+      customer_phone: i % 5 === 0 ? `9677${int(rnd, 10000000, 79999999)}` : null,
+      closed_at: status === "closed" ? iso(Math.max(0, created - int(rnd, 10, 280))) : null,
       created_by: "فارس العمري",
       created_at: iso(created),
       updated_at: iso(Math.max(0, created - int(rnd, 10, 280))),
@@ -139,7 +144,7 @@ export function sessionView(s: MockSession, v: Viewer) {
     status: s.status,
     party: s.party,
     assigned_staff: s.assigned_staff,
-    messages_count: s.timeline.filter((t) => t.kind === "message").length,
+    messages_count: s.timeline.filter((t) => t.kind === "message" && t.sender_type !== "system").length,
     last_activity_at: s.last_activity_at,
     version: s.version,
     is_mine: mine(s, v),
@@ -171,7 +176,14 @@ export function findSession(store: string | null, id: number) {
 }
 
 export function sessionDetail(store: string | null, s: MockSession, v: Viewer, after: number | null) {
-  return { session: sessionView(s, v), timeline: (after ? s.timeline.filter((t) => t.id > after) : s.timeline).map((t) => ({ ...t })) };
+  const last = s.timeline.reduce((m, t) => Math.max(m, t.id), after ?? 0);
+  return { session: sessionView(s, v), timeline: (after ? s.timeline.filter((t) => t.id > after) : s.timeline).map((t) => ({ ...t })), cursor: String(last) };
+}
+
+/** = Django's support_lock_service: every transition leaves a quiet system row in the timeline. */
+function logEvent(store: string | null, s: MockSession, text: string) {
+  const st = supportState(store);
+  s.timeline.push({ id: st.ids.item++, kind: "message", sender_type: "system", sender_name: null, text, created_at: new Date().toISOString() });
 }
 
 export function sessionAction(store: string | null, id: number, action: "takeover" | "release" | "close", body: Record<string, unknown>, v: Viewer): MockResult<ReturnType<typeof sessionView>> {
@@ -194,14 +206,18 @@ export function sessionAction(store: string | null, id: number, action: "takeove
     if (s.status !== "bot_active" && s.status !== "escalated") return { ok: false, status: 409, body: { detail: "لا يمكن استلام الجلسة في حالتها الحالية.", session: sessionView(s, v) } };
     s.status = "human_locked";
     s.assigned_staff = { id: v.owner ? null : v.staffId, name: v.name };
+    logEvent(store, s, `استلم ${v.name} المحادثة.`);
   } else if (action === "release") {
     if (!mine(s, v)) return { ok: false, status: 409, body: { detail: "لا تتولّى هذه الجلسة.", session: sessionView(s, v) } };
     s.status = "bot_active";
     s.assigned_staff = null;
+    logEvent(store, s, `أعاد ${v.name} المحادثة للبوت الآلي.`);
   } else {
     if (s.status === "closed") return { ok: false, status: 409, body: { detail: "الجلسة مغلقة مسبقاً.", session: sessionView(s, v) } };
     if (s.status === "human_locked" && !mine(s, v)) return { ok: false, status: 409, body: { detail: `يتولّاها ${s.assigned_staff?.name ?? "موظف آخر"}.`, session: sessionView(s, v) } };
     s.status = "closed";
+    s.assigned_staff = null;
+    logEvent(store, s, `أغلق ${v.name} المحادثة.`);
   }
   s.version++;
   s.last_activity_at = new Date().toISOString();
@@ -259,9 +275,22 @@ export function listTickets(store: string | null, p: URLSearchParams, v: Viewer)
     count: rows.length,
     next: page * pageSize < rows.length ? `?page=${page + 1}` : null,
     previous: page > 1 ? `?page=${page - 1}` : null,
-    results: rows.slice((page - 1) * pageSize, page * pageSize).map((t) => ({ id: t.id, title: t.title, status: t.status, assigned_to: t.assigned_to, created_at: t.created_at, updated_at: t.updated_at })),
+    results: rows.slice((page - 1) * pageSize, page * pageSize).map((t) => ticketRow(store, t)),
     counters: ticketCounters(store),
   };
+}
+
+function assigneeActive(store: string | null, t: MockTicket) {
+  return t.assigned_to ? staffState(store).staff.some((s) => s.id === t.assigned_to!.id && s.is_active && !s.terminated_at) : false;
+}
+
+function ticketRow(store: string | null, t: MockTicket) {
+  return { id: t.id, title: t.title, status: t.status, assigned_to: t.assigned_to, assignee_active: assigneeActive(store, t), customer_phone: t.customer_phone, created_at: t.created_at, updated_at: t.updated_at };
+}
+
+/** The detail = Django's ticket_view. */
+export function ticketView(store: string | null, t: MockTicket) {
+  return { ...ticketRow(store, t), description: t.description, created_by: t.created_by, closed_at: t.closed_at };
 }
 
 export function ticketCountersView(store: string | null) {
@@ -279,23 +308,26 @@ function assignee(store: string | null, raw: unknown): { ok: true; value: MockTi
   return s ? { ok: true, value: { id: s.id, name: s.full_name } } : { ok: false };
 }
 
-export function createTicket(store: string | null, body: Record<string, unknown>, v: Viewer): MockResult<MockTicket> {
+export function createTicket(store: string | null, body: Record<string, unknown>, v: Viewer): MockResult<ReturnType<typeof ticketView>> {
   const st = supportState(store);
   const title = String(body.title ?? "").trim();
   const description = String(body.description ?? "").trim();
   const e: Record<string, string[]> = {};
   if (!title) e.title = ["أدخل عنوان التذكرة."];
   if (title.length > 200) e.title = ["200 حرف كحد أقصى."];
+  if (description.length > 4000) e.description = ["4000 حرف كحد أقصى."];
+  const phone = String(body.customer_phone ?? "").replace(/[^\d+]/g, "");
+  if (phone.length > 20) e.customer_phone = ["رقم هاتف غير صحيح."];
   const a = assignee(store, body.assigned_to_id);
   if (!a.ok) e.assigned_to_id = ["الموظف غير موجود أو غير نشط."];
   if (Object.keys(e).length) return { ok: false, status: 400, body: e };
   const now = new Date().toISOString();
-  const t: MockTicket = { id: st.ids.ticket++, title, description, status: "open", assigned_to: a.ok ? a.value : null, created_by: v.name, created_at: now, updated_at: now };
+  const t: MockTicket = { id: st.ids.ticket++, title, description, status: "open", assigned_to: a.ok ? a.value : null, customer_phone: phone || null, closed_at: null, created_by: v.name, created_at: now, updated_at: now };
   st.tickets.push(t);
-  return { ok: true, status: 201, data: t };
+  return { ok: true, status: 201, data: ticketView(store, t) };
 }
 
-export function patchTicket(store: string | null, id: number, body: Record<string, unknown>): MockResult<MockTicket> {
+export function patchTicket(store: string | null, id: number, body: Record<string, unknown>): MockResult<ReturnType<typeof ticketView>> {
   const t = getTicket(store, id);
   if (!t) return { ok: false, status: 404, body: { detail: "التذكرة غير موجودة." } };
   const e: Record<string, string[]> = {};
@@ -307,12 +339,15 @@ export function patchTicket(store: string | null, id: number, body: Record<strin
     if (!a.ok) e.assigned_to_id = ["الموظف غير موجود أو غير نشط."];
   }
   if (Object.keys(e).length) return { ok: false, status: 400, body: e };
-  if (body.status !== undefined) t.status = body.status as TicketStatus;
+  if (body.status !== undefined && body.status !== t.status) {
+    t.status = body.status as TicketStatus;
+    t.closed_at = t.status === "closed" ? (t.closed_at ?? new Date().toISOString()) : null;
+  }
   if (body.title !== undefined) t.title = String(body.title).trim();
   if (body.description !== undefined) t.description = String(body.description).trim();
   if (a && a.ok) t.assigned_to = a.value;
   t.updated_at = new Date().toISOString();
-  return { ok: true, data: t };
+  return { ok: true, data: ticketView(store, t) };
 }
 
 export function assignees(store: string | null) {

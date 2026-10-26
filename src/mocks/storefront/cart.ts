@@ -181,8 +181,10 @@ export function cartTotals(store: string | null, cart: MockCart, lines: PricedLi
     coupon = Math.min(coupon, base);
   }
   const total = round2(Math.max(0, subtotal - promotion - coupon));
-  const thresholdRaw = Number(readSettings(store, "").free_shipping_threshold);
-  const threshold = thresholdRaw > 0 ? convert(thresholdRaw, "YER_NEW", currency, rates) : 0;
+  // In the dashboard currency and compared with the subtotal — exactly `pricing.build_order_invoice`.
+  const settings = readSettings(store, "");
+  const thresholdRaw = Number(settings.free_shipping_threshold);
+  const threshold = thresholdRaw > 0 ? convert(thresholdRaw, settings.currency, currency, rates) : 0;
   const allFree = lines.length > 0 && lines.every((l) => l.isFreeShipping);
   const freeShippingApplies = allFree || (threshold > 0 && total >= threshold);
   return {

@@ -12,6 +12,7 @@ import {
   listTickets,
   patchTicket,
   resetSupport,
+  ticketView,
   sessionAction,
   sessionCounters,
   sessionDetail,
@@ -21,8 +22,8 @@ import {
 } from "@/mocks/support/state";
 
 /**
- * The mock SERVER for `/api/v1/support/*` (M31 §7 sessions, M32 §7 tickets — all
- * `[NEEDS BACKEND]`). Reading is open to every authenticated member (FR-32.01); the
+ * The mock SERVER for `/api/v1/support/*` (M31 §7 sessions, M32 §7 tickets — Django since INT-042,
+ * `api/views_support.py`). Reading is open to every authenticated member (FR-32.01); the
  * takeover / release / close / reply rows need `support.takeover_session` (FR-31.05).
  */
 const r = createRouter();
@@ -47,7 +48,7 @@ r.on("GET", "tickets/counters", (ctx) => mockJson(ticketCountersView(ctx.store),
 r.on("POST", "tickets", async (ctx) => send(createTicket(ctx.store, await ctx.obj(), ctx.viewer), 220));
 r.on("GET", "tickets/:id", (ctx) => {
   const t = getTicket(ctx.store, num(ctx.params.id));
-  return t ? mockJson(t, { delay: 120 }) : mockJson({ detail: "التذكرة غير موجودة." }, { status: 404 });
+  return t ? mockJson(ticketView(ctx.store, t), { delay: 120 }) : mockJson({ detail: "التذكرة غير موجودة." }, { status: 404 });
 });
 r.on("PATCH", "tickets/:id", async (ctx) => send(patchTicket(ctx.store, num(ctx.params.id), await ctx.obj()), 180));
 // Mock-only: the assignee list (M18's `GET /api/v1/staff/?is_active=true` in the real

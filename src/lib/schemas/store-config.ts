@@ -84,6 +84,8 @@ export const storeConfigSchema = z.object({
   week_start_day: z.enum(["sunday", "monday"]).optional(),
   gifting_enabled: z.boolean().optional(),
   loyalty_enabled: z.boolean().optional(),
+  // M19 public tracking ids (INT-023): `null` when tracking is off or the plan lacks
+  // `tracking_tools`; only filled ids are present. CAPI tokens never reach the storefront.
   tracking: z
     .object({
       meta_pixel_id: z.string().nullable().optional(),
@@ -91,7 +93,10 @@ export const storeConfigSchema = z.object({
       snapchat_pixel_id: z.string().nullable().optional(),
       gtm_container_id: z.string().nullable().optional(),
       ga4_measurement_id: z.string().nullable().optional(),
+      google_ads_conversion_id: z.string().nullable().optional(),
+      google_ads_conversion_label: z.string().nullable().optional(),
     })
+    .nullable()
     .optional(),
 });
 export type StoreConfig = z.infer<typeof storeConfigSchema>;

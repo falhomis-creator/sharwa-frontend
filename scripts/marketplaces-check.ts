@@ -85,15 +85,14 @@ async function main() {
     check((await p.locator("[data-testid=market-row]").count()) === 2, "the hub lists two market rows");
     await p.screenshot({ path: join(OUT, "hub-desktop.png") });
 
-    // ── noon: API key ─────────────────────────────────────────────────────────────
+    // ── noon: API key + seller id + country (Django's noon_connect, INT-038) ───────
     const noonRow = p.locator("[data-testid=market-row][data-market=noon]");
     if ((await noonRow.locator("[data-testid=market-conn]").getAttribute("data-status")) !== "connected") {
       await p.click("[data-testid=connect-noon]");
-      await p.fill("[data-testid=noon-key]", "short");
-      await p.click("[data-testid=noon-save]");
-      await p.waitForSelector("[data-testid=noon-dialog] [role=alert]");
-      check(true, "a short key → the server's field error");
       await p.fill("[data-testid=noon-key]", "NOON-PARTNER-KEY-1234567890");
+      check(await p.isDisabled("[data-testid=noon-save]"), "noon: the seller id is required before saving");
+      await p.fill("[data-testid=noon-seller]", "P7788");
+      await p.selectOption("[data-testid=noon-country]", "AE");
       await p.click("[data-testid=noon-save]");
       await p.waitForSelector("[data-testid=market-row][data-market=noon] [data-testid=market-conn][data-status=connected]");
     }

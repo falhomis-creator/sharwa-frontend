@@ -27,6 +27,7 @@ import {
   useCustomerWallet,
   useCustomerWishlist,
   useDeleteNote,
+  useApproveReview,
   useReplyReview,
 } from "@/features/customers/api";
 import {
@@ -272,6 +273,16 @@ function ReviewItem({ review, phone }: { review: Review; phone: string }) {
   const canReply = canPermission("customers.edit_profile");
   const [editing, setEditing] = useState(false);
   const mutation = useReplyReview(phone);
+  const approval = useApproveReview(phone);
+
+  async function approve() {
+    try {
+      await approval.mutateAsync({ id: review.id, approved: true });
+      toast.success("اعتُمد التقييم — يظهر الآن في صفحة المنتج");
+    } catch (err) {
+      toast.error(isApiError(err) ? err.userMessage : "تعذّر الاتصال");
+    }
+  }
   const form = useForm<ReplyForm>({ resolver: zodResolver(replyFormSchema), defaultValues: { admin_reply: review.admin_reply ?? "" } });
 
   async function submit(values: ReplyForm) {
@@ -298,6 +309,11 @@ function ReviewItem({ review, phone }: { review: Review; phone: string }) {
           {formatDateTime(review.created_at)}
         </time>
         {!review.approved ? <span className="text-xs text-warning">بانتظار المراجعة</span> : null}
+        {!review.approved && canReply ? (
+          <Button variant="outline" className="h-11 lg:h-8" disabled={approval.isPending} onClick={() => void approve()} data-testid="review-approve">
+            {approval.isPending ? "جارٍ الاعتماد…" : "اعتماد"}
+          </Button>
+        ) : null}
       </div>
       <p>{review.comment}</p>
       {editing ? (

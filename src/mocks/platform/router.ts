@@ -203,8 +203,9 @@ on("POST", "stores/reprovision", "stores", async ({ body, actor }) => {
   const results = schemas.map((schema) => {
     const c = findClient(schema);
     if (!c) return { schema_name: schema, queued: false, reason: "متجر غير معروف." };
-    if (c.pending_job?.kind === "reprovision") return { schema_name: schema, queued: false, reason: "إعادة تجهيز قيد التنفيذ بالفعل." };
-    if (c.provisioning_status !== "failed" && !isStalled(c)) return { schema_name: schema, queued: false, reason: "المتجر ليس فاشلاً ولا متعثّراً." };
+    // Same reasons as Django (tenants/console_service.reprovision, INT-030).
+    if (c.provisioning_status === "ready") return { schema_name: schema, queued: false, reason: "المتجر جاهز — لا شيء لإعادة تجهيزه." };
+    if (c.pending_job?.kind === "reprovision" || (c.provisioning_status !== "failed" && !isStalled(c))) return { schema_name: schema, queued: false, reason: "إعادة تجهيز قيد التنفيذ بالفعل." };
     c.provisioning_status = "provisioning";
     c.provisioning_started_at = new Date(FIXTURE_NOW).toISOString();
     c.pending_job = { kind: "reprovision", reads_left: 3 };
@@ -246,6 +247,10 @@ on("POST", "stores/:schema/sharwa-ship", "stores", async ({ params, body, actor 
   if (c.pending_job) return bad({ detail: "مهمة أخرى قيد المعالجة على هذا المتجر." }, 409);
   const active = bool((await body()).active);
   if ((c.sharwa_ship === "active") === active) return bad({ detail: active ? "شروة شيب مفعّلة بالفعل." : "شروة شيب غير مفعّلة أصلاً." }, 409);
+  // Django refuses up front what activate_sharwa_ship_task would skip silently (INT-030).
+  if (active && st().features.some((f) => f.code === "sharwa_ship") && !resolveFeature("sharwa_ship", c.schema_name).enabled) {
+    return bad({ detail: "ميزة «شروة شيب» غير متاحة لهذا المتجر — فعّلها من «الميزات» أولاً." });
+  }
   c.pending_job = { kind: "sharwa_ship", reads_left: 2, target: active };
   logAction(c.schema_name, actor, active ? "sharwa_ship.activate" : "sharwa_ship.deactivate", active ? "أُرسلت مهمة activate_sharwa_ship_task." : "أُرسلت مهمة إلغاء شروة شيب.");
   return ok({ detail: active ? "قيد تفعيل شروة شيب — يتحدّث تلقائياً." : "قيد إلغاء شروة شيب.", store: storeRow(c) }, 220);
@@ -317,12 +322,12 @@ function custodySettled(schema: string): { settled: boolean; reason: string | nu
 function deactivationState(schema: string) {
   const s = st();
   const rows = s.deactivations.filter((d) => d.schema_name === schema).sort((a, b) => b.created_at.localeCompare(a.created_at));
-  // «إعادة التفعيل» removes the open record, so the newest row is the live one.
-  const live = rows[0] ?? null;
+  // «إعادة التفعيل» closes the open record (reinstated_at) and keeps it — as Django (INT-030).
+  const live = rows.find((d) => !d.reinstated_at) ?? null;
   const status = live?.status ?? null;
   const custody = custodySettled(schema);
   const opt = (action: "suspend" | "deactivate" | "close" | "reinstate", allowed: boolean, reason: string | null) => ({ action, allowed, reason: allowed ? null : reason });
-  const view = (d: (typeof rows)[number]) => ({ ...d, settled_custody: d.status === "closed" ? d.settled_custody : custody.settled });
+  const view = (d: (typeof rows)[number]) => ({ ...d, settled_custody: d.status === "closed" || d.reinstated_at ? d.settled_custody : custody.settled });
   return {
     current: live ? view(live) : null,
     history: rows.map(view),
@@ -355,17 +360,20 @@ on("POST", "stores/:schema/deactivation", "stores", async ({ params, body, actor
     if (!reason) errors.reason = ["اذكر سبب التعليق — يراه فريق الدعم."];
     if (!/^\d{4}-\d{2}-\d{2}/.test(grace) || Date.parse(grace) <= FIXTURE_NOW) errors.grace_period_ends_at = ["اختر تاريخ نهاية مهلة في المستقبل."];
     if (Object.keys(errors).length) return bad(errors);
-    s.deactivations.push({ id: nextPlatformId(s, "deactivation"), schema_name: c.schema_name, status: "suspended", reason, grace_period_ends_at: new Date(grace).toISOString(), settled_custody: false, created_at: now, updated_at: now, by: actor.username });
+    s.deactivations.push({ id: nextPlatformId(s, "deactivation"), schema_name: c.schema_name, status: "suspended", reason, grace_period_ends_at: new Date(grace).toISOString(), settled_custody: false, created_at: now, updated_at: now, by: actor.username, reinstated_at: null });
     c.is_active = false;
-  } else if (action === "reinstate") {
-    s.deactivations = s.deactivations.filter((d) => !(d.schema_name === c.schema_name && d.id === state.current!.id));
-    c.is_active = true;
   } else {
     const cur = s.deactivations.find((d) => d.id === state.current!.id)!;
-    cur.status = action === "deactivate" ? "deactivated" : "closed";
     cur.updated_at = now;
-    if (action === "close") cur.settled_custody = true;
+    cur.by = actor.username;
     if (reason) cur.reason = reason;
+    if (action === "reinstate") {
+      cur.reinstated_at = now;
+      c.is_active = true;
+    } else {
+      cur.status = action === "deactivate" ? "deactivated" : "closed";
+      if (action === "close") cur.settled_custody = true;
+    }
   }
   const label = { suspend: "عُلِّق", deactivate: "عُطِّل", close: "أُغلق", reinstate: "أُعيد تفعيل" }[action as "suspend"];
   logAction(c.schema_name, actor, `deactivation.${action}`, `${label} المتجر${reason ? `: ${reason}` : ""}.`);
@@ -388,6 +396,7 @@ function validatePlan(b: Body, s: PlatformState, selfId: number | null): Record<
   if (!decimal(b.commission_value)) e.commission_value = ["أدخل قيمة صحيحة."];
   if (bool(b.is_default_free) && !bool(b.is_free)) e.is_default_free = ["الباقة الافتراضية يجب أن تكون مجانية."];
   if (bool(b.is_free) && Number(str(b.price)) > 0) e.price = ["الباقة المجانية سعرها 0."];
+  if (bool(b.is_default_free) && !bool(b.is_active)) e.is_default_free = ["الباقة الافتراضية يجب أن تكون نشطة — التسجيل يُسندها للمتاجر الجديدة."];
   return e;
 }
 
@@ -427,7 +436,10 @@ on("PATCH", "plans/:id", "billing", async ({ params, body, actor }) => {
   const s = st();
   const p = s.plans.find((x) => x.id === Number(params.id));
   if (!p) return notFound("الباقة");
-  const b = { ...p, ...(await body()) } as Body;
+  const patch = await body();
+  // The code is fixed once created (Django, INT-032): it is used programmatically everywhere.
+  if (has(patch, "code") && str(patch.code) !== p.code) return bad({ code: ["الكود ثابت لا يتغيّر بعد الإنشاء — يُستخدم برمجياً."] });
+  const b = { ...p, ...patch } as Body;
   const e = validatePlan(b, s, p.id);
   if (Object.keys(e).length) return bad(e);
   Object.assign(p, planFields(b));
@@ -442,6 +454,8 @@ on("DELETE", "plans/:id", "billing", ({ params, actor }) => {
   if (!p) return notFound("الباقة");
   const subs = s.subscriptions.filter((x) => x.plan_id === p.id && x.is_current).length;
   if (subs) return bad({ detail: `لا يمكن حذف باقة عليها ${subs} اشتراكاً حالياً — انقلها إلى باقة أخرى أولاً.`, current_subscriptions: subs }, 409);
+  // Django's Subscription.plan is PROTECT (INT-032): the subscription history is never erased.
+  if (s.subscriptions.some((x) => x.plan_id === p.id)) return bad({ detail: "الباقة مرتبطة باشتراكات سابقة في سجل المتاجر — عطّلها («غير نشطة») بدل الحذف.", current_subscriptions: 0 }, 409);
   s.plans = s.plans.filter((x) => x.id !== p.id);
   for (const k of [...s.planFeatures.keys()]) if (k.startsWith(`${p.id}:`)) s.planFeatures.delete(k);
   logAction(null, actor, "plan.delete", `حُذفت الباقة «${p.name}».`);
@@ -614,8 +628,8 @@ on("PATCH", "billing-settings", "billing", async ({ body, actor }) => {
   if (has(b, "subscriptions_enabled")) {
     const next = bool(b.subscriptions_enabled);
     if (next && !s.billing.subscriptions_enabled) {
-      const free = s.plans.find((p) => p.is_default_free);
-      if (!free) return bad({ detail: "لا باقة مجانية افتراضية — أنشئها أولاً." });
+      const free = s.plans.find((p) => p.is_default_free && p.is_active);
+      if (!free) return bad({ detail: "لا باقة مجانية افتراضية نشطة — أنشئها أولاً." });
       for (const c of s.clients.filter((x) => x.provisioning_status === "ready" && !currentSubscription(x.schema_name))) {
         s.subscriptions.push({ id: nextPlatformId(s, "sub"), schema_name: c.schema_name, plan_id: free.id, status: "active", is_current: true, started_at: new Date().toISOString(), current_period_end: null, cancelled_at: null, notes: "إسناد تلقائي عند تفعيل الباقات" });
       }
@@ -642,6 +656,7 @@ function validateApp(b: Body, selfCode: string | null): Record<string, string[]>
   if (!decimal(b.price)) e.price = ["أدخل سعراً صحيحاً."];
   if (!(CURRENCIES as readonly string[]).includes(str(b.currency))) e.currency = ["عملة غير معروفة."];
   if (!["monthly", "yearly"].includes(str(b.billing_interval))) e.billing_interval = ["فترة غير معروفة."];
+  if (str(b.icon) && !/^[a-z0-9-]{1,40}$/.test(str(b.icon))) e.icon = ["اسم أيقونة من المكتبة (مثل message-circle)."];
   return e;
 }
 
@@ -761,21 +776,32 @@ on("DELETE", "market-categories/:id", "catalog", ({ params }) => {
 function zoneView(z: PlatformState["zones"][number]) {
   return { ...z, display_price: money(Number(z.price), z.currency) };
 }
-function validateZone(b: Body, selfId: number | null) {
+// Same rules as Django (tenants/console_money_service, INT-031): the code is set once and never
+// changes; the geo bounds are optional but all-or-none.
+function validateZone(b: Body, existing: PlatformState["zones"][number] | null, patch: Body = {}) {
   const e: Record<string, string[]> = {};
   const code = str(b.code).toUpperCase();
-  if (!/^[A-Z]{3}-\d{2}$/.test(code)) e.code = ["مثل SAN-01."];
-  else if (st().zones.some((z) => z.code === code && z.id !== selfId)) e.code = ["الكود مستخدم لمنطقة أخرى."];
+  if (!existing) {
+    if (!/^[A-Z]{3}-\d{2}$/.test(code)) e.code = ["مثل SAN-01."];
+    else if (st().zones.some((z) => z.code === code)) e.code = ["الكود مستخدم لمنطقة أخرى."];
+  } else if (has(patch, "code") && str(patch.code).toUpperCase() !== existing.code.toUpperCase()) {
+    e.code = ["الكود ثابت لا يتغيّر بعد الإنشاء — البوالص السابقة تشير إليه."];
+  }
   if (!str(b.name)) e.name = ["أدخل اسم المنطقة."];
   if (!decimal(b.price)) e.price = ["أدخل سعراً صحيحاً."];
   if (!(CURRENCIES as readonly string[]).includes(str(b.currency))) e.currency = ["عملة غير معروفة."];
   const div = Number(b.volumetric_divisor);
   if (!Number.isInteger(div) || div < 1000 || div > 10000) e.volumetric_divisor = ["بين 1000 و10000 (الافتراضي 5000)."];
-  const lat = Number(str(b.center_latitude));
-  const lng = Number(str(b.center_longitude));
-  if (!Number.isFinite(lat) || lat < -90 || lat > 90) e.center_latitude = ["خط عرض صحيح."];
-  if (!Number.isFinite(lng) || lng < -180 || lng > 180) e.center_longitude = ["خط طول صحيح."];
-  if (!/^\d{1,3}(\.\d{1,2})?$/.test(str(b.radius_km)) || Number(str(b.radius_km)) <= 0) e.radius_km = ["نصف قطر صحيح بالكيلومتر."];
+  const geo = { center_latitude: str(b.center_latitude), center_longitude: str(b.center_longitude), radius_km: str(b.radius_km) };
+  const filled = Object.values(geo).filter(Boolean).length;
+  if (filled > 0) {
+    const lat = Number(geo.center_latitude);
+    const lng = Number(geo.center_longitude);
+    if (geo.center_latitude && (!Number.isFinite(lat) || lat < -90 || lat > 90)) e.center_latitude = ["خط عرض صحيح."];
+    if (geo.center_longitude && (!Number.isFinite(lng) || lng < -180 || lng > 180)) e.center_longitude = ["خط طول صحيح."];
+    if (geo.radius_km && (!/^\d{1,3}(\.\d{1,2})?$/.test(geo.radius_km) || Number(geo.radius_km) <= 0)) e.radius_km = ["نصف قطر صحيح بالكيلومتر."];
+    if (filled < 3) for (const [k, v] of Object.entries(geo)) if (!v) e[k] ??= ["حدود المنطقة ثلاثية: المركز ونصف القطر معاً أو لا شيء."];
+  }
   return e;
 }
 const zoneFields = (b: Body) => ({
@@ -784,9 +810,9 @@ const zoneFields = (b: Body) => ({
   price: Number(str(b.price)).toFixed(2),
   currency: str(b.currency) as Currency,
   volumetric_divisor: Number(b.volumetric_divisor),
-  center_latitude: str(b.center_latitude),
-  center_longitude: str(b.center_longitude),
-  radius_km: str(b.radius_km),
+  center_latitude: str(b.center_latitude) || null,
+  center_longitude: str(b.center_longitude) || null,
+  radius_km: str(b.radius_km) || null,
   is_active: bool(b.is_active),
   sort_order: Number(b.sort_order ?? 0) || 0,
 });
@@ -804,8 +830,9 @@ on("POST", "sharwa-ship/zones", "zones", async ({ body, actor }) => {
 on("PATCH", "sharwa-ship/zones/:id", "zones", async ({ params, body }) => {
   const z = st().zones.find((x) => x.id === Number(params.id));
   if (!z) return notFound("المنطقة");
-  const b = { ...z, ...(await body()) } as Body;
-  const e = validateZone(b, z.id);
+  const patch = await body();
+  const b = { ...z, ...patch, code: z.code } as Body;
+  const e = validateZone(b, z, patch);
   if (Object.keys(e).length) return bad(e);
   Object.assign(z, zoneFields(b));
   return ok(zoneView(z));

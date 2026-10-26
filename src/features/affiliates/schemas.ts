@@ -1,9 +1,10 @@
 import { z } from "zod";
 
 /**
- * M17 — التسويق بالعمولة والمؤثرون (T145). Every row is `[NEEDS BACKEND]` (§7): the
- * proposed `/api/v1/{affiliates,influencers}/*` shapes, served today by `/api/bff/*` from
- * `src/mocks/affiliates`. Enum VALUES verbatim from discovery 02 §5; labels Arabic.
+ * M17 — التسويق بالعمولة والمؤثرون (T145). `/api/v1/{affiliates,influencers}/*`, served by Django
+ * `api/views_partners.py` (INT-034) when `affiliates` is in `SHARWA_LIVE_MODULES`, else by
+ * `src/mocks/affiliates`. «المستحق» = pending sales of paid, live orders minus commissions already
+ * paid for orders refunded later (Django's rule; may be negative). Enum VALUES verbatim from discovery 02 §5; labels Arabic.
  * Money is always a server string (`display_*`) — no local sum, even in previews (FR-17.05).
  */
 export const PARTNER_KINDS = ["affiliates", "influencers"] as const;

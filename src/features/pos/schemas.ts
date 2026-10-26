@@ -2,10 +2,10 @@ import { z } from "zod";
 import { displayMoney } from "@/lib/schemas/money";
 
 /**
- * M16 POS contracts — every row of §7 is `[NEEDS BACKEND]` (Django has `shift_hub`,
- * `open_shift`, `close_shift`, `cash_drawer`, `add_cash_movement`,
- * `resolve_shift_variance` and `create_order` as HTML views only). These are the
- * PROPOSED `/api/v1/pos/*` shapes, served today by `/api/bff/pos/*` from `src/mocks/pos`.
+ * M16 POS contracts — `/api/v1/pos/*`, served by Django `api/views_pos.py` (INT-033) when `pos`
+ * is in `SHARWA_LIVE_MODULES`, else by the fixture in `src/mocks/pos` (same shapes, same messages).
+ * Django keeps `Shift.variance` as expected − actual internally; `display_variance` here is
+ * actual − expected (negative = shortage), as before.
  *
  * Money is `display_*` text from the server, never summed or formatted here (FR-16.07).
  * Amounts the cashier TYPES travel as decimal strings ("150.00").

@@ -74,9 +74,16 @@ function CatalogInner() {
             return (
               <li key={a.code} className="flex flex-col gap-2 py-4 md:flex-row md:items-start md:gap-8" data-testid="app-row" data-code={a.code}>
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <Link href={`/dashboard/apps/${a.code}`} className="self-start text-base font-medium hover:underline">
-                    {a.name}
-                  </Link>
+                  <span className="flex flex-wrap items-baseline gap-2">
+                    <Link href={`/dashboard/apps/${a.code}`} className="text-base font-medium hover:underline">
+                      {a.name}
+                    </Link>
+                    {a.is_listed === false ? (
+                      <span className="text-xs text-muted-foreground" data-testid="app-delisted">
+                        لم يعد متاحاً للتثبيت
+                      </span>
+                    ) : null}
+                  </span>
                   <p className="max-w-prose text-sm text-muted-foreground">{a.description}</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 md:w-[26rem] md:shrink-0 md:justify-end">
@@ -155,7 +162,7 @@ function AppDetailView({ app }: { app: AppDetail }) {
         actions={
           owner ? (
             !inst ? (
-              <Button className="h-11 lg:h-9" onClick={() => (app.install_preview ? setConfirm("install") : run("install"))} disabled={action.isPending} data-testid="app-install">
+              <Button className="h-11 lg:h-9" onClick={() => (app.install_preview ? setConfirm("install") : run("install"))} disabled={action.isPending || app.is_listed === false} data-testid="app-install">
                 تثبيت
               </Button>
             ) : (
@@ -191,6 +198,7 @@ function AppDetailView({ app }: { app: AppDetail }) {
         </Notice>
       ) : null}
       {!owner ? <p className="text-sm text-muted-foreground">تثبيت التطبيقات وتفعيلها لمالك المتجر.</p> : null}
+      {app.is_listed === false ? <Notice testId="app-delisted">أُزيل هذا التطبيق من الكتالوج — يبقى تثبيتك الحالي ولا يمكن تثبيته من جديد.</Notice> : null}
 
       <dl className="grid max-w-xl grid-cols-[auto_1fr] gap-x-6 gap-y-2 text-sm">
         <dt className="text-muted-foreground">السعر</dt>

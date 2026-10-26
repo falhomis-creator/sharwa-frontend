@@ -2,14 +2,15 @@
  * Functional + visual check for Phase 7 T162 — M29 dropshipping & supplier feeds:
  *   - plan gate (`dropshipping` via the console override, restored at the end);
  *   - hub: four supplier ROWS, attention counter = held + rejected + failed orders;
- *   - connect makhazen with credentials (never shown back); `hide_when_out_of_stock` hint;
- *     webhook rotation shows `/webhooks/suppliers/<code>/<token>/` once;
+ *   - connect makhazen with the credential fields Django's registry declares (never shown back);
+ *     `hide_when_out_of_stock` hint; webhook rotation shows `/webhooks/suppliers/<code>/<token>/` + its secret once;
  *   - pricing rule 30% + `end_99` → the server's simulation, «after» prices end in .99;
  *     apply previews the affected count then reports;
  *   - supplier catalog: bulk import → `importing`, settles to `imported` with a product link;
  *   - feed wizard: a `.pdf` is refused locally; a CSV with 5 columns, 3 auto-mapped plus the
  *     missing required one chosen → preview of the converted rows with an error count →
- *     approve → run → errors CSV; the step lives in the URL; a column used twice is refused;
+ *     approve → run → errors CSV; an uploaded file has no repeat schedule (links only); the step lives in
+ *     the URL; a column used twice is refused;
  *   - supplier orders: the attention group on top with the server's reason; resubmit;
  *     tracking numbers Mono.
  *
@@ -94,8 +95,8 @@ async function main() {
     await p.goto(`${NOOR}${ROOT}/suppliers/makhazen`, { waitUntil: "load" });
     await p.waitForSelector("[data-testid=connect-form], [data-testid=sync-settings]");
     if (await p.locator("[data-testid=connect-form]").count()) {
+      check((await p.locator("[data-testid=connect-form] input").count()) === 1, "makhazen asks for one API token (Django's credential_fields)");
       await p.fill("[data-testid=connect-key]", "MKZ-SECRET-0123456789");
-      await p.locator("[data-testid=connect-form] input").nth(1).fill("STORE-77");
       await p.click("[data-testid=connect-save]");
     }
     await p.waitForSelector("[data-testid=sync-settings]");
@@ -107,6 +108,7 @@ async function main() {
     await p.click("[data-testid=webhook-rotate-confirm]");
     await p.waitForSelector("[data-testid=webhook-url]");
     check(/\/webhooks\/suppliers\/makhazen\/[0-9a-f]{32}\//.test((await p.textContent("[data-testid=webhook-url]")) ?? ""), "the rotated webhook URL is shown once");
+    check((await p.locator("[data-testid=webhook-secret]").count()) === 1, "…with its signing secret");
     await p.screenshot({ path: join(OUT, "supplier-settings-desktop.png"), fullPage: true });
     await p.reload({ waitUntil: "load" });
     await p.waitForSelector("[data-testid=sync-settings]");
@@ -177,9 +179,8 @@ async function main() {
     const href = (await p.getAttribute("[data-testid=feed-errors-csv]", "href"))!;
     const dl = await api(p, "GET", href);
     check(dl.status === 200 && dl.type.includes("text/csv"), "after the run, the errors CSV downloads");
-    await p.selectOption("[data-testid=feed-schedule]", "720");
-    await p.waitForSelector("text=حُفظت الجدولة");
-    check(true, "a repeat schedule can be set");
+    check((await p.locator("[data-testid=feed-schedule]").count()) === 0 && (await p.locator("[data-testid=feed-schedule-file]").count()) === 1, "an uploaded file has no repeat schedule (links only)");
+    check((await api(p, "PATCH", `/api/bff/dropshipping/feeds/${new URL(p.url()).searchParams.get("feed")}`, { schedule_interval: 720 })).status === 400, "…and the server refuses one");
     await p.screenshot({ path: join(OUT, "feed-run-desktop.png") });
 
     // ── supplier orders (US-29.5) ─────────────────────────────────────────────────

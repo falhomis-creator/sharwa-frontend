@@ -150,7 +150,7 @@ function ShippingForm({ settings }: { settings: StoreSettings }) {
           <SettingRow
             label={
               <>
-                حد الشحن المجاني <span className="font-normal text-muted-foreground">· ريال يمني (عدن) YER_NEW</span>
+                حد الشحن المجاني <span className="font-normal text-muted-foreground">· بعملة لوحة التحكم {settings.currency}</span>
               </>
             }
             description={

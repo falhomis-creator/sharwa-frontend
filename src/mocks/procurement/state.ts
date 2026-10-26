@@ -9,7 +9,8 @@ import { approvalsState, createApproval, type MockApproval } from "@/mocks/appro
 import { hashStore, rng, str, type Body } from "@/mocks/procurement/kit";
 
 /**
- * M23 mock server state — suppliers and purchase orders (`[NEEDS BACKEND]`, §7).
+ * M23 mock server state — suppliers and purchase orders (§7; live provider: Django
+ * `api/views_procurement.py`, INT-035, module `procurement`).
  * Receiving writes the M21 ledger through `adjustStock(reason=po_received)` so the stock
  * movement is visible in M21 with a reference back to the order (SC-23.2); submitting
  * creates the M18 `po_approval` request, and a decision taken there is reconciled here
@@ -287,12 +288,14 @@ export function listSuppliers(store: string | null, params: URLSearchParams) {
     .map((s) => supplierView(store, s));
 }
 
-function validateSupplier(b: Body, partial: boolean): Record<string, string[]> {
+function validateSupplier(store: string | null, b: Body, partial: boolean, selfId?: number): Record<string, string[]> {
   const errors: Record<string, string[]> = {};
   if (!partial || "name" in b) {
     const name = str(b.name);
     if (!name) errors.name = ["اسم المورد مطلوب."];
     else if (name.length > 150) errors.name = ["الاسم أطول من 150 حرفاً."];
+    // Django (INT-035): `unique_supplier_name`.
+    else if (procurementState(store).suppliers.some((s) => s.id !== selfId && s.name.toLowerCase() === name.toLowerCase())) errors.name = ["مورد بهذا الاسم موجود."];
   }
   if ("phone" in b && str(b.phone) && !/^\d{9,15}$/.test(str(b.phone))) errors.phone = ["رقم الهاتف أرقام فقط بالصيغة الدولية."];
   if ("email" in b && str(b.email) && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(str(b.email))) errors.email = ["بريد إلكتروني غير صالح."];
@@ -300,7 +303,7 @@ function validateSupplier(b: Body, partial: boolean): Record<string, string[]> {
 }
 
 export function createSupplier(store: string | null, b: Body): MockResult<ReturnType<typeof supplierView>> {
-  const errors = validateSupplier(b, false);
+  const errors = validateSupplier(store, b, false);
   if (Object.keys(errors).length) return { ok: false, status: 400, body: errors };
   const s: MockSupplier = {
     id: nextId(store, "supplier", 100),
@@ -321,7 +324,7 @@ export function createSupplier(store: string | null, b: Body): MockResult<Return
 export function updateSupplier(store: string | null, id: number, b: Body): MockResult<ReturnType<typeof supplierView>> {
   const s = procurementState(store).suppliers.find((x) => x.id === id);
   if (!s) return { ok: false, status: 404, body: { detail: "المورد غير موجود." } };
-  const errors = validateSupplier(b, true);
+  const errors = validateSupplier(store, b, true, id);
   if (Object.keys(errors).length) return { ok: false, status: 400, body: errors };
   for (const k of ["name", "contact_name", "phone", "email", "address", "tax_number", "notes"] as const) if (k in b) s[k] = str(b[k]);
   if ("is_active" in b) s.is_active = b.is_active === true;
@@ -332,8 +335,9 @@ export function deleteSupplier(store: string | null, id: number): MockResult<nul
   const state = procurementState(store);
   const s = state.suppliers.find((x) => x.id === id);
   if (!s) return { ok: false, status: 404, body: { detail: "المورد غير موجود." } };
-  const linked = state.orders.filter((o) => o.supplier_id === id && o.status !== "cancelled").length;
-  if (linked) return { ok: false, status: 409, body: { detail: `لا يمكن حذف المورد: مرتبط بـ ${linked} أمر شراء غير ملغى.`, orders_count: linked } };
+  // Django (INT-035): every order — cancelled ones too — keeps its supplier (PROTECT); deactivate instead.
+  const linked = state.orders.filter((o) => o.supplier_id === id).length;
+  if (linked) return { ok: false, status: 409, body: { detail: `لا يمكن حذف المورد: مرتبط بـ ${linked} أمر شراء — عطّله بدلاً من ذلك.`, orders_count: linked } };
   state.suppliers = state.suppliers.filter((x) => x.id !== id);
   return { ok: true, status: 204, data: null };
 }

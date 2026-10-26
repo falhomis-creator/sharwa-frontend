@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { parseAsStringLiteral, useQueryState } from "nuqs";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, KeyRound, Pencil } from "lucide-react";
+import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/shared/page-header";
@@ -13,7 +14,8 @@ import { Mono } from "@/components/shared/mono";
 import { isApiError } from "@/lib/api-error";
 import { formatDateTime, formatRelative } from "@/lib/format";
 import { useAccess } from "@/features/dashboard-shell/components/session-context";
-import { useStaffMember } from "@/features/staff/api";
+import { useStaffMember, useStaffWrites } from "@/features/staff/api";
+import { PasswordOnceDialog } from "@/features/staff/components/password-dialog";
 import { Phone, StatusText, outlineButton } from "@/features/staff/components/bits";
 import { StaffFormSheet } from "@/features/staff/components/staff-form-sheet";
 import { AssignmentsTab } from "@/features/staff/components/assignments-tab";
@@ -40,6 +42,8 @@ function StaffDetail({ id }: { id: number }) {
   const canManage = canPermission("staff.manage");
   const [tab, setTab] = useQueryState("tab", parseAsStringLiteral(STAFF_TABS).withDefault("assignments").withOptions({ history: "replace" }));
   const [editOpen, setEditOpen] = useState(false);
+  const writes = useStaffWrites();
+  const [issued, setIssued] = useState<{ name: string; password: string } | null>(null);
   const [now] = useState(() => new Date());
   const staff = query.data;
 
@@ -64,9 +68,26 @@ function StaffDetail({ id }: { id: number }) {
         title={staff.full_name}
         description={staff.roles_summary || "بلا تعيين — لن يستطيع الدخول إلى أي موقع."}
         actions={
-          <button type="button" className={outlineButton} disabled={!canManage || staff.status === "terminated"} title={canManage ? undefined : "تحتاج صلاحية إدارة الموظفين"} onClick={() => setEditOpen(true)} data-testid="edit-staff">
-            <Pencil className="size-4" aria-hidden /> تعديل
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={outlineButton}
+              disabled={!canManage || staff.status === "terminated" || writes.resetPassword.isPending}
+              title={canManage ? "تُبطل كلمة المرور الحالية وكل الجلسات" : "تحتاج صلاحية إدارة الموظفين"}
+              onClick={() =>
+                writes.resetPassword.mutate(staff.id, {
+                  onSuccess: (r) => setIssued({ name: staff.full_name, password: r.temporary_password }),
+                  onError: (e) => toast.error(isApiError(e) ? e.userMessage : "تعذّر إصدار كلمة المرور."),
+                })
+              }
+              data-testid="reset-password"
+            >
+              <KeyRound className="size-4" aria-hidden /> كلمة مرور مؤقتة جديدة
+            </button>
+            <button type="button" className={outlineButton} disabled={!canManage || staff.status === "terminated"} title={canManage ? undefined : "تحتاج صلاحية إدارة الموظفين"} onClick={() => setEditOpen(true)} data-testid="edit-staff">
+              <Pencil className="size-4" aria-hidden /> تعديل
+            </button>
+          </div>
         }
       />
       <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
@@ -127,6 +148,7 @@ function StaffDetail({ id }: { id: number }) {
       </Tabs>
 
       <StaffFormSheet open={editOpen} onOpenChange={setEditOpen} staff={staff} />
+      <PasswordOnceDialog issued={issued} onClose={() => setIssued(null)} />
     </div>
   );
 }

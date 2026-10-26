@@ -144,7 +144,7 @@ export function OrderSuccess({ uuid, mode }: { uuid: string; mode: "success" | "
           متابعة التسوق
         </Link>
       </div>
-      {!pendingGateway ? <PushSubscribe phone={phone} /> : null}
+      {!pendingGateway ? <PushSubscribe phone={phone} orderUuid={o.public_uuid} /> : null}
     </div>
   );
 }
@@ -228,10 +228,10 @@ function ReceiptUpload({ order }: { order: PublicOrder }) {
           </label>
           <FileField
             id={`${id}-receipt`}
-            accept=".jpg,.jpeg,.png,.webp,.pdf"
+            accept=".jpg,.jpeg,.png"
             onFile={(f) => {
-              if (f && f.size > 5 * 1024 * 1024) {
-                setError("الإيصال: صورة أو PDF حتى 5MB.");
+              if (f && (f.size > 5 * 1024 * 1024 || !/\.(jpe?g|png)$/i.test(f.name))) {
+                setError("الإيصال: صورة JPEG أو PNG حتى 5MB.");
                 setFile(null);
                 return false;
               }

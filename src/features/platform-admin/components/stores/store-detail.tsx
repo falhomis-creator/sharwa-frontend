@@ -14,7 +14,7 @@ import { useReprovision, useSharwaShip, useStore } from "@/features/platform-adm
 import { useCanWrite } from "@/features/platform-admin/components/admin-session";
 import { Code, ConfirmDialog, ReadOnlyNote, StatusText, toastError, toastResult } from "@/features/platform-admin/components/bits";
 import { ActiveCell, ProvisioningCell } from "@/features/platform-admin/components/store-cells";
-import { SharwaShipCell } from "@/features/platform-admin/components/stores/store-bits";
+import { SharwaShipCell, isProvisioningLive } from "@/features/platform-admin/components/stores/store-bits";
 import { ActionsTab, AppsTab, DomainsTab, SubscriptionTab } from "@/features/platform-admin/components/stores/detail-tabs";
 import { FeaturesTab } from "@/features/platform-admin/components/stores/features-tab";
 import { DeactivationTab } from "@/features/platform-admin/components/stores/deactivation-tab";
@@ -39,7 +39,7 @@ export function StoreDetailScreen({ schema }: { schema: string }) {
   const [polling, setPolling] = useState(false);
   const q = useStore(schema, { refetchInterval: polling ? 3000 : false });
   const s = q.data;
-  const busy = Boolean(s && (s.provisioning_status === "provisioning" || s.sharwa_ship === "activating" || s.sharwa_ship === "deactivating"));
+  const busy = Boolean(s && (isProvisioningLive(s) || s.sharwa_ship === "activating" || s.sharwa_ship === "deactivating"));
   if (busy !== polling) setPolling(busy);
   const canStores = useCanWrite("stores");
   const [confirm, setConfirm] = useState<null | "reprovision" | "ship">(null);

@@ -64,7 +64,10 @@ export function useSaveMarketSettings(m: Market) {
 
 export function useConnectNoon() {
   const invalidate = useInvalidate();
-  return useMutation({ mutationFn: (api_key: string) => apiFetch(`${BASE}/noon/connect`, marketRowSchema, { method: "POST", json: { api_key } }), onSuccess: invalidate });
+  return useMutation({
+    mutationFn: (json: { api_key: string; seller_id: string; marketplace_country: "SA" | "AE" }) => apiFetch(`${BASE}/noon/connect`, marketRowSchema, { method: "POST", json }),
+    onSuccess: invalidate,
+  });
 }
 
 export function useDisconnect() {

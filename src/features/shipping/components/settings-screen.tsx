@@ -129,7 +129,8 @@ function FeesForm({ settings }: { settings: ShippingSettings }) {
           >
             <div className="flex items-center gap-2">
               <input id="fee-free" dir="ltr" inputMode="decimal" className={numericInputClass} aria-invalid={Boolean(formState.errors.free_shipping_threshold)} data-testid="fee-free" {...register("free_shipping_threshold")} />
-              <Mono className="shrink-0 text-xs text-muted-foreground">YER_NEW</Mono>
+              {/* The threshold is compared in the dashboard currency (Django `build_order_invoice`). */}
+              <Mono className="shrink-0 text-xs text-muted-foreground">{settings.store_display_currency}</Mono>
             </div>
           </Field>
         </div>

@@ -17,8 +17,10 @@ import { SERVICE_HOURS } from "@/mocks/storefront/extensions";
  */
 export const STORE_OFFSET_MINUTES = 180;
 const OFFSET_SUFFIX = "+03:00";
-/** How long a buyer's hold lasts before the slot is released (server-owned, M26 §10). */
-export const HOLD_MINUTES = 10;
+/** How long a buyer's hold lasts before the slot is released (server-owned, M26 §10) — Django's 15 (INT-036). */
+export const HOLD_MINUTES = 15;
+/** Candidate start times step by 30 minutes, whatever the duration (Django `SLOT_STEP_MINUTES`, INT-036). */
+export const SLOT_STEP_MINUTES = 30;
 
 export interface AvailabilityWindow {
   weekday: number;
@@ -264,7 +266,10 @@ export function cancelSlot(store: string | null, id: number): MockResult<{ detai
 }
 
 // ── Buyer: slots & hold ──────────────────────────────────────────────────────────────
-/** `GET /catalog/products/<id>/slots/?date=` — generated from the windows, minus live holds and bookings. */
+/**
+ * `GET /catalog/products/<id>/slots/?date=` — generated from the windows every 30 minutes; a candidate that
+ * OVERLAPS a booking is `booked`, a live hold `held` (= `booking_service.day_slots`, INT-036).
+ */
 export function buyerSlots(store: string | null, p: MockProduct, date: string) {
   if (!p.is_bookable || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   const st = bookingsState(store);
@@ -274,11 +279,13 @@ export function buyerSlots(store: string | null, p: MockProduct, date: string) {
   const dayOf = (d: string) => {
     const out: Array<{ start_datetime: string; end_datetime: string; status: "available" | "held" | "booked" }> = [];
     for (const w of windows.filter((x) => x.weekday === backendWeekday(d)).sort((a, b) => a.start_time.localeCompare(b.start_time))) {
-      for (let m = toMinutes(w.start_time); m + duration <= toMinutes(w.end_time); m += duration) {
+      for (let m = toMinutes(w.start_time); m + duration <= toMinutes(w.end_time); m += SLOT_STEP_MINUTES) {
         const start = storeInstant(d, m);
-        if (start <= at) continue;
-        const slot = st.slots.find((s) => s.product_id === p.id && s.start === start && live(s, at));
-        out.push({ start_datetime: storeIso(start), end_datetime: storeIso(start + duration * 60_000), status: slot ? slot.status === "booked" ? "booked" : "held" : "available" });
+        const end = start + duration * 60_000;
+        if (start <= at || out.some((o) => Date.parse(o.start_datetime) === start)) continue;
+        const clashes = st.slots.filter((s) => s.product_id === p.id && live(s, at) && start < s.end && end > s.start);
+        const status = clashes.some((s) => s.status === "booked") ? "booked" : clashes.length ? "held" : "available";
+        out.push({ start_datetime: storeIso(start), end_datetime: storeIso(end), status });
       }
     }
     return out;

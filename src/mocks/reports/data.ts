@@ -22,6 +22,8 @@ const DATA_START = "2025-06-01";
 const MAX_RANGE_DAYS = 366;
 const DAY = 86_400_000;
 const ORDER_DERIVED = new Set(["sales_overview", "orders", "best_sellers"]);
+/** The reports whose numbers can be cut by location — Django `reports_contract.LOCATION_REPORTS`. */
+const LOCATION_REPORTS = new Set(["sales_overview", "orders", "store_overview", "best_sellers"]);
 
 type Body = Record<string, unknown>;
 
@@ -284,7 +286,8 @@ export function reportData(store: string | null, code: string, params: URLSearch
   const def = getReportDef(code);
   if (!def) return { ok: false, status: 404, body: { detail: "التقرير غير موجود." } };
   const meta = reportMeta(def);
-  const hasLocations = multiLocationEnabled(store);
+  // Django (INT-027): only the order-derived reports carry a location dimension.
+  const hasLocations = multiLocationEnabled(store) && LOCATION_REPORTS.has(def.code);
   const base = {
     report: meta,
     has_locations: hasLocations,

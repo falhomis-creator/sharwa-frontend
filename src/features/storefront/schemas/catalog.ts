@@ -22,7 +22,7 @@ export const CategoryNodeSchema: z.ZodType<CategoryNode> = z.lazy(() =>
   z.object({
     id: z.number().int(),
     name: z.string(),
-    // [NEEDS BACKEND] `image` for the category strip (M09 §7).
+    // `image` for the category strip (M09 §7) — served by Django since INT-011.
     image: z.string().nullable().optional(),
     subcategories: z.array(CategoryNodeSchema).optional().default([]),
   }),
@@ -51,9 +51,9 @@ export const ProductCardSchema = z.object({
   is_featured: z.boolean().optional().default(false),
   is_free_shipping: z.boolean().optional().default(false),
   payment_policy: PaymentPolicySchema.optional().default("cod"),
-  // [NEEDS BACKEND] merchant badges on list items (M09 §7); derived locally until then.
+  // Merchant badges on list items (M09 §7) — served by Django since INT-011.
   badges: z.array(z.object({ name: z.string(), color: z.string().optional() })).optional(),
-  // [NEEDS BACKEND] readable URL part after the id (M10 §10).
+  // Readable URL part after the id (M10 §10) — served by Django since INT-011.
   slug: z.string().nullable().optional(),
 });
 export type ProductCard = z.infer<typeof ProductCardSchema>;
@@ -191,7 +191,7 @@ export const ProductDetailSchema = ProductCardSchema.extend({
   sizes_list: z.array(z.string()).optional().default([]),
   colors_list: z.array(z.string()).optional().default([]),
   deposit_required: z.union([z.string(), z.number()]).nullable().optional(),
-  // [NEEDS BACKEND] — M10 §7, same names as the model fields.
+  // M10 §7 extensions, same names as the model fields — served by Django since INT-012.
   display_deposit: z.string().nullable().optional(),
   name_en: z.string().nullable().optional(),
   description_en: z.string().nullable().optional(),

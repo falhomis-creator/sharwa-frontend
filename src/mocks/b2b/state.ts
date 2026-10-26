@@ -119,6 +119,9 @@ export function createDraft(
       return detail("لا يوجد فرع متاح — أنشئ فرعاً أولاً أو حدّد location_id.");
     locationId = locations[0]!.id;
   }
+  // INT-044: Django refuses an unsupported currency (it used to store any text); absent = SAR.
+  if (body.currency !== undefined && body.currency !== null && body.currency !== "" && !CURRENCIES.includes(body.currency as Currency))
+    return detail("عملة غير مدعومة.");
   const currency = CURRENCIES.includes(body.currency as Currency)
     ? (body.currency as Currency)
     : "SAR";

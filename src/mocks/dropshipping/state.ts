@@ -65,9 +65,23 @@ interface Connection {
     intervals: { products_minutes: number; prices_minutes: number; inventory_minutes: number };
     stock_buffer: number;
     hide_when_out_of_stock: boolean;
+    orders: { forward_enabled: boolean; forward_cod: boolean; default_country_code: string; shipping_method: string };
   };
   webhook_rotated_at: string | null;
 }
+
+/**
+ * INT-039 — mirrors Django's supplier registry (`services/suppliers/registry.py`): the credential inputs each
+ * supplier declares, and what its adapter supports. Mákhazen asks for one API token (no separate store id).
+ */
+const CREDENTIAL_FIELDS: Record<SupplierCode, Array<{ name: string; label: string; type: string; help: string }>> = {
+  cj: [{ name: "api_key", label: "مفتاح API", type: "password", help: "من لوحة CJ: My CJ ← Authorization ← API ← Generate Key." }],
+  makhazen: [{ name: "api_key", label: "رمز الربط (API Token)", type: "password", help: "من حسابك في مخازن ← الإعدادات ← الربط البرمجي." }],
+  knawat: [{ name: "api_key", label: "رمز الربط (API Token)", type: "password", help: "من حسابك في قنوات ← الإعدادات ← الربط." }],
+  flat_feed: [],
+};
+const KEY_MIN: Record<SupplierCode, number> = { cj: 8, makhazen: 16, knawat: 12, flat_feed: 0 };
+const supportsLive = (code: SupplierCode) => code !== "flat_feed";
 
 export interface PricingRule {
   id: number;
@@ -80,6 +94,9 @@ export interface PricingRule {
   fx_rate: string;
   priority: number;
   is_active: boolean;
+  fixed_add: string;
+  shipping_estimate: string;
+  min_margin_percent: string;
 }
 
 interface SupplierProduct {
@@ -163,6 +180,8 @@ const NAMES: Record<SupplierCode, string[]> = {
   flat_feed: ["طقم أواني جرانيت", "مفرش سرير قطن", "منظم أدراج"],
 };
 
+const ENGINE_DEFAULTS = { fixed_add: "0.00", shipping_estimate: "0.00", min_margin_percent: "10.00" };
+
 const defaultSettings = (): Connection["settings"] => ({
   sync_products: true,
   sync_prices: true,
@@ -170,6 +189,7 @@ const defaultSettings = (): Connection["settings"] => ({
   intervals: { products_minutes: 1440, prices_minutes: 360, inventory_minutes: 30 },
   stock_buffer: 1,
   hide_when_out_of_stock: false,
+  orders: { forward_enabled: true, forward_cod: false, default_country_code: "", shipping_method: "" },
 });
 
 function seed(store: string | null): DropState {
@@ -200,9 +220,9 @@ function seed(store: string | null): DropState {
   };
   if (empty) return state;
   state.rules = [
-    { id: 1, name: "الهامش العام", scope_type: "all", scope_value: "", markup_percent: "35.00", rounding: "end_99", fx_source: "daily", fx_rate: "3.7500", priority: 100, is_active: true },
-    { id: 2, name: "إلكترونيات CJ", scope_type: "supplier", scope_value: "cj", markup_percent: "45.00", rounding: "end_95", fx_source: "fixed", fx_rate: "3.7500", priority: 10, is_active: true },
-    { id: 3, name: "أزياء", scope_type: "category", scope_value: "أزياء", markup_percent: "60.00", rounding: "nearest_1", fx_source: "fixed", fx_rate: "1.0000", priority: 20, is_active: false },
+    { id: 1, name: "الهامش العام", scope_type: "all", scope_value: "", markup_percent: "35.00", rounding: "end_99", fx_source: "daily", fx_rate: "3.7500", priority: 100, is_active: true, ...ENGINE_DEFAULTS },
+    { id: 2, name: "إلكترونيات CJ", scope_type: "supplier", scope_value: "cj", markup_percent: "45.00", rounding: "end_95", fx_source: "fixed", fx_rate: "3.7500", priority: 10, is_active: true, ...ENGINE_DEFAULTS },
+    { id: 3, name: "أزياء", scope_type: "category", scope_value: "أزياء", markup_percent: "60.00", rounding: "nearest_1", fx_source: "fixed", fx_rate: "1.0000", priority: 20, is_active: false, ...ENGINE_DEFAULTS },
   ];
   const catalogIds = catalog(store).products.map((p) => p.id);
   let pid = 1;
@@ -360,9 +380,13 @@ function ruleFor(store: string | null, p: SupplierProduct): PricingRule | null {
   );
 }
 
-function applyRule(p: SupplierProduct, r: Pick<PricingRule, "markup_percent" | "rounding" | "fx_rate">) {
+/** Django's `pricing_engine.compute_sell_price`: (cost×fx + shipping)×(1+markup) + fixed, never under cost×fx×(1+min margin). */
+function applyRule(p: SupplierProduct, r: Pick<PricingRule, "markup_percent" | "rounding" | "fx_rate"> & Partial<Pick<PricingRule, "fixed_add" | "shipping_estimate" | "min_margin_percent">>) {
   const fx = p.currency === "USD" ? Number(r.fx_rate) || 3.75 : 1;
-  return round(p.cost * fx * (1 + Number(r.markup_percent) / 100), r.rounding);
+  const cost = p.cost * fx;
+  const floor = cost * (1 + Number(r.min_margin_percent ?? 10) / 100);
+  const price = (cost + Number(r.shipping_estimate ?? 0)) * (1 + Number(r.markup_percent) / 100) + Number(r.fixed_add ?? 0);
+  return Math.max(round(Math.max(price, floor), r.rounding), Math.ceil(floor * 100) / 100);
 }
 
 const sar = (n: number) => displayMoney(n, "SAR");
@@ -384,6 +408,10 @@ export function connectionView(store: string | null, c: Connection) {
     webhook_configured: Boolean(c.webhook_rotated_at),
     attention_count: s.orders.filter((o) => o.supplier_code === c.supplier_code && ATTENTION.includes(o.status)).length,
     products_count: s.products.filter((p) => p.supplier_code === c.supplier_code).length,
+    reauth_required: false,
+    webhook_supported: supportsLive(c.supplier_code),
+    inventory_sync_supported: supportsLive(c.supplier_code),
+    credential_fields: CREDENTIAL_FIELDS[c.supplier_code],
   };
 }
 
@@ -392,12 +420,13 @@ export const listConnections = (store: string | null) => SUPPLIER_CODES.map((c) 
 export function connect(store: string | null, code: SupplierCode, b: Body): MockResult<ReturnType<typeof connectionView>> {
   const c = dropState(store).conns[code];
   const creds = (b.credentials ?? {}) as Body;
+  const missing = Object.fromEntries(CREDENTIAL_FIELDS[code].filter((f) => !str(creds[f.name])).map((f) => [`credentials.${f.name}`, [`أدخل «${f.label}».`]]));
+  if (Object.keys(missing).length) return { ok: false, status: 400, body: missing };
   if (code !== "flat_feed") {
     const key = str(creds.api_key);
-    if (key.length < 12) return { ok: false, status: 400, body: { "credentials.api_key": ["مفتاح API غير صالح (12 حرفاً على الأقل)."] } };
-    if (code === "makhazen" && !str(creds.store_id)) return { ok: false, status: 400, body: { "credentials.store_id": ["معرّف المتجر لدى مخازن مطلوب."] } };
+    if (key.length < KEY_MIN[code] || /^(bad|revoked)/i.test(key)) return { ok: false, status: 400, body: { "credentials.api_key": [`مفتاح ${code} غير صالح — تحقق من نسخه كاملاً.`] } };
     c.account_label = `${code}-api ••••${key.slice(-4)}`;
-  } else c.account_label = "ملف مسطّح";
+  } else c.account_label = "ملفات وروابط الكتالوج";
   c.connected = true;
   c.connected_at = new Date().toISOString();
   c.last_error = null;
@@ -416,9 +445,17 @@ export function saveSettings(store: string | null, code: SupplierCode, b: Body):
   const errors: Record<string, string[]> = {};
   const iv = (b.intervals ?? {}) as Body;
   const intervals = { products_minutes: Number(iv.products_minutes), prices_minutes: Number(iv.prices_minutes), inventory_minutes: Number(iv.inventory_minutes) };
-  for (const [k, v] of Object.entries(intervals)) if (!Number.isInteger(v) || v < 15) errors[`intervals.${k}`] = ["الفاصل 15 دقيقة على الأقل."];
+  // Django's bounds (INT-039): the catalog beat runs hourly → products/prices ≥ 60; inventory 15..1440.
+  const bounds: Record<keyof typeof intervals, [number, number]> = { products_minutes: [60, 10080], prices_minutes: [60, 10080], inventory_minutes: [15, 1440] };
+  for (const [k, v] of Object.entries(intervals) as Array<[keyof typeof intervals, number]>) {
+    const [low, high] = bounds[k];
+    if (!Number.isInteger(v) || v < low || v > high) errors[`intervals.${k}`] = [`الفاصل بين ${low} و${high} دقيقة.`];
+  }
   const buffer = Number(b.stock_buffer);
   if (!Number.isInteger(buffer) || buffer < 0) errors.stock_buffer = ["عدد صحيح غير سالب."];
+  const orders = (b.orders ?? null) as Body | null;
+  const country = str(orders?.default_country_code).toUpperCase();
+  if (country && !/^[A-Z]{2}$/.test(country)) errors["orders.default_country_code"] = ["رمز دولة من حرفين لاتينيين (مثل YE أو SA)."];
   if (Object.keys(errors).length) return { ok: false, status: 400, body: errors };
   c.settings = {
     sync_products: b.sync_products === true,
@@ -427,16 +464,20 @@ export function saveSettings(store: string | null, code: SupplierCode, b: Body):
     intervals,
     stock_buffer: buffer,
     hide_when_out_of_stock: b.hide_when_out_of_stock === true,
+    orders: orders
+      ? { forward_enabled: orders.forward_enabled === true, forward_cod: orders.forward_cod === true, default_country_code: country, shipping_method: str(orders.shipping_method).slice(0, 100) }
+      : c.settings.orders,
   };
   return { ok: true, data: connectionView(store, c) };
 }
 
-export function rotateWebhook(store: string | null, code: SupplierCode, host: string): MockResult<{ webhook_url: string }> {
+export function rotateWebhook(store: string | null, code: SupplierCode, host: string): MockResult<{ webhook_url: string; webhook_secret: string; base_url_missing: boolean }> {
   const c = dropState(store).conns[code];
-  if (!c.connected) return { ok: false, status: 409, body: { detail: "المورد غير مربوط." } };
+  if (!c.connected) return { ok: false, status: 409, body: { detail: "اربط المورد أولاً ثم فعّل الإشعارات الفورية." } };
+  if (!supportsLive(code)) return { ok: false, status: 409, body: { detail: "هذا المورد لا يرسل إشعارات فورية — المزامنة الدورية تكفي." } };
   c.webhook_rotated_at = new Date().toISOString();
-  const token = Array.from({ length: 32 }, () => "abcdef0123456789"[Math.floor(Math.random() * 16)]).join("");
-  return { ok: true, data: { webhook_url: `https://${host}/webhooks/suppliers/${code}/${token}/` } };
+  const hex = (n: number) => Array.from({ length: n }, () => "abcdef0123456789"[Math.floor(Math.random() * 16)]).join("");
+  return { ok: true, data: { webhook_url: `https://${host}/webhooks/suppliers/${code}/${hex(32)}/`, webhook_secret: hex(43), base_url_missing: false } };
 }
 
 function newJob(store: string | null, code: SupplierCode, type: SyncJob["job_type"], extra: Partial<SyncJob> = {}): SyncJob {
@@ -463,6 +504,7 @@ function newJob(store: string | null, code: SupplierCode, type: SyncJob["job_typ
 
 export function syncInventory(store: string | null, code: SupplierCode): MockResult<{ job_id: number }> {
   const c = dropState(store).conns[code];
+  if (!supportsLive(code)) return { ok: false, status: 409, body: { detail: "هذا المورد لا يدعم مزامنة المخزون المباشرة — المخزون يتحدّث مع الكتالوج/الملف." } };
   if (!c.connected) return { ok: false, status: 409, body: { detail: "المورد غير مربوط." } };
   return { ok: true, status: 202, data: { job_id: newJob(store, code, "inventory", { processed: 48 }).id } };
 }
@@ -489,6 +531,16 @@ function parseRule(b: Body): MockResult<Omit<PricingRule, "id">> {
   if (fx === "fixed" && !(/^\d+(\.\d{1,4})?$/.test(str(b.fx_rate)) && Number(b.fx_rate) > 0)) errors.fx_rate = ["سعر صرف موجب حتى 4 خانات."];
   const priority = Number(b.priority ?? 50);
   if (!Number.isInteger(priority) || priority < 1) errors.priority = ["الأولوية عدد صحيح موجب (الأصغر أولاً)."];
+  const engine: Record<string, string> = {};
+  for (const [k, high, fallback] of [
+    ["fixed_add", 100000, "0"],
+    ["shipping_estimate", 100000, "0"],
+    ["min_margin_percent", 1000, "10"],
+  ] as const) {
+    const raw = str(b[k]) || fallback;
+    if (!/^\d+(\.\d{1,2})?$/.test(raw) || Number(raw) > high) errors[k] = [`رقم بين 0 و${high} حتى خانتين.`];
+    else engine[k] = Number(raw).toFixed(2);
+  }
   if (Object.keys(errors).length) return { ok: false, status: 400, body: errors };
   return {
     ok: true,
@@ -502,6 +554,9 @@ function parseRule(b: Body): MockResult<Omit<PricingRule, "id">> {
       fx_rate: fx === "daily" ? "3.7500" : Number(b.fx_rate).toFixed(4),
       priority,
       is_active: b.is_active !== false,
+      fixed_add: engine.fixed_add!,
+      shipping_estimate: engine.shipping_estimate!,
+      min_margin_percent: engine.min_margin_percent!,
     },
   };
 }
@@ -557,13 +612,13 @@ export function simulateRule(store: string | null, b: Body): MockResult<{ sample
   return { ok: true, data: { sample, affected_count: products.length, below_cost_count: sample.filter((s) => s.below_cost).length, overlaps } };
 }
 
-export function applyRuleNow(store: string | null, id: number): MockResult<{ updated: number }> {
+export function applyRuleNow(store: string | null, id: number): MockResult<{ updated: number; job_id: number | null }> {
   const rule = dropState(store).rules.find((x) => x.id === id);
   if (!rule) return { ok: false, status: 404, body: { detail: "القاعدة غير موجودة." } };
   if (!rule.is_active) return { ok: false, status: 409, body: { detail: "القاعدة غير مفعّلة." } };
   const targets = dropState(store).products.filter((p) => inScope(p, rule) && ruleFor(store, p)?.id === rule.id);
   targets.forEach((p) => (p.price_after_rule = applyRule(p, rule)));
-  return { ok: true, data: { updated: targets.length } };
+  return { ok: true, data: { updated: targets.length, job_id: null } };
 }
 
 // ── supplier catalog ────────────────────────────────────────────────────────────────
@@ -786,7 +841,8 @@ export function patchFeed(store: string | null, id: number, b: Body): MockResult
   if ("schedule_interval" in b) {
     const v = b.schedule_interval;
     if (v === null || v === "" || v === 0) f.schedule_interval = null;
-    else if (!Number.isInteger(Number(v)) || Number(v) < 60) return { ok: false, status: 400, body: { schedule_interval: ["الفاصل 60 دقيقة على الأقل."] } };
+    else if (f.source_kind !== "url") return { ok: false, status: 400, body: { schedule_interval: ["الجدولة لملفات الروابط فقط — الملف المرفوع لا يتغيّر من تلقاء نفسه."] } };
+    else if (!Number.isInteger(Number(v)) || Number(v) < 60 || Number(v) > 10080) return { ok: false, status: 400, body: { schedule_interval: ["الفاصل بين 60 و10080 دقيقة."] } };
     else f.schedule_interval = Number(v);
   }
   if ("name" in b && str(b.name)) f.name = str(b.name);

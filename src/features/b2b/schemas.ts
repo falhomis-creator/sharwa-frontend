@@ -2,13 +2,15 @@ import { z } from "zod";
 import { CURRENCIES, currencySchema } from "@/lib/schemas/money";
 
 /**
- * M36 — البيع بالجملة B2B (T169). The three draft rows are READY in Django:
+ * M36 — البيع بالجملة B2B (T169 · INT-044). The three draft rows are Django's:
  *   POST /api/v1/orders/b2b-draft/ · GET /api/v1/orders/b2b-drafts/ ·
  *   POST /api/v1/orders/b2b-draft/<approval_id>/resolve/
  * and go through the transparent `/api/v1/*` passthrough (fixtures only answer while
- * Django is unreachable). The form's choices (approver roles, branches) are
- * `[NEEDS BACKEND]` (`GET /api/v1/roles/`, M22 locations) → `/api/bff/b2b/options`.
- * The browser NEVER sends a price (FR-36.01, SC-36.3).
+ * Django is unreachable). Since INT-044 the list carries `created_by_name` + `escalated_at`
+ * (escalated first) and is open to approvers too. The form's choices come from
+ * `/api/bff/b2b/options` → `GET /api/v1/orders/b2b-options/` (module `b2b`).
+ * The browser NEVER sends a price (FR-36.01, SC-36.3): Django prices each line — the
+ * quantity price (`ProductTierPrice`) when one applies, in the draft's currency.
  */
 export const B2B_DECISIONS = ["approved", "rejected"] as const;
 export type B2bDecision = (typeof B2B_DECISIONS)[number];

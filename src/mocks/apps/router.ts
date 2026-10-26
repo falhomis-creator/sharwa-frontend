@@ -16,6 +16,7 @@ import {
   isUsable,
   listApps,
   patchTemplate,
+  reconnectAi,
   resetApps,
   saveAiSettings,
   templateView,
@@ -25,7 +26,7 @@ import {
 } from "@/mocks/apps/state";
 
 /**
- * The mock SERVER for `/api/v1/apps/*` (M30 §7, M31 §7 — all `[NEEDS BACKEND]`). Gates:
+ * The mock SERVER for `/api/v1/apps/*` (M30 §7 = Django since INT-040, M31 §7 = Django since INT-041). Gates:
  * the `app_marketplace` feature (FR-30.01) → writes and the AI console are the owner's →
  * the WhatsApp / AI rows need that app installed and active.
  */
@@ -52,7 +53,11 @@ r.on("PATCH", "whatsapp/templates/:id", async (ctx) => {
 r.on("GET", "whatsapp/connect-url", (ctx) => needs(ctx, WHATSAPP_APP) ?? mockJson({ url: `https://connect.sharwa.app/s/${ctx.store}?t=${Date.now().toString(36)}`, connected: true }, { delay: 120 }));
 
 // Sharwa AI (M31)
-r.on("GET", "sharwa-ai/status", (ctx) => mockJson(aiStatus(ctx.store), { delay: 80 }));
+r.on("GET", "sharwa-ai/status", (ctx) => needs(ctx, AI_APP) ?? mockJson(aiStatus(ctx.store), { delay: 80 }));
+r.on("POST", "sharwa-ai/reconnect", (ctx) => {
+  if (!owner(ctx)) return mockJson(OWNER_ONLY, { status: 403 });
+  return needs(ctx, AI_APP) ?? send(reconnectAi(ctx.store));
+});
 r.on("GET", "sharwa-ai/settings", (ctx) => needs(ctx, AI_APP) ?? mockJson(aiSettings(ctx.store), { delay: 100 }));
 r.on("PUT", "sharwa-ai/settings", async (ctx) => {
   if (!owner(ctx)) return mockJson(OWNER_ONLY, { status: 403 });

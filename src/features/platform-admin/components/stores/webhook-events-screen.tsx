@@ -22,7 +22,8 @@ import { WEBHOOK_EVENT_LABELS, WEBHOOK_EVENT_STATUSES, type WebhookEvent, type W
  * default view is the pending queue.
  */
 const TONE: Record<WebhookEventStatus, "warning" | "success" | "muted"> = { pending: "warning", resolved: "success", discarded: "muted" };
-const SOURCES = ["aramex", "smsa", "jeeb", "kuraimi", "whatsapp"] as const;
+/** Django's DLQ `carrier_code` values (PendingWebhookEvent — carrier webhooks; default `sharwa_ship`). */
+const SOURCES = ["sharwa_ship", "aramex", "smsa", "jeeb", "kuraimi", "whatsapp"] as const;
 
 const parsers = {
   status: parseAsStringLiteral([...WEBHOOK_EVENT_STATUSES, "all"] as const).withDefault("pending"),

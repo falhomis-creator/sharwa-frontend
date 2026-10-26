@@ -110,7 +110,7 @@ export function BulkOverrideDialog({ open, onOpenChange, schemas, onDone }: { op
       {value !== "remove" ? (
         <label className="flex flex-col gap-1.5 text-sm">
           ملاحظة
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={300} rows={2} placeholder="سبب الاستثناء — يظهر في صف المتجر" />
+          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={255} rows={2} placeholder="سبب الاستثناء — يظهر في صف المتجر" />
         </label>
       ) : null}
     </BulkActionDialog>

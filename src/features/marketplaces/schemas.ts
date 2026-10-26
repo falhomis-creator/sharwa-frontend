@@ -87,6 +87,8 @@ export const settingsSchema = z.object({
   inventory_sync: z.boolean(),
   stock_buffer: z.number(),
   order_pull: z.boolean(),
+  /** Django `import_marketplace_fulfilled_orders` (INT-038): FBA/FBN orders imported for reports only. */
+  import_marketplace_fulfilled: z.boolean().default(true),
   default_order_status_id: z.number().nullable(),
   preview: z.object({ sample_product: z.string(), display_store_price: z.string(), display_sample_price: z.string() }),
   order_status_options: z.array(z.object({ id: z.number(), name: z.string() })),
@@ -104,6 +106,7 @@ export const settingsFormSchema = z.object({
   inventory_sync: z.boolean(),
   stock_buffer: z.string().regex(/^\d+$/, "عدد صحيح غير سالب."),
   order_pull: z.boolean(),
+  import_marketplace_fulfilled: z.boolean(),
   default_order_status_id: z.string(),
 });
 export type SettingsForm = z.infer<typeof settingsFormSchema>;

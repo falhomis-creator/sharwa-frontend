@@ -61,6 +61,8 @@ export const MOCK_MANAGER_PERMISSIONS = [
   "suppliers.manage",
   "channels.inbox.access",
   "catalog.manage",
+  // INT-043: Django migration 0235 seeds it to «مدير المتجر».
+  "expenses.manage",
 ] as const;
 
 export function storeNameFor(store: string | null): string {

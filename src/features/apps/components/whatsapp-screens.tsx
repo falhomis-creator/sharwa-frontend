@@ -262,7 +262,7 @@ function Editor({ id }: { id: number }) {
   const q = useWaTemplate(id);
   if (q.isLoading) return <Skeleton className="h-64" />;
   if (!q.data) return <ErrorState error={q.error} onRetry={() => void q.refetch()} />;
-  return <EditorForm key={q.data.updated_at} t={q.data} />;
+  return <EditorForm key={`${q.data.updated_at}:${q.data.is_custom ?? ""}`} t={q.data} />;
 }
 
 function EditorForm({ t }: { t: WaTemplate }) {
@@ -288,6 +288,17 @@ function EditorForm({ t }: { t: WaTemplate }) {
     });
   }
 
+  /** An empty body tells the server to drop the merchant's text and use the platform default again. */
+  async function reset() {
+    try {
+      await save.mutateAsync("");
+      setError(undefined);
+      toast.success("عاد القالب إلى النص الافتراضي.");
+    } catch (e) {
+      setError(isApiError(e) ? (e.fields?.body?.[0] ?? e.userMessage) : "تعذّرت الاستعادة.");
+    }
+  }
+
   async function submit() {
     if (missing.length) return setError(`المتغير {{${missing[0]}}} إلزامي في هذا القالب.`);
     try {
@@ -305,7 +316,12 @@ function EditorForm({ t }: { t: WaTemplate }) {
         <Link href="/dashboard/apps/whatsapp/templates" className="self-start text-sm text-muted-foreground hover:underline">
           ← القوالب
         </Link>
-        <h2 className="text-base font-semibold">{t.name}</h2>
+        <h2 className="flex flex-wrap items-baseline gap-2 text-base font-semibold">
+          {t.name}
+          <span className="text-xs font-normal text-muted-foreground" data-testid="wa-template-origin">
+            {t.is_custom ? "نصّك المخصَّص" : "النص الافتراضي"}
+          </span>
+        </h2>
         <div className="flex flex-wrap gap-1.5" aria-label="المتغيرات المتاحة">
           {t.variables.map((v) => (
             <button key={v} type="button" disabled={!owner} onClick={() => insert(v)} className="inline-flex h-11 items-center rounded-md border border-border px-2 font-mono text-xs hover:bg-muted lg:h-7" dir="ltr" data-testid="wa-variable">
@@ -318,9 +334,16 @@ function EditorForm({ t }: { t: WaTemplate }) {
           <Textarea ref={area} id="wa-body" rows={8} dir="auto" value={body} readOnly={!owner} onChange={(e) => setBody(e.target.value)} aria-invalid={Boolean(error)} data-testid="wa-body" />
         </Field>
         {owner ? (
-          <Button className="h-11 self-start lg:h-9" onClick={() => void submit()} disabled={save.isPending || body === t.body} data-testid="wa-save">
-            {save.isPending ? "جارٍ الحفظ…" : "حفظ القالب"}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button className="h-11 lg:h-9" onClick={() => void submit()} disabled={save.isPending || body === t.body} data-testid="wa-save">
+              {save.isPending ? "جارٍ الحفظ…" : "حفظ القالب"}
+            </Button>
+            {t.is_custom ? (
+              <Button variant="ghost" className="h-11 lg:h-9" onClick={() => void reset()} disabled={save.isPending} data-testid="wa-reset">
+                استعادة النص الافتراضي
+              </Button>
+            ) : null}
+          </div>
         ) : (
           <p className="text-xs text-muted-foreground">تحرير القوالب لمالك المتجر.</p>
         )}

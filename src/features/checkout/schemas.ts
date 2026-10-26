@@ -3,8 +3,8 @@ import { currencySchema } from "@/lib/schemas/money";
 import { normalizePhone } from "@/lib/format";
 
 /**
- * M12 contracts — every row `[NEEDS BACKEND]` (M12 §7); the JSON shapes M12 proposes for
- * `POST /checkout/` and its helpers. Amounts are `display_*` strings only (FR-12.03).
+ * M12 contracts — served by Django since INT-014 (`api/views_checkout.py`); the mock keeps the
+ * same shapes. Amounts are `display_*` strings only (FR-12.03).
  */
 export const DeliveryOptionsSchema = z.object({
   delivery_methods: z.array(
@@ -20,7 +20,16 @@ export const PAYMENT_METHODS = ["manual", "sharwa_pay", "jeeb", "kuraimi", "cod"
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 export const PaymentOptionsSchema = z.object({
-  methods: z.array(z.object({ code: z.enum(PAYMENT_METHODS), label: z.string(), enabled: z.boolean(), reason: z.string().nullable().optional() })),
+  methods: z.array(
+    z.object({
+      code: z.enum(PAYMENT_METHODS),
+      label: z.string(),
+      enabled: z.boolean(),
+      reason: z.string().nullable().optional(),
+      /** Direct gateways: what the buyer types at checkout (Jeeb `purchase_code`, Kuraimi `pin`). */
+      fields: z.array(z.object({ name: z.string(), label: z.string(), secret: z.boolean().optional() })).optional(),
+    }),
+  ),
   payout_accounts: z.array(z.object({ account_type: z.enum(["bank", "wallet"]), provider_name: z.string(), account_number: z.string(), account_name: z.string() })),
 });
 export type PaymentOptions = z.infer<typeof PaymentOptionsSchema>;

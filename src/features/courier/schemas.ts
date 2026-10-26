@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 /**
- * M38 contracts. Ready rows (§7): the five `/api/v1/agent/*` POSTs. `[NEEDS BACKEND]`
- * reads (`/api/bff/agent/{me,shipments,custody}`) carry the proposed shapes. Amounts are
+ * M38 contracts. The five `/api/v1/agent/*` POSTs (Ready; INT-046 aligned their bodies: `agent` and
+ * `handed_over_to` are `{id, name}`) and the four reads (`/api/bff/agent/{me,shipments,custody}` →
+ * Django `api/views_courier.py`, module `courier`). Amounts are
  * server strings shown verbatim in Mono (FR-38.10). Defined here, not imported from the
  * dashboard's shipping feature: route groups never share feature folders (VIII).
  */

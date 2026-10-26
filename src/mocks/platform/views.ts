@@ -43,7 +43,7 @@ export function storeRow(c: ClientRow) {
 
 export function currentDeactivation(schema: string): DeactivationRow | undefined {
   return platformState()
-    .deactivations.filter((d) => d.schema_name === schema)
+    .deactivations.filter((d) => d.schema_name === schema && !d.reinstated_at)
     .sort((a, b) => b.created_at.localeCompare(a.created_at))[0];
 }
 

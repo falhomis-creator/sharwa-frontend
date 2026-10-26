@@ -20,7 +20,7 @@ import {
 
 /**
  * M17 hooks — keys `[tenant, 'partners', kind, …]`, Zod on every response (§11 IX).
- * `[NEEDS BACKEND]` rows through `/api/bff/{affiliates,influencers}/*` (one catch-all each).
+ * Through `/api/bff/{affiliates,influencers}/*` (one catch-all each; live module `affiliates`).
  */
 export interface PartnerListParams {
   q?: string;

@@ -54,11 +54,41 @@ async function api(p: Page, method: string, path: string, body?: unknown) {
   );
 }
 
+/**
+ * This is a MOCK E2E: every session is the `sharwa_mock_session` cookie, which Django does not know. A BFF route
+ * whose module is in SHARWA_LIVE_MODULES goes to Django and answers 401 (or 503 with Django down), so the
+ * script would fail far from the cause. Check up front that the routes it drives are answered by the fixtures.
+ */
+async function requireMocks(browser: Browser) {
+  const probe = await page(browser, { store: "glow" });
+  await probe.goto(`${GLOW}/dashboard`, { waitUntil: "load" });
+  const routes = { "/api/bff/products?page_size=1": "products", "/api/bff/b2b/options": "b2b" } as const;
+  const live: string[] = [];
+  for (const [path, module] of Object.entries(routes)) {
+    const r = await probe.evaluate(async (u) => {
+      const res = await fetch(u, { headers: { accept: "application/json" } });
+      return { status: res.status, mock: res.headers.get("x-sharwa-mock") };
+    }, path);
+    if (r.mock !== "1") live.push(`${module} (${path} → ${r.status}, not the fixture)`);
+  }
+  await probe.context().close();
+  if (live.length) {
+    console.error(
+      `✗ b2b-check runs on mocks, but these modules are live on this dev server:\n  - ${live.join("\n  - ")}\n` +
+        "  Restart it without them, e.g. in cmd:  set SHARWA_LIVE_MODULES=&& npm run dev\n" +
+        "  (or remove `products`/`b2b` from SHARWA_LIVE_MODULES in .env.local), then run this script again.",
+    );
+    await browser.close();
+    process.exit(1);
+  }
+}
+
 type Draft = { id: number; customer_name: string; approval_id: number | null; approval_version: number | null; items_count: number; created_by_name?: string | null; escalated_at?: string | null };
 
 async function main() {
   mkdirSync(OUT, { recursive: true });
   const browser = await launch();
+  await requireMocks(browser);
 
   // ── list + self-approval (US-36.2.1) ─────────────────────────────────────────────
   const mona = await page(browser, { store: "noor", session: "manager" });

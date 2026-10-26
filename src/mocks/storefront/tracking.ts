@@ -6,8 +6,10 @@ import { readSettings } from "@/mocks/settings/state";
 import { ORDER_STATUS_LABELS_AR, orderMoney, orderTotalSar, publicOrder } from "@/mocks/storefront/checkout";
 
 /**
- * `[NEEDS BACKEND]` `GET /api/v1/orders/track/<public_uuid>/` (M41 §7), projected from the
- * M06 order fixture. FR-41.04 is enforced HERE, at the source: the payload never carries
+ * Fixture for `GET /api/v1/orders/track/<public_uuid>/` (M41 §7 — Django since INT-015,
+ * `products/services/order_tracking_service.py`), projected from the M06 order fixture and
+ * aligned to Django: a prepared DELIVERY fulfilment reads «جاهز للشحن» (`preparing`), a
+ * prepared PICKUP fulfilment reads «جاهز للاستلام» + its code. FR-41.04 is enforced HERE, at the source: the payload never carries
  * the full phone, coordinates, fraud score, staff, cost or internal location names, and a
  * gift order carries no amount at all (FR-41.05).
  */
@@ -59,7 +61,7 @@ function shipmentFor(o: MockOrder, loc: number, state: FulfillmentState) {
     carrier_name: "شروة شيب",
     status,
     status_label: SHIPMENT_LABELS[status],
-    explanation: returned ? "تعذّر التسليم بعد محاولتين وأُعيدت الشحنة إلى المتجر؛ تواصل مع المتجر لإعادة الإرسال." : null,
+    explanation: returned ? "تعذّر التسليم وأُعيدت الشحنة إلى المتجر؛ تواصل مع المتجر لإعادة الإرسال." : null,
     courier: active ? { name: "عبدالله المندوب", phone: "967771234567" } : null,
     events: events.reverse(),
   };
@@ -76,15 +78,22 @@ export function trackOrder(store: string | null, uuid: string) {
   const finished = o.status === "completed" || o.status === "refunded";
   const fulfillments = locations.map((loc, k) => {
     let state: FulfillmentState = o.status === "cancelled" ? "cancelled" : finished ? "delivered" : (o.fulfillment_states[loc] ?? "pending");
-    // A pickup order that is prepared becomes «جاهز للاستلام» (US-41.3).
-    if (o.pickup_location_id && (state === "shipped" || state === "preparing") && !finished) state = "ready_for_pickup";
+    // Django: `ready_for_pickup` = «ready for pickup OR shipping». A pickup order that is
+    // ready (or marked shipped) becomes «جاهز للاستلام» + code (US-41.3); a delivery order
+    // that is ready stays `preparing`, labelled «جاهز للشحن».
+    let label: string | null = null;
+    if (o.pickup_location_id && (state === "shipped" || state === "ready_for_pickup") && !finished) state = "ready_for_pickup";
+    else if (state === "ready_for_pickup") {
+      state = "preparing";
+      label = "جاهز للشحن";
+    }
     const items = o.lines
       .filter((l) => l.location_id === loc)
       .map((l) => ({ product_name: l.product_name, variant_label: l.variant_label, quantity: Number(l.quantity), image: imageOf(l.product_id) }));
     return {
       id: o.id * 10 + k,
       status: state,
-      status_label: FULFILLMENT_STATE_LABELS[state],
+      status_label: label ?? FULFILLMENT_STATE_LABELS[state],
       items,
       pickup_code: state === "ready_for_pickup" ? String((o.id * 7919) % 1_000_000).padStart(6, "0") : null,
       shipment: o.pickup_location_id ? null : shipmentFor(o, loc, state),

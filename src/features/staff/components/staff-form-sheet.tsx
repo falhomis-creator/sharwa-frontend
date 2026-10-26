@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -15,6 +15,7 @@ import { applyFieldErrors } from "@/features/settings/hooks/use-section-save";
 import { staffFormSchema, type StaffForm, type StaffMember } from "@/features/staff/schemas";
 import { useStaffWrites } from "@/features/staff/api";
 import { outlineButton, primaryButton } from "@/features/staff/components/bits";
+import { PasswordOnceDialog } from "@/features/staff/components/password-dialog";
 
 const EMPTY: StaffForm = { full_name: "", phone: "", is_active: true, enforce_ip_whitelist: false, enforce_roster_schedule: false };
 
@@ -26,6 +27,8 @@ export function StaffFormSheet({ open, onOpenChange, staff }: { open: boolean; o
   const router = useRouter();
   const writes = useStaffWrites();
   const form = useForm<StaffForm>({ resolver: zodResolver(staffFormSchema), defaultValues: EMPTY });
+  // INT-022: the new member's temporary password — shown once, then we go to their assignments.
+  const [issued, setIssued] = useState<{ id: number; name: string; password: string } | null>(null);
   const { register, control, handleSubmit, reset, formState } = form;
 
   useEffect(() => {
@@ -46,7 +49,8 @@ export function StaffFormSheet({ open, onOpenChange, staff }: { open: boolean; o
       } else {
         const created = await writes.createStaff.mutateAsync(body);
         toast.success(`أُضيف ${created.full_name} — عيّنه على موقع ليبدأ العمل.`);
-        router.push(`/dashboard/staff/${created.id}?tab=assignments`);
+        if (created.temporary_password) setIssued({ id: created.id, name: created.full_name, password: created.temporary_password });
+        else router.push(`/dashboard/staff/${created.id}?tab=assignments`);
       }
       onOpenChange(false);
     } catch (e) {
@@ -55,11 +59,12 @@ export function StaffFormSheet({ open, onOpenChange, staff }: { open: boolean; o
   });
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="w-full gap-0 overflow-y-auto p-5 data-[side=left]:w-full data-[side=left]:sm:max-w-md" data-testid="staff-form">
         <SheetHeader className="p-0 pb-4 text-start">
           <SheetTitle>{staff ? "تعديل الموظف" : "إضافة موظف"}</SheetTitle>
-          <SheetDescription>يدخل الموظف برقم هاتفه ورمز تحقق — لا كلمة مرور.</SheetDescription>
+          <SheetDescription>{staff ? "يدخل الموظف برقم هاتفه وكلمة مروره." : "يدخل الموظف برقم هاتفه وكلمة مرور مؤقتة تظهر لك مرة واحدة بعد الإضافة."}</SheetDescription>
         </SheetHeader>
         <form onSubmit={(e) => void submit(e)} className="flex flex-col gap-4" noValidate>
           <Field label="الاسم الكامل" htmlFor="staff-name" required error={formState.errors.full_name?.message}>
@@ -106,5 +111,14 @@ export function StaffFormSheet({ open, onOpenChange, staff }: { open: boolean; o
         </form>
       </SheetContent>
     </Sheet>
+    <PasswordOnceDialog
+      issued={issued}
+      onClose={() => {
+        const id = issued?.id;
+        setIssued(null);
+        if (id) router.push(`/dashboard/staff/${id}?tab=assignments`);
+      }}
+    />
+    </>
   );
 }

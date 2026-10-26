@@ -13,7 +13,7 @@ import { isApiError } from "@/lib/api-error";
 import { formatRelative } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useConnections, useDropJobs, useSyncInventory } from "@/features/dropshipping/api";
-import { JOB_TYPE_LABELS, SUPPLIER_LABELS, type Connection } from "@/features/dropshipping/schemas";
+import { JOB_SUPPLIER_LABELS, JOB_TYPE_LABELS, SUPPLIER_LABELS, type Connection } from "@/features/dropshipping/schemas";
 import { DROP_ROOT, DropJobStatus, DropshippingGate, DropshippingNav, StatusText } from "@/features/dropshipping/components/bits";
 
 /**
@@ -82,7 +82,7 @@ function HubInner() {
             <li key={j.id} className="flex min-h-11 flex-wrap items-center gap-x-4 gap-y-1 px-3 py-2 text-sm">
               <Mono className="text-muted-foreground">#{j.id}</Mono>
               <span>{JOB_TYPE_LABELS[j.job_type]}</span>
-              <span className="text-muted-foreground">{SUPPLIER_LABELS[j.supplier_code]}</span>
+              <span className="text-muted-foreground">{JOB_SUPPLIER_LABELS[j.supplier_code]}</span>
               <DropJobStatus status={j.status} />
               <span className="ms-auto text-xs text-muted-foreground">{formatRelative(j.created_at, now)}</span>
             </li>
@@ -100,7 +100,12 @@ function SupplierRow({ c, now }: { c: Connection; now: Date }) {
     <li className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:gap-6" data-testid="supplier-row" data-code={c.supplier_code}>
       <div className="flex min-w-44 flex-col gap-1">
         <span className="font-medium">{SUPPLIER_LABELS[c.supplier_code]}</span>
-        <StatusText tone={c.connected ? "success" : "muted"} label={c.connected ? "مربوط" : "غير مربوط"} testId="supplier-conn" value={c.connected ? "connected" : "disconnected"} />
+        <StatusText
+          tone={c.connected ? "success" : c.reauth_required ? "destructive" : "muted"}
+          label={c.connected ? "مربوط" : c.reauth_required ? "يتطلب إعادة الربط" : "غير مربوط"}
+          testId="supplier-conn"
+          value={c.connected ? "connected" : "disconnected"}
+        />
       </div>
       <dl className="grid flex-1 grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground sm:grid-cols-4">
         <div>
@@ -132,22 +137,24 @@ function SupplierRow({ c, now }: { c: Connection; now: Date }) {
             <Link href={`${DROP_ROOT}/catalog/${c.supplier_code}`} className={cn(buttonVariants({ variant: "outline" }), btn)} data-testid="to-catalog">
               الكتالوج
             </Link>
-            <Button
-              variant="outline"
-              className={btn}
-              disabled={sync.isPending}
-              onClick={async () => {
-                try {
-                  const r = await sync.mutateAsync(c.supplier_code);
-                  toast.success(`بدأت مزامنة المخزون — المهمة #${r.job_id}`);
-                } catch (e) {
-                  toast.error(isApiError(e) ? e.userMessage : "تعذّرت المزامنة");
-                }
-              }}
-              data-testid="sync-now"
-            >
-              مزامنة المخزون الآن
-            </Button>
+            {c.inventory_sync_supported === false ? null : (
+              <Button
+                variant="outline"
+                className={btn}
+                disabled={sync.isPending}
+                onClick={async () => {
+                  try {
+                    const r = await sync.mutateAsync(c.supplier_code);
+                    toast.success(`بدأت مزامنة المخزون — المهمة #${r.job_id}`);
+                  } catch (e) {
+                    toast.error(isApiError(e) ? e.userMessage : "تعذّرت المزامنة");
+                  }
+                }}
+                data-testid="sync-now"
+              >
+                مزامنة المخزون الآن
+              </Button>
+            )}
           </>
         ) : null}
         <Link href={`${DROP_ROOT}/suppliers/${c.supplier_code}`} className={cn(buttonVariants({ variant: c.connected ? "ghost" : "default" }), btn)} data-testid="to-supplier">

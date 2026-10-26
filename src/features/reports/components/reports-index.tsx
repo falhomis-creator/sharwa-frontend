@@ -16,6 +16,7 @@ import { useAccess } from "@/features/dashboard-shell/components/session-context
 import { useReportIndex } from "@/features/reports/api";
 import { canOpenReport } from "@/features/reports/permissions";
 import { REPORT_STATUS_LABELS, type ReportRow } from "@/features/reports/schemas";
+import { PushBroadcastCard } from "@/features/pwa/components/push-broadcast";
 
 /**
  * `/dashboard/reports` (M25 US-25.1): the ten categories as vertical sections in registry
@@ -125,6 +126,7 @@ function ReportsIndexBody() {
           ))}
         </div>
       )}
+      {query ? null : <PushBroadcastCard />}
     </div>
   );
 }

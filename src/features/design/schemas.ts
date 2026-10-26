@@ -4,9 +4,9 @@ import { DESIGN_STYLES, PRESET_KEYS, STORE_FONTS, type DesignStyle, type PresetK
 import { sectionTypeSchema, type SectionType } from "@/lib/schemas/store-config";
 
 /**
- * M08 — مخصِّص ثيم المتجر. Contracts of M08 §5/§7: the theme entity (`[NEEDS BACKEND]`
- * `PATCH /api/v1/store/theme/`), the presets row, the announcement fields and the Ready
- * `admin/sections` rows. Enum VALUES verbatim from Django; labels in Arabic.
+ * M08 — مخصِّص ثيم المتجر. Contracts of M08 §5/§7: the theme entity
+ * (`PATCH /api/v1/store/theme/`), the presets row, the announcement fields and the
+ * `admin/sections` rows — all served by Django `api/views_design.py` since INT-018. Enum VALUES verbatim from Django; labels in Arabic.
  */
 export const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 

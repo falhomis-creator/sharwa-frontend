@@ -65,9 +65,14 @@ export function OtpForm() {
 
   // No OTP session: after a successful verify the status page is the way forward (also on
   // a later revisit of this URL); otherwise (direct visit, tab session ended) panel 01.
+  // Deferred one task: child effects run before the App Router's own mount effect, so a
+  // replace in the very first commit hits «Router action dispatched before initialization».
   useEffect(() => {
     if (!hydrated || otp) return;
-    router.replace(verifiedToken ? `/register/status/${encodeURIComponent(verifiedToken)}` : "/register");
+    const timer = window.setTimeout(() => {
+      router.replace(verifiedToken ? `/register/status/${encodeURIComponent(verifiedToken)}` : "/register");
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [hydrated, otp, verifiedToken, router]);
 
   if (!hydrated || !otp) {
@@ -188,7 +193,13 @@ function OtpPanel({ otp }: { otp: OtpSession }) {
     } catch (error) {
       if (!isApiError(error)) setNetworkFailed(true);
       else if (error.status === 429) setResendLockedUntil(deadline(error.retryAfter ?? 30));
-      else setFormError(error.userMessage);
+      else if (error.status === 410) {
+        // INT-004: Django keeps the pending registration 30 minutes; past that the token is
+        // gone and no resend can revive it. Panel 01 keeps every value, so one press of
+        // «متابعة» issues a fresh code — the expired panel has no other way forward.
+        returnToDetails({});
+        router.replace("/register");
+      } else setFormError(error.userMessage);
     } finally {
       setBusy(null);
     }

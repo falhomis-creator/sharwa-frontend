@@ -133,6 +133,11 @@ export function DeactivationTab({ schema, storeName }: { schema: string; storeNa
             {history.map((h) => (
               <li key={h.id} className="flex flex-col gap-1 px-4 py-2 md:flex-row md:items-center md:gap-4">
                 <StatusText tone={TONE[h.status]}>{DEACTIVATION_LABELS[h.status]}</StatusText>
+                {h.reinstated_at ? (
+                  <span className="whitespace-nowrap text-xs" data-testid="deactivation-reinstated">
+                    <StatusText tone="success">أُعيد التفعيل</StatusText> <time dateTime={h.reinstated_at}>{formatDate(h.reinstated_at)}</time>
+                  </span>
+                ) : null}
                 <span className="min-w-0 flex-1">{h.reason}</span>
                 <span className="whitespace-nowrap text-xs text-muted-foreground">
                   <time dateTime={h.updated_at}>{formatDateTime(h.updated_at)}</time> · <Code>{h.by}</Code>

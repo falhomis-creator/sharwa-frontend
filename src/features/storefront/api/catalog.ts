@@ -98,7 +98,7 @@ export async function getProduct(store: string, storeHost: string, id: number, c
   throw new StorefrontUnavailableError(`/api/v1/catalog/products/${id}/`, res?.status ?? 502);
 }
 
-/** `[NEEDS BACKEND]` `GET /api/v1/catalog/facets/?category=` (M09 §7) — empty until it ships. */
+/** `GET /api/v1/catalog/facets/?category&brand&tag&collection&search&is_featured` (M09 §7 — Django since INT-011; same filter rules as the list). */
 export async function getFacets(store: string, storeHost: string, query: ProductQuery): Promise<Facets> {
   "use cache";
   cacheLife("minutes");
@@ -117,7 +117,7 @@ export async function getFacets(store: string, storeHost: string, query: Product
   return { brands: [], tags: [], collections: [] };
 }
 
-/** `[NEEDS BACKEND]` `GET /api/v1/catalog/offers/` (M09 §7) — the `promotional_offers` section hides when empty. */
+/** `GET /api/v1/catalog/offers/` (M09 §7 — Django since INT-011) — the `promotional_offers` section hides when empty. */
 export async function getOffers(store: string, storeHost: string): Promise<Offer[]> {
   "use cache";
   cacheLife("minutes");

@@ -1,11 +1,12 @@
 /**
  * Feature keys (39 + `pos`) and permission keys — verbatim from discovery 01 §7 and 02 §10, plus
- * `catalog.manage` (Django migration 0210, decision 2026-10-21).
+ * `catalog.manage` (Django migration 0210, decision 2026-10-21) and `expenses.manage` (migration 0235, INT-043).
  * The frontend never resolves feature gating itself; it reads the effective lists from the session.
  *
  * `pos` is the one key not in discovery 01 §7: the owner made M16 POS a subscription-gated
- * feature (decision 2026-10-19, Phase 7 item 1). `[NEEDS BACKEND]` — Django must add
- * `FeatureFlag(code="pos", requires_plan=True)` so `features[]` carries it.
+ * feature (decision 2026-10-19, Phase 7 item 1). Django seeds `Feature(code="pos",
+ * requires_plan=True)` (billing migration 0013, INT-033), so `features[]` carries it — open to
+ * every store while subscriptions are off, then granted per plan from the M46 matrix.
  */
 export const FEATURE_KEYS = [
   "refunds",
@@ -89,6 +90,8 @@ export const PERMISSION_KEYS = [
   "channels.dropshipping.manage",
   // M05/M04 — products & organization (Django migration 0210, decision 2026-10-21).
   "catalog.manage",
+  // M33 — operating expenses (Django migration 0235, INT-043): seeded to «مدير المتجر» + «مدير الفرع».
+  "expenses.manage",
 ] as const;
 
 export type PermissionKey = (typeof PERMISSION_KEYS)[number];

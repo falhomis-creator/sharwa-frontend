@@ -110,7 +110,8 @@ export function CartLineRow({ item, compact = false }: { item: CartItem; compact
               <button
                 type="button"
                 aria-label={`زيادة كمية ${item.name}`}
-                disabled={unavailable || (item.max_quantity != null && item.quantity >= item.max_quantity)}
+                // An appointment line is one booking (quantity 1, M26) — another time is chosen on the product page.
+                disabled={unavailable || Boolean(item.start_datetime) || (item.max_quantity != null && item.quantity >= item.max_quantity)}
                 onClick={() =>
                   action.mutate({ ...base, action_type: "add", start_datetime: item.start_datetime ?? undefined, quantity: 1 })
                 }

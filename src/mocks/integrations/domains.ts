@@ -14,7 +14,7 @@ interface State {
   custom: Row[];
 }
 
-const SUBDOMAIN_ID = 1;
+const SUBDOMAIN_ID = 0; // Django parity (INT-023): custom claims are ≥ 1
 const EDGE_TARGET = "edge.sharwa.app";
 const EDGE_IP = "76.76.21.21";
 /** Domains already linked to another store on the platform (§8). */

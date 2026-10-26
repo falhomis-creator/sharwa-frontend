@@ -292,13 +292,32 @@ function SessionView({ data, pollError, onRetry }: { data: SessionDetail; pollEr
 }
 
 function SessionMessage({ t }: { t: TimelineItem }) {
+  // INT-042: takeover / release / close are logged by the server as quiet event rows, not chat bubbles.
+  if (t.sender_type === "system") {
+    return (
+      <li className="self-center text-center text-[11px] text-muted-foreground" data-testid="session-event">
+        {t.text} · <Mono title={formatDateTime(t.created_at)}>{new Intl.DateTimeFormat("ar-SA-u-nu-latn", { hour: "2-digit", minute: "2-digit" }).format(new Date(t.created_at))}</Mono>
+      </li>
+    );
+  }
   const out = t.sender_type !== "customer";
   const sender = t.sender_type === "customer" ? "العميل" : t.sender_type === "bot" ? "شروة AI" : (t.sender_name ?? "أنت");
   return (
     <li className={cn("flex max-w-[85%] flex-col gap-1 md:max-w-[70%]", out ? "self-end items-end" : "self-start items-start")} data-testid="session-message" data-sender={t.sender_type}>
-      <p dir="auto" className={cn("whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-sm", out ? "bg-muted" : "border border-border bg-card")}>
-        {t.text}
-      </p>
+      {t.text ? (
+        <p dir="auto" className={cn("whitespace-pre-wrap break-words rounded-lg px-3 py-2 text-sm", out ? "bg-muted" : "border border-border bg-card")}>
+          {t.text}
+        </p>
+      ) : null}
+      {t.media_type ? (
+        t.media_url ? (
+          <a href={t.media_url} target="_blank" rel="noopener noreferrer" className="rounded-lg border border-border px-3 py-2 text-sm underline underline-offset-4" data-testid="session-media">
+            فتح المرفق ({MEDIA_LABELS[t.media_type] ?? t.media_type})
+          </a>
+        ) : (
+          <span className="rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground">مرفق غير متاح حالياً</span>
+        )
+      ) : null}
       <span className="flex gap-2 text-[11px] text-muted-foreground">
         <span>{sender}</span>
         <Mono title={formatDateTime(t.created_at)}>{t.id < 0 ? "جارٍ الإرسال" : new Intl.DateTimeFormat("ar-SA-u-nu-latn", { hour: "2-digit", minute: "2-digit" }).format(new Date(t.created_at))}</Mono>
@@ -306,6 +325,8 @@ function SessionMessage({ t }: { t: TimelineItem }) {
     </li>
   );
 }
+
+const MEDIA_LABELS: Record<string, string> = { image: "صورة", audio: "مقطع صوتي", video: "فيديو", document: "مستند" };
 
 /** US-31.4: folded by default; Mono tool name and time, readable JSON in a 1px frame. */
 function ToolCall({ t }: { t: TimelineItem }) {

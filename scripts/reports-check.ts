@@ -4,7 +4,7 @@
  *   SHARWA_CHROMIUM=/path/to/chrome npx tsx scripts/reports-check.ts [port]   (default 3000)
  *
  * What a screenshot cannot prove (M25 §3 Independent Tests / acceptance):
- *   - the index lists 42 reports, 7 disabled (not links); the local search; the §5 map hides
+ *   - the index lists 42 reports, 6 disabled (not links — statuses as in Django, INT-027); the local search; the §5 map hides
  *     rows for a `reports.view`-only member (pure map, same module the UI uses);
  *   - range, compare and location live in the URL; the same URL reproduces the numbers;
  *     the delta is coloured text; «—» when the compare period has no data; > 366 days blocked;
@@ -68,7 +68,7 @@ async function main() {
   const rows = page.locator("[data-testid=report-row]");
   const disabled = page.locator("[data-testid=report-row]:not([data-status=available])");
   check((await rows.count()) === 42, `the owner sees all 42 reports (got ${await rows.count()})`);
-  check((await disabled.count()) === 7, `7 reports are disabled (got ${await disabled.count()})`);
+  check((await disabled.count()) === 6, `6 reports are disabled (got ${await disabled.count()})`);
   check((await page.locator("[data-testid=report-category]").count()) === 10, "10 category sections in registry order");
   check((await page.locator("[data-testid=report-category]").first().getAttribute("data-category")) === "core", "the first section is «الأساسية»");
   check((await page.locator('[data-testid=report-row][data-code=visits]').evaluate((el) => el.tagName !== "A" && el.getAttribute("aria-disabled") === "true" && (el.textContent ?? "").includes("غير متاح بعد"))), "a not_yet_available row is not a link and says «غير متاح بعد»");

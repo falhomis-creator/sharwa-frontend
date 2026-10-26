@@ -104,7 +104,7 @@ async function main() {
   await page.click("[data-testid=bulk-confirm]");
   await page.waitForSelector("[data-testid=bulk-report]");
   const report = await page.locator("[data-testid=bulk-report]").innerText();
-  check(report.includes("مرفوضة") && report.includes("ليس فاشلاً"), "the report lists every refused store with the server's reason");
+  check(report.includes("مرفوضة") && report.includes("المتجر جاهز"), "the report lists every refused store with the server's reason");
   await page.keyboard.press("Escape");
 
   // ── bulk feature override on the same two stores, then removed again ───────────────
@@ -215,6 +215,7 @@ async function main() {
   await page.click("[data-testid=confirm-action]");
   await page.waitForSelector("[data-testid=deactivation-current]", { state: "detached" });
   check(true, "…and reinstated");
+  check(await page.locator("[data-testid=deactivation-reinstated]").first().isVisible(), "…and the record stays in the history as «أُعيد التفعيل» (INT-030)");
   await page.goto(`${CONSOLE}/stores/books?tab=actions`, { waitUntil: "load" });
   await page.waitForSelector("[data-testid=action-row]");
   check((await page.locator("[data-testid=action-row]").first().innerText()).includes("admin"), "the action log names who did it (FR-20.07)");

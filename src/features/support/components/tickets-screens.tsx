@@ -69,7 +69,16 @@ export function TicketsScreen() {
       { id: "id", header: headerLabel("المعرّف"), cell: ({ row }) => <Mono className="text-xs">#{row.original.id}</Mono> },
       { id: "title", header: headerLabel("العنوان"), cell: ({ row }) => <span className="min-w-48 font-medium">{row.original.title}</span> },
       { id: "status", header: headerLabel("الحالة"), cell: ({ row }) => <RowStatus row={row.original} /> },
-      { id: "assignee", header: headerLabel("المُسنَد إليه"), cell: ({ row }) => <span className="whitespace-nowrap">{row.original.assigned_to?.name ?? <span className="text-muted-foreground">—</span>}</span> },
+      {
+        id: "assignee",
+        header: headerLabel("المُسنَد إليه"),
+        cell: ({ row }) => (
+          <span className="whitespace-nowrap">
+            {row.original.assigned_to?.name ?? <span className="text-muted-foreground">—</span>}
+            {row.original.assigned_to && row.original.assignee_active === false ? <InactiveBadge /> : null}
+          </span>
+        ),
+      },
       { id: "updated", header: headerLabel("آخر تحديث"), cell: ({ row }) => <time dateTime={row.original.updated_at} title={formatDateTime(row.original.updated_at)} className="whitespace-nowrap text-xs text-muted-foreground">{formatRelative(row.original.updated_at, now)}</time> },
     ],
     [now],
@@ -250,12 +259,17 @@ function TicketBody({ ticket, inSheet }: { ticket: Ticket; inSheet: boolean }) {
             data-testid="ticket-assign"
           >
             <option value="">غير مُسنَدة</option>
+            {/* §8: a deactivated assignee is not in the active list — keep them selectable as the current value. */}
+            {ticket.assigned_to && !(staff.data ?? []).some((s) => s.id === ticket.assigned_to?.id) ? (
+              <option value={ticket.assigned_to.id}>{ticket.assigned_to.name} (غير نشط)</option>
+            ) : null}
             {(staff.data ?? []).map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
               </option>
             ))}
           </NativeSelect>
+          {ticket.assigned_to && ticket.assignee_active === false ? <span className="text-xs text-muted-foreground" data-testid="ticket-assignee-inactive">المُسنَد إليه غير نشط — أعد الإسناد.</span> : null}
         </Field>
       </div>
       <section className="flex flex-col gap-1.5">
@@ -274,6 +288,24 @@ function TicketBody({ ticket, inSheet }: { ticket: Ticket; inSheet: boolean }) {
         <dd>
           <Mono>{formatDateTime(ticket.updated_at)}</Mono>
         </dd>
+        {ticket.customer_phone ? (
+          <>
+            <dt>هاتف العميل</dt>
+            <dd>
+              <span dir="ltr">
+                <Mono>{ticket.customer_phone}</Mono>
+              </span>
+            </dd>
+          </>
+        ) : null}
+        {ticket.status === "closed" && ticket.closed_at ? (
+          <>
+            <dt>أُغلقت</dt>
+            <dd>
+              <Mono>{formatDateTime(ticket.closed_at)}</Mono>
+            </dd>
+          </>
+        ) : null}
       </dl>
       <ConfirmDialog
         open={reopen}
@@ -286,6 +318,10 @@ function TicketBody({ ticket, inSheet }: { ticket: Ticket; inSheet: boolean }) {
       />
     </div>
   );
+}
+
+function InactiveBadge() {
+  return <span className="ms-1.5 rounded border border-border px-1 text-[10px] text-muted-foreground">غير نشط</span>;
 }
 
 function CreateTicketSheet({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (o: boolean) => void; onCreated: (id: number) => void }) {
@@ -305,10 +341,11 @@ function CreateTicketForm({ onOpenChange, onCreated }: { onOpenChange: (o: boole
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [assignee, setAssignee] = useState("");
+  const [phone, setPhone] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const parsed = ticketFormSchema.safeParse({ title, description, assigned_to_id: assignee ? Number(assignee) : null });
+    const parsed = ticketFormSchema.safeParse({ title, description, assigned_to_id: assignee ? Number(assignee) : null, customer_phone: phone });
     if (!parsed.success) {
       const out: Record<string, string> = {};
       for (const i of parsed.error.issues) out[String(i.path[0])] ??= i.message;
@@ -328,7 +365,7 @@ function CreateTicketForm({ onOpenChange, onCreated }: { onOpenChange: (o: boole
         <form onSubmit={(e) => void submit(e)} className="flex h-full flex-col">
           <SheetHeader>
             <SheetTitle>تذكرة جديدة</SheetTitle>
-            <SheetDescription>العنوان إلزامي؛ الوصف والإسناد اختياريان.</SheetDescription>
+            <SheetDescription>العنوان إلزامي؛ الوصف وهاتف العميل والإسناد اختيارية.</SheetDescription>
           </SheetHeader>
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4">
             <Field label="العنوان" htmlFor="tk-title" error={errors.title} required>
@@ -336,6 +373,9 @@ function CreateTicketForm({ onOpenChange, onCreated }: { onOpenChange: (o: boole
             </Field>
             <Field label="الوصف" htmlFor="tk-desc" error={errors.description}>
               <Textarea id="tk-desc" rows={6} dir="auto" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </Field>
+            <Field label="هاتف العميل" htmlFor="tk-phone" error={errors.customer_phone} hint="اختياري — حين تخص التذكرة عميلاً بعينه.">
+              <input id="tk-phone" dir="ltr" inputMode="tel" className={inputClass} value={phone} onChange={(e) => setPhone(e.target.value)} aria-invalid={Boolean(errors.customer_phone)} placeholder="967XXXXXXXXX" data-testid="ticket-phone" />
             </Field>
             <Field label="المُسنَد إليه" htmlFor="tk-assign" error={errors.assigned_to_id}>
               <NativeSelect id="tk-assign" value={assignee} onChange={(e) => setAssignee(e.target.value)} className="h-11 lg:h-8">

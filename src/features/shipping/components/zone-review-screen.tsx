@@ -121,7 +121,7 @@ function ReviewTabBody() {
         cell: ({ row }) => (
           <span className="flex flex-col">
             <span>{row.original.address}</span>
-            <span className="text-xs text-muted-foreground">{row.original.city}</span>
+            {row.original.city ? <span className="text-xs text-muted-foreground">{row.original.city}</span> : null}
           </span>
         ),
       },
@@ -148,7 +148,7 @@ function ReviewTabBody() {
         <SchematicMap
           circles={zoneCircles(zones.data.results)}
           polygons={restricted.data.results.map((z) => ({ id: `rz-${z.id}`, label: z.name, points: z.polygon_points, muted: !z.is_active }))}
-          points={(rows ?? []).map((r) => ({ id: `o-${r.order_id}`, label: `#${r.order_id} — ${r.address}`, lat: r.latitude, lng: r.longitude }))}
+          points={(rows ?? []).flatMap((r) => (r.latitude === null || r.longitude === null ? [] : [{ id: `o-${r.order_id}`, label: `#${r.order_id} — ${r.address}`, lat: r.latitude, lng: r.longitude }]))}
           highlight={focus}
           label="مخطط المناطق والنطاقات المحظورة وطلبات المراجعة"
         />
@@ -194,9 +194,7 @@ function ReviewTabBody() {
                 <Mono>#{r.order_id}</Mono>
               </Link>
             </span>
-            <span className="text-xs text-muted-foreground">
-              {r.address} · {r.city}
-            </span>
+            <span className="text-xs text-muted-foreground">{[r.address, r.city].filter(Boolean).join(" · ")}</span>
             <ReasonText item={r} />
             <ReviewActions item={r} onAct={(action) => setActing({ item: r, action })} />
           </div>
@@ -269,7 +267,7 @@ function ResolveDialog({ acting, onClose }: { acting: { item: ReviewItem; action
       <DialogContent className="sm:max-w-md" data-testid="resolve-dialog">
         <DialogTitle>{title}</DialogTitle>
         <DialogDescription>{desc}</DialogDescription>
-        {item ? <p className="text-sm text-muted-foreground">{item.address} · {item.city}</p> : null}
+        {item ? <p className="text-sm text-muted-foreground">{[item.address, item.city].filter(Boolean).join(" · ")}</p> : null}
         {action === "convert_pickup" ? (
           <Field label="نقطة الاستلام" htmlFor="resolve-pickup" required>
             <NativeSelect id="resolve-pickup" value={pickup} onChange={(e) => setPickup(e.target.value)} className="h-11 md:h-8" data-testid="resolve-pickup">

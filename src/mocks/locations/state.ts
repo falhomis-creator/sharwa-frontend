@@ -7,7 +7,7 @@ import { readSettings, setMultiLocation } from "@/mocks/settings/state";
 import { FIXTURE_NOW, nextId, storeState } from "@/mocks/store-state";
 
 /**
- * Locations (M22, `[NEEDS BACKEND]`) — the per-store seed every other module reads:
+ * Locations (M22, live: INT-025 — Django `api/views_locations.py`) — the per-store seed every other module reads:
  * M21 (location inventory), M18 (staff × location assignments), M24 (restock location),
  * M06 (`source_location`). The two ids of the M06 seed (1 = المستودع الرئيسي, 2 = فرع الرياض)
  * are kept, so order lines and location inventory agree.
@@ -150,16 +150,19 @@ export function nextLocationId(store: string | null, entity: "location" | "assig
   return nextId(store, `locations:${entity}`, entity === "location" ? 100 : 500);
 }
 
-/** The server's derivation of «نوع العرض» (M22 §5) — Arabic, never recomputed in the UI. */
+/**
+ * The server's derivation of «نوع العرض» — a verbatim port of Django `Location.display_type`
+ * (`products/models/locations.py`, INT-025), never recomputed in the UI.
+ */
 export function displayType(l: Pick<MockLocation, "flags" | "ownership">): string {
   const f = l.flags;
   if (l.ownership === "dropship_supplier") return "مورد دروبشيبينج";
   if (f.is_mobile) return "مركبة متنقلة";
   if (l.ownership === "third_party_3pl") return "مستودع مشترك (3PL)";
-  if (f.is_pickup_point && !f.stores_inventory && !f.serves_walk_in_customers) return "خزانة PUDO";
-  if (f.stores_inventory && f.serves_walk_in_customers && f.ships_to_customer) return "موقع هجين";
-  if (f.stores_inventory && !f.serves_walk_in_customers) return "مستودع مغلق";
-  if (f.serves_walk_in_customers) return "فرع تجزئة";
+  if (f.is_transient && !f.ships_to_customer) return "خزانة / PUDO";
+  if (f.stores_inventory && f.ships_to_customer && f.serves_walk_in_customers && f.has_pos_terminal) return "موقع هجين";
+  if (f.stores_inventory && f.ships_to_customer && !f.serves_walk_in_customers) return "مستودع مغلق";
+  if (f.serves_walk_in_customers && f.has_pos_terminal) return "فرع تجزئة";
   if (f.is_pickup_point) return "نقطة استلام";
   return "موقع";
 }

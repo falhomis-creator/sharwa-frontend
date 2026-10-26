@@ -40,12 +40,22 @@ function HubInner() {
   const [noonOpen, setNoonOpen] = useState(false);
   const [now] = useState(() => new Date());
 
+  const [oauthError, setOauthError] = useQueryState("oauth_error", parseAsString);
+
   useEffect(() => {
     if (connected === "amazon") {
       toast.success("رُبط حساب أمازون");
       void setConnected(null);
     }
   }, [connected, setConnected]);
+
+  // INT-038: Django's callback sends a refusal back (state, cancelled consent, not on amazon.sa…).
+  useEffect(() => {
+    if (oauthError) {
+      toast.error(oauthError);
+      void setOauthError(null);
+    }
+  }, [oauthError, setOauthError]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -169,7 +179,19 @@ function MarketRowView({ m, now, onNoon }: { m: MarketRow; now: Date; onNoon: ()
           // Ready upstream: a server redirect into SP-API OAuth that returns to this page —
           // a full navigation on purpose (it leaves the app), hence a plain anchor.
           // eslint-disable-next-line @next/next/no-html-link-for-pages
-          <a href="/api/bff/marketplaces/amazon/oauth/start" className={cn(buttonVariants(), btn)} data-testid="connect-amazon">
+          <a
+            href="/api/bff/marketplaces/amazon/oauth/start"
+            // The server needs where to come back to (this store host + port): Django validates it.
+            onClick={(e) => {
+              e.preventDefault();
+              // An API route answering with an external 302 (not a Next page, so no router.push): absolute URL object.
+              const target = new URL("/api/bff/marketplaces/amazon/oauth/start", window.location.origin);
+              target.searchParams.set("return", new URL("/dashboard/channels/marketplaces", window.location.origin).href);
+              window.location.assign(target);
+            }}
+            className={cn(buttonVariants(), btn)}
+            data-testid="connect-amazon"
+          >
             {m.needs_reauth ? "إعادة الربط" : "ربط أمازون"}
           </a>
         ) : (
@@ -211,7 +233,10 @@ function MarketRowView({ m, now, onNoon }: { m: MarketRow; now: Date; onNoon: ()
 function NoonDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
   const connect = useConnectNoon();
   const [key, setKey] = useState("");
+  const [seller, setSeller] = useState("");
+  const [country, setCountry] = useState<"SA" | "AE">("SA");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   return (
     <Dialog
       open={open}
@@ -219,32 +244,49 @@ function NoonDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (v: b
         onOpenChange(v);
         if (!v) {
           setKey("");
+          setSeller("");
           setError(null);
+          setFieldErrors({});
         }
       }}
     >
       <DialogContent data-testid="noon-dialog">
         <DialogTitle>ربط نون</DialogTitle>
-        <DialogDescription>أدخل مفتاح API من بوابة شركاء نون. لن يُعرض المفتاح بعد الحفظ.</DialogDescription>
+        <DialogDescription>أدخل مفتاح API ومعرّف البائع من بوابة شركاء نون، واختر الدولة. لن يُعرض المفتاح بعد الحفظ.</DialogDescription>
         <form
           className="flex flex-col gap-4"
           onSubmit={async (e) => {
             e.preventDefault();
+            setFieldErrors({});
+            setError(null);
             try {
-              await connect.mutateAsync(key.trim());
+              await connect.mutateAsync({ api_key: key.trim(), seller_id: seller.trim(), marketplace_country: country });
               toast.success("رُبط حساب نون");
               setKey("");
+              setSeller("");
               onOpenChange(false);
             } catch (err) {
-              setError(isApiError(err) ? (err.fields?.api_key?.[0] ?? err.userMessage) : "تعذّر الربط");
+              if (isApiError(err) && err.fields) {
+                setFieldErrors(Object.fromEntries(Object.entries(err.fields).map(([k, m]) => [k, m[0] ?? ""])));
+                setError(err.fields.api_key?.[0] ?? null);
+              } else setError(isApiError(err) ? err.userMessage : "تعذّر الربط");
             }
           }}
         >
           <Field label="مفتاح API" htmlFor="noon-key" error={error ?? undefined} required>
             <input id="noon-key" type="password" autoComplete="off" dir="ltr" value={key} onChange={(e) => setKey(e.target.value)} className={cn(inputClass, "font-mono")} data-testid="noon-key" />
           </Field>
+          <Field label="معرّف البائع" htmlFor="noon-seller" error={fieldErrors.seller_id} required>
+            <input id="noon-seller" autoComplete="off" dir="ltr" value={seller} onChange={(e) => setSeller(e.target.value)} className={cn(inputClass, "font-mono")} data-testid="noon-seller" />
+          </Field>
+          <Field label="الدولة" htmlFor="noon-country" error={fieldErrors.marketplace_country} required>
+            <select id="noon-country" value={country} onChange={(e) => setCountry(e.target.value === "AE" ? "AE" : "SA")} className={cn(inputClass, "h-11 md:h-9")} data-testid="noon-country">
+              <option value="SA">نون السعودية (SAR)</option>
+              <option value="AE">نون الإمارات (AED)</option>
+            </select>
+          </Field>
           <DialogFooter>
-            <Button type="submit" className="h-11 lg:h-9" disabled={!key.trim() || connect.isPending} data-testid="noon-save">
+            <Button type="submit" className="h-11 lg:h-9" disabled={!key.trim() || !seller.trim() || connect.isPending} data-testid="noon-save">
               حفظ وربط
             </Button>
           </DialogFooter>

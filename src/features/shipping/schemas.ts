@@ -83,10 +83,12 @@ export const providerSchema = z.object({
   name: z.string(),
   phone_number: z.string(),
   is_active: z.boolean(),
-  max_weight_per_awb: z.string(),
-  max_items_per_awb: z.number(),
+  // INT-021: Django keeps these nullable (legacy rows created before the limits existed) — the
+  // list shows «—» and the form asks for a value on the next save.
+  max_weight_per_awb: z.string().nullable(),
+  max_items_per_awb: z.number().nullable(),
   accepts_hazardous: z.boolean(),
-  volumetric_divisor: z.number(),
+  volumetric_divisor: z.number().nullable(),
   carrier_code: z.enum(["", ...CARRIER_CODES]),
   staff_account: z.number().nullable(),
   kind: z.enum(["agent", "company"]),
@@ -105,6 +107,10 @@ export const carrierSchema = z.object({
   connection: z.enum(CONNECTIONS),
   is_connected: z.boolean(),
   last_error: z.string().nullable(),
+  /** INT-021: `merchant_own` once the merchant saved their own account; `platform_shared` = Sharwa's. */
+  credential_source: z.enum(["platform_shared", "merchant_own"]).optional(),
+  /** INT-021: false until the platform enables this carrier (saving credentials is refused meanwhile). */
+  platform_enabled: z.boolean().optional(),
   fields: z.array(z.object({ name: z.string(), label: z.string(), is_secret: z.boolean(), required: z.boolean(), value: z.string().nullable(), has_value: z.boolean() })),
   webhook_url: z.string(),
   signature_header: z.string(),
@@ -140,8 +146,10 @@ export const reviewItemSchema = z.object({
   customer_name: z.string(),
   address: z.string(),
   city: z.string(),
-  latitude: z.number(),
-  longitude: z.number(),
+  // INT-021: null for an order whose buyer sent no coordinates (e.g. flagged because its zone was
+  // deactivated) — it is listed but not drawn on the map.
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
   reason: z.enum(REVIEW_REASONS),
   restricted_zone_id: z.number().nullable(),
   restricted_zone_name: z.string().nullable(),

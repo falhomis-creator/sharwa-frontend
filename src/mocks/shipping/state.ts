@@ -135,22 +135,22 @@ export interface ShippingState {
 }
 
 // ── Carrier adapters' credential_fields (FR-15.02: the form is built from these) ─────
+/** Verbatim from Django `products/carriers/{aramex,smsa}.py` `credential_fields` (INT-021 — Django is the authority). */
 export const CARRIER_META: Record<CarrierCode, { name: string; fields: Array<{ name: string; label: string; is_secret: boolean; required: boolean }> }> = {
   aramex: {
     name: "أرامكس",
     fields: [
-      { name: "account_number", label: "رقم الحساب", is_secret: false, required: true },
-      { name: "username", label: "اسم المستخدم", is_secret: false, required: true },
+      { name: "username", label: "اسم المستخدم", is_secret: true, required: true },
       { name: "password", label: "كلمة المرور", is_secret: true, required: true },
-      { name: "account_pin", label: "الرقم السري للحساب (PIN)", is_secret: true, required: true },
-      { name: "account_entity", label: "الكيان (Entity)", is_secret: false, required: false },
+      { name: "account_number", label: "رقم الحساب", is_secret: false, required: true },
+      { name: "account_pin", label: "الرقم السري للحساب", is_secret: true, required: true },
     ],
   },
   smsa: {
-    name: "سمسا",
+    name: "SMSA",
     fields: [
-      { name: "customer_id", label: "رقم العميل", is_secret: false, required: true },
-      { name: "passkey", label: "مفتاح المرور (Passkey)", is_secret: true, required: true },
+      { name: "username", label: "اسم المستخدم", is_secret: true, required: true },
+      { name: "password", label: "كلمة المرور", is_secret: true, required: true },
     ],
   },
 };
@@ -174,7 +174,7 @@ export function listZones(store: string | null) {
     ? []
     : [...platformState().zones]
         .sort((a, b) => a.sort_order - b.sort_order)
-        .map((z) => ({ code: z.code, name: z.name, price: z.price, currency: z.currency, volumetric_divisor: z.volumetric_divisor, center_latitude: z.center_latitude, center_longitude: z.center_longitude, radius_km: z.radius_km, is_active: z.is_active, sort_order: z.sort_order }));
+        .map((z) => ({ code: z.code, name: z.name, price: z.price, currency: z.currency, volumetric_divisor: z.volumetric_divisor, center_latitude: z.center_latitude ?? "", center_longitude: z.center_longitude ?? "", radius_km: z.radius_km ?? "", is_active: z.is_active, sort_order: z.sort_order }));
   return rows.map((z) => ({ ...z, display_price: displayMoney(Number(z.price), z.currency) }));
 }
 
@@ -213,7 +213,7 @@ function seed(store: string | null): ShippingState {
       { id: 5, name: "سمسا إكسبرس", phone_number: "966920009999", is_active: true, max_weight_per_awb: "30.000", max_items_per_awb: 30, accepts_hazardous: false, volumetric_divisor: 6000, carrier_code: "smsa", staff_account: null },
     ],
     carriers: {
-      aramex: { code: "aramex", credentials: { account_number: "45796", username: "noor.api", password: "s3cr3t-aramex", account_pin: "543543", account_entity: "RUH" }, last_error: null, last_event_at: isoDaysAgo(9, 14), last_event_waybill: "44012873365" },
+      aramex: { code: "aramex", credentials: { username: "noor.api", password: "s3cr3t-aramex", account_number: "45796", account_pin: "543543" }, last_error: null, last_event_at: isoDaysAgo(9, 14), last_event_waybill: "44012873365" },
       smsa: { code: "smsa", credentials: {}, last_error: null, last_event_at: null, last_event_waybill: null },
     },
     packaging: [
@@ -337,7 +337,8 @@ function methodView(m: MockDeliveryMethod) {
 }
 
 export function listMethods(store: string | null, params: URLSearchParams) {
-  let rows = shippingState(store).methods;
+  // Django (`shipping_companies_view`): a disabled official «شروة شيب» method leaves the merchant's list.
+  let rows = shippingState(store).methods.filter((m) => !(m.is_sharwa_official && !m.is_active));
   const active = params.get("is_active");
   if (active) rows = rows.filter((m) => String(m.is_active) === active);
   return paginate(rows.map(methodView), params);
@@ -366,10 +367,11 @@ export function createMethod(store: string | null, b: Body): MockResult<ReturnTy
 export function patchMethod(store: string | null, id: number, b: Body): MockResult<ReturnType<typeof methodView>> {
   const m = shippingState(store).methods.find((x) => x.id === id);
   if (!m) return notFound("طريقة التوصيل");
-  if (m.is_sharwa_official) return { ok: false, status: 403, body: { detail: "طرق شروة شيب الرسمية للقراءة فقط — تُدار من المنصة." } };
+  // Django: the official method's price, time and active flag are the merchant's; its name is not.
+  if (m.is_sharwa_official && has(b, "name") && str(b.name) !== m.name) return { ok: false, status: 400, body: { name: ["اسم طريقة «شروة شيب» الرسمية ثابت — يُدار من المنصة."] } };
   const err = fail(validateMethod(b, true));
   if (err) return err;
-  if (has(b, "name")) m.name = str(b.name);
+  if (has(b, "name") && !m.is_sharwa_official) m.name = str(b.name);
   if (has(b, "price")) m.price = Number(str(b.price)).toFixed(2);
   if (has(b, "estimated_time")) m.estimated_time = str(b.estimated_time);
   if (has(b, "is_active")) m.is_active = bool(b.is_active);
@@ -380,7 +382,7 @@ export function deleteMethod(store: string | null, id: number): MockResult<null>
   const s = shippingState(store);
   const m = s.methods.find((x) => x.id === id);
   if (!m) return notFound("طريقة التوصيل");
-  if (m.is_sharwa_official) return { ok: false, status: 403, body: { detail: "طرق شروة شيب الرسمية لا تُحذف." } };
+  if (m.is_sharwa_official) return { ok: false, status: 403, body: { detail: "لا يمكن حذف «شروة شيب» — هذه طريقة شحن رسمية من المنصة، يمكنك تعطيلها فقط." } };
   s.methods = s.methods.filter((x) => x.id !== id);
   s.sla = s.sla.filter((r) => r.delivery_method_id !== id);
   return { ok: true, status: 204, data: null };
@@ -554,6 +556,8 @@ export function carrierView(store: string | null, host: string, code: CarrierCod
     connection: carrierConnection(store, code),
     is_connected: carrierConnection(store, code) === "connected",
     last_error: c.last_error,
+    credential_source: Object.keys(c.credentials).length > 0 ? ("merchant_own" as const) : ("platform_shared" as const),
+    platform_enabled: true,
     fields: meta.fields.map((f) => ({ ...f, value: f.is_secret ? null : (c.credentials[f.name] ?? ""), has_value: Boolean(c.credentials[f.name]) })),
     webhook_url: `https://${host || "store.sharwa.app"}/api/v1/webhooks/carrier/${code}/`,
     signature_header: "X-Carrier-Signature",
@@ -590,14 +594,18 @@ export function putCredentials(store: string | null, host: string, code: Carrier
 export function testCarrier(store: string | null, code: CarrierCode): MockResult<{ ok: boolean; message: string }> {
   const c = shippingState(store).carriers[code];
   if (carrierConnection(store, code) === "not_connected" && !c.last_error) return { ok: false, status: 400, body: { detail: "أدخل بيانات الاعتماد واحفظها قبل اختبار الاتصال." } };
-  const name = CARRIER_META[code].name;
-  const id = code === "aramex" ? c.credentials.account_number : c.credentials.customer_id;
+  // Messages mirror the Django adapters' `test_connection()` (SMSA has no live API yet).
+  if (code === "smsa") {
+    c.last_error = "SMSA غير مرتبطة بواجهة فعلية بعد — لا يمكن اختبار الاتصال الآن.";
+    return { ok: true, data: { ok: false, message: c.last_error } };
+  }
+  const id = c.credentials.account_number;
   if (!id || !/^\d{4,}$/.test(id)) {
-    c.last_error = `رفضت ${name} بيانات الاعتماد: ${code === "aramex" ? "رقم الحساب" : "رقم العميل"} غير معروف.`;
+    c.last_error = "رفضت أرامكس بيانات الاعتماد: رقم الحساب غير معروف.";
     return { ok: true, data: { ok: false, message: c.last_error } };
   }
   c.last_error = null;
-  return { ok: true, data: { ok: true, message: `نجح الاتصال — ${name} تعرّفت على الحساب ${id}.` } };
+  return { ok: true, data: { ok: true, message: `نجح الاتصال — خادم أرامكس متاح، وتُطابَق بيانات الحساب ${id} عند أول بوليصة.` } };
 }
 
 // ── packaging profiles ───────────────────────────────────────────────────────────────

@@ -2,8 +2,9 @@ import { z } from "zod";
 import { displayMoney } from "@/lib/schemas/money";
 
 /**
- * M43 contract — `GET /api/v1/merchant/stores/?from&to` (`[NEEDS BACKEND]`; Django has
- * `merchant_master_dashboard` as HTML only). Proposed shape of §7, plus `is_available`
+ * M43 contract — `GET /api/v1/merchant/stores/?from&to`. Integrated (INT-049): Django
+ * `api/views_rollup.py` + `tenants/merchant_rollup.py` when `rollup` is in SHARWA_LIVE_MODULES
+ * (the HTML `merchant_master_dashboard` stays as it was). Shape of §7, plus `is_available`
  * (§8 «غير متاح»: provisioning or inactive) so the UI never infers it.
  *
  * Every number is a count or a server-formatted SAR string; totals come from the server

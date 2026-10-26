@@ -27,3 +27,12 @@ export function groupByModule<T extends { code: string }>(rows: T[]): Array<{ ke
   if (other.length) out.push({ key: OTHER_GROUP.key, label: OTHER_GROUP.label, rows: other });
   return out.filter((g) => g.rows.length > 0);
 }
+
+/**
+ * A provisioning job that is (or is about to be) running — the screens poll while it lasts.
+ * Django re-queues a store as `pending` and the worker flips it to `provisioning` (INT-030),
+ * so both count; a STALLED one is not moving, so it does not keep the poll alive.
+ */
+export function isProvisioningLive(s: { provisioning_status: string; is_stalled: boolean }): boolean {
+  return (s.provisioning_status === "pending" || s.provisioning_status === "provisioning") && !s.is_stalled;
+}

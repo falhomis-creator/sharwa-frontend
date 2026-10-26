@@ -22,6 +22,8 @@ import { StoreFooter } from "@/features/storefront/components/store-footer";
 import { StoreHeader } from "@/features/storefront/components/store-header";
 import { StorefrontChrome } from "@/features/storefront/components/storefront-chrome";
 import { StorefrontProvider } from "@/features/storefront/components/storefront-provider";
+import { TrackingScripts } from "@/features/storefront/components/tracking-scripts";
+import { ReferralCapture } from "@/features/storefront/components/referral-capture";
 
 /**
  * Storefront group root — the single place a store-origin page is admitted (M47 T052) and,
@@ -127,6 +129,10 @@ export default async function StorefrontLayout({ children }: { children: ReactNo
         <StoreThemeRoot config={config} store={store}>
           <SkipLink />
           <PreviewBridge />
+          {/* M19 tracking tools (INT-023) — `config.tracking` from Django, null when off. */}
+          <TrackingScripts tracking={config.tracking ?? null} />
+          {/* M17 (INT-034): `?aff_id=` → AffiliateClick + the `sharwa_aff` cookie the checkout attributes with. */}
+          <ReferralCapture />
           {config.enable_announcement_bar && config.announcement_text ? (
             <StoreAnnouncement
               config={{

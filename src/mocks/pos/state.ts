@@ -14,7 +14,8 @@ import { MOCK_OTP_CODE } from "@/mocks/dashboard/auth";
 import { storeNameFor } from "@/mocks/dashboard/me";
 
 /**
- * M16 POS fixture state (`[NEEDS BACKEND]`, §7). Mirrors the Django rules of discovery 02
+ * M16 POS fixture state (§7 — served by Django `api/views_pos.py` since INT-033 when `pos` is in
+ * `SHARWA_LIVE_MODULES`; this fixture stays the mock-mode server). Mirrors the Django rules of discovery 02
  * §10: ONE open shift per register, `expected_closing` and `variance` computed by the
  * server, a shortage parks the shift at `pending_manager_approval` with an
  * `ApprovalRequest(shift_shortage)` in the SAME approvals queue M18 shows, a discount over
@@ -675,6 +676,8 @@ export function createPosOrder(store: string | null, actor: Actor, body: Body, k
       if (!a) return { ok: false as const, status: 404, body: { detail: "طلب الاعتماد غير موجود." } };
       if (a.status === "pending") return { ok: false as const, status: 409, body: { detail: "طلب الاعتماد ما زال بانتظار المدير." } };
       if (a.status === "rejected") return { ok: false as const, status: 403, body: { detail: "رفض المدير هذا الخصم." } };
+      // Django (INT-033): an approval covers ONE receipt — it is linked to the order when used.
+      if (a.entity?.kind === "order") return { ok: false as const, status: 409, body: { detail: "استُخدم هذا الاعتماد لإيصال سابق — أرسل طلباً جديداً." } };
       approvalId = a.id;
     } else {
       return { ok: false as const, status: 403, body: { code: "discount_exceeds_limit", detail: `الخصم يتجاوز حدّك (${actor.maxDiscount}%) — يلزم اعتماد المدير.`, max_discount_percent: actor.maxDiscount } };
@@ -722,6 +725,8 @@ export function createPosOrder(store: string | null, actor: Actor, body: Body, k
   }));
   const first = order.timeline[0];
   if (first) first.text = `أُنشئ الطلب من نقطة البيع (${reg.name}) بواسطة ${actor.name}.`;
+  const used = approvalId === null ? undefined : approvalsState(store).items.find((x) => x.id === approvalId);
+  if (used) used.entity = { kind: "order", id: order.id, label: `#${order.id}`, available: true };
   // Stock leaves the product/variant (M04/M21 read the same rows).
   const cat = catalog(store);
   for (const l of q.lines) {

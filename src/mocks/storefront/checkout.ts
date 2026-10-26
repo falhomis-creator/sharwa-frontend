@@ -19,8 +19,9 @@ import { convert, fmt, fromSar, round2, storeRates, type Rates } from "@/mocks/s
 import { isVerified, normalizeBuyerPhone, verifyOtp } from "@/mocks/storefront/otp";
 
 /**
- * The mock SERVER for checkout (M12 §7 — every row `[NEEDS BACKEND]`, the JSON contracts
- * M12 proposes for `POST /checkout/` and its helpers). It reuses the session cart, the
+ * The mock SERVER for checkout (M12 §7 — Django serves every row since INT-014; this fixture
+ * answers only while Django is down or `SHARWA_MOCKS` is on, and follows Django's rules:
+ * a transfer needs its receipt + amount, COD is off whenever something is due upfront). It reuses the session cart, the
  * store's `StoreSetting` flags (M34) and writes the order into the SAME orders state the
  * M06 dashboard lists, so a storefront purchase shows up for the merchant immediately.
  *
@@ -92,11 +93,12 @@ export function paymentOptions(store: string | null, cartId: string) {
   const rates = storeRates(store);
   const lines = priceLines(store, cart, cart.currency, rates);
   const s = readSettings(store, "");
-  const needsUpfront = lines.some((l) => l.paymentPolicy === "full");
-  const methods: Array<{ code: CheckoutMethod; label: string; enabled: boolean; reason?: string }> = [];
+  // Django: COD only when nothing is due upfront (`upfront_required == 0`) — full or deposit lines block it.
+  const needsUpfront = lines.some((l) => l.paymentPolicy === "full" || l.depositSar > 0);
+  const methods: Array<{ code: CheckoutMethod; label: string; enabled: boolean; reason?: string; fields?: Array<{ name: string; label: string; secret: boolean }> }> = [];
   if (s.enable_manual_payment) methods.push({ code: "manual", label: METHOD_LABELS.manual, enabled: true });
   if (s.enable_sharwa_pay) methods.push({ code: "sharwa_pay", label: METHOD_LABELS.sharwa_pay, enabled: true });
-  if (store === "noor") methods.push({ code: "jeeb", label: METHOD_LABELS.jeeb, enabled: true });
+  if (store === "noor") methods.push({ code: "jeeb", label: METHOD_LABELS.jeeb, enabled: true, fields: [{ name: "purchase_code", label: "كود الشراء من تطبيق جيب", secret: false }] });
   methods.push({
     code: "cod",
     label: METHOD_LABELS.cod,
@@ -402,6 +404,12 @@ export function placeOrder(store: string | null, cartId: string, f: CheckoutFiel
   }
   const transfer = text(f.transfer_amount_reported);
   if (transfer && !/^\d+(\.\d{1,2})?$/.test(transfer)) e.transfer_amount_reported = ["أدخل المبلغ المحوَّل بالأرقام (مثال: 250.00)."];
+  if (method === "manual") {
+    // Django: a transfer is placed with its proof; without it the order is COD (its own option).
+    if (!receiptAttached) e.receipt_image = ["أرفق صورة إشعار التحويل."];
+    if (!transfer) e.transfer_amount_reported = ["أدخل المبلغ الذي حوّلته."];
+  }
+  if (method === "jeeb" && !text(f.purchase_code)) e.payment_method = ["يرجى تعبئة بيانات الدفع المطلوبة كاملة."];
 
   const inv = buildInvoice(store, cart, { ...f, use_wallet: useWallet, payment_method: method }, rates);
   if (!inv.ok) Object.assign(e, inv.body);

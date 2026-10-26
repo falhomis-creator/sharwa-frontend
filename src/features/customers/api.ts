@@ -169,6 +169,15 @@ export function useDeleteNote(phone: string) {
   });
 }
 
+/** INT-029 (M42): a storefront review waits for the merchant's approval before it is listed. */
+export function useApproveReview(phone: string) {
+  const invalidate = useInvalidateCustomer(phone);
+  return useMutation({
+    mutationFn: ({ id, approved }: { id: number; approved: boolean }) => apiFetch(`/api/bff/reviews/${id}`, reviewSchema, { method: "PATCH", json: { approved } }),
+    onSuccess: invalidate,
+  });
+}
+
 export function useReplyReview(phone: string) {
   const invalidate = useInvalidateCustomer(phone);
   return useMutation({

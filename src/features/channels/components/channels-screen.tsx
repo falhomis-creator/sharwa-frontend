@@ -20,7 +20,8 @@ import { ConfirmDialog } from "@/features/inbox/components/confirm-dialog";
 /**
  * `/dashboard/channels/social` (US-27.1): three rows — Meta, TikTok Shop, Telegram — each
  * with its state (غير مربوط / مربوط باسم الحساب / خطأ) and the matching action. OAuth is a
- * full-page redirect to the server route, which returns here with `?connected=<code>`.
+ * full-page redirect to the server route, which returns here with `?connected=<code>` — or `?oauth_error=<reason>`
+ * (INT-037: Django's callback sends the provider's / its own refusal back, shown as a toast).
  * Secrets never come back (FR-27.08): the token field is write-only.
  */
 export function ChannelsScreen() {
@@ -40,8 +41,12 @@ function ChannelsInner() {
 
   useEffect(() => {
     const code = search.get("connected") as ConnectionCode | null;
+    const failure = search.get("oauth_error");
     if (code && code in CONNECTION_LABELS) {
       toast.success(`رُبطت ${CONNECTION_LABELS[code]}.`);
+      router.replace("/dashboard/channels/social");
+    } else if (failure) {
+      toast.error(failure);
       router.replace("/dashboard/channels/social");
     }
   }, [search, router]);
@@ -67,12 +72,24 @@ function ChannelsInner() {
               <ChannelState c={c} />
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
-              {c.channel_code === "telegram" && !c.connected ? null : c.connected && !c.error ? (
+              {c.channel_code === "telegram" && (!c.connected || c.error) ? null : c.connected && !c.error ? (
                 <Button variant="outline" className="h-11 lg:h-9" onClick={() => setConfirm(c)} data-testid="channel-disconnect">
                   فصل
                 </Button>
               ) : (
-                <a href={`/api/bff/channels/${c.channel_code}/oauth/start`} className={cn(buttonVariants({ variant: c.error ? "default" : "outline" }), "h-11 lg:h-9")} data-testid="channel-connect">
+                <a
+                  href={`/api/bff/channels/${c.channel_code}/oauth/start`}
+                  // The server needs where to come back to (this store host + port): Django validates it.
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // An API route answering with an external 302 (not a Next page, so no router.push): absolute URL object.
+                    const target = new URL(`/api/bff/channels/${c.channel_code}/oauth/start`, window.location.origin);
+                    target.searchParams.set("return", new URL("/dashboard/channels/social", window.location.origin).href);
+                    window.location.assign(target);
+                  }}
+                  className={cn(buttonVariants({ variant: c.error ? "default" : "outline" }), "h-11 lg:h-9")}
+                  data-testid="channel-connect"
+                >
                   {c.error ? "إعادة الربط" : "ربط"}
                 </a>
               )}
@@ -82,7 +99,7 @@ function ChannelsInner() {
                 </Button>
               ) : null}
             </div>
-            {c.channel_code === "telegram" && !c.connected ? <TelegramForm /> : null}
+            {c.channel_code === "telegram" && (!c.connected || c.error) ? <TelegramForm /> : null}
           </li>
         ))}
       </ul>

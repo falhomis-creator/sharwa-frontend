@@ -4,9 +4,9 @@ import { mockJson } from "@/mocks/runtime";
 import { b2bOptions, bumpApprovalVersion } from "@/mocks/b2b/state";
 
 /**
- * `/api/bff/b2b/*` — the `[NEEDS BACKEND]` half of M36: the draft form's choices
- * (`GET /api/v1/roles/` shared with M18, the M22 branches). Negotiation drafts
- * (`/api/v1/orders/negotiations/`) stay hidden until Django ships them (§10).
+ * `/api/bff/b2b/*` mock — the draft form's choices, mirroring Django `GET /api/v1/orders/b2b-options/`
+ * (INT-044, `api/views_b2b.py`: active roles, active branches, multi-branch flag, default currency).
+ * Negotiation drafts (`/api/v1/orders/negotiations/`) stay hidden until a screen asks for them (§10).
  */
 export async function b2bMock(request: Request, segments: string[], ctx: MockRouteContext): Promise<Response> {
   const { store, session } = ctx;

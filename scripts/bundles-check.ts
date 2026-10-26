@@ -21,6 +21,9 @@ import { conflictFor, firstViolation, violates, type Rule } from "../src/feature
 const PORT = process.argv[2] ?? "3000";
 const NOOR = `http://noor.localhost:${PORT}`;
 const OUT = join(process.cwd(), "docs", "visual-checks", "37-advanced-products");
+// Screenshots use `caret: "initial"`: Playwright's default ("hide") writes `caret-color: transparent` INLINE on the
+// page's inputs while it captures — on a PDP whose lazy sections have not hydrated yet, React then reports a hydration
+// mismatch on that style. The caret is irrelevant to these images, so the DOM is left untouched.
 const failures: string[] = [];
 const consoleErrors: string[] = [];
 
@@ -110,7 +113,7 @@ async function main() {
   check((await m.locator("[data-testid=compat-rules] li").count()) >= 2, "editor: compatibility rules are listed");
   const self = await api(m, "POST", `/api/bff/products/${cups}/extras/bundle-components/`, { component_id: cups, quantity: "1" });
   check(self.status === 400 && self.text.includes("إلى نفسها"), "editor: a bundle cannot contain itself (server)");
-  await m.screenshot({ path: join(OUT, "editor-bundle-desktop.png"), fullPage: true });
+  await m.screenshot({ caret: "initial", path: join(OUT, "editor-bundle-desktop.png"), fullPage: true });
 
   // ── editor: tier prices ──────────────────────────────────────────────────────────
   await m.goto(`${NOOR}/dashboard/products/${dates}?tab=advanced`, { waitUntil: "load" });
@@ -139,14 +142,14 @@ async function main() {
   check(reordered.status === 200, "editor: fields reorder (dnd-kit → POST reorder)");
   await api(m, "POST", `/api/bff/products/${ring}/extras/personalization-fields/reorder/`, { ordered_ids: fields.map((f) => f.id) });
   await api(m, "DELETE", `/api/bff/products/${ring}/extras/personalization-fields/${fields.at(-1)!.id}/`);
-  await m.screenshot({ path: join(OUT, "editor-personalization-desktop.png"), fullPage: true });
+  await m.screenshot({ caret: "initial", path: join(OUT, "editor-personalization-desktop.png"), fullPage: true });
 
   // ── editor: auction ──────────────────────────────────────────────────────────────
   await m.goto(`${NOOR}/dashboard/products/${beads}?tab=advanced`, { waitUntil: "load" });
   await m.waitForSelector("[data-testid=auction-form]");
   check((await m.inputValue("[data-testid=au-reserve]")) !== "", "editor: the merchant sees the reserve");
   check((await m.locator("[data-testid=auction-bids] tbody tr").count()) > 0, "editor: bids are listed read-only");
-  await m.screenshot({ path: join(OUT, "editor-auction-desktop.png"), fullPage: true });
+  await m.screenshot({ caret: "initial", path: join(OUT, "editor-auction-desktop.png"), fullPage: true });
 
   // ── editor: serials ──────────────────────────────────────────────────────────────
   await m.goto(`${NOOR}/dashboard/products/${watch}?tab=advanced`, { waitUntil: "load" });
@@ -181,7 +184,7 @@ async function main() {
   check((await thermosOptions.filter({ hasText: "كحلي" }).getAttribute("aria-disabled")) === "true", "PDP: an option outside «in» is disabled");
   await thermosOptions.filter({ hasText: "أسود" }).click();
   check(!(await shopper.isDisabled("[data-testid=add-to-cart]")), "PDP: a compatible combination can be added");
-  await shopper.screenshot({ path: join(OUT, "pdp-bundle-desktop.png"), fullPage: true });
+  await shopper.screenshot({ caret: "initial", path: join(OUT, "pdp-bundle-desktop.png"), fullPage: true });
 
   // ── PDP: tiers, deposit, auction ─────────────────────────────────────────────────
   await shopper.goto(`${NOOR}/p/${dates}`, { waitUntil: "load" });
@@ -194,23 +197,23 @@ async function main() {
   const auction = await api(shopper, "GET", `/api/bff/catalog/products/${beads}/auction?currency=SAR`);
   check(!auction.text.includes("reserve\"") && !auction.text.includes("1250"), "PDP: the auction response never carries the reserve (SC-37.2)");
   check(!((await shopper.content()).includes("1250")), "PDP: the reserve never reaches the DOM");
-  await shopper.screenshot({ path: join(OUT, "pdp-auction-desktop.png") });
+  await shopper.screenshot({ caret: "initial", path: join(OUT, "pdp-auction-desktop.png") });
 
   // ── visual: mobile + dark ────────────────────────────────────────────────────────
   const mob = await page(browser, { width: 390 });
   await mob.goto(`${NOOR}/p/${cups}`, { waitUntil: "load" });
   await mob.waitForSelector("[data-testid=bundle-parts]");
   check(await mob.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), "390px: PDP bundle without horizontal scroll");
-  await mob.screenshot({ path: join(OUT, "pdp-bundle-mobile.png"), fullPage: true });
+  await mob.screenshot({ caret: "initial", path: join(OUT, "pdp-bundle-mobile.png"), fullPage: true });
   const dark = await page(browser, { session: "merchant", dark: true });
   await dark.goto(`${NOOR}/dashboard/products/${cups}?tab=advanced`, { waitUntil: "load" });
   await dark.waitForSelector("[data-testid=bundle-total]");
-  await dark.screenshot({ path: join(OUT, "editor-bundle-dark.png"), fullPage: true });
+  await dark.screenshot({ caret: "initial", path: join(OUT, "editor-bundle-dark.png"), fullPage: true });
   const mobEd = await page(browser, { session: "merchant", width: 390 });
   await mobEd.goto(`${NOOR}/dashboard/products/${ring}?tab=advanced`, { waitUntil: "load" });
   await mobEd.waitForSelector("[data-testid=pf-row]");
   check(await mobEd.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), "390px: editor advanced tab without horizontal scroll");
-  await mobEd.screenshot({ path: join(OUT, "editor-personalization-mobile.png"), fullPage: true });
+  await mobEd.screenshot({ caret: "initial", path: join(OUT, "editor-personalization-mobile.png"), fullPage: true });
 
   await browser.close();
   console.log(consoleErrors.length ? `\nconsole errors:\n${consoleErrors.join("\n")}` : "\n0 console errors");

@@ -1,3 +1,4 @@
+import { liveOrMock } from "@/lib/bff/live-route";
 import { mockRoute, readBody, respond } from "@/lib/bff/mock-route";
 import { setCod } from "@/mocks/customers/state";
 import { audit, sessionActor } from "@/mocks/staff/state";
@@ -8,7 +9,8 @@ import { audit, sessionActor } from "@/mocks/staff/state";
  */
 export async function POST(request: Request, { params }: RouteContext<"/api/bff/customers/[phone]/cod">) {
   const { phone } = await params;
-  return mockRoute(
+  const p = encodeURIComponent(decodeURIComponent(phone));
+  return liveOrMock(request, "customers", `/api/v1/customers/${p}/cod/`, () => mockRoute(
     request,
     async ({ store, session }) => {
       const actor = sessionActor(store, session);
@@ -26,5 +28,5 @@ export async function POST(request: Request, { params }: RouteContext<"/api/bff/
       return respond(result);
     },
     { permission: "customers.edit_profile" },
-  );
+  ));
 }

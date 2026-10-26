@@ -4,8 +4,9 @@ import { addReview, findVisible, listReviews } from "@/mocks/storefront/catalog"
 import { verifyOtp } from "@/mocks/storefront/otp";
 
 /**
- * `[NEEDS BACKEND]` reviews (M10 §7, M42 §7): `GET …/reviews/?page&rating` → summary + page;
- * `POST …/reviews/` `{rating, comment, phone, otp}` → stored for moderation (US-10.6.2).
+ * Reviews (M10 §7, M42 §7): `GET …/reviews/?page&rating` → summary + page — Django since INT-012;
+ * `POST …/reviews/` `{rating, comment, phone, otp}` → stored for moderation (US-10.6.2) — Django since
+ * INT-029 (`ProductReview.is_approved=False` until the merchant approves it in the M07 reviews tab).
  */
 export async function GET(request: Request, { params }: RouteContext<"/api/bff/catalog/products/[id]/reviews">) {
   const { id } = await params;

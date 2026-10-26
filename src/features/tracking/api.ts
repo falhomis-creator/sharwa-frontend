@@ -7,7 +7,8 @@ import { TrackingSchema, type Tracking } from "@/features/tracking/schemas";
 
 /**
  * First render of the tracking page. NOT cached (an order changes; the page then polls the
- * BFF row every 60 s while a shipment moves). Target first, fixture while it is not shipped.
+ * BFF row every 60 s while a shipment moves). Django first (INT-015); the fixture answers
+ * only when the route is missing or Django is unreachable.
  */
 export async function getTracking(store: string, storeHost: string, uuid: string): Promise<Tracking | null> {
   await connection();

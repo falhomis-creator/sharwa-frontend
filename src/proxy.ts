@@ -112,8 +112,9 @@ export const config = {
     /*
      * Skip Next internals, the BFF (`/api/*`), the favicon and vendored static assets.
      * `sw.js` / `manifest.webmanifest` are intentionally NOT skipped: on store origins they
-     * are owned by the storefront group (research R-16).
+     * are owned by the storefront group (research R-16). `/media/*` is skipped too: it is
+     * rewritten to Django's media in next.config.ts (uploaded logos, gallery, section images).
      */
-    "/((?!_next/|api/|favicon\\.ico|fonts/|images/|icons/).*)",
+    "/((?!_next/|api/|media/|favicon\\.ico|fonts/|images/|icons/).*)",
   ],
 };

@@ -183,8 +183,21 @@ function RuleFormBody({ rule, onDone }: { rule: PricingRule | null; onDone: () =
   const form = useForm<RuleForm>({
     resolver: zodResolver(ruleFormSchema),
     defaultValues: rule
-      ? { name: rule.name, scope_type: rule.scope_type, scope_value: rule.scope_value, markup_percent: rule.markup_percent, rounding: rule.rounding, fx_source: rule.fx_source, fx_rate: rule.fx_rate, priority: String(rule.priority), is_active: rule.is_active }
-      : { name: "", scope_type: "all", scope_value: "", markup_percent: "30", rounding: "end_99", fx_source: "fixed", fx_rate: "3.75", priority: "50", is_active: true },
+      ? {
+          name: rule.name,
+          scope_type: rule.scope_type,
+          scope_value: rule.scope_value,
+          markup_percent: rule.markup_percent,
+          rounding: rule.rounding,
+          fx_source: rule.fx_source,
+          fx_rate: rule.fx_rate,
+          priority: String(rule.priority),
+          is_active: rule.is_active,
+          fixed_add: rule.fixed_add ?? "",
+          shipping_estimate: rule.shipping_estimate ?? "",
+          min_margin_percent: rule.min_margin_percent ?? "",
+        }
+      : { name: "", scope_type: "all", scope_value: "", markup_percent: "30", rounding: "end_99", fx_source: "fixed", fx_rate: "3.75", priority: "50", is_active: true, fixed_add: "0", shipping_estimate: "0", min_margin_percent: "10" },
   });
   const { register, control, handleSubmit, formState, setError } = form;
   const scope = useWatch({ control, name: "scope_type" });
@@ -285,6 +298,17 @@ function RuleFormBody({ rule, onDone }: { rule: PricingRule | null; onDone: () =
             <input id={`${id}-fr`} inputMode="decimal" dir="ltr" {...register("fx_rate", digits)} className={numericInputClass} />
           </Field>
         ) : null}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3" data-testid="rule-engine-terms">
+        <Field label="تقدير شحن المورد" htmlFor={`${id}-se`} error={err("shipping_estimate")} hint="يُضاف للتكلفة قبل الهامش.">
+          <input id={`${id}-se`} inputMode="decimal" dir="ltr" {...register("shipping_estimate", digits)} className={numericInputClass} />
+        </Field>
+        <Field label="إضافة ثابتة" htmlFor={`${id}-fa`} error={err("fixed_add")} hint="بعد الهامش (ر.س).">
+          <input id={`${id}-fa`} inputMode="decimal" dir="ltr" {...register("fixed_add", digits)} className={numericInputClass} />
+        </Field>
+        <Field label="الحد الأدنى للهامش %" htmlFor={`${id}-mm`} error={err("min_margin_percent")} hint="لا يُنزل السعر تحته.">
+          <input id={`${id}-mm`} inputMode="decimal" dir="ltr" {...register("min_margin_percent", digits)} className={numericInputClass} />
+        </Field>
       </div>
       <Controller
         control={control}

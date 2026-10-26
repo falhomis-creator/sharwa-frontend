@@ -22,8 +22,8 @@ import {
 } from "@/mocks/procurement/state";
 
 /**
- * Mock server for `/api/v1/suppliers/*` and `/api/v1/purchase-orders/*` (M23 §7, all
- * `[NEEDS BACKEND]`). Two catch-all BFF routes feed it the path AFTER `/api/bff/`, so
+ * Mock server for `/api/v1/suppliers/*` and `/api/v1/purchase-orders/*` (M23 §7; live provider
+ * Django `api/views_procurement.py`, INT-035). Two catch-all BFF routes feed it the path AFTER `/api/bff/`, so
  * the first segment is the resource. Gates: read needs `suppliers.manage` OR
  * `suppliers.approve` (FR-23.01); writes need `suppliers.manage`; a decision needs
  * `suppliers.approve`.

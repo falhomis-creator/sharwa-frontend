@@ -1,8 +1,9 @@
+import { liveOrMock } from "@/lib/bff/live-route";
 import { mockRoute, readBody, respond } from "@/lib/bff/mock-route";
 import { patchLocationRow } from "@/mocks/inventory/state";
 
 /** `PATCH /api/v1/locations/<id>/inventory/<unit>/` `{reorder_point?, quarantine_quantity?}`; `unit` = `p<productId>` or `v<variantId>`. */
-export async function PATCH(request: Request, ctx: RouteContext<"/api/bff/locations/[id]/inventory/[unit]">) {
+async function mockPATCH(request: Request, ctx: RouteContext<"/api/bff/locations/[id]/inventory/[unit]">) {
   const { id, unit } = await ctx.params;
   return mockRoute(
     request,
@@ -15,4 +16,16 @@ export async function PATCH(request: Request, ctx: RouteContext<"/api/bff/locati
     },
     { permission: "inventory.adjust" },
   );
+}
+
+// INT-025: `liveOrMock` module `locations` → Django `api/views_locations.py`; the fixture handlers above otherwise.
+type Ctx = RouteContext<"/api/bff/locations/[id]/inventory/[unit]">;
+
+async function upstream(ctx: Ctx) {
+  const p = await ctx.params;
+  return `/api/v1/locations/${encodeURIComponent(p.id)}/inventory/${encodeURIComponent(p.unit)}/`;
+}
+
+export async function PATCH(request: Request, ctx: Ctx) {
+  return liveOrMock(request, "locations", await upstream(ctx), () => mockPATCH(request, ctx));
 }

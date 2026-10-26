@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { AccessGate } from "@/components/shared/access-gate";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -17,13 +17,14 @@ import { isApiError } from "@/lib/api-error";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useAccess } from "@/features/dashboard-shell/components/session-context";
-import { fetchConsoleToken, useAiSettings, useAiStatus, useApp, useSaveAiSettings } from "@/features/apps/api";
-import { AI_APP, aiSettingsFormSchema, type AiSettings } from "@/features/apps/schemas";
+import { fetchConsoleToken, useAiReconnect, useAiSettings, useAiStatus, useApp, useSaveAiSettings } from "@/features/apps/api";
+import { AI_APP, aiSettingsFormSchema, type AiSettings, type AiStatus } from "@/features/apps/schemas";
 import { installationState } from "@/features/apps/components/apps-screens";
 import { Notice, StatusDot } from "@/features/inbox/components/bits";
 
-/** The external console's origin — the only origin whose `postMessage` is trusted (FR-31.08). */
-const CONSOLE_ORIGIN = "https://ai.sharwa.app";
+/** The console announces it can receive the token; we answer once with it (Django's launch-page handshake). */
+const CONSOLE_READY = "sharwa-console-ready";
+const CONSOLE_TOKEN = "sharwa-console-token";
 
 /**
  * `/dashboard/apps/sharwa-ai` (M31 US-31.1, US-31.5): connection status (polled), the two
@@ -48,18 +49,22 @@ function AiInner() {
   const { session } = useAccess();
   const owner = session.kind === "merchant";
 
-  // US-31.5 acceptance 2: refresh on a message from the console's own origin only.
+  // US-31.5 acceptance 2: refresh on a message from the console's own origin only. FR-31.08: that origin is the
+  // one Django's `SHARWA_AI_CONSOLE_URL` names — learned from the console-token response, never hard-coded.
+  const [consoleOrigin, setConsoleOrigin] = useState<string | null>(null);
   const refetchStatus = status.refetch;
   const refetchSettings = settings.refetch;
   useEffect(() => {
+    if (!consoleOrigin) return;
     const onMessage = (e: MessageEvent) => {
-      if (e.origin !== CONSOLE_ORIGIN) return;
+      if (e.origin !== consoleOrigin) return;
+      if ((e.data as { type?: unknown } | null)?.type === CONSOLE_READY) return; // the handshake, not a change
       void refetchStatus();
       void refetchSettings();
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [refetchStatus, refetchSettings]);
+  }, [consoleOrigin, refetchStatus, refetchSettings]);
 
   if (app.isLoading) return <Skeleton className="h-72" />;
   if (!app.data) {
@@ -93,33 +98,10 @@ function AiInner() {
           {settings.data && !settings.data.ai_enabled ? <Notice tone="warning" testId="ai-disabled">المساعد معطّل — الجلسات الجديدة تذهب للموظفين مباشرة.</Notice> : null}
           <section className="flex flex-col gap-2">
             <h2 className="text-base font-semibold">حالة الربط</h2>
-            {status.data ? (
-              status.data.connected ? (
-                <span className="flex flex-wrap items-center gap-2 text-sm">
-                  <StatusDot tone="success" label="مربوط" testId="ai-status" value="connected" />
-                  {status.data.connected_at ? (
-                    <span className="text-xs text-muted-foreground">
-                      منذ <Mono>{formatDateTime(status.data.connected_at)}</Mono>
-                    </span>
-                  ) : null}
-                </span>
-              ) : status.data.connecting ? (
-                <span className="inline-flex items-center gap-1.5 text-sm" data-testid="ai-status" data-status="connecting">
-                  <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-warning motion-reduce:animate-none" />
-                  جارٍ الربط…
-                </span>
-              ) : (
-                <span className="flex flex-col gap-1">
-                  <StatusDot tone="destructive" label="تعذّر الربط" testId="ai-status" value="error" />
-                  {status.data.error ? <span className="text-xs text-destructive">{status.data.error}</span> : null}
-                </span>
-              )
-            ) : (
-              <Skeleton className="h-6 w-40" />
-            )}
+            {status.data ? <ConnectionStatus data={status.data} owner={owner} /> : <Skeleton className="h-6 w-40" />}
           </section>
           {settings.data ? <SettingsForm key={`${settings.data.ai_enabled}:${settings.data.max_consecutive_bot_replies_override ?? ""}`} data={settings.data} owner={owner} /> : settings.isLoading ? <Skeleton className="h-40" /> : <ErrorState error={settings.error} onRetry={() => void settings.refetch()} />}
-          {owner ? <ConsoleButton /> : null}
+          {owner ? <ConsoleButton onOrigin={setConsoleOrigin} /> : null}
         </>
       )}
     </div>
@@ -164,19 +146,112 @@ function SettingsForm({ data, owner }: { data: AiSettings; owner: boolean }) {
   );
 }
 
-function ConsoleButton() {
+function ConnectionStatus({ data, owner }: { data: AiStatus; owner: boolean }) {
+  const reconnect = useAiReconnect();
+  if (data.connected) {
+    return (
+      <span className="flex flex-wrap items-center gap-2 text-sm">
+        <StatusDot tone="success" label="مربوط" testId="ai-status" value="connected" />
+        {data.connected_phone_number ? (
+          <span className="text-xs" data-testid="ai-phone" dir="ltr">
+            <Mono>{data.connected_phone_number}</Mono>
+          </span>
+        ) : null}
+        {data.connected_at ? (
+          <span className="text-xs text-muted-foreground">
+            منذ <Mono>{formatDateTime(data.connected_at)}</Mono>
+          </span>
+        ) : null}
+      </span>
+    );
+  }
+  if (data.connecting) {
+    return (
+      <div className="flex flex-col gap-3">
+        <span className="inline-flex items-center gap-1.5 text-sm" data-testid="ai-status" data-status="connecting">
+          <span aria-hidden className="size-1.5 animate-pulse rounded-full bg-warning motion-reduce:animate-none" />
+          جارٍ الربط…
+        </span>
+        {data.qr_image ? (
+          <figure className="flex flex-col items-start gap-2" data-testid="ai-qr">
+            {/* eslint-disable-next-line @next/next/no-img-element -- a data: URL from the server, refreshed by the poll */}
+            <img src={data.qr_image} alt="رمز QR لربط واتساب" className="size-56 rounded-md border border-border bg-white p-2" />
+            <figcaption className="max-w-prose text-xs text-muted-foreground">
+              من واتساب على الهاتف الذي سيردّ على العملاء: الإعدادات ← الأجهزة المرتبطة ← ربط جهاز، ثم امسح الرمز.
+            </figcaption>
+          </figure>
+        ) : null}
+      </div>
+    );
+  }
+  async function retry() {
+    try {
+      await reconnect.mutateAsync();
+    } catch (e) {
+      toast.error(isApiError(e) ? e.userMessage : "تعذّرت إعادة الربط.");
+    }
+  }
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <StatusDot tone="destructive" label="تعذّر الربط" testId="ai-status" value="error" />
+      {data.error ? <span className="text-xs text-destructive">{data.error}</span> : null}
+      {owner ? (
+        <Button variant="outline" className="h-11 lg:h-9" onClick={() => void retry()} disabled={reconnect.isPending} data-testid="ai-reconnect">
+          <RefreshCw className="size-4" strokeWidth={1.75} aria-hidden />
+          {reconnect.isPending ? "جارٍ إعادة الربط…" : "إعادة الربط"}
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * FR-31.08 + Django's launch-page contract: the token is requested on click, never put in a URL, never stored. The
+ * console opens on its plain URL, posts `sharwa-console-ready` to its opener, and gets the token back ONCE via
+ * `postMessage`, addressed to the console's own origin and only to the window we opened. Unused tokens are dropped
+ * when they expire.
+ */
+function ConsoleButton({ onOrigin }: { onOrigin: (origin: string) => void }) {
   const [pending, setPending] = useState(false);
+  const cleanup = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    const pendingHandshake = cleanup; // drop an unclaimed token when the screen unmounts
+    return () => pendingHandshake.current?.();
+  }, []);
+
   async function open() {
-    const win = window.open("about:blank", "_blank");
+    // Opened synchronously inside the click so popup blockers allow it; navigated once the token is in hand.
+    const win = window.open("about:blank", "sharwa-ai-console");
+    if (!win) {
+      toast.error("المتصفح منع فتح النافذة؛ اسمح بالنوافذ المنبثقة لهذا الموقع.");
+      return;
+    }
+    cleanup.current?.();
     setPending(true);
     try {
-      // FR-31.08: the token lives in this closure only — never stored, never rendered.
-      const { console_url, token } = await fetchConsoleToken();
-      const url = `${console_url}?token=${encodeURIComponent(token)}`;
-      if (win) win.location.href = url;
-      else window.open(url, "_blank");
+      const { console_url, token, expires_in } = await fetchConsoleToken();
+      const origin = new URL(console_url).origin;
+      let secret: string | null = token;
+      let timer = 0;
+      function stop() {
+        secret = null;
+        window.removeEventListener("message", onMessage);
+        window.clearTimeout(timer);
+        if (cleanup.current === stop) cleanup.current = null;
+      }
+      function onMessage(e: MessageEvent) {
+        if (!secret || !win || e.source !== win || e.origin !== origin) return;
+        if ((e.data as { type?: unknown } | null)?.type !== CONSOLE_READY) return;
+        win.postMessage({ type: CONSOLE_TOKEN, token: secret }, origin);
+        stop();
+      }
+      timer = window.setTimeout(stop, Math.max(expires_in, 1) * 1000);
+      cleanup.current = stop;
+      window.addEventListener("message", onMessage);
+      onOrigin(origin);
+      win.location.href = console_url;
     } catch (e) {
-      win?.close();
+      win.close();
       toast.error(isApiError(e) ? e.userMessage : "تعذّر فتح وحدة التحكم.");
     } finally {
       setPending(false);
@@ -185,7 +260,7 @@ function ConsoleButton() {
   return (
     <section className="flex flex-col items-start gap-2">
       <h2 className="text-base font-semibold">وحدة التحكم</h2>
-      <p className="max-w-prose text-sm text-muted-foreground">المعرفة والنبرة والأدوات تُدار في وحدة تحكم شروة AI؛ تُفتح في نافذة جديدة برمز دخول قصير العمر.</p>
+      <p className="max-w-prose text-sm text-muted-foreground">المعرفة والنبرة والأدوات تُدار في وحدة تحكم شروة AI؛ تُفتح في نافذة جديدة ويُسلَّم لها دخول قصير العمر مباشرة، بلا أي رمز في الرابط.</p>
       <Button variant="outline" className="h-11 lg:h-9" onClick={() => void open()} disabled={pending} data-testid="ai-console">
         <ExternalLink className="size-4" strokeWidth={1.75} aria-hidden />
         {pending ? "جارٍ الفتح…" : "افتح وحدة تحكم شروة AI"}

@@ -209,7 +209,7 @@ function AssignDialog({ initial, onClose }: { initial: ClientOption[]; onClose: 
             </Field>
           </div>
           <Field label="ملاحظات" htmlFor="assign-notes">
-            <Input id="assign-notes" className={INPUT} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={300} />
+            <Input id="assign-notes" className={INPUT} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={255} />
           </Field>
         </div>
         <DialogFooter>

@@ -62,9 +62,11 @@ export function useSession(id: number) {
     queryKey: key,
     queryFn: async ({ signal }) => {
       const current = qc.getQueryData<SessionDetail>(key);
-      const last = current?.timeline.filter((t) => t.id > 0).at(-1)?.id;
-      const res = await apiFetch(`/api/bff/support/sessions/${id}`, sessionDetailSchema, { query: last ? { after: last } : {}, signal });
-      if (!current || !last) return res;
+      // INT-042: Django hands back an opaque cursor (messages and tool calls advance independently); the last id
+      // is the fallback for a response without one.
+      const after = current?.cursor ?? current?.timeline.filter((t) => t.id > 0).at(-1)?.id;
+      const res = await apiFetch(`/api/bff/support/sessions/${id}`, sessionDetailSchema, { query: after ? { after } : {}, signal });
+      if (!current || !after) return res;
       return { ...res, timeline: mergeTimeline(current.timeline, res.timeline) };
     },
     refetchInterval: 5_000,
@@ -75,7 +77,8 @@ export function useSession(id: number) {
 export function mergeTimeline(current: TimelineItem[], incoming: TimelineItem[]): TimelineItem[] {
   const out = current.filter((t) => !(t.id < 0 && incoming.some((i) => i.client_id && i.client_id === t.client_id)));
   for (const i of incoming) if (!out.some((t) => t.id === i.id)) out.push(i);
-  return out.sort((a, b) => (a.id < 0 ? 1 : b.id < 0 ? -1 : a.id - b.id));
+  // Server rows by time then id (ids are unique, not chronological across messages and tool calls); unsent last.
+  return out.sort((a, b) => (a.id < 0 ? 1 : b.id < 0 ? -1 : a.created_at.localeCompare(b.created_at) || a.id - b.id));
 }
 
 export function useSessionAction(id: number) {
@@ -130,7 +133,7 @@ export function useCreateTicket() {
   const store = useStore();
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { title: string; description: string; assigned_to_id: number | null }) => apiFetch("/api/bff/support/tickets", ticketSchema, { method: "POST", json: body }),
+    mutationFn: (body: { title: string; description: string; assigned_to_id: number | null; customer_phone?: string }) => apiFetch("/api/bff/support/tickets", ticketSchema, { method: "POST", json: body }),
     onSuccess: (t) => {
       qc.setQueryData(supportKeys(store).ticket(t.id), t);
       void qc.invalidateQueries({ queryKey: supportKeys(store).ticketLists });

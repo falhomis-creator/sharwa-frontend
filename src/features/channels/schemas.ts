@@ -5,6 +5,10 @@ export const CONNECTIONS = ["meta", "tiktok", "telegram"] as const;
 export type ConnectionCode = (typeof CONNECTIONS)[number];
 export const CONNECTION_LABELS: Record<ConnectionCode, string> = { meta: "Meta (فيسبوك وإنستغرام)", tiktok: "TikTok Shop", telegram: "تيليجرام" };
 export const CONNECTION_SHORT: Record<ConnectionCode, string> = { meta: "Meta", tiktok: "TikTok", telegram: "تيليجرام" };
+/** Staff access also covers WhatsApp (INT-037 — Django's `StaffChannelAccess` filters its conversations too). */
+export const ACCESS_CHANNELS = [...CONNECTIONS, "whatsapp"] as const;
+export type AccessChannel = (typeof ACCESS_CHANNELS)[number];
+export const ACCESS_SHORT: Record<AccessChannel, string> = { ...CONNECTION_SHORT, whatsapp: "واتساب" };
 
 export const channelSchema = z.object({
   channel_code: z.enum(CONNECTIONS),
@@ -103,7 +107,7 @@ export const mappingRowSchema = z.object({ category_id: z.number().int(), catego
 export type MappingRow = z.infer<typeof mappingRowSchema>;
 export const mappingListSchema = z.array(mappingRowSchema);
 
-export const accessRowSchema = z.object({ staff_id: z.number().int(), channel_code: z.enum(CONNECTIONS), can_view: z.boolean(), can_reply: z.boolean() });
+export const accessRowSchema = z.object({ staff_id: z.number().int(), channel_code: z.enum(ACCESS_CHANNELS), can_view: z.boolean(), can_reply: z.boolean() });
 export type AccessRow = z.infer<typeof accessRowSchema>;
 export const accessSchema = z.object({ staff: z.array(z.object({ id: z.number().int(), name: z.string() })), rows: z.array(accessRowSchema) });
 export type StaffAccess = z.infer<typeof accessSchema>;

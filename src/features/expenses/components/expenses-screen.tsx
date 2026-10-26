@@ -33,6 +33,8 @@ import { EXPENSE_CATEGORIES, EXPENSE_CATEGORY_LABELS, EXPENSE_CURRENCIES, expens
  * form fixed at the start, the ledger grouped by month at the end. Each month header shows
  * the server's total PER CURRENCY (FR-33.03) — the page never adds two amounts. Create only:
  * no edit/delete until the contract exists (FR-33.06). Filters + page in the URL (FR-33.04).
+ * Access (INT-043): the owner, or a member holding `expenses.manage` (Django migration 0235);
+ * a staff entry shows the member's name in «أدخله», the owner's shows «المالك».
  */
 const PAGE_SIZE = 50;
 const parsers = {
@@ -73,9 +75,9 @@ const monthLabel = (ym: string) => MONTH_FMT.format(new Date(`${ym}-01T00:00:00Z
 const dayLabel = (ymd: string) => DAY_FMT.format(new Date(`${ymd}T00:00:00Z`));
 
 export function ExpensesScreen() {
-  const { session } = useAccess();
-  // §10: the backend view needs the merchant session and no permission key exists yet.
-  if (session.kind !== "merchant") return <ForbiddenState title="المصروفات التشغيلية لمالك المتجر" description="لا توجد صلاحية مخصصة للمصروفات لدى الموظفين بعد." />;
+  const { canPermission } = useAccess();
+  // §10 → INT-043: Django gates /api/v1/expenses/ with `expenses.manage` (the owner implicitly).
+  if (!canPermission("expenses.manage")) return <ForbiddenState title="المصروفات التشغيلية" description="تحتاج صلاحية «إدارة المصروفات التشغيلية» — اطلبها من مالك المتجر." />;
   return <ExpensesInner />;
 }
 
@@ -114,7 +116,7 @@ function ExpensesInner() {
   const reportHref = `/dashboard/reports/operating_expenses${f.from || f.to ? `?${new URLSearchParams({ ...(f.from ? { from: f.from } : {}), ...(f.to ? { to: f.to } : {}) }).toString()}` : ""}`;
 
   return (
-    <div className="flex flex-col gap-6 pb-20 md:pb-0">
+    <div className="flex flex-col gap-6 pb-36 md:pb-0">
       <PageHeader
         title="المصروفات التشغيلية"
         description="قيود يدوية للتغليف والإيجار والرواتب وغيرها — لا تمسّ الطلبات أو المحافظ."
@@ -141,7 +143,9 @@ function ExpensesInner() {
       </div>
       {!desktop ? (
         <>
-          <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+          {/* Sits ON TOP of the shell's bottom nav (`MobileBottomNav`: sticky, h-16, below lg) — at bottom-0 the
+              nav covered it and the button could not be tapped. The page pads for both bars (pb-36). */}
+          <div className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-card p-3">
             <Button type="button" className="h-11 w-full" onClick={() => setDrawer(true)} data-testid="new-expense-mobile">
               مصروف جديد
             </Button>

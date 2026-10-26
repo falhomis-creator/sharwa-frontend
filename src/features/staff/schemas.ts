@@ -23,6 +23,9 @@ export const staffSchema = z.object({
   roles_summary: z.string().optional().default(""),
 });
 export type StaffMember = z.infer<typeof staffSchema>;
+/** INT-022: `POST /staff/` and `POST /staff/<id>/reset-password/` return the staff password ONCE. */
+export const createdStaffSchema = staffSchema.extend({ temporary_password: z.string().optional() });
+export const passwordResetSchema = z.object({ temporary_password: z.string(), token_version: z.number().int() });
 export const staffListSchema = z.object({ count: z.number().int(), results: z.array(staffSchema) });
 
 export const staffFormSchema = z.object({
@@ -157,7 +160,8 @@ export type AlertType = (typeof ALERT_TYPES)[number];
 export const ALERT_TYPE_LABELS: Record<AlertType, string> = { export_volume: "حجم التصدير", view_volume: "حجم العرض", message_volume: "حجم الرسائل" };
 export const alertSchema = z.object({
   id: z.number().int(),
-  staff_id: z.number().int(),
+  // INT-022: Django keeps the alert after the member row is gone (SET_NULL + `staff_name` snapshot).
+  staff_id: z.number().int().nullable(),
   staff_name: z.string(),
   staff_terminated: z.boolean(),
   level: z.enum(["warning", "critical"]),

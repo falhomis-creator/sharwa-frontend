@@ -14,7 +14,6 @@ import {
   isLive,
   jobListSchema,
   jobRefSchema,
-
   metaSchema,
   previewSchema,
   ruleSchema,
@@ -72,7 +71,10 @@ export function useSyncInventory() {
 }
 
 export function useRotateWebhook(code: SupplierCode) {
-  return useMutation({ mutationFn: () => apiFetch(`${BASE}/suppliers/${code}/webhook/rotate`, z.object({ webhook_url: z.string() }), { method: "POST" }) });
+  return useMutation({
+    mutationFn: () =>
+      apiFetch(`${BASE}/suppliers/${code}/webhook/rotate`, z.object({ webhook_url: z.string(), webhook_secret: z.string().optional(), base_url_missing: z.boolean().optional() }), { method: "POST" }),
+  });
 }
 
 export function useRules() {
@@ -99,7 +101,7 @@ export function useSimulateRule() {
 
 export function useApplyRule() {
   const invalidate = useInvalidate();
-  return useMutation({ mutationFn: (id: number) => apiFetch(`${BASE}/pricing-rules/${id}/apply`, z.object({ updated: z.number() }), { method: "POST" }), onSuccess: invalidate });
+  return useMutation({ mutationFn: (id: number) => apiFetch(`${BASE}/pricing-rules/${id}/apply`, z.object({ updated: z.number(), job_id: z.number().nullable().optional() }), { method: "POST" }), onSuccess: invalidate });
 }
 
 /** FR-29.05: polls while any visible row is `importing`. */
@@ -116,7 +118,8 @@ export function useSupplierCatalog(code: SupplierCode, params: Params) {
 export function useImportProducts(code: SupplierCode) {
   const invalidate = useInvalidate();
   return useMutation({
-    mutationFn: (ids: number[]) => apiFetch(`${BASE}/suppliers/${code}/import`, z.object({ job_id: z.number(), count: z.number() }), { method: "POST", json: { supplier_product_ids: ids } }),
+    /** Row ids, or `ext:<pid>` for a live-search hit not stored yet (CJ — INT-039). */
+    mutationFn: (ids: Array<number | string>) => apiFetch(`${BASE}/suppliers/${code}/import`, z.object({ job_id: z.number(), count: z.number() }), { method: "POST", json: { supplier_product_ids: ids } }),
     onSuccess: invalidate,
   });
 }

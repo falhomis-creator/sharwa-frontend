@@ -315,3 +315,18 @@ export const sections = {
     title: "أسئلة يسألها التاجر قبل أن يبدأ",
   },
 } as const;
+
+/**
+ * «ما يشمله» for the free column when the plan carries no feature names — a Django plan
+ * with an empty `Feature` catalogue must never render an empty list (INT-001). Also the
+ * mock's list, so both modes show the same copy.
+ */
+export const freePlanHighlights = [
+  "منتجات ومتغيرات بلا حد",
+  "لوحة طلبات كاملة",
+  "نقطة بيع للمعرض",
+  "محفظة شروة باي",
+  "ربط شركات الشحن",
+  "نطاق فرعي مجاني",
+  "دعم على واتساب",
+] as const;

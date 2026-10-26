@@ -70,9 +70,9 @@ function ProvidersBody() {
       ),
     },
     { id: "phone", header: headerLabel("الهاتف"), meta: { className: "whitespace-nowrap" }, cell: ({ row }) => <Ltr className="font-mono text-sm tabular-nums">{prettyPhone(row.original.phone_number)}</Ltr> },
-    { id: "weight", meta: { numeric: true }, header: headerLabel("أقصى وزن/بوليصة (كغ)"), cell: ({ row }) => <Mono>{row.original.max_weight_per_awb}</Mono> },
-    { id: "items", meta: { numeric: true }, header: headerLabel("أقصى قطع"), cell: ({ row }) => <Mono>{row.original.max_items_per_awb}</Mono> },
-    { id: "divisor", meta: { numeric: true }, header: headerLabel("المقسوم الحجمي"), cell: ({ row }) => <Mono>{row.original.volumetric_divisor}</Mono> },
+    { id: "weight", meta: { numeric: true }, header: headerLabel("أقصى وزن/بوليصة (كغ)"), cell: ({ row }) => <Mono>{row.original.max_weight_per_awb ?? "—"}</Mono> },
+    { id: "items", meta: { numeric: true }, header: headerLabel("أقصى قطع"), cell: ({ row }) => <Mono>{row.original.max_items_per_awb ?? "—"}</Mono> },
+    { id: "divisor", meta: { numeric: true }, header: headerLabel("المقسوم الحجمي"), cell: ({ row }) => <Mono>{row.original.volumetric_divisor ?? "—"}</Mono> },
     { id: "hazardous", header: headerLabel("مواد خطرة"), cell: ({ row }) => <span className={row.original.accepts_hazardous ? "" : "text-muted-foreground"}>{row.original.accepts_hazardous ? "يقبل" : "لا يقبل"}</span> },
     {
       id: "link",
@@ -159,7 +159,7 @@ function ProvidersBody() {
             <span className="flex w-full items-center justify-between gap-2 text-xs text-muted-foreground">
               <Ltr className="font-mono tabular-nums">{prettyPhone(p.phone_number)}</Ltr>
               <span>
-                <Mono>{p.max_weight_per_awb}</Mono> كغ · <Mono>{p.max_items_per_awb}</Mono> قطعة
+                <Mono>{p.max_weight_per_awb ?? "—"}</Mono> كغ · <Mono>{p.max_items_per_awb ?? "—"}</Mono> قطعة
               </span>
             </span>
             <span className="flex items-center justify-between gap-2">
@@ -225,10 +225,10 @@ function toForm(p: Provider | undefined, defaultCarrier: "" | "aramex"): Provide
     name: p.name,
     phone_number: p.phone_number,
     is_active: p.is_active,
-    max_weight_per_awb: p.max_weight_per_awb,
-    max_items_per_awb: String(p.max_items_per_awb),
+    max_weight_per_awb: p.max_weight_per_awb ?? "",
+    max_items_per_awb: p.max_items_per_awb === null ? "" : String(p.max_items_per_awb),
     accepts_hazardous: p.accepts_hazardous,
-    volumetric_divisor: String(p.volumetric_divisor),
+    volumetric_divisor: String(p.volumetric_divisor ?? 5000),
     carrier_code: p.carrier_code,
     staff_account: p.staff_account ? String(p.staff_account) : "",
   };

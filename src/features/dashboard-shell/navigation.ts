@@ -778,7 +778,8 @@ export const NAVIGATION: NavGroup[] = [
       },
       {
         key: "wallet.expenses",
-        ownerOnly: true,
+        // INT-043: was owner-only until Django added the key (migration 0235).
+        permission: "expenses.manage",
         title: "المصروفات التشغيلية",
         path: "/dashboard/wallet/expenses",
         keywords: ["مصروف", "operating_expenses"],

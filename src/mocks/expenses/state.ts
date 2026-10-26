@@ -5,7 +5,8 @@ import { FIXTURE_NOW, seedOf, storeState } from "@/mocks/store-state";
 
 /**
  * M33 mock state (T166) — `OperatingExpense` rows per store, ordered `-expense_date, -id`
- * like `operating_expenses_view`. The list answer groups by month and carries one total
+ * like `operating_expenses_view` and `expenses_api_service.list_expenses` (INT-043).
+ * Validation messages are the ones Django returns verbatim. The list answer groups by month and carries one total
  * PER CURRENCY, formatted here as Django would (`format_money`) — never one mixed total.
  */
 type Category = "packaging" | "rent" | "salaries" | "other";
@@ -128,6 +129,7 @@ export function createExpense(store: string | null, body: Record<string, unknown
   const date = String(body.expense_date ?? "");
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(date))) e.expense_date = ["أدخل تاريخاً صحيحاً."];
   const note = typeof body.note === "string" ? body.note.trim() : "";
+  if (note.length > 500) e.note = ["الملاحظة 500 حرف على الأكثر."];
   if (Object.keys(e).length) return { ok: false, status: 400, body: e };
   const state = expensesState(store);
   const row: MockExpense = { id: ++state.ids.expense, category: category as Category, amount: Number(amount).toFixed(2), currency: currency as Currency, expense_date: date, note, created_by_name: createdBy };

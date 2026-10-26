@@ -3,7 +3,7 @@ import { applyCoupon, removeCoupon } from "@/mocks/storefront/cart";
 import { mockJson } from "@/mocks/runtime";
 
 /**
- * `[NEEDS BACKEND]` `POST /api/v1/cart/coupon/` `{code}` → the cart with `coupon_code` and
+ * `POST /api/v1/cart/coupon/` `{code}` (Django since INT-013) → the cart with `coupon_code` and
  * the discount, or 400 `{detail}` with the server's message verbatim; `DELETE` removes it (M11 §7).
  * The coupon lives in the session, never in the URL (FR-11.11).
  */

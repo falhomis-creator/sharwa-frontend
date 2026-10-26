@@ -143,15 +143,16 @@ export type Tracking = z.infer<typeof trackingSchema>;
 
 export const trackingInputSchema = z.object({
   is_tracking_enabled: z.boolean(),
-  meta_pixel_id: z.string().max(64, "64 حرفاً كحد أقصى."),
-  tiktok_pixel_id: z.string().max(64, "64 حرفاً كحد أقصى."),
-  snapchat_pixel_id: z.string().max(64, "64 حرفاً كحد أقصى."),
-  gtm_container_id: z.string().max(32, "32 حرفاً كحد أقصى."),
-  ga4_measurement_id: z.string().max(32, "32 حرفاً كحد أقصى."),
-  google_ads_conversion_id: z.string().max(32, "32 حرفاً كحد أقصى."),
-  google_ads_conversion_label: z.string().max(64, "64 حرفاً كحد أقصى."),
-  meta_conversions_api_token: z.string().max(512, "الرمز أطول من المعتاد."),
-  tiktok_events_api_token: z.string().max(512, "الرمز أطول من المعتاد."),
+  // Limits = Django `TrackingSettings` columns (INT-023): ids 50, Ads label 100, tokens 255.
+  meta_pixel_id: z.string().max(50, "50 حرفاً كحد أقصى."),
+  tiktok_pixel_id: z.string().max(50, "50 حرفاً كحد أقصى."),
+  snapchat_pixel_id: z.string().max(50, "50 حرفاً كحد أقصى."),
+  gtm_container_id: z.string().max(50, "50 حرفاً كحد أقصى."),
+  ga4_measurement_id: z.string().max(50, "50 حرفاً كحد أقصى."),
+  google_ads_conversion_id: z.string().max(50, "50 حرفاً كحد أقصى."),
+  google_ads_conversion_label: z.string().max(100, "100 حرفاً كحد أقصى."),
+  meta_conversions_api_token: z.string().max(255, "الرمز أطول من المسموح (255)."),
+  tiktok_events_api_token: z.string().max(255, "الرمز أطول من المسموح (255)."),
 });
 export type TrackingInput = z.infer<typeof trackingInputSchema>;
 

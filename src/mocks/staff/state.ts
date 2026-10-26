@@ -14,7 +14,7 @@ import { FIXTURE_NOW, nextId, storeState } from "@/mocks/store-state";
  * Staff ids 2–5 are shared with the M22 assignment seed and the approvals seed; the owner
  * (فارس العمري) is not a staff row. The staff session fixture («كاشير» سارة الحربي) is id 2.
  */
-export const PERMISSION_CATEGORIES = ["الطلبات", "الموظفون", "العملاء", "المخزون", "التقارير", "الخصومات", "الموردون", "الدعم", "القنوات", "المنتجات والكتالوج"] as const;
+export const PERMISSION_CATEGORIES = ["الطلبات", "الموظفون", "العملاء", "المخزون", "التقارير", "الخصومات", "الموردون", "الدعم", "القنوات", "المنتجات والكتالوج", "المالية"] as const;
 
 export interface MockPermission {
   code: PermissionKey;
@@ -58,6 +58,7 @@ const PERMISSION_META: Record<PermissionKey, [string, MockPermission["category"]
   "channels.marketplaces.manage": ["إدارة الأسواق", "القنوات"],
   "channels.dropshipping.manage": ["إدارة الدروبشيبينج", "القنوات"],
   "catalog.manage": ["إدارة الكتالوج (التصنيفات والعلامات والوسوم والتشكيلات والشارات)", "المنتجات والكتالوج"],
+  "expenses.manage": ["إدارة المصروفات التشغيلية (عرض الدفتر وتسجيل المصروفات)", "المالية"],
 };
 
 export const PERMISSIONS: MockPermission[] = PERMISSION_KEYS.map((code) => ({ code, name: PERMISSION_META[code][0], category: PERMISSION_META[code][1] }));
@@ -347,7 +348,7 @@ export function getStaff(store: string | null, id: number) {
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 const bool = (v: unknown) => v === true || v === "true";
 
-export function createStaff(store: string | null, body: Record<string, unknown>, actor: string): MockResult<ReturnType<typeof toStaffView>> {
+export function createStaff(store: string | null, body: Record<string, unknown>, actor: string): MockResult<ReturnType<typeof toStaffView> & { roles_summary: string; temporary_password: string }> {
   const state = staffState(store);
   const errors: Record<string, string[]> = {};
   const full_name = str(body.full_name);
@@ -370,7 +371,26 @@ export function createStaff(store: string | null, body: Record<string, unknown>,
   };
   state.staff.push(row);
   audit(store, { action_code: "staff.created", actor, entity: `موظف #${row.id}`, before_snapshot: null, after_snapshot: { full_name, phone, is_active: row.is_active } });
-  return { ok: true, status: 201, data: toStaffView(row) };
+  // Django (INT-022): staff sign in with phone + password — the temporary one is returned ONCE.
+  return { ok: true, status: 201, data: { ...toStaffView(row), roles_summary: "", temporary_password: mockTemporaryPassword(row.id) } };
+}
+
+/** Deterministic in the fixture so check scripts can sign in with it; Django draws it with `secrets`. */
+function mockTemporaryPassword(seed: number): string {
+  const h = chainHash(String(seed), String(Date.now()));
+  return `Shw${h.slice(0, 3)}-${h.slice(3, 7)}7`;
+}
+
+/** `POST /api/v1/staff/<id>/reset-password/` → `{temporary_password, token_version}` — all sessions end. */
+export function resetStaffPassword(store: string | null, id: number, actor: string): MockResult<{ temporary_password: string; token_version: number }> {
+  const state = staffState(store);
+  const row = state.staff.find((s) => s.id === id);
+  if (!row) return { ok: false, status: 404, body: { detail: "الموظف غير موجود." } };
+  if (row.terminated_at) return { ok: false, status: 400, body: { detail: "الموظف مُنهى الخدمة." } };
+  row.token_version += 1;
+  state.sessions = state.sessions.filter((s) => s.staff_id !== id);
+  audit(store, { action_code: "staff.password_reset", actor, entity: `موظف #${id}`, before_snapshot: null, after_snapshot: { token_version: row.token_version } });
+  return { ok: true, data: { temporary_password: mockTemporaryPassword(id), token_version: row.token_version } };
 }
 
 export function patchStaff(store: string | null, id: number, body: Record<string, unknown>, actor: string): MockResult<ReturnType<typeof toStaffView>> {

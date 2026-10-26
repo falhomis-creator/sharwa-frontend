@@ -655,3 +655,10 @@ Task: "T039 faq.tsx"  Task: "T040 site-footer.tsx"  Task: "T041 reveal.tsx"
 - لا كود خارج `src/features/<module>/` أو مجموعة مسار الوحدة أو `src/components/shared`/`src/lib` المشترك.
 - كل enum حرفياً من `data-model.md`؛ كل عقد من `contracts/`؛ أي انحراف يعود إلى المواصفة أولاً (الدستور VI).
 - commit بعد كل مهمة أو مجموعة منطقية؛ لا وسم `*-after` بلا لقطات + lint + tsc.
+
+---
+
+## Retroactive Tasks (2026-10-24) — تدقيق REA ومزامنة التوثيق
+
+- [X] T195 (Retroactive) Update Layout architecture and document in constitution. **[Completed]** — الدستور v3.1.0: قسم «Dashboard Shell & Theme Architecture» (بوابة الجلسة خارج Suspense، شريط جانبي 256/64px من `lg`، دُرج + شريط سفلي تحته، شريط علوي 48px، محتوى بسقف 1440px؛ نظام الرموز ذو الطبقتين — ستة مدخلات علامة هي سطح الـ white-label الوحيد؛ الوضع الداكن؛ استثناء المتجر من `dark:`). المصدر: REA على `src/features/dashboard-shell` (31 ملفاً) + `(shell)/layout.tsx` + `globals.css`.
+- [X] T196 (Retroactive) Upgrade Products module UI (Templates & Variants) and update Mock data contracts. **[Completed]** — العقد المستخرَج بـ REA من `src/features/products/{schemas,components}` (محرّر البطاقات، منشئ المتغيرات قبل الحفظ، نماذج بحقول JSON — D1، 35 قطاعاً بـ `attribute_id`). `src/mocks/catalog/*` كانت مطابقة للـ Zod؛ مُواءمان مع سلوك Django (M04 Step 3): `stock` المنتج ذي المتغيرات = مرآة مجموعها (في التفاصيل وبعد التوليد/التعديل الجماعي وفي الـ seed)، وSKU المتغير الجديد `<sku المنتج>-<n>`. لا تغيير في الـ schemas ولا في Django.

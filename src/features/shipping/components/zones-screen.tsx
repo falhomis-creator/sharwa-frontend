@@ -29,7 +29,10 @@ export function ZonesScreen() {
 }
 
 export function zoneCircles(zones: Zone[]) {
-  return zones.map((z) => ({ id: z.code, label: z.code, lat: Number(z.center_latitude), lng: Number(z.center_longitude), radiusKm: Number(z.radius_km), muted: !z.is_active }));
+  // A zone without a centre/radius (Django keeps them nullable → "") has no circle to draw.
+  return zones
+    .filter((z) => z.center_latitude !== "" && z.center_longitude !== "" && z.radius_km !== "")
+    .map((z) => ({ id: z.code, label: z.code, lat: Number(z.center_latitude), lng: Number(z.center_longitude), radiusKm: Number(z.radius_km), muted: !z.is_active }));
 }
 
 function ZonesBody() {

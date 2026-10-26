@@ -16,7 +16,7 @@ export const CartItemSchema = z.object({
   quantity: z.coerce.number(),
   display_price: z.string().nullable(),
   display_subtotal: z.string().nullable(),
-  // [NEEDS BACKEND] item extensions (M11 §7).
+  // Item extensions (M11 §7) — served by Django since INT-013.
   image: z.string().nullable().optional(),
   variant_id: z.number().int().nullable().optional(),
   variant_label: z.string().nullable().optional(),
@@ -40,7 +40,7 @@ export const CartSchema = z.object({
   count: z.number().int().nonnegative(),
   currency: currencySchema,
   display_subtotal: z.string(),
-  // [NEEDS BACKEND] (M11 §7)
+  // M11 §7 — served by Django since INT-013.
   coupon_code: z.string().nullable().optional(),
   display_discount: z.string().nullable().optional(),
   applied_offers: z.array(AppliedOfferSchema).optional(),

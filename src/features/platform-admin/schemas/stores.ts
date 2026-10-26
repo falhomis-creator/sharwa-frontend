@@ -88,6 +88,8 @@ export const deactivationRecordSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   by: z.string(),
+  /** «إعادة التفعيل» closes the record without deleting it (INT-030) — history keeps it. */
+  reinstated_at: z.string().nullable().default(null),
 });
 export type DeactivationRecord = z.infer<typeof deactivationRecordSchema>;
 

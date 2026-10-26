@@ -15,7 +15,8 @@ import { deriveBrandShades } from "@/mocks/storefront/theme";
 import { tenantFixture } from "@/mocks/tenant/config";
 
 /**
- * M08 theme customizer mocks (T099).
+ * M08 theme customizer mocks (T099) — Django serves the same rows since INT-018
+ * (`api/views_design.py`, `liveOrMock` module `design`).
  *
  * - `store/theme` and `store/announcement` are `[NEEDS BACKEND]` (M08 §7): Django has only the
  *   HTML `StorefrontDesignForm` / `AnnouncementBarForm`. The announcement half writes the SAME

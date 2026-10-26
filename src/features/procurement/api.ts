@@ -18,8 +18,8 @@ import {
 } from "@/features/procurement/schemas";
 
 /**
- * M23 data hooks — keys `[tenant, 'procurement', …]`; Zod on every response. All rows are
- * `[NEEDS BACKEND]` → `/api/bff/{suppliers,purchase-orders}/*` (one catch-all each).
+ * M23 data hooks — keys `[tenant, 'procurement', …]`; Zod on every response, through
+ * `/api/bff/{suppliers,purchase-orders}/*` (one catch-all each; live module `procurement`, INT-035).
  */
 export type Params = Record<string, string | number | undefined>;
 

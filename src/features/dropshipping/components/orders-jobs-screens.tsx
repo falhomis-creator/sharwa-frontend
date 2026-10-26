@@ -20,6 +20,7 @@ import {
   ATTENTION_STATUSES,
   JOB_STATUSES,
   JOB_STATUS_LABELS,
+  JOB_SUPPLIER_LABELS,
   JOB_TYPE_LABELS,
   SUPPLIER_CODES,
   SUPPLIER_LABELS,
@@ -221,7 +222,7 @@ function JobsInner() {
     () => [
       { id: "id", header: headerLabel("المهمة"), cell: ({ row }) => <Mono>#{row.original.id}</Mono> },
       { id: "type", header: headerLabel("النوع"), cell: ({ row }) => <span className="whitespace-nowrap">{JOB_TYPE_LABELS[row.original.job_type]}</span> },
-      { id: "supplier", header: headerLabel("المورد"), cell: ({ row }) => <span className="text-muted-foreground">{SUPPLIER_LABELS[row.original.supplier_code]}</span> },
+      { id: "supplier", header: headerLabel("المورد"), cell: ({ row }) => <span className="text-muted-foreground">{JOB_SUPPLIER_LABELS[row.original.supplier_code]}</span> },
       {
         id: "status",
         header: headerLabel("الحالة"),

@@ -2,6 +2,9 @@ import { z } from "zod";
 
 /**
  * M13 — مركز التسويق: the seven tools' read models and inputs (discovery 02 §5, §4, §15).
+ * Served by Django `api/views_marketing.py` since INT-019 (`liveOrMock` module `marketing`).
+ * `buy_condition_type` & co. are the offer's condition for EVERY type: Django's `condition_type`
+ * for a discount / free shipping, the «buy X» condition for buy_x_get_y.
  * Enum VALUES are the Django models' verbatim; the Arabic labels are UI text only (M13 §10).
  * Money is a server string (`display_*`) — never formatted here (FR-13.09).
  */
@@ -154,11 +157,12 @@ export const offerInputSchema = z
       if (!v.discount_value || !(n > 0)) ctx.addIssue({ code: "custom", path: ["discount_value"], message: "القيمة يجب أن تكون أكبر من صفر." });
       else if (v.discount_type === "percent" && (n > 100 || !Number.isInteger(n))) ctx.addIssue({ code: "custom", path: ["discount_value"], message: "النسبة بين 1 و100." });
     }
+    // The condition applies to every offer type (Django: condition_type for discount/free shipping — INT-019).
+    if (v.buy_condition_type === "category" && !v.buy_category_id) ctx.addIssue({ code: "custom", path: ["buy_category_id"], message: "اختر التصنيف." });
+    if (v.buy_condition_type === "product" && !v.buy_product_id) ctx.addIssue({ code: "custom", path: ["buy_product_id"], message: "اختر المنتج." });
+    if (v.buy_condition_type === "min_items" && !positiveInt(v.min_total_items)) ctx.addIssue({ code: "custom", path: ["min_total_items"], message: "عدد صحيح أكبر من صفر." });
     if (v.offer_type === "buy_x_get_y") {
       if (!positiveInt(v.buy_quantity)) ctx.addIssue({ code: "custom", path: ["buy_quantity"], message: "عدد صحيح أكبر من صفر." });
-      if (v.buy_condition_type === "category" && !v.buy_category_id) ctx.addIssue({ code: "custom", path: ["buy_category_id"], message: "اختر التصنيف." });
-      if (v.buy_condition_type === "product" && !v.buy_product_id) ctx.addIssue({ code: "custom", path: ["buy_product_id"], message: "اختر المنتج." });
-      if (v.buy_condition_type === "min_items" && !positiveInt(v.min_total_items)) ctx.addIssue({ code: "custom", path: ["min_total_items"], message: "عدد صحيح أكبر من صفر." });
       if (!v.get_product_id) ctx.addIssue({ code: "custom", path: ["get_product_id"], message: "اختر المنتج الممنوح." });
       if (!positiveInt(v.get_quantity)) ctx.addIssue({ code: "custom", path: ["get_quantity"], message: "عدد صحيح أكبر من صفر." });
       const pct = Number(v.get_discount_percent);

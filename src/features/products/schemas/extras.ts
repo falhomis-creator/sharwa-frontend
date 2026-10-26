@@ -3,7 +3,8 @@ import { z } from "zod";
 /**
  * M37 (bundles, compatibility, personalization, auction, serials, formula preview) and
  * M36 (quantity prices) — the editor's sub-resources under `/api/v1/products/<id>/…`
- * (`[NEEDS BACKEND]`). Every derived amount is the server's `display_*` (FR-37.02).
+ * (Django: `api/views_product_extras.py` INT-045 · `api/views_b2b.py` INT-044). Every derived
+ * amount is the server's `display_*` (FR-37.02).
  */
 export const tierPriceSchema = z.object({ id: z.number().int(), min_quantity: z.number().int(), price: z.string(), display_price: z.string() });
 export type TierPriceRow = z.infer<typeof tierPriceSchema>;

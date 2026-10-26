@@ -138,7 +138,8 @@ function ReturnBody({
     try {
       const res = await decide.mutateAsync(body);
       setMode(null);
-      toast.success(res.status === "approved" ? `اعتُمد الإرجاع #${res.id}` : `رُفض الإرجاع #${res.id}`);
+      // Django completes an approved return in the same step (`completed`), the mock stops at `approved`.
+      toast.success(res.status === "rejected" ? `رُفض الإرجاع #${res.id}` : `اعتُمد الإرجاع #${res.id}`);
     } catch (e) {
       if (!isApiError(e)) return setFailure({ kind: "network" });
       if (e.status === 409) return setFailure({ kind: "conflict" });
@@ -160,7 +161,7 @@ function ReturnBody({
       if (fresh.status !== "requested") {
         setFailure(null);
         setMode(null);
-        toast.info(`حُسم الإرجاع من مستخدم آخر: ${fresh.status === "approved" ? "معتمد" : "مرفوض"}`);
+        toast.info(`حُسم الإرجاع من مستخدم آخر: ${fresh.status === "rejected" ? "مرفوض" : "معتمد"}`);
         return;
       }
       await submit(fresh.version);

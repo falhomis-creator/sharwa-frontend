@@ -14,9 +14,9 @@
 | 8 | GET/POST | `/api/v1/admin/sections/` | DRF SessionAuth + `IsAdminUser` ⚠ | section object | `[StoreSection]` / created | `dashboard/theme/schemas/sections.ts` | M08 (auth unification `[NEEDS BACKEND]`) |
 | 9 | PATCH/PUT/DELETE | `/api/v1/admin/sections/<pk>/` | same | per `section_type` | section / 204 | same | M08 |
 | 10 | POST | `/api/v1/admin/sections/reorder/` | same | `{ordered_ids:[int]}` | `{ok, reordered}` | `ReorderResultSchema` | M08 |
-| 11 | POST | `/api/v1/pwa/install-event/` | none, 30/min/IP | `{event_type: prompt_shown\|ios_hint_shown\|accepted\|dismissed\|installed, source:'nextjs_app'}` | 201 `{ok}` / 429 | `pwa/schemas.ts` | M44 |
+| 11 | POST | `/api/v1/pwa/install-event/` | none, 300/min/IP (loose CGNAT ceiling since INT-016) | `{event_type: prompt_shown\|ios_hint_shown\|accepted\|dismissed\|installed, source:'nextjs_app'}` | 201 `{ok}` / 429 | `pwa/schemas.ts` | M44 |
 | 12 | GET | `/api/v1/push/vapid-public-key/` | none | — | `{publicKey}` | `pwa/schemas.ts` | M44, M49 |
-| 13 | POST | `/api/v1/push/subscribe/` | none | `{endpoint, keys:{p256dh, auth}, customer_phone?}` | 201 `{ok}` | same | M44, M49 |
+| 13 | POST | `/api/v1/push/subscribe/` | none, 120/min/IP | `{endpoint, keys:{p256dh, auth}, order_uuid?, customer_phone?}` — since INT-016 the targeting phone comes from `order_uuid`'s order; `customer_phone` alone is ignored; 400 `{order_uuid}` for an unknown order | 201 `{ok}` | same | M44, M49 |
 | 14 | POST | `/api/v1/push/unsubscribe/` | none | `{endpoint}` | `{ok}` / 400 | same | M44, M49 |
 | 15 | GET/POST | `/api/v1/returns/` | merchant session + CSRF, perm `orders.process_returns` | `?status&q` · POST `{order_id, reason, refund_method, line_items:[{fulfillment_item_id, quantity_returned, restock}]}` | list / created | `dashboard/returns/schemas.ts` | M24, M06 |
 | 16 | GET | `/api/v1/returns/order/<order_id>/items/` | same | — | `[{fulfillment_item_id, product_name, quantity, remaining, unit_refund_amount, location_name}]` | same | M24 |

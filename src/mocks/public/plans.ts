@@ -1,4 +1,5 @@
 import type { PublicPlansResponse } from "@/features/landing/schemas/plans";
+import { freePlanHighlights } from "@/features/landing/landing.content";
 
 /**
  * Reflects the ACTUAL platform state (discovery 01 §4): subscriptions are
@@ -17,15 +18,7 @@ export function plansMock(): PublicPlansResponse {
         billing_interval: "monthly",
         max_products: null,
         max_orders_per_month: null,
-        features: [
-          "منتجات ومتغيرات بلا حد",
-          "لوحة طلبات كاملة",
-          "نقطة بيع للمعرض",
-          "محفظة شروة باي",
-          "ربط شركات الشحن",
-          "نطاق فرعي مجاني",
-          "دعم على واتساب",
-        ],
+        features: [...freePlanHighlights],
       },
     ],
   };

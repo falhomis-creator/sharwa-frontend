@@ -3,7 +3,7 @@ import { mockJson } from "@/mocks/runtime";
 import { findVisible, formulaQuote } from "@/mocks/storefront/catalog";
 import { parseCurrency, storeDefaultCurrency } from "@/mocks/storefront/money";
 
-/** `[NEEDS BACKEND]` `GET …/quote/?value=` → `{display_price}` for formula pricing (M10 US-10.3.2). */
+/** `GET …/quote/?value=` → `{display_price}` for formula pricing (M10 US-10.3.2) — Django since INT-012 (unit price × value, as the cart charges). */
 export async function GET(request: Request, { params }: RouteContext<"/api/bff/catalog/products/[id]/quote">) {
   const { id } = await params;
   return storefrontAdapter(request, `/api/v1/catalog/products/${id}/quote/`, ({ store, url }) => {

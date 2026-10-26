@@ -3,9 +3,10 @@ import { CURRENCIES, currencySchema, type Currency } from "@/lib/schemas/money";
 
 /**
  * M33 — المصروفات التشغيلية (T166). `OperatingExpense` (discovery 02 §12): four categories,
- * VALUES verbatim, labels Arabic. Every row is `[NEEDS BACKEND]` — the proposed
- * `GET/POST /api/v1/expenses/`, served by `/api/bff/expenses` today. The month groups and
- * their per-currency totals are BUILT BY THE SERVER (FR-33.03): the browser never sums.
+ * VALUES verbatim, labels Arabic. Served by Django `GET/POST /api/v1/expenses/` (INT-043,
+ * `api/views_expenses.py`) through `/api/bff/expenses` — module `expenses` in
+ * SHARWA_LIVE_MODULES, the fixture otherwise. The month groups and their per-currency totals
+ * are BUILT BY THE SERVER (FR-33.03): the browser never sums.
  */
 export const EXPENSE_CATEGORIES = ["packaging", "rent", "salaries", "other"] as const;
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];

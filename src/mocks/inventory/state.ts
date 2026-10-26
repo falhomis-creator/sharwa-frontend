@@ -542,6 +542,13 @@ export function listMovements(store: string | null, params: URLSearchParams): { 
   return { count: all.length, net_delta: net, results: all.slice(start, start + pageSize).map((m) => decorateMovement(store, m)) };
 }
 
+/** Server-side page (the tables use manual pagination) — same bounds as Django `inventory_service._page`. */
+function pageOf<T>(rows: T[], params: URLSearchParams): T[] {
+  const page = Math.max(1, Number(params.get("page") ?? 1) || 1);
+  const size = Math.min(100, Math.max(10, Number(params.get("page_size") ?? 50) || 50));
+  return rows.slice((page - 1) * size, page * size);
+}
+
 export interface ItemRow extends MockInventoryItem {
   product_name: string;
   location_name: string | null;
@@ -557,7 +564,7 @@ export function listItems(store: string | null, params: URLSearchParams): { coun
   const results = inventoryState(store)
     .items.filter((i) => (!product || i.product_id === product) && (!status || i.status === status) && (!q || i.serial_number.toLowerCase().includes(q)))
     .map((i) => ({ ...i, product_name: cat.products.find((p) => p.id === i.product_id)?.name ?? `منتج #${i.product_id}`, location_name: refs.find((l) => l.id === i.location_id)?.name ?? null }));
-  return { count: results.length, results };
+  return { count: results.length, results: pageOf(results, params) };
 }
 
 export interface ReservationRow extends MockReservation {
@@ -579,7 +586,7 @@ export function listReservations(store: string | null, params: URLSearchParams):
       const v = r.variant_id ? cat.variants.find((x) => x.id === r.variant_id) : undefined;
       return { ...r, product_name: p?.name ?? `منتج #${r.product_id}`, variant_label: p && v ? toVariant(cat, p, v).label : null, location_name: refs.find((l) => l.id === r.location_id)?.name ?? null };
     });
-  return { count: results.length, results };
+  return { count: results.length, results: pageOf(results, params) };
 }
 
 /** CSV of the current table filter (FR-21.11) — the same rows the page shows. */

@@ -1,3 +1,4 @@
+import { liveOrMock } from "@/lib/bff/live-route";
 import { mockRoute } from "@/lib/bff/mock-route";
 import { MOCK_HEADER, mockJson } from "@/mocks/runtime";
 import { exportCustomersCsv } from "@/mocks/customers/state";
@@ -11,6 +12,10 @@ import { audit, sessionActor } from "@/mocks/staff/state";
  * written to the audit log with the filters and the row count.
  */
 export async function GET(request: Request) {
+  return liveOrMock(request, "customers", "/api/v1/customers/export.csv", () => exportMock(request));
+}
+
+async function exportMock(request: Request) {
   return mockRoute(
     request,
     ({ store, session, url }) => {

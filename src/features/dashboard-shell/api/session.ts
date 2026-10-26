@@ -77,7 +77,18 @@ async function mockSession(ctx: StoreContext, cookie: string | null): Promise<Se
 }
 
 export async function resolveSession(ctx: StoreContext, cookie: string | null): Promise<Session | null> {
-  return (await upstreamSession(ctx, cookie)) ?? (await mockSession(ctx, cookie));
+  return (await resolveSessionWithSource(ctx, cookie)).session;
+}
+
+/** Same resolution, telling whether the fixture answered (drives the dev mock indicator). */
+export async function resolveSessionWithSource(
+  ctx: StoreContext,
+  cookie: string | null,
+): Promise<{ session: Session | null; isMock: boolean }> {
+  const live = await upstreamSession(ctx, cookie);
+  if (live) return { session: live, isMock: false };
+  const mock = await mockSession(ctx, cookie);
+  return { session: mock, isMock: mock !== null };
 }
 
 /** RSC entry point: resolves the store from the proxy headers and reads the session. */

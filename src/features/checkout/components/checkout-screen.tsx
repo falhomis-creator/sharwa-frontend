@@ -84,7 +84,8 @@ const FIELD_ORDER: Array<FieldPath<CheckoutDraft>> = [
   "gift_message",
 ];
 
-const ACCEPT = ".jpg,.jpeg,.png,.webp,.pdf";
+// Django accepts JPEG/PNG receipts only (`validate_receipt_image`, ≤ 5MB).
+const ACCEPT = ".jpg,.jpeg,.png";
 
 const noopSubscribe = () => () => {};
 
@@ -130,6 +131,8 @@ export function CheckoutScreen() {
   const [otpFor, setOtpFor] = useState<OtpPurpose | null>(null);
   const [verified, setVerified] = useState<Partial<Record<OtpPurpose, string>>>({});
   const [sharwaBalance, setSharwaBalance] = useState<string | null>(null);
+  // Gateway customer fields (Jeeb `purchase_code`, Kuraimi `pin`) — sent once, never stored.
+  const [gatewayFields, setGatewayFields] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const restoredRef = useRef(false);
 
@@ -222,6 +225,24 @@ export function CheckoutScreen() {
     setDetail(null);
     setChanged([]);
     const method = values.payment_method;
+    // A transfer is placed with its proof (Django: receipt + amount); without them it is COD.
+    if (method === "manual") {
+      let missing = false;
+      if (!receipt) {
+        setReceiptError("أرفق صورة إشعار التحويل.");
+        missing = true;
+      }
+      if (!values.transfer_amount_reported) {
+        setError("transfer_amount_reported", { message: "أدخل المبلغ الذي حوّلته." });
+        missing = true;
+      }
+      if (missing) return;
+    }
+    const gatewayInputs = methods.find((m) => m.code === method)?.fields ?? [];
+    if (gatewayInputs.some((f) => !gatewayFields[f.name]?.trim())) {
+      setDetail("أدخل بيانات الدفع المطلوبة.");
+      return;
+    }
     // OTP gates (FR-12.06): COD, Sharwa Pay and the wallet each need their code first.
     if (method === "cod" && !codes.cod) return setOtpFor("cod");
     if (method === "sharwa_pay" && !codes.sharwa_pay) return setOtpFor("sharwa_pay");
@@ -260,6 +281,7 @@ export function CheckoutScreen() {
       put("transfer_amount_reported", values.transfer_amount_reported);
       if (receipt) fd.set("receipt_image", receipt);
     }
+    for (const f of gatewayInputs) put(f.name, gatewayFields[f.name]?.trim());
     if (buyNow) {
       put("product_id", sp.get("product"));
       put("variant_id", sp.get("variant"));
@@ -595,6 +617,19 @@ export function CheckoutScreen() {
               ))}
             </div>
             {err("payment_method") ? <p className="text-sm text-destructive">{err("payment_method")}</p> : null}
+            {(methods.find((m) => m.code === v.payment_method)?.fields ?? []).map((f) => (
+              <Field key={f.name} id={`gateway-${f.name}`} label={f.label}>
+                <input
+                  id={`field-gateway-${f.name}`}
+                  type={f.secret ? "password" : "text"}
+                  dir="ltr"
+                  autoComplete="off"
+                  value={gatewayFields[f.name] ?? ""}
+                  onChange={(e) => setGatewayFields((x) => ({ ...x, [f.name]: e.target.value }))}
+                  className={cn(input, "w-56 font-mono")}
+                />
+              </Field>
+            ))}
             {v.payment_method === "manual" && payment.data ? (
               <ManualTransfer
                 accounts={payment.data.payout_accounts}
@@ -845,12 +880,12 @@ function ManualTransfer({
           </li>
         ))}
       </ul>
-      <Field id="transfer_amount_reported" label="المبلغ المحوَّل (اختياري)" error={amountError}>
+      <Field id="transfer_amount_reported" label="المبلغ المحوَّل" error={amountError}>
         <input id="field-transfer_amount_reported" dir="ltr" inputMode="decimal" {...register} className="store-frame h-11 w-48 rounded-lg border-input bg-background px-3 font-mono text-base outline-none md:text-sm" />
       </Field>
       <div className="space-y-1.5">
         <label htmlFor="field-receipt" className="block text-sm font-medium">
-          صورة الإيصال (يمكن إرفاقها لاحقاً)
+          صورة الإيصال (JPEG أو PNG)
         </label>
         {receipt ? (
           <div className="flex items-center gap-2 text-sm">
@@ -864,8 +899,8 @@ function ManualTransfer({
             id="field-receipt"
             accept={ACCEPT}
             onFile={(f) => {
-              if (f && (f.size > 5 * 1024 * 1024 || !/\.(jpe?g|png|webp|pdf)$/i.test(f.name))) {
-                onReceipt(null, "الإيصال: صورة أو PDF حتى 5MB.");
+              if (f && (f.size > 5 * 1024 * 1024 || !/\.(jpe?g|png)$/i.test(f.name))) {
+                onReceipt(null, "الإيصال: صورة JPEG أو PNG حتى 5MB.");
                 return false;
               }
               onReceipt(f, null);

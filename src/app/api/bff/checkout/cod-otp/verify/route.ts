@@ -3,7 +3,7 @@ import { mockJson } from "@/mocks/runtime";
 import { codCheck } from "@/mocks/storefront/checkout";
 import { verifyOtp } from "@/mocks/storefront/otp";
 
-/** `POST /api/v1/checkout/cod-otp/verify/` `{phone, otp}` → `{ok, cod_allowed, reason?}` (M12 §7). */
+/** `POST /api/v1/checkout/cod-otp/verify/` `{phone, otp}` → `{ok, cod_allowed, reason?}` (M12 §7) — Django since INT-014 (`cod_allowed` is always true there: COD trust is a merchant-side signal). */
 export function POST(request: Request) {
   return storefrontAdapter(request, "/api/v1/checkout/cod-otp/verify/", async ({ store, body }) => {
     const { fields } = await body();

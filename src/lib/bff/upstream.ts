@@ -27,6 +27,8 @@ const FORWARD_RESPONSE_HEADERS = [
   "etag",
   "location",
   "x-sharwa-mock",
+  // M07 export (INT-017): the row count the export toast reports.
+  "x-export-rows",
 ] as const;
 
 export interface UpstreamContext {
@@ -134,7 +136,12 @@ export async function upstreamFetch(
 
   const method = init.method ?? request.method;
   const hasBody = !["GET", "HEAD"].includes(method);
-  const body = hasBody ? (init.body === undefined ? request.body : init.body) : undefined;
+  // The incoming body is BUFFERED, never streamed: a streamed body goes out chunked with no
+  // Content-Length, and Django (runserver and gunicorn alike) reads CONTENT_LENGTH — it saw an
+  // EMPTY body, so every write through the `/api/v1/*` passthrough (PWA install events, push
+  // subscribe, storefront writes…) answered 400 «required field». Same rule as `forwardLive`.
+  // 8MB max (DATA_UPLOAD_MAX_MEMORY_SIZE), so buffering is safe.
+  const body = hasBody ? (init.body === undefined ? await bufferedBody(request) : init.body) : undefined;
 
   try {
     return await fetch(`${UPSTREAM_ORIGIN}${path}`, {
@@ -143,12 +150,19 @@ export async function upstreamFetch(
       body,
       redirect: "manual",
       cache: "no-store",
-      // Required by undici when streaming a request body
-      ...(body && typeof body !== "string" ? { duplex: "half" as const } : {}),
+      // Required by undici only when a caller passes an explicit stream
+      ...(body instanceof ReadableStream ? { duplex: "half" as const } : {}),
     });
   } catch (err) {
     throw new UpstreamUnavailableError(err);
   }
+}
+
+/** The request body as bytes (`null` when empty or already read), so fetch sends a Content-Length. */
+async function bufferedBody(request: Request): Promise<ArrayBuffer | null> {
+  if (!request.body || request.bodyUsed) return null;
+  const raw = await request.arrayBuffer();
+  return raw.byteLength > 0 ? raw : null;
 }
 
 /** Stream an upstream response back to the browser, keeping cookies and cache-relevant headers verbatim. */

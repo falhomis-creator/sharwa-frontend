@@ -25,8 +25,11 @@ import { productTemplateSchema } from "@/features/products/schemas/templates";
  * table first. The table is therefore the single, reviewable map of the BFF → Django contract.
  * The browser hooks, their Zod schemas and every screen stay exactly the same.
  *
- * Phase B (decision D6) is deliberately NOT listed and stays on mocks until Step 5:
- * `import`, `import/<job>`, `import/<job>/run`, `export.csv`, `<id>/extras/**`.
+ * Phase B (decision D6) is NOT in this table: it has its own switches (below), independent of `products`:
+ * `<id>/extras/tier-prices/**` (M36 quantity prices) → `b2b` (INT-044, `B2B_LIVE_RULES`);
+ * `import`, `import/<job>`, `import/<job>/run`, `export.csv` and the M37 `<id>/extras/**` (bundle components,
+ * compatibility rules, personalization fields, auction + bids, serials) → `advanced_products` (INT-045,
+ * `ADVANCED_LIVE_RULES`).
  */
 type Rule =
   | { pattern: RegExp; upstream: (m: RegExpMatchArray) => string }
@@ -64,10 +67,51 @@ export const PRODUCTS_LIVE_RULES: readonly Rule[] = [
   { pattern: rx("/global-templates"), upstream: () => "/api/v1/global-variant-templates/" },
 ];
 
+/**
+ * M36 quantity prices from the product editor (INT-044, `api/views_b2b.py`): the extras sub-resource
+ * `tier-prices` maps 1:1 to `/api/v1/products/<id>/tier-prices/[<tier_id>/]`. Switched by the `b2b`
+ * module, so it can go live without the rest of the M37 extras (INT-045).
+ */
+export const B2B_LIVE_RULES: readonly Rule[] = [
+  { pattern: rx(`/${ID}/extras/tier-prices`), upstream: (m) => `/api/v1/products/${m[1]}/tier-prices/` },
+  { pattern: rx(`/${ID}/extras/tier-prices/${ID}`), upstream: (m) => `/api/v1/products/${m[1]}/tier-prices/${m[2]}/` },
+];
+
+/**
+ * M37 advanced products + CSV import/export (INT-045, `api/views_product_extras.py`). Each extras sub-resource maps
+ * 1:1 to `/api/v1/products/<id>/<resource>/…`; the export keeps the list filters in the query string.
+ */
+const JOB = "([\\w-]+)";
+export const ADVANCED_LIVE_RULES: readonly Rule[] = [
+  { pattern: rx(`/${ID}/extras/bundle-components`), upstream: (m) => `/api/v1/products/${m[1]}/bundle-components/` },
+  { pattern: rx(`/${ID}/extras/bundle-components/${ID}`), upstream: (m) => `/api/v1/products/${m[1]}/bundle-components/${m[2]}/` },
+  { pattern: rx(`/${ID}/extras/compatibility-rules`), upstream: (m) => `/api/v1/products/${m[1]}/compatibility-rules/` },
+  { pattern: rx(`/${ID}/extras/compatibility-rules/${ID}`), upstream: (m) => `/api/v1/products/${m[1]}/compatibility-rules/${m[2]}/` },
+  { pattern: rx(`/${ID}/extras/personalization-fields`), upstream: (m) => `/api/v1/products/${m[1]}/personalization-fields/` },
+  { pattern: rx(`/${ID}/extras/personalization-fields/reorder`), upstream: (m) => `/api/v1/products/${m[1]}/personalization-fields/reorder/` },
+  { pattern: rx(`/${ID}/extras/personalization-fields/${ID}`), upstream: (m) => `/api/v1/products/${m[1]}/personalization-fields/${m[2]}/` },
+  { pattern: rx(`/${ID}/extras/auction`), upstream: (m) => `/api/v1/products/${m[1]}/auction/` },
+  { pattern: rx(`/${ID}/extras/auction/bids`), upstream: (m) => `/api/v1/products/${m[1]}/auction/bids/` },
+  { pattern: rx(`/${ID}/extras/serials`), upstream: (m) => `/api/v1/products/${m[1]}/serials/` },
+  // CSV import (three stages) + export with the list filters
+  { pattern: rx("/import"), upstream: () => "/api/v1/products/import/" },
+  { pattern: rx(`/import/${JOB}`), upstream: (m) => `/api/v1/products/import/${m[1]}/` },
+  { pattern: rx(`/import/${JOB}/run`), upstream: (m) => `/api/v1/products/import/${m[1]}/run/` },
+  { pattern: rx("/export\\.csv"), upstream: () => "/api/v1/products/export/" },
+];
+
 /** The Django answer for a live products route, or `null` (module off / Phase B → fixture). */
 export async function dispatchLiveProducts(request: Request): Promise<Response | null> {
   const { pathname } = new URL(request.url);
-  if (!pathname.startsWith("/api/bff/products") || !isModuleLive("products")) return null;
+  if (!pathname.startsWith("/api/bff/products")) return null;
+  for (const [module, rules] of [["b2b", B2B_LIVE_RULES], ["advanced_products", ADVANCED_LIVE_RULES]] as const) {
+    if (!isModuleLive(module)) continue;
+    for (const rule of rules) {
+      const m = pathname.match(rule.pattern);
+      if (m) return "upstream" in rule ? forwardLive(request, rule.upstream(m)) : rule.handle(request, m);
+    }
+  }
+  if (!isModuleLive("products")) return null;
   for (const rule of PRODUCTS_LIVE_RULES) {
     const m = pathname.match(rule.pattern);
     if (!m) continue;

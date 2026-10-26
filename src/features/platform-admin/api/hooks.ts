@@ -2,7 +2,7 @@
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { apiFetch } from "@/lib/api-client";
+import { apiFetch, setCsrfToken } from "@/lib/api-client";
 import { PLATFORM_STORE, storeKey } from "@/lib/query-keys";
 import {
   actionResultSchema,
@@ -50,6 +50,7 @@ import {
   type PlanFeatureCell,
   type PlanInput,
   type ZoneInput,
+  type ZoneUpdate,
 } from "@/features/platform-admin/schemas";
 
 /**
@@ -98,7 +99,13 @@ const clean = (p: Params) => Object.fromEntries(Object.entries(p).filter(([, v])
 
 // ── session ─────────────────────────────────────────────────────────────────────────
 export function useAdminLogin() {
-  return useMutation({ mutationFn: (input: AdminLoginInput) => apiFetch(`${BASE}/auth/login`, adminSessionSchema, { method: "POST", json: input }) });
+  return useMutation({
+    mutationFn: (input: AdminLoginInput) => apiFetch(`${BASE}/auth/login`, adminSessionSchema, { method: "POST", json: input }),
+    // Django's login() rotates the CSRF token (INT-030): adopt the new one before the next write.
+    onSuccess: (session) => {
+      if (session.csrf_token) setCsrfToken(session.csrf_token);
+    },
+  });
 }
 
 export function useAdminLogout() {
@@ -424,7 +431,7 @@ export function useZones() {
 export function useSaveZone(id: number | null) {
   const inv = useInvalidate();
   return useMutation({
-    mutationFn: (v: ZoneInput) => apiFetch(id ? `${BASE}/sharwa-ship/zones/${id}` : `${BASE}/sharwa-ship/zones`, zoneSchema, { method: id ? "PATCH" : "POST", json: v }),
+    mutationFn: (v: ZoneInput | ZoneUpdate) => apiFetch(id ? `${BASE}/sharwa-ship/zones/${id}` : `${BASE}/sharwa-ship/zones`, zoneSchema, { method: id ? "PATCH" : "POST", json: v }),
     onSuccess: () => inv(adminKeys.zones),
   });
 }

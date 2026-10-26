@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
+import { cookies } from "next/headers";
+import { connection } from "next/server";
+import { ApiClientProvider } from "@/components/providers/api-client-provider";
 import { MockIndicator } from "@/components/shared/mock-indicator";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { getCsrfToken } from "@/lib/csrf";
 
 /**
  * `(admin)` group root (M20, T137) — served on `console.<base>` only: the proxy rewrites
@@ -22,10 +26,26 @@ export default function AdminGroupLayout({ children }: { children: ReactNode }) 
   return (
     <QueryProvider>
       <TooltipProvider delay={200}>
+        <Suspense fallback={null}>
+          <CsrfBootstrap />
+        </Suspense>
         {children}
         <Toaster position="bottom-left" />
         {process.env.NODE_ENV === "production" ? null : <MockIndicator />}
       </TooltipProvider>
     </QueryProvider>
   );
+}
+
+/**
+ * The console's CSRF token (INT-030): Django enforces CSRF on the console login and on every
+ * write, and `csrftoken` is HttpOnly — so, exactly like the dashboard, the token is read
+ * server-side (platform host: no `X-Store-Domain`, the public schema) and handed to the
+ * browser client as a prop. The login answer carries the rotated token as well.
+ */
+async function CsrfBootstrap() {
+  await connection();
+  const cookieStore = await cookies();
+  const token = await getCsrfToken(null, cookieStore.toString() || null);
+  return <ApiClientProvider csrfToken={token}>{null}</ApiClientProvider>;
 }

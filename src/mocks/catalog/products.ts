@@ -56,6 +56,22 @@ function effectiveStock(state: CatalogState, p: MockProduct): string {
   return vs.reduce((acc, v) => addDecimal(acc, v.stock, 3), "0.000");
 }
 
+/**
+ * Django keeps `Product.stock` as a mirror of its variants' sum and recalculates it after every
+ * variant write (M04 Step 3) — the mock does the same so detail/list/POS read one number.
+ */
+function syncStockMirror(state: CatalogState, p: MockProduct) {
+  if (variantsOf(state, p.id).length > 0) p.stock = effectiveStock(state, p);
+}
+
+/** New variant SKUs are `<product sku>-<n>`, the first free n — Django's `variant_service` rule. */
+function nextVariantSku(state: CatalogState, p: MockProduct): string {
+  const taken = new Set(state.variants.map((v) => v.sku));
+  let n = variantsOf(state, p.id).length + 1;
+  while (taken.has(`${p.sku}-${n}`)) n += 1;
+  return `${p.sku}-${n}`;
+}
+
 function isLowStock(p: MockProduct, stock: string): boolean {
   const threshold = String(p.low_stock_threshold ?? LOW_STOCK_THRESHOLD);
   return compareDecimal(stock, "0") > 0 && compareDecimal(stock, threshold) <= 0;
@@ -142,7 +158,8 @@ export function toDetail(state: CatalogState, p: MockProduct, hasOrders: boolean
     ...p,
     blueprint_id: p.blueprint_id,
     collection_ids: state.collections.filter((c) => c.product_ids.includes(p.id)).map((c) => c.id),
-    stock: vs.length > 0 ? p.stock : stock,
+    // With variants: the mirror of their sum, as Django returns it (never the stale base value).
+    stock,
     variants: vs.map((v) => toVariant(state, p, v)),
     status: productStatus(p),
     display_price: displayMoney(Number(price), p.currency),
@@ -689,23 +706,31 @@ export function generateVariants(
   const excluded = new Set(exclude.map(key));
   const existing = new Map(variantsOf(state, id).map((v) => [key(v.option_ids), v]));
   const next: MockVariant[] = [];
+  // Surviving combinations keep id, stock, SKU and extra price; new ones get `<sku>-<n>`.
+  const kept = combos.filter((c) => !excluded.has(key(c)) && existing.has(key(c)));
+  state.variants = state.variants.filter((v) => v.product_id !== id || kept.some((c) => key(c) === key(v.option_ids)));
   for (const combo of combos) {
     if (excluded.has(key(combo))) continue;
     const prev = existing.get(key(combo));
-    next.push(
-      prev ?? {
-        id: nextCatalogId(state, "variant"),
-        product_id: id,
-        option_ids: combo,
-        sku: `${p.sku}-${combo.join("")}`,
-        extra_price: "0.00",
-        stock: "0.000",
-        image: null,
-      },
-    );
+    if (prev) {
+      next.push(prev);
+      continue;
+    }
+    const created: MockVariant = {
+      id: nextCatalogId(state, "variant"),
+      product_id: id,
+      option_ids: combo,
+      sku: nextVariantSku(state, p),
+      extra_price: "0.00",
+      stock: "0.000",
+      image: null,
+    };
+    state.variants.push(created);
+    next.push(created);
   }
   state.variants = state.variants.filter((v) => v.product_id !== id).concat(next);
   p.variant_attribute_ids = attrs.map((a) => a.id);
+  syncStockMirror(state, p);
   p.updated_at = now();
   return { ok: true, data: next.map((v) => toVariant(state, p, v)) };
 }
@@ -735,6 +760,7 @@ export function bulkPatchVariants(
     if (r.extra_price !== undefined) v.extra_price = r.extra_price;
     if (r.stock !== undefined) v.stock = r.stock.includes(".") ? r.stock : `${r.stock}.000`;
   }
+  syncStockMirror(state, p);
   p.updated_at = now();
   return { ok: true, data: variantsOf(state, id).map((v) => toVariant(state, p, v)) };
 }

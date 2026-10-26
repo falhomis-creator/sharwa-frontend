@@ -26,6 +26,8 @@ import {
   staffSessionsSchema,
   tokensSchema,
   verifySchema,
+  createdStaffSchema,
+  passwordResetSchema,
   type RosterEntry,
 } from "@/features/staff/schemas";
 
@@ -144,7 +146,7 @@ export function useStaffWrites() {
 
   return {
     createStaff: useMutation({
-      mutationFn: (body: Record<string, unknown>) => apiFetch("/api/bff/staff", staffSchema, { method: "POST", json: body }),
+      mutationFn: (body: Record<string, unknown>) => apiFetch("/api/bff/staff", createdStaffSchema, { method: "POST", json: body }),
       onSuccess: () => void invalidate(storeKey(store, "staff", "list")).then(touchAudit),
     }),
     patchStaff: useMutation({
@@ -154,6 +156,10 @@ export function useStaffWrites() {
     terminate: useMutation({
       mutationFn: (id: number) => apiFetch(`/api/bff/staff/${id}/terminate`, staffSchema, { method: "POST" }),
       onSuccess: (_d, id) => void invalidate(storeKey(store, "staff", "list"), keys.detail(id), keys.sub(id, "sessions")).then(touchAudit),
+    }),
+    resetPassword: useMutation({
+      mutationFn: (id: number) => apiFetch(`/api/bff/staff/${id}/reset-password`, passwordResetSchema, { method: "POST" }),
+      onSuccess: (_d, id) => void invalidate(keys.detail(id), keys.sub(id, "sessions")).then(touchAudit),
     }),
     revokeSessions: useMutation({
       mutationFn: (id: number) => apiFetch(`/api/bff/staff/${id}/revoke-sessions`, z.object({ token_version: z.number() }), { method: "POST" }),

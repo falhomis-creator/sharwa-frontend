@@ -2,9 +2,9 @@ import { z } from "zod";
 import { SHIPMENT_STATUSES, type ShipmentStatus } from "@/features/shipping/schemas";
 
 /**
- * M39 «شروة شيب» contracts (§7 — every row `[NEEDS BACKEND]`, the proposed
- * `/api/v1/shipping/*` shapes served today by `/api/bff/shipping/*`). Money, cost and
- * weights arrive as server strings and are shown verbatim (FR-39.02/03).
+ * M39 «شروة شيب» contracts — Django `api/views_sharwa_ship.py` since INT-047 (module `sharwa_ship`; the
+ * `/api/bff/shipping/*` adapters keep the fixture behind the switch). Money, cost and weights arrive as
+ * server strings and are shown verbatim (FR-39.02/03).
  */
 export const BILLING_STATUSES = ["pending", "collected", "waived"] as const;
 export type BillingStatus = (typeof BILLING_STATUSES)[number];

@@ -38,7 +38,7 @@ function Inner({ code }: { code: SupplierCode }) {
   const table = useTableUrlState();
   const [f, setF] = useQueryStates(parsers, { history: "replace" });
   const [selection, setSelection] = useState<RowSelectionState>({});
-  const [pending, setPending] = useState<number[] | null>(null);
+  const [pending, setPending] = useState<Array<number | string> | null>(null);
   const conn = useConnection(code);
   const query = useSupplierCatalog(code, { q: f.q || undefined, category: f.category || undefined, import_status: f.import_status ?? undefined, page: table.page > 1 ? table.page : undefined });
   const imp = useImportProducts(code);
@@ -114,7 +114,7 @@ function Inner({ code }: { code: SupplierCode }) {
         rowSelection={selection}
         onRowSelectionChange={setSelection}
         bulkActions={(ids) => (
-          <Button size="sm" className="h-11 lg:h-8" onClick={() => setPending(ids.map(Number))} data-testid="bulk-import">
+          <Button size="sm" className="h-11 lg:h-8" onClick={() => setPending(ids.map((id) => (id.startsWith("ext:") ? id : Number(id))))} data-testid="bulk-import">
             استيراد <Mono>{ids.length}</Mono>
           </Button>
         )}

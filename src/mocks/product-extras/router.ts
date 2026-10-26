@@ -27,7 +27,8 @@ import { catalog } from "@/mocks/catalog/state";
 
 /**
  * The mock server behind `/api/bff/products/<id>/extras/*` → `/api/v1/products/<id>/*`
- * (M37 §7 + M36 tier prices, all `[NEEDS BACKEND]`). The segment after `extras/` is the
+ * (Django since INT-044/INT-045: tier prices → module `b2b`, the M37 extras → module `advanced_products`; see
+ * `B2B_LIVE_RULES` / `ADVANCED_LIVE_RULES` in `lib/bff/live-products.ts`, which answer before this fixture). The segment after `extras/` is the
  * upstream sub-resource verbatim (`bundle-components`, `compatibility-rules`,
  * `personalization-fields`, `auction`, `serials`, `tier-prices`). Reads need
  * `inventory.view` (like the product itself); writes are the catalogue managers' (M04 §2).

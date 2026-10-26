@@ -10,7 +10,7 @@ import type { Audience, BuyCondition, CartStatus, Channel, DiscountType, EventCo
 import { couponState, AUDIENCES, BUY_CONDITIONS, CHANNELS, DISCOUNT_TYPES, EVENT_COLORS, EVENT_TYPES, OFFER_TYPES } from "@/features/marketing/schemas";
 
 /**
- * M13 `[NEEDS BACKEND]` fixtures: coupons, promotional offers, abandoned carts (+ settings),
+ * M13 fixtures (Django `api/views_marketing.py` since INT-019, module `marketing`): coupons, promotional offers, abandoned carts (+ settings),
  * campaigns (+ recipients), the marketing timeline and the gifting switch — per store on
  * `globalThis` (`storeState`). The storefront's Phase 4 coupon codes (WELCOME10, NOOR50,
  * OLD20, MAXED, SOON, OFF) are the same rows here, in the states the cart mock answers with.
@@ -179,9 +179,9 @@ function seed(store: string | null): MarketingState {
   const bakhoor = products.find((p) => p.name.includes("بخور")) ?? products[0]!;
   state.offers = [
     { id: 1, name: "البخور 3 بـ 2", offer_type: "buy_x_get_y", discount_type: null, discount_value: null, min_order_amount: null, description: "اشترِ ثلاث علب بخور واحصل على الثالثة مجاناً", image: null, cta_text: "تسوّق البخور", buy_quantity: 3, buy_condition_type: "product", buy_category_id: null, buy_product_id: bakhoor.id, get_product_id: bakhoor.id, get_quantity: 1, get_discount_percent: 100, min_total_items: null, priority: 1, valid_from: iso(-20), valid_until: iso(40), is_active: true, created_at: iso(-20) },
-    { id: 2, name: "شحن مجاني فوق 300", offer_type: "free_shipping", discount_type: null, discount_value: null, min_order_amount: "300.00", description: "التوصيل مجاني لكل الطلبات فوق 300 ريال", image: null, cta_text: "اطلب الآن", buy_quantity: null, buy_condition_type: null, buy_category_id: null, buy_product_id: null, get_product_id: null, get_quantity: null, get_discount_percent: null, min_total_items: null, priority: 2, valid_from: null, valid_until: null, is_active: true, created_at: iso(-45) },
-    { id: 3, name: "خصم الشتاء", offer_type: "discount", discount_type: "percent", discount_value: "12", min_order_amount: "150.00", description: "12% على كل السلة لطلبات الشتاء", image: null, cta_text: "اكتشف العرض", buy_quantity: null, buy_condition_type: null, buy_category_id: null, buy_product_id: null, get_product_id: null, get_quantity: null, get_discount_percent: null, min_total_items: null, priority: 3, valid_from: iso(30), valid_until: iso(90), is_active: true, created_at: iso(-3) },
-    { id: 4, name: "عرض العيد", offer_type: "discount", discount_type: "fixed", discount_value: "40.00", min_order_amount: "250.00", description: "40 ريالاً على طلبات العيد", image: null, cta_text: "", buy_quantity: null, buy_condition_type: null, buy_category_id: null, buy_product_id: null, get_product_id: null, get_quantity: null, get_discount_percent: null, min_total_items: null, priority: 4, valid_from: iso(-200), valid_until: iso(-160), is_active: false, created_at: iso(-200) },
+    { id: 2, name: "شحن مجاني فوق 300", offer_type: "free_shipping", discount_type: null, discount_value: null, min_order_amount: "300.00", description: "التوصيل مجاني لكل الطلبات فوق 300 ريال", image: null, cta_text: "اطلب الآن", buy_quantity: null, buy_condition_type: "all", buy_category_id: null, buy_product_id: null, get_product_id: null, get_quantity: null, get_discount_percent: null, min_total_items: null, priority: 2, valid_from: null, valid_until: null, is_active: true, created_at: iso(-45) },
+    { id: 3, name: "خصم الشتاء", offer_type: "discount", discount_type: "percent", discount_value: "12", min_order_amount: "150.00", description: "12% على كل السلة لطلبات الشتاء", image: null, cta_text: "اكتشف العرض", buy_quantity: null, buy_condition_type: "all", buy_category_id: null, buy_product_id: null, get_product_id: null, get_quantity: null, get_discount_percent: null, min_total_items: null, priority: 3, valid_from: iso(30), valid_until: iso(90), is_active: true, created_at: iso(-3) },
+    { id: 4, name: "عرض العيد", offer_type: "discount", discount_type: "fixed", discount_value: "40.00", min_order_amount: "250.00", description: "40 ريالاً على طلبات العيد", image: null, cta_text: "", buy_quantity: null, buy_condition_type: "all", buy_category_id: null, buy_product_id: null, get_product_id: null, get_quantity: null, get_discount_percent: null, min_total_items: null, priority: 4, valid_from: iso(-200), valid_until: iso(-160), is_active: false, created_at: iso(-200) },
   ];
 
   const orders = ordersState(store).orders;
@@ -352,7 +352,7 @@ export function listOffers(store: string | null, params: URLSearchParams) {
   const type = params.get("offer_type");
   const rows = marketingState(store)
     .offers.filter((o) => (!q || includesNormalized(o.name, q)) && (!status || couponState({ is_active: o.is_active, start_date: o.valid_from, expires_at: o.valid_until, max_uses: null, used_count: 0 }) === status) && (!type || o.offer_type === type))
-    .sort((a, b) => a.priority - b.priority || b.created_at.localeCompare(a.created_at));
+    .sort((a, b) => b.priority - a.priority || b.created_at.localeCompare(a.created_at)); // Django: -priority
   return { count: rows.length, results: rows.map((o) => offerView(store, o)) };
 }
 function readOffer(store: string | null, body: Record<string, unknown>, existing?: MockOffer): MockResult<MockOffer> {
@@ -372,23 +372,24 @@ function readOffer(store: string | null, body: Record<string, unknown>, existing
     discount_value = discount_type === "percent" ? String(Math.round(v)) : v.toFixed(2);
   }
   const bx = offer_type === "buy_x_get_y";
-  const buy_condition_type = bx ? ((body.buy_condition_type ?? existing?.buy_condition_type ?? "all") as BuyCondition) : null;
-  if (bx && !BUY_CONDITIONS.includes(buy_condition_type!)) errors.buy_condition_type = ["شرط الشراء غير معروف."];
+  // Like Django (INT-019): the condition applies to every type (condition_type for discount/free shipping).
+  const buy_condition_type = (body.buy_condition_type ?? existing?.buy_condition_type ?? "all") as BuyCondition;
+  if (!BUY_CONDITIONS.includes(buy_condition_type)) errors.buy_condition_type = ["شرط الشراء غير معروف."];
   const buy_quantity = bx ? num("buy_quantity", existing?.buy_quantity ?? null) : null;
   const get_quantity = bx ? num("get_quantity", existing?.get_quantity ?? null) : null;
   const get_discount_percent = bx ? num("get_discount_percent", existing?.get_discount_percent ?? null) : null;
   const get_product_id = bx ? num("get_product_id", existing?.get_product_id ?? null) : null;
-  const min_total_items = bx && buy_condition_type === "min_items" ? num("min_total_items", existing?.min_total_items ?? null) : null;
-  const buy_category_id = bx && buy_condition_type === "category" ? num("buy_category_id", existing?.buy_category_id ?? null) : null;
-  const buy_product_id = bx && buy_condition_type === "product" ? num("buy_product_id", existing?.buy_product_id ?? null) : null;
+  const min_total_items = buy_condition_type === "min_items" ? num("min_total_items", existing?.min_total_items ?? null) : null;
+  const buy_category_id = buy_condition_type === "category" ? num("buy_category_id", existing?.buy_category_id ?? null) : null;
+  const buy_product_id = buy_condition_type === "product" ? num("buy_product_id", existing?.buy_product_id ?? null) : null;
+  if (buy_condition_type === "category" && !buy_category_id) errors.buy_category_id = ["اختر التصنيف."];
+  if (buy_condition_type === "product" && !buy_product_id) errors.buy_product_id = ["اختر المنتج."];
+  if (buy_condition_type === "min_items" && !(min_total_items && min_total_items > 0)) errors.min_total_items = ["عدد صحيح أكبر من صفر."];
   if (bx) {
     if (!(buy_quantity && buy_quantity > 0)) errors.buy_quantity = ["عدد صحيح أكبر من صفر."];
     if (!(get_quantity && get_quantity > 0)) errors.get_quantity = ["عدد صحيح أكبر من صفر."];
     if (!(get_discount_percent && get_discount_percent >= 1 && get_discount_percent <= 100)) errors.get_discount_percent = ["النسبة بين 1 و100."];
     if (!get_product_id) errors.get_product_id = ["اختر المنتج الممنوح."];
-    if (buy_condition_type === "category" && !buy_category_id) errors.buy_category_id = ["اختر التصنيف."];
-    if (buy_condition_type === "product" && !buy_product_id) errors.buy_product_id = ["اختر المنتج."];
-    if (buy_condition_type === "min_items" && !(min_total_items && min_total_items > 0)) errors.min_total_items = ["عدد صحيح أكبر من صفر."];
   }
   const priority = num("priority", existing?.priority ?? 10) ?? 10;
   if (!Number.isInteger(priority) || priority < 0) errors.priority = ["الأولوية عدد صحيح."];

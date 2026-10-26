@@ -21,13 +21,15 @@ import {
 } from "@/mocks/pos/state";
 
 /**
- * The mock SERVER for `/api/v1/pos/*` (M16 §7 — every row `[NEEDS BACKEND]`), behind the
+ * The mock SERVER for `/api/v1/pos/*` (M16 §7 — live provider: Django `api/views_pos.py`, INT-033), behind the
  * catch-all `src/app/api/bff/pos/[...path]`. Gates in order: the session (401, `mockRoute`),
  * the plan feature `pos` (403 `feature_disabled` — Phase 7 decision 1, subscription-gated),
  * then the M22 location assignment.
  *
- * Still mock-only and kept as-is until Django ships the rows: the manager code `2468`
- * (`MOCK_MANAGER_CODE`) and the 200.00 refund OTP threshold (`LARGE_REFUND_THRESHOLD`).
+ * Fixture values: the manager code `2468` (`MOCK_MANAGER_CODE`) and the 200.00 refund OTP
+ * threshold (`LARGE_REFUND_THRESHOLD`). In Django the code is the store's hashed
+ * `StoreSetting.pos_manager_code_hash` (`manage.py set_pos_manager_code`; 2468 accepted under
+ * DEBUG while none is set) and the threshold is `StoreSetting.pos_refund_otp_threshold` (200.00 default).
  */
 type Body = Record<string, unknown>;
 type Actor = ReturnType<typeof actorOf>;

@@ -403,28 +403,32 @@ export function RunStep({ feed }: { feed: Feed }) {
           تنزيل أخطاء CSV
         </a>
       ) : null}
-      <Field label="الجدولة" htmlFor="feed-schedule" hint="يُعاد تشغيل الملف تلقائياً بهذا الفاصل.">
-        <NativeSelect
-          id="feed-schedule"
-          value={feed.schedule_interval ? String(feed.schedule_interval) : ""}
-          onChange={async (e) => {
-            try {
-              await action.mutateAsync({ id: feed.id, action: "patch", json: { schedule_interval: e.target.value ? Number(e.target.value) : null } });
-              toast.success("حُفظت الجدولة");
-            } catch (err) {
-              toast.error(isApiError(err) ? err.userMessage : "تعذّر الحفظ");
-            }
-          }}
-          className="h-11 max-w-xs md:h-8"
-          data-testid="feed-schedule"
-        >
-          {SCHEDULES.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </NativeSelect>
-      </Field>
+      {feed.source_kind === "url" ? (
+        <Field label="الجدولة" htmlFor="feed-schedule" hint="يُعاد جلب الرابط بهذا الفاصل، ويُستورد تلقائياً إن تغيّر محتواه.">
+          <NativeSelect
+            id="feed-schedule"
+            value={feed.schedule_interval ? String(feed.schedule_interval) : ""}
+            onChange={async (e) => {
+              try {
+                await action.mutateAsync({ id: feed.id, action: "patch", json: { schedule_interval: e.target.value ? Number(e.target.value) : null } });
+                toast.success("حُفظت الجدولة");
+              } catch (err) {
+                toast.error(isApiError(err) ? err.userMessage : "تعذّر الحفظ");
+              }
+            }}
+            className="h-11 max-w-xs md:h-8"
+            data-testid="feed-schedule"
+          >
+            {SCHEDULES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </NativeSelect>
+        </Field>
+      ) : (
+        <p className="text-xs text-muted-foreground" data-testid="feed-schedule-file">الملف المرفوع لا يتغيّر من تلقاء نفسه — ارفع نسخة أحدث بملف جديد. الجدولة للروابط فقط.</p>
+      )}
     </div>
   );
 }

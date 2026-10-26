@@ -674,18 +674,24 @@ export function seedProducts(): { products: MockProduct[]; variants: MockVariant
     p.variant_attribute_ids = attrIds;
     p.variant_display_style = attrIds.includes(2) ? "swatches" : "dropdown";
     const combos = groups.reduce<number[][]>((acc, g) => acc.flatMap((c) => g.map((o) => [...c, o])), [[]]);
-    for (const combo of combos) {
+    let total = 0;
+    for (const [n, combo] of combos.entries()) {
       variantId += 1;
+      const units = int(rndV, 0, 14);
+      total += units;
       variants.push({
         id: variantId,
         product_id: p.id,
         option_ids: combo,
-        sku: `${p.sku}-${combo.join("")}`,
+        // `<product sku>-<n>`, as Django's variant generation names them (M04 Step 3).
+        sku: `${p.sku}-${n + 1}`,
         extra_price: combo.includes(4) ? "20.00" : "0.00",
-        stock: `${int(rndV, 0, 14)}.000`,
+        stock: `${units}.000`,
         image: null,
       });
     }
+    // `Product.stock` mirrors the variant sum in Django.
+    p.stock = `${total}.000`;
   };
   addMatrix(byName("ثوب قطن صيفي"), [1, 2], [[1, 2, 3, 4], [5, 6]]);
   addMatrix(byName("عباية كلاسيك سوداء"), [1], [[1, 2, 3]]);

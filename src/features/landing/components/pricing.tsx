@@ -5,7 +5,7 @@ import { Mono } from "@/components/shared/mono";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SectionHeading } from "@/features/landing/components/section-heading";
 import { getPublicPlans } from "@/features/landing/api/plans";
-import { hero, sections } from "@/features/landing/landing.content";
+import { freePlanHighlights, hero, sections } from "@/features/landing/landing.content";
 import type { PublicPlan } from "@/features/landing/schemas/plans";
 
 /**
@@ -38,7 +38,9 @@ export async function Pricing() {
 const LIMIT = (v: number | null) => (v === null ? "بلا حد" : String(v));
 
 function SinglePlan({ plan }: { plan?: PublicPlan }) {
-  const features = plan?.features ?? [];
+  // Live plans name their features from Django's `Feature` catalogue; an empty catalogue
+  // falls back to the page's own highlights so the column is never blank.
+  const features: readonly string[] = plan?.features.length ? plan.features : freePlanHighlights;
 
   return (
     <div className="mt-12 grid grid-cols-1 overflow-hidden rounded-2xl border border-border/60 bg-elevated shadow-xl shadow-emerald-500/10 lg:mt-16 lg:grid-cols-12">

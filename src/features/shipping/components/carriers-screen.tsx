@@ -169,6 +169,15 @@ function CredentialsForm({ carrier }: { carrier: Carrier }) {
       <h2 id="cred-h" className="text-base font-semibold">
         بيانات الاعتماد
       </h2>
+      {carrier.platform_enabled === false ? (
+        <p className="text-sm text-warning" data-testid="carrier-platform-disabled">
+          {carrier.name} غير مفعّلة على مستوى المنصة بعد — لا يمكن حفظ بيانات الاعتماد حتى يفعّلها دعم شروة.
+        </p>
+      ) : carrier.credential_source === "platform_shared" && carrier.connection !== "not_connected" ? (
+        <p className="text-sm text-muted-foreground" data-testid="carrier-shared">
+          يعمل الربط حالياً بحساب شروة المشترك — أدخل بيانات حسابك الخاص واحفظها لاستخدامه بدلاً منه.
+        </p>
+      ) : null}
       <form
         className="flex flex-col gap-4"
         noValidate
@@ -203,7 +212,7 @@ function CredentialsForm({ carrier }: { carrier: Carrier }) {
           </Field>
         ))}
         <div className="flex flex-wrap gap-2">
-          <button type="submit" className={primaryButton} disabled={saveCredentials.isPending} data-testid="credentials-save">
+          <button type="submit" className={primaryButton} disabled={saveCredentials.isPending || carrier.platform_enabled === false} data-testid="credentials-save">
             حفظ
           </button>
           <button type="button" className={outlineButton} disabled={test.isPending || carrier.connection === "not_connected"} title={carrier.connection === "not_connected" ? "احفظ بيانات الاعتماد أولاً" : undefined} onClick={runTest} data-testid="carrier-test">

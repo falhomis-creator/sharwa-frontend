@@ -56,7 +56,7 @@ function seed(store: string | null): Raw {
     snapchat_link: "",
     return_policy: full ? RICH_POLICY : "",
     default_delivery_fee: full ? "2500.00" : "0.00",
-    free_shipping_threshold: full ? "30000.00" : "0.00",
+    free_shipping_threshold: full ? "300.00" : "0.00",
     currency: "SAR",
     usd_to_sar: DEFAULT_FX.usd_to_sar,
     sar_to_yer_old: DEFAULT_FX.sar_to_yer_old,
@@ -102,7 +102,8 @@ export function readSettings(store: string | null, storeHost: string): StoreSett
   return {
     ...s,
     display_default_delivery_fee: displayMoney(Number(s.default_delivery_fee), "YER_NEW"),
-    display_free_shipping_threshold: displayMoney(Number(s.free_shipping_threshold), "YER_NEW"),
+    // Dashboard currency — what Django's pricing compares against (INT-013).
+    display_free_shipping_threshold: displayMoney(Number(s.free_shipping_threshold), s.currency),
     fx_preview: fxPreview(s),
     store_url: `https://${storeHost}`,
     pending_payment_orders: pending,
@@ -255,7 +256,7 @@ export function patchPayments(store: string | null, host: string, body: Body): M
 /**
  * `POST settings/multi-location/` `{enabled, merge?}`. Turning it OFF while more than one
  * location holds stock is a 409 with the conflicting locations, unless `merge: true`
- * (quantities move to the default location — M34 US-34.7.3).
+ * (each product's stock becomes one number — the sum of its locations, as Django mirrors it).
  */
 export function setMultiLocation(store: string | null, host: string, body: Body): MockResult<StoreSettings> {
   if (typeof body.enabled !== "boolean") return { ok: false, status: 400, body: { enabled: ["قيمة غير صالحة."] } };
@@ -265,7 +266,7 @@ export function setMultiLocation(store: string | null, host: string, body: Body)
       ok: false,
       status: 409,
       body: {
-        detail: "يوجد مخزون في أكثر من موقع؛ الإيقاف يدمج الكميات في الموقع الافتراضي «المستودع الرئيسي».",
+        detail: "يوجد مخزون في أكثر من موقع؛ الإيقاف يجعل مخزون كل منتج رقماً واحداً (مجموع المواقع).",
         conflicts: [{ location: "فرع الرياض", products_with_stock: 14 }],
       },
     };

@@ -4,7 +4,7 @@ import { shopperPhone, toggleWishlist } from "@/mocks/engagement/state";
 import { normalizeBuyerPhone } from "@/mocks/storefront/otp";
 
 /**
- * `[NEEDS BACKEND]` (M42 §7) `POST /api/v1/wishlist/toggle/` `{product_id}` → `{saved}`.
+ * Live (INT-029, Django `api/views_engagement.py`) (M42 §7) `POST /api/v1/wishlist/toggle/` `{product_id}` → `{saved}`.
  * The phone is the session's (`POST /shopper/phone/` first); a `phone` in the body is accepted
  * as a fallback for callers that already know it (the Phase 4 contract). 409 when neither.
  */

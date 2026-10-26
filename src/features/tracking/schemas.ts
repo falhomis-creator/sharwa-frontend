@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-/** M41 §7 `[NEEDS BACKEND]` `GET /api/v1/orders/track/<public_uuid>/`. No internal field is part of the shape (FR-41.04). */
+/** M41 §7 `GET /api/v1/orders/track/<public_uuid>/` (Django since INT-015). No internal field is part of the shape (FR-41.04). */
 export const ShipmentSchema = z.object({
   waybill_number: z.string(),
   carrier_code: z.string(),

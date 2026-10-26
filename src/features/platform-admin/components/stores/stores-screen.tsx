@@ -15,7 +15,7 @@ import { useCanWrite } from "@/features/platform-admin/components/admin-session"
 import { ReadOnlyNote, StatusText } from "@/features/platform-admin/components/bits";
 import { ActiveCell, ProvisioningCell, baseStoreColumns } from "@/features/platform-admin/components/store-cells";
 import { BulkOverrideDialog, ReprovisionDialog } from "@/features/platform-admin/components/stores/bulk-dialogs";
-import { SharwaShipCell } from "@/features/platform-admin/components/stores/store-bits";
+import { SharwaShipCell, isProvisioningLive } from "@/features/platform-admin/components/stores/store-bits";
 import { PROVISIONING_LABELS, PROVISIONING_STATUSES, type StoreRow } from "@/features/platform-admin/schemas";
 
 /**
@@ -45,7 +45,7 @@ export function StoresScreen() {
   const [polling, setPolling] = useState(false);
   const query = useStores(params, { refetchInterval: polling ? 3000 : false });
   const rows = query.data?.results;
-  const needsPoll = Boolean(rows?.some((r) => r.provisioning_status === "provisioning" || r.sharwa_ship === "activating" || r.sharwa_ship === "deactivating"));
+  const needsPoll = Boolean(rows?.some((r) => isProvisioningLive(r) || r.sharwa_ship === "activating" || r.sharwa_ship === "deactivating"));
   if (needsPoll !== polling) setPolling(needsPoll);
 
   const set = (patch: Partial<{ q: string | null; status: (typeof STATUS_FILTERS)[number] | null; plan: string | null; is_active: "true" | "false" | null }>) => {

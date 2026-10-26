@@ -4,7 +4,7 @@ import { mockJson } from "@/mocks/runtime";
 import { createTopup, createWithdrawal, listRequests, listTransactions, sendOtp, verifyOtp, walletView, normalizePayPhone } from "@/mocks/sharwa-pay/state";
 
 /**
- * `/api/bff/sharwa-pay/*` → the proposed `/api/v1/sharwa-pay/*` rows (M40 §7). The session
+ * `/api/bff/sharwa-pay/*` mock half (INT-048: live = `api/views_sharwa_pay.py`). The session
  * is a dev-only HttpOnly marker on the PLATFORM origin (`sharwa_mock_pay=<phone>`), set by
  * `otp/verify` and cleared by `logout` — the real contract is Django's session cookie on the
  * same origin (M40 §10). It is never readable from JS and never shared with a store origin.
