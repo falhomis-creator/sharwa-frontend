@@ -1,0 +1,35 @@
+{
+  "count": 3,
+  "results": [
+    {
+      "id": 31,
+      "report_code": "sales_overview",
+      "report_title": "نظرة عامة على المبيعات",
+      "frequency": "weekly",
+      "email": "owner@noor-store.com",
+      "is_active": true,
+      "next_run_at": "2026-10-24T04:00:00.000Z",
+      "created_at": "2026-10-08T20:00:00.000Z"
+    },
+    {
+      "id": 32,
+      "report_code": "inventory_overview",
+      "report_title": "نظرة عامة على المخزون",
+      "frequency": "monthly",
+      "email": "stock@noor-store.com",
+      "is_active": true,
+      "next_run_at": "2026-11-01T04:00:00.000Z",
+      "created_at": "2026-10-08T20:00:00.000Z"
+    },
+    {
+      "id": 33,
+      "report_code": "abandoned_carts",
+      "report_title": "السلات المتروكة",
+      "frequency": "daily",
+      "email": "marketing@noor-store.com",
+      "is_active": false,
+      "next_run_at": null,
+      "created_at": "2026-10-08T20:00:00.000Z"
+    }
+  ]
+}

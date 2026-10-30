@@ -1,0 +1,49 @@
+{
+  "id": "799437a5-fac3-5c78-bad9-89cc0f6fe70d",
+  "name": "Sharwa · local · platform origin",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "default",
+      "enabled": true,
+      "description": "Public-schema host (a `tenants.Domain` row of the public tenant). Landing/onboarding rows and the Sharwa Pay wallet `/api/v1/sharwa-pay/*`."
+    },
+    {
+      "key": "x_store_domain",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "MUST stay empty: Sharwa Pay answers 404 «غير موجود.» on a store host or with X-Store-Domain."
+    },
+    {
+      "key": "sharwa_pay_phone",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Customer phone for POST /api/v1/sharwa-pay/otp/send/ then otp/verify/ (WhatsApp code; fill locally)."
+    },
+    {
+      "key": "otp_debug",
+      "value": "123456",
+      "type": "default",
+      "enabled": true,
+      "description": "DEBUG ONLY — onboarding OTP verify (DEBUG_STATIC_OTP). Not accepted by the Sharwa Pay OTP."
+    },
+    {
+      "key": "csrf_token",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script."
+    },
+    {
+      "key": "idempotency_key",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script (new UUID per send)."
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

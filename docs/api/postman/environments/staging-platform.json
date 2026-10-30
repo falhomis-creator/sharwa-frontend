@@ -1,0 +1,42 @@
+{
+  "id": "f32f83ff-2a13-5979-89b6-042096cac357",
+  "name": "Sharwa · staging · platform origin",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://<base>",
+      "type": "default",
+      "enabled": true,
+      "description": "Staging/production origin — replace the placeholder. The platform origin (public schema)."
+    },
+    {
+      "key": "x_store_domain",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "MUST stay empty: Sharwa Pay answers 404 «غير موجود.» on a store host or with X-Store-Domain."
+    },
+    {
+      "key": "sharwa_pay_phone",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Customer phone for POST /api/v1/sharwa-pay/otp/send/ then otp/verify/ (WhatsApp code; fill locally)."
+    },
+    {
+      "key": "csrf_token",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script."
+    },
+    {
+      "key": "idempotency_key",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script (new UUID per send)."
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

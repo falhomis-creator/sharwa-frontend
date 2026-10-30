@@ -1,0 +1,317 @@
+# OpenAPI base fragment (DOC-008): info, servers, security schemes and the shared components.
+# Hand-written. scripts/openapi/build.py merges it with the route inventory and the domain fragments.
+openapi: 3.1.0
+info:
+  title: Sharwa API — /api/v1 (واجهة شروة البرمجية)
+  version: 1.0.0
+  summary: Django REST API of the Sharwa multi-tenant e-commerce platform, integrated with the Next.js frontend in Phase 002 (INT-001 → INT-049).
+  description: 'Hand-curated OpenAPI document — see docs/api/openapi/README.md for the generation strategy (hybrid: the route inventory comes from sharwa_saas/api/urls.py,
+    shapes are written from Django and checked against the frontend Zod contracts by scripts/openapi-contract-diff.ts).
+
+
+    Status per operation: `x-sharwa-status: documented` = request/response fully specified and diffed against Zod; `stub` = route, methods, module, live key and derived
+    security only — completed by the domain step of the Phase 003 execution plan.
+
+
+    Conventions (docs/api/overview/): money crosses the API as server-formatted strings (`display_*`), never summed across currencies; Arabic server messages are
+    verbatim; gate order is session (401) → plan feature (403) → permission key (403) → owner-only (403) → resource state (404/409).'
+  x-phase002-baseline: 2026-10-24 → 2026-10-26
+servers:
+- url: '{scheme}://{store_host}'
+  description: 'Store host — a store subdomain (`<sub>.<base>`) or a verified custom domain. Tenant (store) schema. Local: `<store>.localhost:8000` (Django dev server).'
+  variables:
+    scheme:
+      default: http
+      enum:
+      - http
+      - https
+    store_host:
+      default: noor.localhost:8000
+- url: '{scheme}://{platform_host}'
+  description: 'Platform origin — the public schema: landing/onboarding rows, Sharwa Pay `/api/v1/sharwa-pay/*`, and the console API `/api/v1/platform/*` (the console
+    UI runs on `console.<base>` and reaches these routes through its BFF). `platform_host` = any host whose `tenants.Domain` row belongs to the public tenant (local:
+    `localhost:8000`). A store host or an `X-Store-Domain` header ⇒ 404 on console and Sharwa Pay routes.'
+  variables:
+    scheme:
+      default: http
+      enum:
+      - http
+      - https
+    platform_host:
+      default: localhost:8000
+components:
+  securitySchemes:
+    storeSession:
+      type: apiKey
+      in: cookie
+      name: sessionid
+      description: 'Django session on a store host. Store owner: `is_merchant_authenticated` + `auth_tenant_schema` pinned to the store (`MerchantSessionAuthentication`).
+        Staff: `StaffSession` (`auth/staff/login/`). Courier agent: a staff session whose `shipping_provider_profile` is the agent. A session pinned to one store
+        is refused (403) on another store.'
+    consoleSession:
+      type: apiKey
+      in: cookie
+      name: sessionid
+      description: 'Django admin session on the public schema (`ConsoleSessionAuthentication`): superuser = «مالك المنصة», `is_staff` = «مشرف تشغيلي». No session
+        ⇒ 401 with `WWW-Authenticate: Session`.'
+    sharwaPaySession:
+      type: apiKey
+      in: cookie
+      name: sessionid
+      description: Sharwa Pay wallet session on the platform origin (session key `sharwa_pay_auth_phone`, `cycle_key()` on login). No session ⇒ 401 «سجّل الدخول برقم
+        جوالك.».
+    csrfHeader:
+      type: apiKey
+      in: header
+      name: X-CSRFToken
+      description: 'Required on every unsafe method of a session-authenticated route, and on the logins themselves. Obtain it from `GET /api/v1/auth/csrf/` (`{csrfToken}`);
+        `CSRF_COOKIE_HTTPONLY=True`, so it is never read from the cookie. A CSRF failure is `403 {"detail": "CSRF Failed: …"}` — refresh once and retry. See docs/api/overview/csrf.md.'
+  parameters:
+    XStoreDomain:
+      name: X-Store-Domain
+      in: header
+      required: false
+      schema:
+        type: string
+        example: noor.localhost
+      description: Selects the store on a host that is not a store host (API paths only, `TenantHeaderOverrideMiddleware`). Unknown domain ⇒ 404; inactive store ⇒
+        403 «هذا المتجر غير نشط حالياً.»; a session bound to another store ⇒ 403. Forbidden (404) on console and Sharwa Pay routes.
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+      description: Client-generated key for retried writes (merchant withdrawals, customer wallet top-ups, POS writes, inbox replies). A replay returns the first
+        result instead of acting twice. See docs/api/overview/idempotency.md.
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: page_size
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+  headers:
+    RetryAfter:
+      description: Seconds to wait before retrying (sent with 429, and with 503 by the provisioning guard).
+      schema:
+        type: integer
+    CacheControlNoStore:
+      description: '`no-store` — money, wallet, tracking and token responses are never cached.'
+      schema:
+        type: string
+        const: no-store
+  responses:
+    BadRequest:
+      description: Validation failed — field errors (or `{detail}` for a non-field rule).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/FieldErrors'
+    Unauthorized:
+      description: No (valid) session for this origin.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Detail'
+    Forbidden:
+      description: 'Plan feature off, permission key missing, owner-only, CSRF failure («CSRF Failed: …»), or a session bound to another store.'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Detail'
+    NotFound:
+      description: Resource does not exist or is hidden from this member; console/Sharwa Pay routes on a store host.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Detail'
+    Conflict:
+      description: Concurrency or state conflict — see the Conflict* schemas for the module's shape.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConflictVersion'
+    TooManyRequests:
+      description: Rate limit or cooldown hit.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Detail'
+      headers:
+        Retry-After:
+          $ref: '#/components/headers/RetryAfter'
+    NotAvailable:
+      description: 'Mock mode only (Next BFF): no Django endpoint and mocks off — «غير متاح بعد.»'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Detail'
+  schemas:
+    DisplayMoney:
+      type: string
+      description: Server-formatted amount from `format_money` (e.g. «1,250 ر.س», «12.50 ر.س», «$12.50», «3,500 ر.ي»). Never parsed, summed or re-formatted by clients.
+      examples:
+      - 1,250 ر.س
+    Currency:
+      type: string
+      enum:
+      - SAR
+      - USD
+      - YER_OLD
+      - YER_NEW
+      description: SAR ريال سعودي · USD دولار أمريكي · YER_OLD ريال يمني (صنعاء) · YER_NEW ريال يمني (عدن).
+    Detail:
+      type: object
+      required:
+      - detail
+      properties:
+        detail:
+          type: string
+          description: Arabic message, verbatim.
+    FieldErrors:
+      type: object
+      description: 'DRF-style validation errors: field name → list of Arabic messages (nested objects/lists for nested fields).'
+      additionalProperties:
+        type: array
+        items:
+          type: string
+    CodeError:
+      type: object
+      required:
+      - code
+      properties:
+        code:
+          type: string
+        detail:
+          type: string
+    FeatureDisabled:
+      type: object
+      required:
+      - detail
+      properties:
+        detail:
+          type: string
+        code:
+          type: string
+          const: feature_disabled
+      description: 'Plan feature off. Most modules answer `{detail}` only; POS (INT-033) adds `code: feature_disabled`.'
+    ConflictVersion:
+      type: object
+      required:
+      - detail
+      - current_version
+      properties:
+        detail:
+          type: string
+        current_version:
+          type: integer
+      description: Stale optimistic `version` (theme INT-018, returns INT-026, purchase orders INT-035, …).
+    ConflictOrder:
+      allOf:
+      - $ref: '#/components/schemas/ConflictVersion'
+      - type: object
+        required:
+        - order
+        properties:
+          order:
+            type: object
+      description: 'Orders (INT-007): `{detail, current_version, order}`.'
+    ConflictStatus:
+      allOf:
+      - $ref: '#/components/schemas/ConflictVersion'
+      - type: object
+        required:
+        - status
+        properties:
+          status:
+            type: string
+      description: 'Convert-to-pickup (INT-021): `{detail, current_version, status}`.'
+    ConflictSession:
+      type: object
+      required:
+      - detail
+      - session
+      properties:
+        detail:
+          type: string
+        session:
+          type: object
+      description: Support session lock (INT-042).
+    ConflictAuction:
+      type: object
+      required:
+      - detail
+      - auction
+      properties:
+        detail:
+          type: string
+        auction:
+          type: object
+      description: Storefront bid refused (INT-045).
+    ConflictChanged:
+      type: object
+      required:
+      - detail
+      - changed
+      properties:
+        detail:
+          type: string
+        changed:
+          type: array
+          items: {}
+      description: Checkout lines hidden / out of stock / slot taken (INT-014, INT-036).
+    ConflictConflicts:
+      type: object
+      required:
+      - detail
+      - conflicts
+      properties:
+        detail:
+          type: string
+        conflicts:
+          type: array
+          items: {}
+      description: Multi-location off with stock in several locations (INT-010, INT-025).
+    PageEnvelope:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        next:
+          type:
+          - string
+          - 'null'
+        previous:
+          type:
+          - string
+          - 'null'
+        results:
+          type: array
+          items: {}
+      description: DRF `PageNumberPagination` envelope (`src/lib/schemas/pagination.ts`). Many service views send only `{count, results}`.
+    CountResults:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          minimum: 0
+        results:
+          type: array
+          items: {}

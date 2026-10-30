@@ -941,3 +941,231 @@ Fixed during visual review:
 - One stale Turbopack SSR module after rewriting `provisioning-poller.tsx` caused a transient 500 that cleared after a recompile.
 
 **Not done (stop rule):** the T067 commit and the `rp/13-onboarding-after` tag. T067 is left unchecked in `tasks.md` for that reason.
+
+---
+
+# Phase 003 — Documentation
+
+## 2026-10-28 — Official Step 43 · M-5 P3 modules · 1.13 Domain 9 API + 1.19 Domain 14 API (DOC-164 → 168, DOC-253 → 262)
+
+**Verified first**: the Step 43 row of `specs/003-documentation/execution-plan.md` — Milestone **M-5** (P3 modules), subsection "1.13 Domain 9 API + 1.19 Domain 14 API", DOC-164 → 168 + DOC-253 → 262, 15 tasks, outputs `docs/api/domains/09-b2b/` and `docs/api/domains/14-apps-ai-support/` (Track 1 — English).
+
+**Literal output** (files written/changed; no application code touched; no git commands run):
+
+Added:
+- `docs/api/domains/09-b2b/m36-b2b-wholesale.md` — DOC-165 (`#options`: `{roles, locations, multi_location, default_currency}`, either-permission gate, BFF `options` forwarding + mock-only `_test/bump`), DOC-166 (`#tier-prices`: GET `inventory.view` / POST `catalog.manage` / DELETE, rows ascending with `display_price` in the product's currency, «أدخل عدداً صحيحاً موجباً.» / «يوجد سعر لهذه الكمية مسبقاً.» (incl. the `IntegrityError` race) / «أدخل سعراً صحيحاً.» / «السعر غير موجود.» / «المنتج غير موجود.», `ProductChangeLog` `tier_prices` rows «12+ → 90.00», `B2B_LIVE_RULES`), DOC-167 (`#unit-price-precedence`: variant ?? formula ?? highest tier ≤ qty ?? base; `Cart.__iter__` + checkout with prefetched tiers; draft lines converted into the draft's currency), DOC-168 (`#drafts`: create with the staff-session gate, currency whitelist «عملة غير مدعومة.», explicit-branch rule «لا يوجد فرع متاح — أنشئ فرعاً أولاً أو حدّد location_id.», zero-trust pricing; list with `created_by_name`/`escalated_at`, escalated-first; resolve with 404 «طلب الموافقة غير موجود.» and the `resolve_order_approval` linkage; mock + `requireMocks()` notes; the 8 tests; A.13 re-audit open item).
+- `docs/api/domains/14-apps-ai-support/m30-app-store.md` — DOC-253 (gate chain with «متجر التطبيقات غير مفعّل في خطتك.» / «إدارة التطبيقات لمالك المتجر فقط.», delisted-but-installed `is_listed:false` rule, `install_preview` from `is_billed_for_client` with the «مجاني» case, `suspension_reason`, `whatsapp` ⇄ `whatsapp_bot` translation), DOC-254 (install/activate/deactivate error matrix incl. the while-suspended 403 «التطبيق معلَّق من المنصة — تواصل مع الدعم.», events, charges), DOC-255 (usage event mapping table, summary, the six templates ids 1–6 with `{{var}}` rules and every PATCH error, connect-url `no-store`, the three Celery tasks), DOC-256 (12-route table, migration `0233` `AppUsageLog.order` SET_NULL, QR-proxy + monthly-counter legacy notes, BFF `apps`/`sharwa_ai` split, 7 tests).
+- `docs/api/domains/14-apps-ai-support/m31-sharwa-ai.md` — DOC-257 (status payload, first-call session start, live polling, gateway-outage rule, the DISCONNECTED/SESSION_EXPIRED/LOGGED_OUT/BANNED/FAILED/ERROR → Arabic message table, `record_status` single rule, reconnect 409 «واتساب مربوط فعلاً.»), DOC-258 (settings GET/PUT all-or-nothing, 1–50/null override, platform default 4), DOC-259 (console-token RS256 claims, `auth_tenant_schema` pin, both 503 sentences, `no-store`/`no-referrer`, the `sharwa-console-ready` / `sharwa-console-token` handshake as a Mermaid sequence diagram, origin from `console_url`, TTL 900 s).
+- `docs/api/domains/14-apps-ai-support/m32-support.md` — DOC-260 (11-route table, session filters + `ai:{installed, enabled}`, party-name resolution incl. `{id: null, name: «مالك المتجر»}`, timeline `2×id` / `2×id+1` scheme, dot-cursor with legacy decode, system rows, signed media, the redaction key list), DOC-261 (takeover/release/close `{version}` with 409 `{detail, session}`, `staff_close` refusal, idempotent reply 201/200 on `client_id`, «استلم الجلسة أولاً لتتمكن من الردّ.», `deliver_staff_reply` on commit), DOC-262 (tickets CRUD with the field mapping, `closed_at` follows status, assignees without `staff.view`, migration `0234`).
+
+Changed:
+- `docs/api/domains/09-b2b/README.md` — stub replaced by the Domain 9 overview (route table with BFF paths/switches, providers, no-migration note, `NegotiationDraft` open item).
+- `docs/api/domains/14-apps-ai-support/README.md` — Status column added; all three pages marked written (Step 43).
+- `specs/003-documentation/documentation-roadmap.md` — DOC-164 → 168 and DOC-253 → 262 ticked with Status lines; frontmatter `status:` 431 → **446 / 536**; next pointer → Step 44.
+- `docs/CHANGELOG.md` — Step 43 entry appended.
+
+**Quality gate**: all 58 «…» quotes across the four new pages machine-checked against the `sharwa_saas` + `src` corpora — 56 verbatim, 2 documented f-string instantiations («منتج غير صالح: 41», «تُضاف الرسوم شهرياً …»). Route counts verified against `api/urls.py` (5 B2B rows, 12 M30 routes, 4 M31 routes before `apps/<str:code>/`, 11 M32 routes). Tests counted: 8 + 7 + 6 + 6.
+
+**Discrepancies**: none — all 15 tasks matched the code on every checked rule.
+
+**Stop rule honored:** stopped after Step 43; nothing committed.
+
+## 2026-10-28 — Official Step 44 · M-5 · 1.18 Domain 13 API (part A: inbox & channels) (DOC-222 → 232)
+
+**Verified first**: the Step 44 row of `specs/003-documentation/execution-plan.md` — Milestone **M-5**, subsection "1.18 Domain 13 API (part A: inbox & channels)", DOC-222 → 232, 11 tasks, output `13-*/m27-inbox-channels.md` (Track 1 — English). The directive's `.speckit/003-documentation` path does not exist; used `specs/003-documentation` (as in Steps 41–43).
+
+**Literal output** (files written/changed; no application code touched; no git commands run):
+
+Added:
+- `docs/api/domains/13-channels-operations/m27-inbox-channels.md` — DOC-222 (`#2-access-gate-chain`: 6-gate table — session 401 «انتهت جلستك، سجّل الدخول مجدداً.», plan feature `social_channels` 403 «ميزة قنوات التواصل غير مفعّلة في خطتك.», inbox membership `channels.inbox.access` 403 «ليست لديك صلاحية لهذا الإجراء.», owner-only 403 «إعدادات القنوات لمالك المتجر فقط.» with the template-list exception, StaffChannelAccess 404 «المحادثة غير موجودة.» / 403 «لا تملك صلاحية الردّ على هذه القناة.», disconnected 409 «القناة غير مربوطة — لا يمكن الردّ.»; whitelist rules; FR-27.08 secrecy), DOC-223 (`#41`–`#43`: counters `{unread}` over visible channels, list filters incl. `assigned=me` owner-means-unassigned, the UI ⇄ Django channel-code table with the facebook/instagram `source_platform` split and `whatsapp` added, unknown codes never listed, reopen rule resolved/pending → open), DOC-224 (`#44`: `?after=` polling, reply body `{text?, template_id?, product_id?, client_id}` + `Idempotency-Key`, queued row → same-row sent/failed via `dispatch_channel_message(message_id=…)` on per-channel queues, provider reason verbatim in `error_detail` (test's «انقضت نافذة الـ 24 ساعة.»), Mermaid lifecycle diagram, retry-with-same-`client_id` → 200 first message, template fills empty text, product card `compose_product_message`), DOC-225 (`#45`: body table, ChatToOrderError 400 messages verbatim, 409 «المحادثة مرتبطة بالطلب #<id> مسبقاً.» re-checked under `select_for_update`, stock lock + decrement + `is_backordered`, `sales_channel='chat'` + normalized `traffic_source` + channel default fulfilment, store-currency fix + `record_event` «أُنشئ من محادثة #<id>.», in-thread confirmation), DOC-226 (`#51`–`#52`: list row + four UNHEALTHY messages from the 15-min health task, Telegram getMe → setWebhook → install + bridge with 400 `{bot_token}` «رمز البوت غير صحيح — انسخه كما يعطيه @BotFather.», disconnect keeps conversations read-only, `_safe_return` no-open-redirect rules, 404 «هذه القناة لا تُربط عبر OAuth.», OAuth round-trip Mermaid diagram with `?connected=` / `?oauth_error=`), DOC-227 (`#53`–`#54`: keyword CRUD with every validation message and case-insensitive uniqueness «يوجد محفّز بالكلمة نفسها.», `ChannelReplyTemplate` new in INT-037, GET for every inbox member / writes owner-only), DOC-228 (`#55`: catalog-sync GET/PUT/run (409 not connected / unhealthy), report per `ChannelProductLink` status, `products/?sync_status`, resync → `sync_channel_product`, static TikTok categories + legacy codes, category-mapping body; ⚠️ callout: Meta sync needs a mapping no screen offers — «لا يوجد ربط تصنيف لهذا المنتج على هذه القناة.»), DOC-229 (`#56`: 4-row matrix meta/tiktok/telegram/whatsapp, all-rows-at-once save, reply folded into view), DOC-230 (`#3` 21-route table; `#6`: migration `0231_inbox_api` field list, Celery tasks + queues + Beat cadence, bugs-fixed list, BFF `inbox/[...path]` + `channels/[[...path]]` via `liveOrMock(…, "channels", …)`, `_mock/*` fixture-only, `.env.example`, tests 10 + 8 legacy suites).
+- `docs/api/domains/13-channels-operations/m28-marketplaces.md` — DOC-231 (`#2` 3-gate chain — permission key before plan feature, reverse of M27, noted; `#41` hub row with counters/last job; `#42` Amazon OAuth: LWA env error, `state` nonce, validated return, callback pins `SAUDI_MARKETPLACE_ID` then `?connected=amazon` / `?oauth_error=` («اربط حساب أمازون أولاً.», «حساب البائع غير مشارك في سوق أمازون السعودية — لا يمكن تثبيت الربط.»), Mermaid diagram; `#43` noon connect `api_key`+`seller_id`+`marketplace_country` (SA→SAR, AE→AED, `NOON_MARKETPLACE_ADAPTER` fake switch «محوّل نون الحقيقي غير مبني بعد…»), disconnect preserves listings; `#44` settings with all validation messages, `import_marketplace_fulfilled` added, `auto_push` = re-send price/stock of published listings with the Next labels), DOC-232 (`#5`: lazy `materialize_listings` (needs_identifier/unpublished, no auto-push, SKU default/cap/duplicate-skip), price formula `override` else `base_sar × fx × (1 + markup%)` + `display_computed_price`, identifier table asin/nsku/ean/upc/gtin with regexes + per-adapter support errors, `set_identifier` → unpublished until pushed, price_override rules). Page marked part A; DOC-233/234 sections land in Step 45.
+
+Changed:
+- `specs/003-documentation/documentation-roadmap.md` — DOC-222 → 232 ticked with Status lines; frontmatter `status:` 446 → **457 / 536**; next pointer → Step 45.
+- `docs/CHANGELOG.md` — Step 44 entry inserted at the top of the entries list.
+
+**Quality gate**: all 96 distinct «…»/Arabic-"…" strings across the two pages machine-checked against the `sharwa_saas` + `src` corpora — all verbatim or documented f-string instantiations/placeholders (incl. «جارٍ الإرسال» = the UI optimistic-bubble label in `src/features/inbox/api.ts:135`, vs the model label «قيد الإرسال» in migration 0231 — both quoted in their own contexts). Route counts verified against `api/urls.py` (21 M27 routes at lines 565-585, 14 M28 at 588-601). Tests counted: 10 (`test_channels_api.py`) + 9 (`test_marketplaces_api.py`); 8 legacy `test_social_channels_phase*` suites. The one-off gate script was deleted after use (per-step tree rule: only `docs/` + `specs/` change).
+
+**Discrepancies**: none — all 11 tasks matched the code on every checked rule. Two nuances recorded as page prose, not discrepancies: M28's permission-before-feature gate order; keyword case-insensitive uniqueness comes from the service `iexact` check on top of the DB `unique=True`.
+
+**Stop rule honored:** stopped after Step 44; nothing committed.
+---
+
+## 2026-10-29 — Official Step 45 · M-5 · 1.18 Domain 13 API (part B: marketplaces, dropshipping) (DOC-233 → 242)
+
+**Verified first**: the Step 45 row of `specs/003-documentation/execution-plan.md` — Milestone **M-5**, subsection "1.18 Domain 13 API (part B: marketplaces, dropshipping)", DOC-233 → 242, 10 tasks. DOC-233/234 complete `m28-marketplaces.md`; DOC-235…241 write `m29-dropshipping.md`; DOC-242 (the first POS task, its own roadmap Output) opens `m16-pos.md` — parts of POS beyond it stay with Step 46. The directive's `.speckit/003-documentation` path does not exist; used `specs/003-documentation`.
+
+**Literal output** (files written/changed; no application code touched; no git commands run):
+
+Added:
+- `docs/api/domains/13-channels-operations/m29-dropshipping.md` — DOC-235 (`#4-suppliers-connections-and-settings--doc-235`: 3-gate chain session/`channels.dropshipping.manage`/feature «ميزة الدروبشيبينغ غير مفعّلة في خطتك.», supplier row + `attention_total` + capability flags + registry `credential_fields` — مخازن's single «رمز الربط (API Token)», connect adapter-first (`400` `credentials.<field>`/`429` `<اسم المورد> يطلب الانتظار قليلاً…`/`502`), disconnect, settings bounds «الفاصل بين <low> و<high> دقيقة.» + «إحالة الطلبات» forwarding), DOC-236 (`#5…`: sync-inventory 202 + three 409s «هذا المورد لا يدعم مزامنة المخزون المباشرة…»/«المورد غير مربوط.»/«لا منتجات مستورَدة من هذا المورد بعد.», webhook rotate URL+secret once `no-store`, CJ live catalogue — UI page = CJ page 24, `ext:<pid>` ids, computed `importing`; import 202 with the 500 cap «الحد الأقصى 500 منتج في الدفعة الواحدة.» and «استيراد آخر جارٍ لهذا المورد…»), DOC-237 (`#6…`: engine formula `(cost_sar + shipping) × (1 + markup%) + fixed_add` floored by min margin + rounding; selection chain override→category→supplier→default→platform; translation table with priority inversion `1000 − priority` + worked example; `scope='product'` excluded; `fx daily` = `StoreSetting.usd_to_sar`; simulate (same RuleBook, affected = imported unlocked, below-cost flags, overlaps) and apply (`price_sync` over exactly those, «القاعدة غير مفعّلة.»); all CRUD messages incl. the three new fields), DOC-238 (`#7-flat-feeds--doc-238`: create multipart/`{url}` with all errors incl. «الحد الأقصى 20 ملفاً نشطاً — عطّل ملفاً قديماً أولاً.», **the full 20-key mapping table** with the six new fields (`price` ≥ cost + `price_locked`, `compare_at_price` → `old_price`, `gtin` barcode fallback, `extra_images`, `brand` created by name, `supplier_url`), `variant_sku` parent-column grouping, legacy-only keys survive, «العمود مستخدم في حقل آخر (<key>).», status machine draft→mapped→approved→running/job, preview raw rows, approve ≤5% + contiguous parents «لا يمكن الاعتماد: الأخطاء تتجاوز 5%…» (no import start), run 202, link-only schedule 60–10080 «الجدولة لملفات الروابط فقط…» + 5-min fetch slack, errors CSV + `meta/`), DOC-239 (`#8…`: filters + attention statuses `failed·rejected·held`, resubmit via `send_now` + 409s, HTML-only legacy ⚠️ callout incl. «منتجاتي»), DOC-240 (`#9…`: job type mapping table, `supplier_code: all`, job row, CSV «المرجع/الرمز/الرسالة», per-type retry table, Beat machinery + first-pass-baseline repricing), DOC-241 (`#3` 27-route table + `#10…`: migration `0232_dropshipping_api` fields, mock alignment, BFF/`dropshipping` live key, `scripts/dropshipping-check.ts`, 11 tests + 5 legacy suites).
+- `docs/api/domains/13-channels-operations/m16-pos.md` — DOC-242 (part 1; DOC-243 → 248 in Step 46): `#2-access--gate-chain` (session 401 «انتهت جلستك…» → feature `pos` `403 {detail: «ميزة نقطة البيع غير مفعّلة في خطتك.», code: feature_disabled}` → locations `StaffLocationRole ∩ has_pos_terminal` → M18 keys; variance = owner/`staff.manage`/«مدير الفرع»·«مدير المتجر»), `billing/0013_seed_pos_feature` + requires_plan/subscriptions-off note, `#3-endpoint-summary--the-14-routes` (⚠️ discrepancy callout: roadmap 15 vs code 14 — force-close is Celery-only, surfaced via `force_closed_notice`), `#4-cashier-context` (locations, ceiling logic, `can_discount`/`can_refund`/`can_resolve_variance`, force-close notice), `#5-registers` (location 403 «لست معيَّناً على هذا الموقع.», disabled register shown only with an open shift, `is_mine`).
+
+Changed:
+- `docs/api/domains/13-channels-operations/m28-marketplaces.md` — part A completed: new `#6-listing-push-and-marketplace-jobs--doc-233` (push split — NO-ID rows in the same job, `400` «كل القوائم المحددة تحتاج معرّفاً قبل الدفع.», Amazon Feeds above 20 with `409` «هناك عملية نشر جماعي جارية لهذا السوق — انتظر اكتمالها.» else per-listing tasks; trigger `order_pull`/`fba_inventory` 409s «يجري سحب الطلبات الآن بالفعل…»/«يجري جلب مخزون المستودع الآن بالفعل.»/«هذا السوق لا يدعم قراءة مخزون مستودعه.» + 30-min stale takeover; job view labels «التاجر»/«النظام (تلقائي)»/«النظام (مجدول)» + summary «أُنشئ … · حُدّث … · تُخطّي …»; errors CSV with the 8 Arabic columns «SKU البائع»…«آخر دفعة») and `#7-marketplace-orders-and-shipment-re-confirmation--doc-234` (order row, confirmation mapping table `''→not_required`, `needs_tracking|queued→pending`, `confirmed`, `failed`; hint «أدخل رقم التتبع ليُؤكَّد الشحن للسوق آلياً.»; all re-confirmation 409s verbatim); header Source/Tests, route-table Doc column, §8 wiring and §9 open items updated.
+- `specs/003-documentation/documentation-roadmap.md` — DOC-233 → 242 ticked with Status lines (audit-corrected `--` anchor convention); frontmatter `status:` 457 → **467 / 536**; next pointer → Step 46.
+- `docs/CHANGELOG.md` — Step 45 entry inserted above the Step-44 audit entry.
+
+**Quality gate**: all 129 distinct «…»/JSON Arabic strings across the three pages machine-checked against the `sharwa_saas` + `src` corpora (script run from the temp dir, outside the repo). It caught 6 issues, all fixed before publishing: one true misquote (m28 «آليا.» → «آلياً.» with tanwin), my «…» abbreviation of the extensions message (now «الامتدادات المسموحة: <القائمة>»), two nested-«» renderings (the credentials message now shown as code since the message itself contains «…»; the 429 detail's placeholder no longer wrapped in «» that the f-string doesn't have), plus two f-string constants («20 ملفاً», «500 منتج») that matched once the script's loose variant was repaired (it had been built from an already-substituted pattern — dead code — now fixed). Route counts verified against `api/urls.py` (27 dropshipping at 604-630, 14 POS at 521-534). Tests counted: 9 + 5 legacy (M28), 11 + 5 legacy (M29).
+
+**Discrepancies**: one — DOC-242 says 15 POS routes; the code registers 14 (force-close is a Celery transition surfaced via `pos/context/`, not a route). Flagged in `m16-pos.md` §3 and in the task's Status line. Nuances recorded as page prose, not discrepancies: the feed schedule presets (60/360/720/1440) are UI choices over the server's 60–10080 range; M29's gate order (permission before feature) matches the roadmap's own listing.
+
+**Stop rule honored:** stopped after Step 45; nothing committed.
+---
+
+## 2026-10-29 — Official Step 46 · M-5 · 1.18 Domain 13 API (part C: POS, bookings) (DOC-243 → 252)
+
+**Verified first**: the Step 46 row of `specs/003-documentation/execution-plan.md` — Milestone **M-5**, subsection "1.18 Domain 13 API (part C: POS, bookings)", DOC-243 → 252, 10 tasks, outputs `m16-pos.md` (completion) and `m26-bookings.md` (new). The directive's `.speckit/003-documentation` path does not exist; used `specs/003-documentation`.
+
+**Literal output** (files written/changed; no application code touched; no git commands run):
+
+Added:
+- `docs/api/domains/13-channels-operations/m26-bookings.md` — DOC-249 (`#4-bookable-services-and-availability--doc-249`: services row + `availability_count`, availability GET/PUT full replacement with per-row `{results: [{field: [msg]}]}` errors «يوم غير صالح (0 = الاثنين … 6 = الأحد).»/«وقت غير صالح.»/«يجب أن ينتهي الوقت بعد بدايته.»/«تتداخل مع نافذة أخرى في اليوم نفسه.», 70-window cap, paused windows untouched, **0 = Monday**, gate session → «ميزة الحجوزات غير مفعّلة في خطتك.» with **no M18 key**), DOC-250 (`#5…`: calendar filters with store-zone bounds + inclusive `to` + status list «حالة غير معروفة.», computed `is_expired`, customer «زائر المتجر», cancel 409 «هذا الحجز ملغى مسبقاً.» + `order_effect` «بقي الطلب #<id> كما هو؛ راجعه لاسترجاع المبلغ إن لزم.» + AuditLog), DOC-251 (`#6-buyer-slots-and-holds--doc-251`: `?date` response + 21-day `next_available_date`, **the 5-step slot algorithm** (weekday windows → 30-min candidates → drop past → booked/held overlap, expired holds never count → store-zone ISO), hold table 201/400 «اختر موعداً صالحاً.»/«هذا الوقت خارج ساعات توفر الخدمة.»/409 «لم يعد هذا الموعد متاحاً.» (incl. IntegrityError race)/429 «احتجزت مواعيد كثيرة…», same-session re-hold, `release_slot_id`, 15-min `HOLD_MINUTES`, naive = store wall clock), DOC-252 (`#7-hold-lifecycle-and-the-cartcheckout-integration--doc-252`: **Mermaid state diagram** held → booked | expired → cancelled; the five bug fixes; cart add needs `start_datetime` → quantity-1 `cart_bookings`, decrease/remove/clear release, `cart_count`/`product_qty` count bookings, disabled «+»; buy-now isolated `buy_now_bookings` with 409 `{detail: «لم يعد هذا الموعد متاحاً.», changed: [المنتج]}`; checkout locking + the expired-hold rejection + holds → booked; no migration; BFF/env/mock/tests 9).
+
+Changed:
+- `docs/api/domains/13-channels-operations/m16-pos.md` — completed (part 1 was Step 45): header Source/Tests updated, route-table markers resolved, and new §6–§13: DOC-243 (`#6-shifts-open-current-pending--doc-243` outcome table — `200` own-shift idempotent open, 409 f-strings «لديك وردية قائمة على «<الجهاز>».»/«الجهاز مشغول بوردية <الموظف>.»/«الجهاز مشغول بوردية أخرى.», disabled 400 «جهاز الكاش معطّل ولا يمكن فتح وردية جديدة عليه.», float 400; notice clearing), DOC-244 (`#7…`: movements note mandatory «اذكر سبب الحركة.» + cash-out ceiling «المبلغ أكبر من النقد المتوقع في الدرج.», close formula + shortage → `ApprovalRequest(shift_shortage)`, resolve-variance checks incl. «تغيّرت الوردية، أعد التحميل.»/«لا يمكنك اعتماد عجز ورديتك.», **sign convention callout** `Shift.variance` expected−actual vs `display_variance` actual−expected, both decisions close, M18-screen path), DOC-245 (`#8…`: `sellable()` excludes bundles+bookable+auction, barcode `exact`, quote line errors, sale = M06 order `sales_channel='pos'` + `POS-<shift>-<seq>` + `discount_allocated` cart share + `_apply_delta` stock + serialized `sold` + cash drawer vs Sharwa-Pay-outside + timeline «أُنشئ الطلب من نقطة البيع (<الجهاز>) بواسطة <الاسم>.», **idempotency contract** `PosIdempotencyKey` first-in-transaction, typed keys «مفتاح منع التكرار مستخدم لعملية أخرى.»), DOC-246 (`#9…`: **decision table** — within ceiling / manager code «رمز المدير غير صحيح.» + 5-fails lock «أُقفل رمز المدير مؤقتاً بعد 5 محاولات خاطئة…» + `set_pos_manager_code` + DEBUG `2468` / approval_id pending 409 «طلب الاعتماد ما زال بانتظار المدير.» / rejected 403 «رفض المدير هذا الخصم.» / one-receipt reuse 409 «استُخدم هذا الاعتماد لإيصال سابق…» / granted-% 403 / neither 403 `discount_exceeds_limit` «الخصم يتجاوز حدّك (<n>%) — يلزم اعتماد المدير.»; `discount-approvals/` 201 «أُرسل طلب الاعتماد إلى المدير.»), DOC-247 (`#10…`: gates «ليست لديك صلاحية الاسترجاع.»/«افتح وردية لتسجيل الاسترجاع في الدرج.»/«أقصى مبلغ قابل للاسترجاع …», OTP 428 `{"code": "otp_required", "detail": "استرجاع كبير — أدخل رمز التحقق المرسل إلى جوال مالك المتجر.", …}`, receipt+amount binding, store-WhatsApp «لا يوجد رقم واتساب مسجَّل للمتجر…»/«أُرسلت رموز تحقق كثيرة…», 3-attempt lock «أُقفل الاسترجاع مؤقتاً بعد 3 محاولات خاطئة…», reused «استُخدم رمز التحقق هذا مسبقاً…», DEBUG `123456`, **Mermaid 428→OTP→retry diagram**, settlement `process_order_refund(manual)` + cash drawer movement), DOC-248 (`#11…`: force-close Beat */30 + 12 h + version bump + notice cycle, migration `0229_pos_api` fields + `billing/0013`, BFF/env/`__reset`, 17 tests + legacy suites).
+- `specs/003-documentation/documentation-roadmap.md` — DOC-243 → 252 ticked with Status lines; frontmatter `status:` 467 → **477 / 536**; next pointer → Step 47.
+- `docs/CHANGELOG.md` — Step 46 entry inserted above the Step-45 audit entry.
+
+**Quality gate**: all 93 distinct «…»/JSON Arabic strings across the two pages machine-checked (script in the temp dir; loose variant built from `strict`, `re.S` enabled for line-split f-strings). Three initial misses, all fixed before publishing: the OTP count word «محاولة/محاولتان» is a runtime variable — now the fixed prefixes «رمز التحقق غير صحيح.» / «انتهت صلاحية الرمز — …» are quoted plus the test's rendered «المتبقي 2 محاولتان.»; my «…» abbreviation of the same message removed; the checkout expired-hold message quoted as its two literal fragments around the f-string date. Also caught and fixed two "self-correcting" drafting fragments before they shipped («الحجز غير موجودة…» in m26 §5, «مفتاح منع التكرار مستخدم لعملية أخرى.» double-render in the DOC-245 status line). Route counts verified against `api/urls.py` (6 bookings routes at 81-82 + 559-562; POS 14 unchanged). Tests counted: 17 POS + 9 bookings.
+
+**Discrepancies**: none new. Carried: DOC-242/248's 15-route count vs the 14 registered (force-close has no HTTP route) — already flagged in `m16-pos.md` §3 since Step 45, referenced in DOC-248's Status line. (Note: the concurrent audit session's Step-45 review landed mid-step, confirmed that discrepancy and fixed five bare-Arabic supplier names in the Step-45 pages; its «…»-quoting convention for registry display names was applied to the new pages.)
+
+**Stop rule honored:** stopped after Step 46; nothing committed.
+---
+
+## 2026-10-29 — Official Step 47 · M-5 P3 modules · 2.9 B2B + 2.15 Apps/AI/support + 2.17 Sharwa Pay manuals (DOC-357 → 358, DOC-418 → 424, DOC-428 → 430)
+
+**Verified first**: the Step 47 row of `specs/003-documentation/execution-plan.md` — Milestone **M-5**, subsection "2.9 B2B + 2.15 Apps/AI/support + 2.17 Sharwa Pay manuals", 12 tasks, Track 2 (Arabic, RTL). The directive's `.speckit/003-documentation` path does not exist; used `specs/003-documentation`. Output paths taken from the roadmap tasks (`docs/guides/merchant/09-b2b/`, `docs/guides/merchant/14-apps-ai-support/`, `docs/guides/sharwa-pay/08-finance/`), not from the directive's examples. The device shell was unavailable: files were staged, written in the cloud workspace and committed back.
+
+**Literal output** (files written/changed; no application code touched; no git commands run):
+
+Added:
+- `docs/guides/merchant/09-b2b/create-draft.md` — DOC-357
+- `docs/guides/merchant/09-b2b/approve-drafts.md` — DOC-358
+- `docs/guides/merchant/14-apps-ai-support/app-store.md` — DOC-418
+- `docs/guides/merchant/14-apps-ai-support/whatsapp-app.md` — DOC-419
+- `docs/guides/merchant/14-apps-ai-support/whatsapp-templates.md` — DOC-420
+- `docs/guides/merchant/14-apps-ai-support/sharwa-ai-pairing.md` — DOC-421
+- `docs/guides/merchant/14-apps-ai-support/sharwa-ai-settings-console.md` — DOC-422
+- `docs/guides/merchant/14-apps-ai-support/support-sessions.md` — DOC-423
+- `docs/guides/merchant/14-apps-ai-support/support-tickets.md` — DOC-424
+- `docs/guides/sharwa-pay/08-finance/sign-in.md` — DOC-428
+- `docs/guides/sharwa-pay/08-finance/wallet-and-transactions.md` — DOC-429
+- `docs/guides/sharwa-pay/08-finance/topup-and-withdraw.md` — DOC-430
+
+Changed:
+- `docs/guides/merchant/09-b2b/README.md`, `docs/guides/merchant/14-apps-ai-support/README.md`, `docs/guides/sharwa-pay/08-finance/README.md` — «الحالة» column, all pages «مكتوبة (الخطوة 47)».
+- `docs/guides/_assets/shots.json` — 24 entries registered (191 → 215); `docs/guides/_screenshots.md` — 24 rows in §7 + the Step-47 not-captured note.
+- `specs/003-documentation/documentation-roadmap.md` — the 12 tasks ticked with Status lines; frontmatter `status:` 477 → **489 / 536**; next pointer → Step 48.
+- `docs/CHANGELOG.md` — Step 47 entry inserted at the top.
+
+**Quality gate**: 498 distinct «…» quotations machine-checked against the `sharwa_saas` + `src` corpora — all verbatim or rendered template strings; permission labels confirmed in migrations 0159/0182. Every page opens `<div dir="rtl">` + blank line and closes `</div>`; template section order kept; Latin text only in code spans; all 76 relative links and glossary anchors resolve. Two content errors caught and fixed before publishing (wallet creation happens on the first top-up *request*; an empty editor cannot be saved to restore a WhatsApp template).
+
+**Discrepancies**: four — DOC-419 no WhatsApp connection status on the panel; DOC-422 button text «افتح وحدة تحكم شروة AI» vs the roadmap's «فتح لوحة الذكاء»; DOC-423 «مركز الدعم» hidden from read-only members by the `support.takeover_session` gate; DOC-429 the wallet's «ريال يمني (قديم)/(جديد)» vs Sanaa/Aden. Carried: tickets under «محفظة المتجر» (Step 10).
+
+**Stop rule honored:** stopped after Step 47; nothing committed.
+---
+
+## 2026-10-29 — Official Step 48 · M-5 P3 modules · 2.14 Sales channels manuals (part A: inbox, channels, marketplaces, dropshipping) (DOC-398 → 408)
+
+**Verified first**: the Step 48 row of `specs/003-documentation/execution-plan.md` — Milestone **M-5**, subsection "2.14 Sales channels manuals (part A: inbox, channels, marketplaces, dropshipping)", DOC-398 → 408, 11 tasks, Track 2 (Arabic, RTL). The directive's `.speckit/003-documentation` path does not exist; used `specs/003-documentation`. Output paths taken from the roadmap tasks (`docs/guides/merchant/13-channels-operations/`), not from the directive's `13-communications` example. The device shell was unavailable: files were staged, written in the cloud workspace and committed back.
+
+**Literal output** (files written/changed; no application code touched; no git commands run):
+
+Added:
+- `docs/guides/merchant/13-channels-operations/inbox.md` — DOC-398
+- `docs/guides/merchant/13-channels-operations/chat-to-order.md` — DOC-399
+- `docs/guides/merchant/13-channels-operations/connect-channels.md` — DOC-400
+- `docs/guides/merchant/13-channels-operations/keywords-templates-access.md` — DOC-401
+- `docs/guides/merchant/13-channels-operations/catalog-sync.md` — DOC-402
+- `docs/guides/merchant/13-channels-operations/marketplaces-connect.md` — DOC-403
+- `docs/guides/merchant/13-channels-operations/marketplaces-listings.md` — DOC-404
+- `docs/guides/merchant/13-channels-operations/marketplaces-jobs-orders.md` — DOC-405
+- `docs/guides/merchant/13-channels-operations/dropshipping-suppliers.md` — DOC-406
+- `docs/guides/merchant/13-channels-operations/dropshipping-catalog.md` — DOC-407
+- `docs/guides/merchant/13-channels-operations/dropshipping-pricing.md` — DOC-408
+
+Changed:
+- `docs/guides/merchant/13-channels-operations/README.md` — «الحالة» column; DOC-398 → 408 «مكتوبة (الخطوة 48)», DOC-409 → 417 «مخطَّطة».
+- `docs/guides/_assets/shots.json` — 23 entries registered (215 → 238); `docs/guides/_screenshots.md` — 23 rows in §7 + the Step-48 not-captured note.
+- `specs/003-documentation/documentation-roadmap.md` — the 11 tasks ticked with Status lines; frontmatter `status:` 489 → **500 / 536**; next pointer → Step 49.
+- `docs/CHANGELOG.md` — Step 48 entry inserted at the top.
+
+**Quality gate**: 715 distinct «…» quotations machine-checked against the `sharwa_saas` + `src` corpora — all verbatim or rendered template strings (permission labels confirmed in migrations 0186/0194/0200). Every page opens `<div dir="rtl">` + blank line and closes `</div>`; template section order kept; Latin text outside code spans is limited to product and technical names (Meta, TikTok Shop, CJ Dropshipping, Seller Central, API, SKU, FBA/FBN, Webhook); all relative links and heading anchors resolve. Content corrections made while writing: the template filter matches title *or* body; a product card is sent as soon as it is picked; the hub shows only the «بلا معرّف» count, not a failed count; the CSV contents were not overstated; per-supplier webhook/inventory support is described as "where supported" because the CJ adapter was not read.
+
+**Discrepancies**: seven — DOC-398 empty state omits WhatsApp; DOC-399 dialog promises delivery fees the chat order does not add; DOC-400 no WhatsApp row on the channels page + two owner-only sentences; DOC-405 «إعادة تأكيد» vs «إعادة تأكيد الشحنة»; DOC-406 «كنوات» vs «قنوات»; DOC-408 lock rule ≠ "supplier fixed price" with no unlock action; DOC-408 «ثابت» FX multiplies SAR costs too.
+
+**Stop rule honored:** stopped after Step 48; nothing committed.
+---
+
+## 2026-10-29 — Official Step 49 · M-5 P3 modules · 2.14 Sales channels manuals (part B: POS, bookings) (DOC-409 → 417)
+
+**Verified first**: the Step 49 row of `specs/003-documentation/execution-plan.md` — Milestone **M-5**, subsection "2.14 Sales channels manuals (part B: POS, bookings)", DOC-409 → 417, 9 tasks, Track 2 (Arabic, RTL). The directive's `.speckit/003-documentation` path does not exist; used `specs/003-documentation`. Output paths taken from the roadmap tasks (`docs/guides/merchant/13-channels-operations/`). DOC-409/410 (dropshipping feeds, supplier orders/jobs) belong to this range although the label says "POS, bookings". The device shell was unavailable: files were staged, written in the cloud workspace and committed back.
+
+**Literal output** (files written/changed; no application code touched; no git commands run):
+
+Added:
+- `docs/guides/merchant/13-channels-operations/dropshipping-feeds.md` — DOC-409
+- `docs/guides/merchant/13-channels-operations/dropshipping-orders-jobs.md` — DOC-410
+- `docs/guides/merchant/13-channels-operations/pos-open-shift.md` — DOC-411
+- `docs/guides/merchant/13-channels-operations/pos-sell.md` — DOC-412
+- `docs/guides/merchant/13-channels-operations/pos-discounts.md` — DOC-413
+- `docs/guides/merchant/13-channels-operations/pos-refunds.md` — DOC-414
+- `docs/guides/merchant/13-channels-operations/pos-close-shift.md` — DOC-415
+- `docs/guides/merchant/13-channels-operations/bookings-services.md` — DOC-416
+- `docs/guides/merchant/13-channels-operations/bookings-slots.md` — DOC-417
+
+Changed:
+- `docs/guides/merchant/13-channels-operations/README.md` — DOC-409 → 417 linked, Arabic titles, «مكتوبة (الخطوة 49)».
+- `docs/guides/_assets/shots.json` — 23 entries registered (238 → 261); `docs/guides/_screenshots.md` — 23 rows in §7 + the Step-49 not-captured note.
+- `specs/003-documentation/documentation-roadmap.md` — the 9 tasks ticked with Status lines; frontmatter `status:` 500 → **509 / 536**; next pointer → Step 50.
+- `docs/CHANGELOG.md` — Step 49 entry inserted at the top.
+- `execution_log.md` — this entry.
+
+**Quality gate**: every «…» quotation machine-checked against the `sharwa_saas` + `src` corpora; the misses were template strings with interpolation (`#`, counts, `{MAX_WINDOWS}`, `{NOTE_MAX}`, `{left} {word}`), permission labels documented in `permissions-matrix.md`, and sibling-page strings. Three non-verbatim quotes were unquoted («مدفوعاً», «مُباع», the formula «المعدود − المتوقع»). Every page opens `<div dir="rtl">` + blank line and closes `</div>`; template section order kept; at most 8 numbered steps per page; all relative links resolve (the 02/04/10/12 folders confirmed on the device); glossary anchors `#5-المخزون-والمواقع-والورديات` and `#6-المنتجات-والقنوات` exist. Content corrections made while writing: removed unsupported claims (Excel-encoding speculation, "waiting does not block selling", "locked by manager", "no deferred/split payment"); the manager code and the `set_pos_manager_code` command and the DEBUG test code are not published; the third POS close-shift screenshot became the shortage outcome because the mock has no pending shift seed.
+
+**Discrepancies**: nine groups — DOC-409 wizard defaults, no feed delete/disable, raw preview values, two errors-CSV shapes; DOC-410 no jobs type filter, old-screens-only features; DOC-411 no register-management UI, no sidebar link; DOC-412 zero-padded receipt number; DOC-413 manager code not settable from the UI, machine code `discount_exceeds_limit` never shown, approver not recorded on code approvals; DOC-414 refund threshold without UI, misleading Sharwa Pay toast; DOC-415 variance sign convention differs between screen and DB/approval, reject also closes, no justification field; DOC-416 no permission key, paused windows not shown, feature-off is a route gate; DOC-417 calendar instead of list, cancel offered for booked only. Details in `docs/CHANGELOG.md`.
+
+**Stop rule honored:** stopped after Step 49; nothing committed.
+---
+
+## 2026-10-30 — Official Step 52 · M-6 · 4.2 Coverage, consistency & publishing (DOC-533 → 536) — Phase 003 closing step
+
+**Verified first**: the Step 52 row of `specs/003-documentation/execution-plan.md` — Milestone **M-6**, subsection "4.2 Coverage, consistency & publishing", DOC-533 → 536, 4 tasks, outputs "`docs/_coverage.md`, link/term checks, A.13 fixes, publishing decision"; plan rule 7 allows the three A.13 code fixes in this step only. (The prompt named `.speckit/003-documentation`; the roadmap lives in `specs/003-documentation/`.)
+
+**Environment**: the shell on fares's computer was unavailable ("Workspace unavailable") and the Filesystem connector failed on every call (schema error), so files were staged into the cloud workspace, edited there, checked with the new scripts against a mirror of the repository tree, and committed back. Read access to the Django repository on GitHub was refused, so no Python run of `sharwa_saas` was possible (DOC-520 stays open).
+
+**Sign-offs asked and given by fares (2026-10-30)**: DOC-007 + DOC-014, DOC-284, DOC-011 + DOC-012 (Step 51 live run accepted), DOC-536 rule; DOC-522 → option A; publishing → repository only, for now.
+
+**Literal output** (no git commands run):
+
+Added:
+- `docs/_coverage.md` — DOC-533 (generated by `docs/_tools/coverage.py`)
+- `docs/_verification.md` — DOC-534 § Consistency, DOC-535 fixes, DOC-536 consequences
+- `docs/_tools/check_links.py`, `docs/_tools/check_terms.py`, `docs/_tools/coverage.py`, `docs/_tools/allow.json`, `docs/_tools/README.md`
+
+Changed — code/config (A.13, DOC-535):
+- `.env.example` — 39-key `SHARWA_LIVE_MODULES` sample line + comment lines for five modules (KI-01, DOC-461)
+- `src/features/dashboard-shell/schemas.ts` — `accountStoreSchema` / `AccountStore` / `accountStoresSchema` and the unused `provisioningStatusSchema` import removed; header comment updated (KI-02)
+- `src/app/api/bff/README.md` — `account/stores` row removed (KI-02)
+- `specs/001-sharwa-frontend-platform/contracts/ready-api-v1.md` — re-audited table applied (KI-03)
+- To delete with `git rm` (fares): `src/app/api/bff/account/stores/route.ts`, `src/mocks/dashboard/stores.ts` (KI-02)
+
+Changed — documentation:
+- 12 pages: 72 `{#id}` attributes → `<a id>` (Domain 5 and 6 API pages)
+- anchors/paths: `ops/dev-setup-windows.md`, `ops/management-commands.md`, `api/domains/05-storefront/m11-cart.md`, `api/domains/16-platform-console/m20-console.md`, `architecture/90-open-items.md`, `architecture/data-model/15-reports.md`
+- terms: `glossary.md` (23 rows, legend ✓ (UI)), `guides/console/16-platform-console/{sharwa-pay-review,dues}.md`, `guides/merchant/12-settings-staff-integrations/permissions-matrix.md`, `api/domains/08-finance/{README,m14-payments-wallet,m40-sharwa-pay}.md`, `api/domains/07-marketing-design-partners/m17-affiliates-influencers.md`, `api/integrators/webhooks-events.md`
+- final state of KI-01/02/03: `architecture/{92-inconsistencies,20-bff,22-live-module-keys,00-system-overview,01-domain-map,02-integration-protocol}.md`, `api/domains/02-dashboard-shell/{m03-overview,m43-multi-store}.md`, `api/overview/{bff,conventions}.md`, `api/CHANGELOG.md`, `api/domains/10-inventory-locations-procurement/{m21-inventory,m22-locations}.md`, `api/domains/04-orders-returns/m24-returns.md`, `ops/environment.md`, `ops/deployment/go-live-checklist.md`, `ops/testing/ci.md`
+- sign-offs: `api/openapi/README.md`, `api/overview/conventions.md`, `api/overview/csrf.md`, `guides/_style-guide.md`, `guides/_glossary.md`, `ops/testing/ci.md`
+- `README.md` §7 Maintenance (`#maintenance`), tree, shared references; `guides/_screenshots.md` Step 52 note
+- `specs/003-documentation/documentation-roadmap.md` — DOC-007, 011, 012, 014, 284, 461, 522, 533, 534, 535, 536 ticked with Status lines; Appendix A note; frontmatter status 524 → **535 / 536**
+- `docs/CHANGELOG.md` — Step 52 entry + Phase 003 closing summary at the top
+- `execution_log.md` — this entry
+
+**Quality gate** (run on the final tree): `check_links.py` — 6,909 links, **0 broken**, 279 screenshots pending; `check_terms.py` — **0 findings** (67 reasoned exceptions); `coverage.py --check` — 0 empty cells, 0 missing outputs, 1 open task (DOC-520). Before the step: 195 broken links, 76 term findings.
+
+**Left open**: DOC-520 (needs `DiscoverRunner.build_suite()` on `sharwa_saas`, fares's machine). fares must run `npx tsc --noEmit` and `npm run lint` after the `git rm` before committing.
+
+**Stop rule honored:** stopped after Step 52; nothing committed.
+---

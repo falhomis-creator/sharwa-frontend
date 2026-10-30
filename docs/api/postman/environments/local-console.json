@@ -1,0 +1,49 @@
+{
+  "id": "f1024ae8-88e6-5528-8f5a-bc194d5514b9",
+  "name": "Sharwa · local · console API",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "default",
+      "enabled": true,
+      "description": "Public-schema host serving /api/v1/platform/* (the console UI on console.<base> reaches it through its BFF). Locally this is the same host as local-platform, so the two share one cookie jar — and one Django session: clear the localhost cookies when switching between console and Sharwa Pay runs, or point this environment at a second public-tenant domain."
+    },
+    {
+      "key": "x_store_domain",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "MUST stay empty: the console answers 404 on a store host or with X-Store-Domain."
+    },
+    {
+      "key": "console_username",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Django admin user: superuser = «مالك المنصة», is_staff = «مشرف تشغيلي» (fill locally)."
+    },
+    {
+      "key": "console_password",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Password (fill locally). 5 failures per username lock the login for 15 minutes."
+    },
+    {
+      "key": "csrf_token",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script."
+    },
+    {
+      "key": "idempotency_key",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script (new UUID per send)."
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

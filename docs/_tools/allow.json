@@ -1,0 +1,404 @@
+[
+ {
+  "rule": "T5",
+  "file": "docs/CHANGELOG.md",
+  "text": "displayMoney()",
+  "reason": "quotes the wrong format on purpose (discrepancy or known-limitation note)"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/CHANGELOG.md",
+  "text": "Constitution principle II shows money as",
+  "reason": "quotes the wrong format on purpose (discrepancy or known-limitation note)"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/glossary.md",
+  "text": "the constitution (principle II) gives the money example",
+  "reason": "quotes the wrong format on purpose (discrepancy or known-limitation note)"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/architecture/40-money.md",
+  "text": "their own `_money(amount, currency)`",
+  "reason": "quotes the wrong format on purpose (discrepancy or known-limitation note)"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/guides/_screenshots.md",
+  "text": "البيانات التجريبية تعرض المبالغ دائماً بخانتين",
+  "reason": "quotes the wrong format on purpose (discrepancy or known-limitation note)"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/guides/_style-guide.md",
+  "text": "البيانات التجريبية تعرض المبالغ دائماً بخانتين",
+  "reason": "quotes the wrong format on purpose (discrepancy or known-limitation note)"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/guides/merchant/08-finance/money-display.md",
+  "text": "«100 ر.س» لا «100.00 ر.س»",
+  "reason": "quotes the wrong format on purpose (discrepancy or known-limitation note)"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/guides/merchant/08-finance/money-display.md",
+  "text": "وهي تعرض المبالغ بخانتين عشريتين دائماً",
+  "reason": "quotes the wrong format on purpose (discrepancy or known-limitation note)"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/api/domains/13-channels-operations/m28-marketplaces.md",
+  "text": "display_store_price (in SAR)",
+  "reason": "M28 marketplace screens format with their own `_money()` (always two decimals) — documented in 40-money.md"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/api/domains/13-channels-operations/m28-marketplaces.md",
+  "text": "\"display_market_price\": \"100.00 ر.س\"",
+  "reason": "M28 marketplace screens format with their own `_money()` (always two decimals) — documented in 40-money.md"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/api/domains/13-channels-operations/m28-marketplaces.md",
+  "text": "\"display_computed_price\": \"100.00 ر.س\"",
+  "reason": "M28 marketplace screens format with their own `_money()` (always two decimals) — documented in 40-money.md"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/api/domains/13-channels-operations/m28-marketplaces.md",
+  "text": "shows the **same computation without the override**",
+  "reason": "M28 marketplace screens format with their own `_money()` (always two decimals) — documented in 40-money.md"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/api/domains/03-catalog/m37-advanced-products.md",
+  "text": "IMP-1,12.50 ر.س",
+  "reason": "CSV row: `1` is the previous column, the amount is «12.50 ر.س»"
+ },
+ {
+  "rule": "T5",
+  "file": "docs/CHANGELOG.md",
+  "text": "`display_commission` example «15.00 ر.س» → «15 ر.س»",
+  "reason": "Step 52 entry quotes the value it fixed"
+ },
+ {
+  "rule": "T2",
+  "file": "docs/ops/migrations/phase-002-ledger.md",
+  "text": "«هجرة» M1 … M5",
+  "reason": "migration header labels (Phase A steps), not module ids"
+ },
+ {
+  "rule": "T9",
+  "file": "docs/api/domains/08-finance/m14-payments-wallet.md",
+  "text": "sk_live_9c41b2e07f2a",
+  "reason": "fake key and secret from api/test_payments_api.py (the test asserts they never leak)"
+ },
+ {
+  "rule": "T3",
+  "file": "docs/guides/merchant/10-inventory-locations-procurement/export-inventory.md",
+  "text": "`inventory.export` audit row",
+  "reason": "audit action name, not a permission key"
+ },
+ {
+  "rule": "T3",
+  "file": "docs/architecture/37-audit.md",
+  "text": "`inventory.export` · `inventory.writeoff_request`",
+  "reason": "audit action names, not permission keys"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0501234567",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0551234567",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0700000001",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0770000000",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0770000001",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0770000011",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0770000111",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0770000999",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0770841802",
+  "reason": "M42 demo shopper / staff fixture (src/mocks/customers/state.ts DEMO_PHONE)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0771234567",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0771999001",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0777000001",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0777123456",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "0777410225",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "700000001",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "733902118",
+  "reason": "payout account numbers from api/test_payments_api.py"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "770000000",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "770000001",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "770000011",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "770841802",
+  "reason": "M42 demo shopper / staff fixture (src/mocks/customers/state.ts DEMO_PHONE)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "771234000",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "771234567",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "773514352",
+  "reason": "example quoted verbatim from the comment at products/order_events.py:57"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "777000001",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "777123456",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "777410225",
+  "reason": "payout account numbers from api/test_payments_api.py"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "966501234567",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "966551234502",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "966551234567",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967700000000",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967700000001",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967770000000",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967770000001",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967770000002",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967770000011",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967770000033",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967770000051",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967770000099",
+  "reason": "RISKY_PHONE fixture (COD disabled), src/mocks/customers/state.ts"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967770000111",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967770000999",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967770841802",
+  "reason": "M42 demo shopper / staff fixture (src/mocks/customers/state.ts DEMO_PHONE)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967771020304",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967771111111",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967771112223",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967771234000",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967771234501",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967771234567",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967777000001",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ },
+ {
+  "rule": "T8",
+  "file": "*",
+  "text": "967777410225",
+  "reason": "fixture number (Django tests, frontend mocks or a sequential illustrative value)"
+ }
+]

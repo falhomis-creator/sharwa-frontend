@@ -1,0 +1,77 @@
+{
+  "id": "e14dd3bf-365b-5683-8e49-29d57edab621",
+  "name": "Sharwa · local · store host",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "http://noor.localhost:8000",
+      "type": "default",
+      "enabled": true,
+      "description": "Django dev server on a STORE host. Replace `noor` with a store that exists in your local Django (a `tenants.Domain` row such as `<sub>.localhost`). Cookies of `*.localhost` are per store host."
+    },
+    {
+      "key": "x_store_domain",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Leave empty when base_url is a store host. To call a store through a public host (e.g. base_url=http://localhost:8000), set it to the store domain (`noor.localhost`) — TenantHeaderOverrideMiddleware. A session already bound to another store is refused (403 «الجلسة الحالية موثَّقة على متجر مختلف — لا يمكن التحويل إلى متجر آخر بهذه الجلسة.»)."
+    },
+    {
+      "key": "merchant_phone",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Store WhatsApp phone for POST /api/v1/auth/merchant/login/ (fill locally, never commit)."
+    },
+    {
+      "key": "merchant_password",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Dashboard password (fill locally, never commit)."
+    },
+    {
+      "key": "staff_phone",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Staff phone for POST /api/v1/auth/staff/login/ (fill locally)."
+    },
+    {
+      "key": "staff_password",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Staff password (fill locally)."
+    },
+    {
+      "key": "pos_manager_code_debug",
+      "value": "2468",
+      "type": "default",
+      "enabled": true,
+      "description": "DEBUG ONLY — accepted as the POS manager code while the store has no `pos_manager_code_hash` and Django runs with settings.DEBUG=True (products/services/pos_service.py DEBUG_MANAGER_CODE). NEVER valid in production; set a real code with `manage.py set_pos_manager_code --schema=<schema> <code>`."
+    },
+    {
+      "key": "otp_debug",
+      "value": "123456",
+      "type": "default",
+      "enabled": true,
+      "description": "DEBUG ONLY — `DEBUG_STATIC_OTP` (api/views_onboarding.py): accepted for the onboarding OTP verify and the POS large-refund OTP when settings.DEBUG=True. NEVER valid in production."
+    },
+    {
+      "key": "csrf_token",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script."
+    },
+    {
+      "key": "idempotency_key",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script (new UUID per send)."
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

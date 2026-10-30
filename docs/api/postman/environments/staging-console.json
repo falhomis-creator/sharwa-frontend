@@ -1,0 +1,49 @@
+{
+  "id": "6e872e9f-7a46-50a7-b290-7d3c7c8679ee",
+  "name": "Sharwa · staging · console API",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://<django-public-host>",
+      "type": "default",
+      "enabled": true,
+      "description": "Staging/production origin — replace the placeholder. The host that serves the console API (/api/v1/platform/*) on the public schema."
+    },
+    {
+      "key": "x_store_domain",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "MUST stay empty: the console answers 404 on a store host or with X-Store-Domain."
+    },
+    {
+      "key": "console_username",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Django admin user: superuser = «مالك المنصة», is_staff = «مشرف تشغيلي» (fill locally)."
+    },
+    {
+      "key": "console_password",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Password (fill locally). 5 failures per username lock the login for 15 minutes."
+    },
+    {
+      "key": "csrf_token",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script."
+    },
+    {
+      "key": "idempotency_key",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script (new UUID per send)."
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

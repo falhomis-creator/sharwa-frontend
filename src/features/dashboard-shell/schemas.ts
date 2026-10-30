@@ -1,11 +1,12 @@
 import { z } from "zod";
 import { displayMoney } from "@/lib/schemas/money";
-import { provisioningStatusSchema } from "@/lib/schemas/provisioning";
 
 /**
  * M03 data contracts. Every row is `[NEEDS BACKEND]` (contracts/needs-backend-inventory.md
  * §M03 — 12 of 12), so these are the PROPOSED shapes of `/api/v1/auth/me/`,
- * `/api/v1/dashboard/overview/`, `/api/v1/dashboard/counters/` and `/api/v1/account/stores/`.
+ * `/api/v1/dashboard/overview/` and `/api/v1/dashboard/counters/`. (The store switcher uses the M43
+ * contract `GET /api/v1/merchant/stores/` in `src/features/stores-rollup`; the superseded
+ * `account/stores` route and its schemas were removed in Phase 003 Step 52.)
  * They are served today by `/api/bff/*` from `src/mocks/dashboard/*`; when Django ships the
  * real endpoints only the handler bodies change.
  *
@@ -143,13 +144,3 @@ export const countersSchema = z.object({
   unread_behavior_alerts: z.number().int(),
 });
 export type Counters = z.infer<typeof countersSchema>;
-
-export const accountStoreSchema = z.object({
-  name: z.string(),
-  host: z.string(),
-  is_current: z.boolean(),
-  provisioning_status: provisioningStatusSchema.shape.status,
-});
-export type AccountStore = z.infer<typeof accountStoreSchema>;
-
-export const accountStoresSchema = z.array(accountStoreSchema);

@@ -1,0 +1,440 @@
+[
+  {
+    "category": "core",
+    "title": "الأساسية",
+    "reports": [
+      {
+        "code": "sales_overview",
+        "title": "نظرة عامة على المبيعات",
+        "description": "الإيرادات والطلبات يومياً مع متوسط السلة",
+        "status": "available",
+        "permission": "reports.sales.view",
+        "core": true,
+        "allowed": true
+      },
+      {
+        "code": "best_sellers",
+        "title": "الأكثر مبيعاً",
+        "description": "المنتجات مرتبة بالكمية المباعة والإيراد",
+        "status": "available",
+        "permission": "reports.sales.view",
+        "core": true,
+        "allowed": true
+      },
+      {
+        "code": "orders",
+        "title": "الطلبات",
+        "description": "الطلبات المكتملة والملغاة والمسترجعة يومياً",
+        "status": "available",
+        "permission": "reports.sales.view",
+        "core": true,
+        "allowed": true
+      },
+      {
+        "code": "store_overview",
+        "title": "نظرة عامة على المتجر",
+        "description": "صافي الإيراد بعد الخصم والاسترجاع والعمولات",
+        "status": "available",
+        "permission": "reports.profit.view",
+        "core": true,
+        "allowed": true
+      },
+      {
+        "code": "inventory_overview",
+        "title": "نظرة عامة على المخزون",
+        "description": "قيمة المخزون والكميات حسب التصنيف",
+        "status": "available",
+        "permission": "reports.inventory.view",
+        "core": true,
+        "allowed": true
+      }
+    ]
+  },
+  {
+    "category": "customers",
+    "title": "العملاء",
+    "reports": [
+      {
+        "code": "customers_vip",
+        "title": "العملاء المميزون",
+        "description": "أعلى العملاء إنفاقاً وعدد طلباتهم",
+        "status": "available",
+        "permission": "reports.customers.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "abandoned_carts",
+        "title": "السلات المتروكة",
+        "description": "السلات غير المكتملة وقيمتها ونسبة الاسترداد",
+        "status": "available",
+        "permission": "reports.customers.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "visits",
+        "title": "الزيارات",
+        "description": "زيارات المتجر ومعدل التحويل",
+        "status": "not_yet_available",
+        "permission": "reports.customers.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "ratings",
+        "title": "التقييمات",
+        "description": "متوسط التقييم وعدد المراجعات لكل منتج",
+        "status": "available",
+        "permission": "reports.customers.view",
+        "core": false,
+        "allowed": true
+      }
+    ]
+  },
+  {
+    "category": "finance",
+    "title": "المالية",
+    "reports": [
+      {
+        "code": "payment_gateways",
+        "title": "بوابات الدفع",
+        "description": "المدفوعات حسب البوابة ونسب النجاح",
+        "status": "available",
+        "permission": "reports.sales.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "taxes",
+        "title": "الضرائب",
+        "description": "الضريبة المحصلة على الطلبات يومياً",
+        "status": "available",
+        "permission": "reports.profit.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "coupons",
+        "title": "الكوبونات",
+        "description": "استخدام الكوبونات وقيمة الخصم",
+        "status": "available",
+        "permission": "reports.sales.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "refunds",
+        "title": "الاسترجاعات",
+        "description": "المبالغ المسترجعة وعدد الطلبات",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "wallet_custody",
+        "title": "عهدة المحافظ",
+        "description": "أرصدة محافظ العملاء المحتجزة لدى المتجر",
+        "status": "available",
+        "permission": "reports.profit.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "invoices_settlements",
+        "title": "الفواتير والتسويات",
+        "description": "فواتير المنصة وتسويات البوابات",
+        "status": "not_yet_available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "platform_commissions",
+        "title": "عمولات المنصة",
+        "description": "عمولة شروة المستحقة على المبيعات",
+        "status": "available",
+        "permission": "reports.profit.view",
+        "core": false,
+        "allowed": true
+      }
+    ]
+  },
+  {
+    "category": "shipping",
+    "title": "الشحن",
+    "reports": [
+      {
+        "code": "third_party_logistics",
+        "title": "شركات الشحن الخارجية",
+        "description": "الشحنات وتكلفتها ومتوسط زمن التسليم لكل شركة",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "couriers",
+        "title": "المندوبون",
+        "description": "التسليمات والتحصيل لكل مندوب",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "returns",
+        "title": "المرتجعات",
+        "description": "الشحنات المرتجعة وأسبابها",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "zones",
+        "title": "المناطق",
+        "description": "الطلبات ورسوم الشحن حسب المدينة",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      }
+    ]
+  },
+  {
+    "category": "inventory",
+    "title": "المخزون",
+    "reports": [
+      {
+        "code": "categories",
+        "title": "التصنيفات",
+        "description": "المبيعات والمخزون لكل تصنيف",
+        "status": "available",
+        "permission": "reports.inventory.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "variants",
+        "title": "المتغيرات",
+        "description": "أداء متغيرات المنتجات (الحجم واللون)",
+        "status": "available",
+        "permission": "reports.inventory.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "stock_movements",
+        "title": "حركات المخزون",
+        "description": "الوارد والصادر والتسويات يومياً",
+        "status": "available",
+        "permission": "reports.inventory.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "suppliers",
+        "title": "الموردون",
+        "description": "المشتريات ومدة التوريد لكل مورد",
+        "status": "available",
+        "permission": "reports.inventory.view",
+        "core": false,
+        "allowed": true
+      }
+    ]
+  },
+  {
+    "category": "operations",
+    "title": "العمليات",
+    "reports": [
+      {
+        "code": "staff_performance",
+        "title": "أداء الموظفين",
+        "description": "الطلبات المعالجة ومتوسط زمن التجهيز لكل موظف",
+        "status": "available",
+        "permission": "reports.staff_performance.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "audit_log",
+        "title": "سجل التدقيق",
+        "description": "عدد العمليات الحساسة المسجلة يومياً",
+        "status": "available",
+        "permission": "reports.staff_performance.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "customer_service",
+        "title": "خدمة العملاء",
+        "description": "المحادثات وزمن الرد الأول",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "system_performance",
+        "title": "أداء النظام",
+        "description": "زمن تحميل المتجر وتوفره",
+        "status": "not_yet_available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "marketing_utm",
+        "title": "مصادر التسويق (UTM)",
+        "description": "الطلبات والإيراد حسب مصدر الزيارة",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "ai_forecasting",
+        "title": "التنبؤ الذكي",
+        "description": "توقع المبيعات والطلب على المخزون",
+        "status": "coming_soon",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      }
+    ]
+  },
+  {
+    "category": "local_market",
+    "title": "السوق المحلي",
+    "reports": [
+      {
+        "code": "currencies",
+        "title": "العملات",
+        "description": "المبيعات حسب عملة الدفع",
+        "status": "available",
+        "permission": "reports.profit.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "pos",
+        "title": "نقاط البيع",
+        "description": "مبيعات نقاط البيع في الفروع يومياً",
+        "status": "available",
+        "permission": "reports.sales.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "operating_expenses",
+        "title": "المصروفات التشغيلية",
+        "description": "الإيجار والرواتب والمصروفات اليومية",
+        "status": "available",
+        "permission": "reports.profit.view",
+        "core": false,
+        "allowed": true
+      }
+    ]
+  },
+  {
+    "category": "advanced_behavior",
+    "title": "السلوك المتقدم",
+    "reports": [
+      {
+        "code": "failed_searches",
+        "title": "عمليات البحث بلا نتائج",
+        "description": "كلمات بحث العملاء التي لم تجد منتجاً",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "wishlists",
+        "title": "قوائم الأمنيات",
+        "description": "أكثر المنتجات إضافة لقوائم الأمنيات",
+        "status": "available",
+        "permission": "reports.customers.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "loyalty",
+        "title": "الولاء",
+        "description": "النقاط الممنوحة والمستبدلة يومياً",
+        "status": "available",
+        "permission": "reports.customers.view",
+        "core": false,
+        "allowed": true
+      }
+    ]
+  },
+  {
+    "category": "marketing",
+    "title": "التسويق",
+    "reports": [
+      {
+        "code": "affiliates",
+        "title": "التسويق بالعمولة",
+        "description": "مبيعات المسوقين وعمولاتهم",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "bundles",
+        "title": "الحزم",
+        "description": "مبيعات الحزم والعروض المجمعة",
+        "status": "not_yet_available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "subscriptions",
+        "title": "الاشتراكات",
+        "description": "الاشتراكات المتكررة وتجديدها",
+        "status": "not_yet_available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      }
+    ]
+  },
+  {
+    "category": "infrastructure",
+    "title": "البنية",
+    "reports": [
+      {
+        "code": "export_engine",
+        "title": "محرك التصدير",
+        "description": "مهام التصدير المكتملة والفاشلة يومياً",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "scheduled_reports",
+        "title": "التقارير المجدولة",
+        "description": "التقارير المرسلة بالبريد يومياً",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      },
+      {
+        "code": "whatsapp_costs",
+        "title": "تكاليف واتساب",
+        "description": "رسائل واتساب المرسلة وتكلفتها",
+        "status": "available",
+        "permission": "reports.view",
+        "core": false,
+        "allowed": true
+      }
+    ]
+  }
+]

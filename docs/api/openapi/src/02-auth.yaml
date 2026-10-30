@@ -1,0 +1,28 @@
+# Domain 02 — auth rows documented so far (CSRF handshake, DOC-012). Completed by Step 03 (auth & identity flows).
+x-doc-page: docs/api/overview/csrf.md
+components:
+  schemas:
+    auth.CsrfToken:
+      type: object
+      required:
+      - csrfToken
+      properties:
+        csrfToken:
+          type: string
+          description: Masked token (64 chars) derived from the request's `csrftoken` cookie (Django `get_token`).
+operations:
+  GET /api/v1/auth/csrf/:
+    summary: رمز CSRF مرتبط بكعكة المتصفح الحالية
+    security: []
+    responses:
+      '200':
+        description: Token
+        headers:
+          Cache-Control:
+            $ref: '#/components/headers/CacheControlNoStore'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/auth.CsrfToken'
+    description: 'Returns a token matching the caller''s `csrftoken` cookie; sets a fresh cookie pair when the caller has none. `Cache-Control: no-store`. Works on
+      store hosts and on the platform origin.'

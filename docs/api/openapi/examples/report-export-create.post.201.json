@@ -1,0 +1,18 @@
+{
+  "job_id": 905,
+  "report_code": "orders",
+  "report_title": "الطلبات",
+  "format": "csv",
+  "params": {
+    "from": "2026-10-01",
+    "to": "2026-10-07",
+    "compare": false,
+    "location": null
+  },
+  "status": "queued",
+  "download_token": null,
+  "error": null,
+  "created_at": "2026-10-17T20:00:00.000Z",
+  "expires_at": null,
+  "requested_by": "مالك المتجر"
+}

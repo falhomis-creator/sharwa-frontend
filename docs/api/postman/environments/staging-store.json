@@ -1,0 +1,63 @@
+{
+  "id": "0066bdea-56f7-53c2-8cfa-cdc02b019c46",
+  "name": "Sharwa · staging · store host",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://<store>.<base>",
+      "type": "default",
+      "enabled": true,
+      "description": "Staging/production origin — replace the placeholder. A store subdomain or a verified custom domain."
+    },
+    {
+      "key": "x_store_domain",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Leave empty when base_url is a store host. To call a store through a public host (e.g. base_url=http://localhost:8000), set it to the store domain (`noor.localhost`) — TenantHeaderOverrideMiddleware. A session already bound to another store is refused (403 «الجلسة الحالية موثَّقة على متجر مختلف — لا يمكن التحويل إلى متجر آخر بهذه الجلسة.»)."
+    },
+    {
+      "key": "merchant_phone",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Store WhatsApp phone for POST /api/v1/auth/merchant/login/ (fill locally, never commit)."
+    },
+    {
+      "key": "merchant_password",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Dashboard password (fill locally, never commit)."
+    },
+    {
+      "key": "staff_phone",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Staff phone for POST /api/v1/auth/staff/login/ (fill locally)."
+    },
+    {
+      "key": "staff_password",
+      "value": "",
+      "type": "secret",
+      "enabled": true,
+      "description": "Staff password (fill locally)."
+    },
+    {
+      "key": "csrf_token",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script."
+    },
+    {
+      "key": "idempotency_key",
+      "value": "",
+      "type": "default",
+      "enabled": true,
+      "description": "Written by the collection pre-request script (new UUID per send)."
+    }
+  ],
+  "_postman_variable_scope": "environment"
+}

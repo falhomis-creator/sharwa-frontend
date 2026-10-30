@@ -1,0 +1,165 @@
+{
+  "report": {
+    "code": "sales_overview",
+    "title": "نظرة عامة على المبيعات",
+    "category": "core",
+    "category_title": "الأساسية",
+    "description": "الإيرادات والطلبات يومياً مع متوسط السلة",
+    "status": "available",
+    "core": true,
+    "chart": "line"
+  },
+  "has_locations": true,
+  "locations": [
+    {
+      "id": 1,
+      "name": "المستودع الرئيسي"
+    },
+    {
+      "id": 2,
+      "name": "فرع الرياض"
+    },
+    {
+      "id": 3,
+      "name": "فرع جدة"
+    },
+    {
+      "id": 4,
+      "name": "خزانة استلام — الملقا"
+    },
+    {
+      "id": 5,
+      "name": "مركبة التوصيل 1"
+    },
+    {
+      "id": 6,
+      "name": "مورد العطور — دروبشيبينج"
+    }
+  ],
+  "timezone": "Asia/Aden",
+  "refreshed_at": "2026-10-17T03:00:00.000Z",
+  "range": {
+    "from": "2026-10-01",
+    "to": "2026-10-07"
+  },
+  "compare": null,
+  "summary": [
+    {
+      "key": "revenue",
+      "label": "الإيرادات",
+      "display_value": "11,011.00 ر.س",
+      "compare_display_value": null,
+      "delta_pct": null
+    },
+    {
+      "key": "orders_count",
+      "label": "الطلبات",
+      "display_value": "15",
+      "compare_display_value": null,
+      "delta_pct": null
+    },
+    {
+      "key": "aov",
+      "label": "متوسط السلة",
+      "display_value": "734.07 ر.س",
+      "compare_display_value": null,
+      "delta_pct": null
+    }
+  ],
+  "series": [
+    {
+      "label": "الإيرادات — الفترة الحالية",
+      "points": [
+        {
+          "x": "2026-10-01",
+          "y": 1910,
+          "display_y": "1,910.00 ر.س"
+        },
+        {
+          "x": "2026-10-02",
+          "y": 2476,
+          "display_y": "2,476.00 ر.س"
+        },
+        {
+          "x": "2026-10-03",
+          "y": 1080,
+          "display_y": "1,080.00 ر.س"
+        },
+        {
+          "x": "2026-10-04",
+          "y": 1634,
+          "display_y": "1,634.00 ر.س"
+        },
+        {
+          "x": "2026-10-05",
+          "y": 2194,
+          "display_y": "2,194.00 ر.س"
+        },
+        {
+          "x": "2026-10-06",
+          "y": 475,
+          "display_y": "475.00 ر.س"
+        },
+        {
+          "x": "2026-10-07",
+          "y": 1242,
+          "display_y": "1,242.00 ر.س"
+        }
+      ]
+    }
+  ],
+  "table": {
+    "columns": [
+      {
+        "key": "date",
+        "label": "اليوم",
+        "type": "date"
+      },
+      {
+        "key": "revenue",
+        "label": "الإيرادات",
+        "type": "money"
+      },
+      {
+        "key": "orders_count",
+        "label": "الطلبات",
+        "type": "number"
+      },
+      {
+        "key": "aov",
+        "label": "متوسط السلة",
+        "type": "money"
+      }
+    ],
+    "rows": [
+      {
+        "id": "2026-10-07",
+        "date": "2026-10-07",
+        "revenue": "1,242.00 ر.س",
+        "revenue__value": 1242,
+        "orders_count": 2,
+        "aov": "621.00 ر.س",
+        "aov__value": 621
+      },
+      {
+        "id": "2026-10-06",
+        "date": "2026-10-06",
+        "revenue": "475.00 ر.س",
+        "revenue__value": 475,
+        "orders_count": 2,
+        "aov": "237.50 ر.س",
+        "aov__value": 237.5
+      },
+      {
+        "id": "2026-10-05",
+        "date": "2026-10-05",
+        "revenue": "2,194.00 ر.س",
+        "revenue__value": 2194,
+        "orders_count": 2,
+        "aov": "1,097.00 ر.س",
+        "aov__value": 1097
+      }
+    ],
+    "count": 7
+  }
+}

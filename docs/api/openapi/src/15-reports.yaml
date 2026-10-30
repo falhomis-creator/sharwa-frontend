@@ -1,0 +1,901 @@
+# Domain 15 — Reports (M25, INT-027). Written from sharwa_saas/api/views_reports.py, api/serializers.py
+# (ReportExportJobSerializer, ScheduledReportSerializer, ReportExportCreateSerializer) and
+# products/services/reports_contract.py; diffed against src/features/reports/schemas.ts (DOC-009 pilot).
+# `operations` keys are "METHOD /api/v1/path/" exactly as in the route inventory; fields merge onto the stub.
+x-doc-page: docs/api/domains/15-reports/
+components:
+  schemas:
+    reports.ReportRow:
+      type: object
+      required:
+      - code
+      - title
+      - description
+      - status
+      - permission
+      - core
+      - allowed
+      properties:
+        code:
+          type: string
+        title:
+          type: string
+          description: '`entry.title_ar`'
+        description:
+          type: string
+          description: '`REPORT_DESCRIPTIONS[code]` or empty'
+        status:
+          type: string
+          enum:
+          - available
+          - not_yet_available
+          - coming_soon
+        permission:
+          type: string
+          description: '`permission_code` of the registry entry'
+        core:
+          type: boolean
+          description: category == `core`
+        allowed:
+          type: boolean
+          description: '`can_open`: plan feature of the entry + the member''s permission (owner: always)'
+    reports.ReportIndex:
+      type: array
+      description: '`report_index()` — `REPORT_CATEGORIES` order, each with its `REPORT_REGISTRY` entries.'
+      items:
+        type: object
+        required:
+        - category
+        - title
+        - reports
+        properties:
+          category:
+            type: string
+          title:
+            type: string
+          reports:
+            type: array
+            items:
+              $ref: '#/components/schemas/reports.ReportRow'
+    reports.ReportMeta:
+      type: object
+      required:
+      - code
+      - title
+      - category
+      - category_title
+      - description
+      - status
+      - core
+      - chart
+      properties:
+        code:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        category_title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+          - available
+          - not_yet_available
+          - coming_soon
+        core:
+          type: boolean
+        chart:
+          type: string
+          enum:
+          - line
+          - bar
+          description: '`line` for the daily-series reports (`ROLLUP_TIME_REPORTS`), else `bar`'
+    reports.SummaryItem:
+      type: object
+      required:
+      - key
+      - label
+      - display_value
+      - compare_display_value
+      - delta_pct
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        display_value:
+          type: string
+          description: Formatted value, or «—» without data
+        compare_display_value:
+          type:
+          - string
+          - 'null'
+        delta_pct:
+          type:
+          - number
+          - 'null'
+          description: Rounded to 1 decimal; null without both periods or when the previous value is 0
+    reports.Series:
+      type: object
+      required:
+      - label
+      - points
+      properties:
+        label:
+          type: string
+        points:
+          type: array
+          items:
+            type: object
+            required:
+            - x
+            - y
+            - display_y
+            properties:
+              x:
+                type: string
+                description: ISO date or dimension label
+              y:
+                type: number
+              display_y:
+                type: string
+    reports.ReportColumn:
+      type: object
+      required:
+      - key
+      - label
+      - type
+      properties:
+        key:
+          type: string
+        label:
+          type: string
+        type:
+          type: string
+          enum:
+          - text
+          - date
+          - number
+          - money
+          - percent
+    reports.ReportData:
+      type: object
+      required:
+      - report
+      - has_locations
+      - locations
+      - timezone
+      - refreshed_at
+      - summary
+      - series
+      - table
+      properties:
+        report:
+          $ref: '#/components/schemas/reports.ReportMeta'
+        has_locations:
+          type: boolean
+          description: True only for `sales_overview`, `orders`, `store_overview`, `best_sellers` when multi-location is on (INT-027)
+        locations:
+          type: array
+          items:
+            type: object
+            required:
+            - id
+            - name
+            properties:
+              id:
+                type: integer
+              name:
+                type: string
+        timezone:
+          type: string
+          description: '`StoreSetting.timezone`'
+        refreshed_at:
+          type:
+          - string
+          - 'null'
+          description: Latest refresh for `core` reports, else null
+        range:
+          type: object
+          required:
+          - from
+          - to
+          properties:
+            from:
+              type: string
+              format: date
+            to:
+              type: string
+              format: date
+          description: Absent when the report is not available
+        compare:
+          oneOf:
+          - type: object
+            required:
+            - from
+            - to
+            properties:
+              from:
+                type: string
+                format: date
+              to:
+                type: string
+                format: date
+          - type: 'null'
+        summary:
+          type: array
+          items:
+            $ref: '#/components/schemas/reports.SummaryItem'
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/reports.Series'
+        table:
+          type: object
+          required:
+          - columns
+          - rows
+          - count
+          properties:
+            columns:
+              type: array
+              items:
+                $ref: '#/components/schemas/reports.ReportColumn'
+            rows:
+              type: array
+              description: Up to 1000 rows per page (`TABLE_PAGE_SIZE`); money/percent cells carry a `<key>__value` number next to the display string
+              items:
+                type: object
+                additionalProperties:
+                  type:
+                  - string
+                  - number
+            count:
+              type: integer
+              description: All rows before paging
+    reports.Refresh:
+      type: object
+      required:
+      - refreshed_at
+      properties:
+        refreshed_at:
+          type: string
+          format: date-time
+    reports.ExportJob:
+      type: object
+      description: '`ReportExportJobSerializer`'
+      required:
+      - job_id
+      - report_code
+      - report_title
+      - format
+      - params
+      - status
+      - download_token
+      - error
+      - created_at
+      - expires_at
+      - requested_by
+      properties:
+        job_id:
+          type: integer
+          description: '`id`'
+        report_code:
+          type: string
+        report_title:
+          type: string
+        format:
+          type: string
+          enum:
+          - csv
+          - xlsx
+        params:
+          type: object
+          required:
+          - from
+          - to
+          - compare
+          - location
+          properties:
+            from:
+              type:
+              - string
+              - 'null'
+            to:
+              type:
+              - string
+              - 'null'
+            compare:
+              type: boolean
+            location:
+              type:
+              - string
+              - 'null'
+        status:
+          type: string
+          enum:
+          - queued
+          - processing
+          - ready
+          - failed
+          - expired
+          description: '`effective_export_status`: `ready` past `expires_at` reads `expired`'
+        download_token:
+          type:
+          - string
+          - 'null'
+          description: Only while `ready`
+        error:
+          type:
+          - string
+          - 'null'
+          description: '`error_detail`'
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type:
+          - string
+          - 'null'
+          description: Only for `ready`/`expired`
+        requested_by:
+          type: string
+          description: Staff full name, or «مالك المتجر»
+    reports.ExportList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/reports.ExportJob'
+      description: Latest 50 jobs; staff see only their own, the owner sees all.
+    reports.Schedule:
+      type: object
+      description: '`ScheduledReportSerializer` (`recipient_email` → `email`)'
+      required:
+      - id
+      - report_code
+      - report_title
+      - frequency
+      - email
+      - is_active
+      - next_run_at
+      - created_at
+      properties:
+        id:
+          type: integer
+        report_code:
+          type: string
+        report_title:
+          type: string
+        frequency:
+          type: string
+          enum:
+          - daily
+          - weekly
+          - monthly
+        email:
+          type: string
+          format: email
+        is_active:
+          type: boolean
+        next_run_at:
+          type:
+          - string
+          - 'null'
+          description: Next Celery run (daily 03:00 UTC beat) — null when paused
+        created_at:
+          type: string
+          format: date-time
+    reports.ScheduleList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/reports.Schedule'
+    reports.ExportCreateRequest:
+      type: object
+      required:
+      - format
+      properties:
+        format:
+          type: string
+          enum:
+          - csv
+          - xlsx
+          description: Error «اختر CSV أو XLSX.»
+        params:
+          type: object
+          properties:
+            from:
+              type: string
+            to:
+              type: string
+            compare:
+              type: boolean
+            location:
+              type: string
+    reports.ScheduleWriteRequest:
+      type: object
+      properties:
+        report_code:
+          type: string
+          description: An available, exportable report — else «اختر تقريراً.» / «هذا التقرير غير متاح بعد.»
+        frequency:
+          type: string
+          enum:
+          - daily
+          - weekly
+          - monthly
+          description: Error «اختر التكرار.»
+        email:
+          type: string
+          format: email
+          description: Stored lower-case; errors «أدخل البريد المستلم.» / «أدخل بريداً إلكترونياً صحيحاً.»
+        is_active:
+          type: boolean
+operations:
+  GET /api/v1/reports/:
+    summary: سجل التقارير مجمّعاً بالفئة مع صلاحية كل عضو
+    security:
+    - storeSession: []
+    responses:
+      '200':
+        description: Registry
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/reports.ReportIndex'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '403':
+        description: «ميزة التقارير غير مفعّلة في خطتك.» (plan feature `reports`) · «ليست لديك صلاحية لهذا الإجراء.» (permission) · CSRF failure
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+    description: 'Registry grouped by category with `allowed` per member. Gate: session → plan feature `reports`; no permission key (each row''s `allowed` carries
+      it).'
+    x-zod: reports.reportIndexSchema
+    x-mock-note: The mock BFF additionally requires `reports.view` on this route (mockRoute permission); Django does not — see docs/api/openapi/contract-diff.md.
+  POST /api/v1/reports/refresh-today/:
+    summary: إعادة حساب مقاييس اليوم الجاري (مرة كل 5 دقائق)
+    security:
+    - storeSession: []
+      csrfHeader: []
+    responses:
+      '200':
+        description: Refreshed
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/reports.Refresh'
+      '429':
+        description: «يمكنك التحديث مرة كل 5 دقائق فقط للحفاظ على الأداء.»
+        headers:
+          Retry-After:
+            $ref: '#/components/headers/RetryAfter'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '403':
+        description: «ميزة التقارير غير مفعّلة في خطتك.» (plan feature `reports`) · «ليست لديك صلاحية لهذا الإجراء.» (permission) · CSRF failure
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+    description: Recompute today's metrics. Staff need `reports.sales.view`. Store-wide cooldown 300 s (cache key `reports:refresh-today:<schema>`, shared with the
+      dashboard overview refresh — INT-003).
+    x-zod: reports.refreshSchema
+  GET /api/v1/reports/exports/:
+    summary: «تصديراتي» — آخر 50 مهمة
+    security:
+    - storeSession: []
+    responses:
+      '200':
+        description: Jobs
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/reports.ExportList'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '403':
+        description: «ميزة التقارير غير مفعّلة في خطتك.» (plan feature `reports`) · «ليست لديك صلاحية لهذا الإجراء.» (permission) · CSRF failure
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+    description: «تصديراتي» — latest 50 jobs. Needs `reports.export`.
+    x-zod: reports.exportListSchema
+  GET /api/v1/reports/exports/{job_id}/:
+    summary: حالة مهمة تصدير (تُستطلع كل 5 ثوانٍ)
+    security:
+    - storeSession: []
+    responses:
+      '200':
+        description: Job
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/reports.ExportJob'
+      '404':
+        description: «مهمة التصدير غير موجودة.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '403':
+        description: «ميزة التقارير غير مفعّلة في خطتك.» (plan feature `reports`) · «ليست لديك صلاحية لهذا الإجراء.» (permission) · CSRF failure
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+    description: Job status, polled every 5 s by the UI.
+    x-zod: reports.exportJobSchema
+  GET /api/v1/reports/exports/{job_id}/download/:
+    summary: تنزيل ملف التصدير برمز موقَّع (?token=)
+    security:
+    - storeSession: []
+    responses:
+      '200':
+        description: The file (`report_<code>_<id>.<ext>`)
+        content:
+          text/csv:
+            schema:
+              type: string
+          application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+            schema:
+              type: string
+              format: binary
+      '403':
+        description: «رمز التنزيل غير صالح.» · gate
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '404':
+        description: «مهمة التصدير غير موجودة.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '409':
+        description: «الملف ليس جاهزاً بعد.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '410':
+        description: «انتهت صلاحية الملف — أعد التصدير.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+    parameters:
+    - name: token
+      in: query
+      required: true
+      schema:
+        type: string
+      description: '`download_token` of the ready job'
+    description: Download the file (job owner + token + validity).
+  GET /api/v1/reports/schedules/:
+    summary: اشتراكات التقارير المجدولة (قائمة/إنشاء)
+    security:
+    - storeSession: []
+    responses:
+      '200':
+        description: Subscriptions
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/reports.ScheduleList'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '403':
+        description: «ميزة التقارير غير مفعّلة في خطتك.» (plan feature `reports`) · «ليست لديك صلاحية لهذا الإجراء.» (permission) · CSRF failure
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+    description: Scheduled report subscriptions. Needs `reports.export`.
+    x-zod: reports.scheduleListSchema
+  POST /api/v1/reports/schedules/:
+    summary: اشتراكات التقارير المجدولة (قائمة/إنشاء)
+    security:
+    - storeSession: []
+      csrfHeader: []
+    responses:
+      '201':
+        description: Created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/reports.Schedule'
+      '400':
+        description: 'Field errors: «اختر تقريراً.» · «هذا التقرير غير متاح بعد.» · «اختر التكرار.» · «أدخل البريد المستلم.» · «أدخل بريداً إلكترونياً صحيحاً.»'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldErrors'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '403':
+        description: «ميزة التقارير غير مفعّلة في خطتك.» (plan feature `reports`) · «ليست لديك صلاحية لهذا الإجراء.» (permission) · CSRF failure
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+    description: Create a subscription.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/reports.ScheduleWriteRequest'
+          example:
+            report_code: sales_overview
+            frequency: weekly
+            email: owner@example.com
+    x-zod: reports.scheduleSchema
+  PATCH /api/v1/reports/schedules/{pk}/:
+    summary: إيقاف/استئناف/تعديل/حذف اشتراك مجدول
+    security:
+    - storeSession: []
+      csrfHeader: []
+    responses:
+      '200':
+        description: Updated
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/reports.Schedule'
+      '400':
+        $ref: '#/components/responses/BadRequest'
+      '404':
+        description: «الاشتراك غير موجود.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '403':
+        description: «ميزة التقارير غير مفعّلة في خطتك.» (plan feature `reports`) · «ليست لديك صلاحية لهذا الإجراء.» (permission) · CSRF failure
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+    description: Pause/resume/edit (partial).
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/reports.ScheduleWriteRequest'
+          example:
+            is_active: false
+    x-zod: reports.scheduleSchema
+  DELETE /api/v1/reports/schedules/{pk}/:
+    summary: إيقاف/استئناف/تعديل/حذف اشتراك مجدول
+    security:
+    - storeSession: []
+      csrfHeader: []
+    responses:
+      '204':
+        description: Deleted
+      '404':
+        description: «الاشتراك غير موجود.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '403':
+        description: «ميزة التقارير غير مفعّلة في خطتك.» (plan feature `reports`) · «ليست لديك صلاحية لهذا الإجراء.» (permission) · CSRF failure
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+    description: Delete a subscription.
+  GET /api/v1/reports/{code}/:
+    summary: بيانات تقرير واحد (ملخص + سلسلة + جدول)
+    security:
+    - storeSession: []
+    responses:
+      '200':
+        description: Report data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/reports.ReportData'
+      '400':
+        description: 'Invalid range (field errors on `from`/`to`/`compare_from`/`compare_to`, or `{detail: «الحد الأقصى سنة واحدة.»}`)'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldErrors'
+      '404':
+        description: «التقرير غير موجود.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '403':
+        description: «ميزة التقارير غير مفعّلة في خطتك.» · «ليست لديك صلاحية لعرض هذا التقرير.» with `report_title`
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - detail
+              properties:
+                detail:
+                  type: string
+                report_title:
+                  type: string
+    parameters:
+    - name: from
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      description: Range start (YYYY-MM-DD) — «تاريخ غير صالح (YYYY-MM-DD).»
+    - name: to
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      description: Range end — «تاريخ النهاية قبل البداية.»; max one year «الحد الأقصى سنة واحدة.»
+    - name: compare_from
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      description: Comparison start
+    - name: compare_to
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      description: Comparison end
+    - name: location
+      in: query
+      required: false
+      schema:
+        type: integer
+      description: A location id from `locations`; ignored otherwise or when `has_locations` is false
+    - name: ordering
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Column key, `-` prefix for descending
+    - name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+      description: Table page (1000 rows)
+    description: 'One report: summary, series, table. A report the member cannot open answers 403 with its title only.'
+    x-zod: reports.reportDataSchema
+  POST /api/v1/reports/{code}/exports/:
+    summary: طلب تصدير تقرير (CSV/XLSX) — يُرجع المهمة فوراً
+    security:
+    - storeSession: []
+      csrfHeader: []
+    responses:
+      '201':
+        description: Job created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/reports.ExportJob'
+      '400':
+        description: «هذا التقرير غير متاح بعد للتصدير.» · «هذا التقرير غير متاح للتصدير.» · field errors
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FieldErrors'
+      '404':
+        description: «التقرير غير موجود.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '401':
+        description: «انتهت جلستك، سجّل الدخول مجدداً.»
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+      '403':
+        description: «ليست لديك صلاحية لتصدير هذا التقرير.» · plan feature · permission
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Detail'
+    description: Queue an export (Celery). Needs `reports.export`.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/reports.ExportCreateRequest'
+          example:
+            format: csv
+            params:
+              from: '2026-10-01'
+              to: '2026-10-07'
+              compare: false
+    x-zod: reports.exportJobSchema

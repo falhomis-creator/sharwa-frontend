@@ -1,0 +1,15 @@
+# Redocly CLI config for docs/api/openapi/sharwa-v1.yaml (DOC-008).
+# Run from sharwa-frontend:  npx @redocly/cli@1 lint docs/api/openapi/sharwa-v1.yaml --config docs/api/openapi/redocly.yaml
+extends:
+  - recommended
+rules:
+  # Django routes end with "/" (APPEND_SLASH) — the trailing slash is part of the real path.
+  no-path-trailing-slash: off
+  # Stub operations carry only a `default` response until their domain step documents them;
+  # documented operations list their 4xx bodies explicitly.
+  operation-4xx-response: off
+  # Django resolves routes in urls.py order (e.g. customers/wallets/ is declared before
+  # customers/<str:phone>/), so these pairs are unambiguous at runtime; kept visible as warnings.
+  no-ambiguous-paths: warn
+  info-license: off
+  no-unused-components: warn

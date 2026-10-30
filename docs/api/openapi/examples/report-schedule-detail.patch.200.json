@@ -1,0 +1,10 @@
+{
+  "id": 34,
+  "report_code": "sales_overview",
+  "report_title": "نظرة عامة على المبيعات",
+  "frequency": "weekly",
+  "email": "owner@example.com",
+  "is_active": false,
+  "next_run_at": null,
+  "created_at": "2026-10-17T20:00:00.000Z"
+}

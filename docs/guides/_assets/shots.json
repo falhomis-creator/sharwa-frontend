@@ -1,0 +1,3484 @@
+[
+  {
+    "id": "merchant/02-dashboard-shell/plan-features-1",
+    "host": "noor",
+    "session": "staff",
+    "path": "/dashboard/bookings",
+    "waitFor": "[data-testid=feature-off]",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "A screen whose plan feature is off for this store: the cashier fixture's plan has no «الحجوزات». Used by plan-features.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/troubleshooting-access-1",
+    "host": "noor",
+    "session": "staff",
+    "path": "/dashboard/returns",
+    "waitFor": "[data-testid=forbidden], [data-testid=feature-off]",
+    "note": "A screen the member has no permission for. Used by troubleshooting-access.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/troubleshooting-access-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/orders",
+    "recipe": "order-conflict",
+    "note": "The orders conflict panel after another user changed the same order. Changes one fixture order per run. Used by troubleshooting-access.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/permissions-matrix-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/roles",
+    "waitFor": "text=الأدوار النظامية",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "«الأدوار والصلاحيات»: the four read-only system roles and a custom role. Used by permissions-matrix.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/permissions-matrix-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/2?tab=overrides",
+    "waitFor": "[data-testid=effective-permissions]",
+    "note": "A staff member's «الاستثناءات» tab with «الصلاحية النهائية» per key. Used by permissions-matrix.md."
+  },
+  {
+    "id": "merchant/08-finance/money-display-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/currency",
+    "waitFor": "[data-testid=fx-preview]",
+    "element": "[data-testid=settings-currency]",
+    "note": "Settings → «العملات»: display currency, the three rates and the 100 SAR preview. Used by money-display.md."
+  },
+  {
+    "id": "merchant/08-finance/money-display-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/wallet/expenses",
+    "waitFor": "[data-testid=month-totals]",
+    "note": "«المصروفات التشغيلية»: month totals shown per currency, never added together. Used by money-display.md."
+  },
+  {
+    "id": "merchant/01-public-onboarding/landing-and-plans-1",
+    "host": "",
+    "path": "/",
+    "waitFor": "text=أنشئ متجرك الآن مجاناً",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "The platform landing page: hero, «أنشئ متجرك الآن مجاناً» and the feature carousel. The page has no plans or stats section today. Used by landing-and-plans.md."
+  },
+  {
+    "id": "merchant/01-public-onboarding/landing-and-plans-2",
+    "host": "",
+    "path": "/login",
+    "waitFor": "#subdomain",
+    "note": "«دخول التاجر»: the «نطاق متجرك» field and «متابعة». Used by landing-and-plans.md."
+  },
+  {
+    "id": "merchant/01-public-onboarding/register-store-1",
+    "host": "",
+    "path": "/register",
+    "waitFor": "#store_name",
+    "steps": [
+      {
+        "fill": "#store_name",
+        "value": "Noor Demo"
+      },
+      {
+        "fill": "#merchant_phone",
+        "value": "0771000001"
+      },
+      {
+        "fill": "#subdomain",
+        "value": "noordemo"
+      },
+      {
+        "waitFor": "#subdomain-status:has-text('متاح')"
+      }
+    ],
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "Panel 01 «أنشئ متجرك» filled with fixture values, the subdomain reading «متاح». Used by register-store.md."
+  },
+  {
+    "id": "merchant/01-public-onboarding/register-store-2",
+    "host": "",
+    "path": "/register",
+    "waitFor": "#subdomain",
+    "steps": [
+      {
+        "fill": "#subdomain",
+        "value": "admin"
+      },
+      {
+        "waitFor": "#subdomain-status:has-text('محجوز للنظام')"
+      }
+    ],
+    "element": "form",
+    "note": "Subdomain availability state: «محجوز للنظام» inside the field. Used by register-store.md."
+  },
+  {
+    "id": "merchant/01-public-onboarding/verify-otp-1",
+    "host": "",
+    "path": "/register",
+    "waitFor": "#store_name",
+    "steps": [
+      {
+        "fill": "#store_name",
+        "value": "Noor Verify"
+      },
+      {
+        "fill": "#merchant_phone",
+        "value": "0771000002"
+      },
+      {
+        "fill": "#subdomain",
+        "value": "noorverify"
+      },
+      {
+        "waitFor": "#subdomain-status:has-text('متاح')"
+      },
+      {
+        "click": "label[for=agree_terms]"
+      },
+      {
+        "click": "button[type=submit]"
+      },
+      {
+        "waitFor": "input[aria-label^=\"الرقم\"]"
+      }
+    ],
+    "note": "Panel 02 «أدخل رمز التحقق»: six cells, masked number and the «ينتهي خلال» countdown (mock TTL). Used by verify-otp.md."
+  },
+  {
+    "id": "merchant/01-public-onboarding/provisioning-and-first-password-1",
+    "host": "",
+    "path": "/register/status/prov-guide",
+    "waitFor": "text=الزمن المنقضي",
+    "note": "The platform wait page while provisioning (mock token prefix `prov`). Used by provisioning-and-first-password.md."
+  },
+  {
+    "id": "merchant/01-public-onboarding/provisioning-and-first-password-2",
+    "host": "noor",
+    "path": "/dashboard/setup-password?t=st-guide&setup=guide",
+    "waitFor": "#new-password",
+    "note": "«اختر كلمة مرور متجرك» on the store host (mock accepts any non-empty setup token). Used by provisioning-and-first-password.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/owner-login-1",
+    "host": "noor",
+    "path": "/dashboard/login",
+    "waitFor": "#phone",
+    "note": "Owner «تسجيل الدخول». Used by owner-login.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/owner-login-2",
+    "host": "noor",
+    "path": "/dashboard/forgot-password",
+    "waitFor": "text=أرسل الرمز",
+    "note": "«نسيت كلمة المرور» before sending. Used by owner-login.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/owner-login-3",
+    "host": "noor",
+    "path": "/dashboard/reset-password?t=guide-token",
+    "waitFor": "#code",
+    "note": "«إعادة تعيين كلمة المرور» with a token in the link. Used by owner-login.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/staff-login-1",
+    "host": "noor",
+    "path": "/dashboard/staff/login",
+    "waitFor": "#staff-password",
+    "note": "«دخول الموظفين». Used by staff-login.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/overview-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard",
+    "waitFor": "[data-testid=today-bar]",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "«النظرة العامة»: today bar, new orders, attention, top products and traffic; the mobile capture shows the bottom bar. Used by overview.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/command-palette-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard",
+    "waitFor": "[data-testid=open-palette]",
+    "steps": [
+      {
+        "click": "[data-testid=open-palette]"
+      },
+      {
+        "fill": "[data-testid=palette-input]",
+        "value": "محمد"
+      },
+      {
+        "wait": 800
+      }
+    ],
+    "probe": [
+      "/api/bff/search?q=%D9%85%D8%AD%D9%85%D8%AF&limit=5"
+    ],
+    "note": "⌘K open with server groups (orders, customers) for a fixture first name. Used by command-palette.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/notifications-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard",
+    "waitFor": "[data-testid=notification-bell]",
+    "steps": [
+      {
+        "click": "[data-testid=notification-bell]"
+      },
+      {
+        "waitFor": "[data-testid=notification-panel]"
+      },
+      {
+        "wait": 600
+      }
+    ],
+    "probe": [
+      "/api/bff/notifications/summary"
+    ],
+    "note": "The bell panel with filter chips and grouped rows. Used by notifications.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/my-stores-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/stores",
+    "waitFor": "text=النطاق المطبَّق",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "probe": [
+      "/api/bff/merchant/stores"
+    ],
+    "note": "«كل متاجري»: range, applied range, per-store rows and the total. Used by my-stores.md."
+  },
+  {
+    "id": "merchant/02-dashboard-shell/my-stores-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard",
+    "waitFor": "[data-testid=store-switcher]",
+    "steps": [
+      {
+        "click": "[data-testid=store-switcher] summary"
+      },
+      {
+        "waitFor": "[data-testid=switcher-all-stores]"
+      }
+    ],
+    "note": "The topbar store switcher open. Used by my-stores.md."
+  },
+  {
+    "id": "buyer/05-storefront/browse-and-search-1",
+    "host": "noor",
+    "path": "/",
+    "waitFor": "[data-testid=product-card]",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "Store home with its sections (categories, offers, product rows). Used by browse-and-search.md."
+  },
+  {
+    "id": "buyer/05-storefront/browse-and-search-2",
+    "host": "noor",
+    "path": "/c/1",
+    "waitFor": "[data-testid=filters-panel]",
+    "note": "A category listing with the facets panel (brand / collection / tag with counts), the sort menu and the result count. Used by browse-and-search.md."
+  },
+  {
+    "id": "buyer/05-storefront/product-page-1",
+    "host": "noor",
+    "path": "/p/1007",
+    "waitFor": "[data-testid=buy-box]",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "A product with variant swatches, quantity and the two buttons. Used by product-page.md."
+  },
+  {
+    "id": "buyer/05-storefront/cart-1",
+    "host": "noor",
+    "path": "/p/1056",
+    "waitFor": "[data-testid=add-to-cart]",
+    "steps": [
+      {
+        "click": "[data-testid=add-to-cart]"
+      },
+      {
+        "waitFor": "[data-testid=cart-sheet] [data-testid=coupon-toggle]"
+      },
+      {
+        "click": "[data-testid=cart-sheet] [data-testid=coupon-toggle]"
+      },
+      {
+        "fill": "[data-testid=cart-sheet] [data-testid=coupon-input]",
+        "value": "WELCOME10"
+      },
+      {
+        "click": "[data-testid=cart-sheet] button:has-text('تطبيق')"
+      },
+      {
+        "waitFor": "[data-testid=cart-sheet] :text('مُطبَّق')"
+      }
+    ],
+    "element": "[data-testid=cart-sheet]",
+    "note": "The cart sheet with one line, coupon WELCOME10 applied and the free-shipping bar. Used by cart.md."
+  },
+  {
+    "id": "buyer/05-storefront/checkout-delivery-1",
+    "host": "noor",
+    "path": "/p/1056",
+    "waitFor": "[data-testid=buy-now]",
+    "steps": [
+      {
+        "click": "[data-testid=buy-now]"
+      },
+      {
+        "waitFor": "#field-name"
+      }
+    ],
+    "fullPage": true,
+    "note": "Checkout (buy-now) — «بياناتك», «التوصيل» tabs, delivery methods and the summary. Used by checkout-delivery.md."
+  },
+  {
+    "id": "buyer/05-storefront/checkout-payment-1",
+    "host": "noor",
+    "path": "/p/1056",
+    "waitFor": "[data-testid=buy-now]",
+    "steps": [
+      {
+        "click": "[data-testid=buy-now]"
+      },
+      {
+        "waitFor": "#field-name"
+      },
+      {
+        "click": "[data-testid=pay-manual]"
+      },
+      {
+        "waitFor": "[data-testid=manual-transfer]"
+      }
+    ],
+    "element": "section:has(#field-payment_method)",
+    "note": "The «الدفع» section with the bank / wallet transfer chosen: payout accounts, amount and receipt fields. Used by checkout-payment.md."
+  },
+  {
+    "id": "buyer/05-storefront/order-success-1",
+    "host": "noor",
+    "path": "/p/1056",
+    "waitFor": "[data-testid=buy-now]",
+    "steps": [
+      {
+        "click": "[data-testid=buy-now]"
+      },
+      {
+        "waitFor": "#field-name"
+      },
+      {
+        "fill": "#field-name",
+        "value": "فاطمة أحمد"
+      },
+      {
+        "fill": "#field-phone",
+        "value": "0771000020"
+      },
+      {
+        "fill": "#field-address",
+        "value": "صنعاء — شارع حدة"
+      },
+      {
+        "click": "[data-testid=pay-cod]"
+      },
+      {
+        "click": "[data-testid=checkout-submit]:visible"
+      },
+      {
+        "waitFor": "[data-testid=otp-dialog-cod]"
+      },
+      {
+        "fill": "[data-testid=otp-dialog-cod] input",
+        "value": "123456"
+      },
+      {
+        "waitFor": "[data-testid=order-number]"
+      }
+    ],
+    "note": "Places a COD buy-now order with the mock OTP and captures /checkout/success/<uuid>. Creates one fixture order per run; desktop only so the mock OTP limit (3 codes per number in 10 minutes) is never reached. Used by order-success.md."
+  },
+  {
+    "id": "buyer/05-storefront/track-order-1",
+    "host": "noor",
+    "path": "/p/1056",
+    "waitFor": "[data-testid=buy-now]",
+    "steps": [
+      {
+        "click": "[data-testid=buy-now]"
+      },
+      {
+        "waitFor": "#field-name"
+      },
+      {
+        "fill": "#field-name",
+        "value": "فاطمة أحمد"
+      },
+      {
+        "fill": "#field-phone",
+        "value": "0771000021"
+      },
+      {
+        "fill": "#field-address",
+        "value": "صنعاء — شارع حدة"
+      },
+      {
+        "click": "[data-testid=pay-cod]"
+      },
+      {
+        "click": "[data-testid=checkout-submit]:visible"
+      },
+      {
+        "waitFor": "[data-testid=otp-dialog-cod]"
+      },
+      {
+        "fill": "[data-testid=otp-dialog-cod] input",
+        "value": "123456"
+      },
+      {
+        "waitFor": "[data-testid=order-number]"
+      },
+      {
+        "click": "[data-testid=track-link]"
+      },
+      {
+        "waitFor": "[data-testid=tracking]"
+      }
+    ],
+    "note": "Places a COD order, then opens /track/<uuid>: status axes and one delivery card. Creates one fixture order per run; desktop only so the mock OTP limit (3 codes per number in 10 minutes) is never reached. Used by track-order.md."
+  },
+  {
+    "id": "buyer/05-storefront/app-and-notifications-1",
+    "host": "noor",
+    "path": "/p/1056",
+    "waitFor": "[data-testid=buy-now]",
+    "steps": [
+      {
+        "click": "[data-testid=buy-now]"
+      },
+      {
+        "waitFor": "#field-name"
+      },
+      {
+        "fill": "#field-name",
+        "value": "فاطمة أحمد"
+      },
+      {
+        "fill": "#field-phone",
+        "value": "0771000022"
+      },
+      {
+        "fill": "#field-address",
+        "value": "صنعاء — شارع حدة"
+      },
+      {
+        "click": "[data-testid=pay-cod]"
+      },
+      {
+        "click": "[data-testid=checkout-submit]:visible"
+      },
+      {
+        "waitFor": "[data-testid=otp-dialog-cod]"
+      },
+      {
+        "fill": "[data-testid=otp-dialog-cod] input",
+        "value": "123456"
+      },
+      {
+        "waitFor": "[data-testid=order-number]"
+      },
+      {
+        "waitFor": "[data-testid=push-subscribe]"
+      }
+    ],
+    "element": "[data-testid=order-success]",
+    "note": "Success page with «نبّهني عند تغيّر حالة طلبي». Places one fixture COD order per run (own fixture number). Needs a VAPID public key in the mock; without one the button is hidden and this shot fails. Used by app-and-notifications.md."
+  },
+  {
+    "id": "buyer/05-storefront/wishlist-1",
+    "host": "noor",
+    "path": "/p/1056",
+    "waitFor": "[data-testid=wishlist-toggle]",
+    "steps": [
+      {
+        "click": "[data-testid=wishlist-toggle]"
+      },
+      {
+        "waitFor": "[data-testid=shopper-phone]"
+      },
+      {
+        "fill": "[data-testid=shopper-phone] input",
+        "value": "0771000023"
+      },
+      {
+        "click": "[data-testid=shopper-phone] [data-testid=shopper-phone-submit]"
+      },
+      {
+        "waitFor": "button:has-text('عرض القائمة')"
+      },
+      {
+        "click": "button:has-text('عرض القائمة')"
+      },
+      {
+        "waitFor": "[data-testid=wishlist-items]"
+      }
+    ],
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "Saves one product with a fixture phone (no OTP), then opens «المفضلة». Used by wishlist.md."
+  },
+  {
+    "id": "buyer/05-storefront/reviews-1",
+    "host": "noor",
+    "path": "/p/1007",
+    "waitFor": "[data-testid=review-open]",
+    "steps": [
+      {
+        "click": "[data-testid=review-open]"
+      },
+      {
+        "waitFor": "[data-testid=review-form]"
+      }
+    ],
+    "element": "[data-testid=review-form]",
+    "note": "The product review form («تقييمك», «تعليقك», «الاسم (اختياري)»). Used by reviews.md."
+  },
+  {
+    "id": "buyer/05-storefront/reviews-2",
+    "host": "noor",
+    "path": "/about",
+    "waitFor": "[data-testid=store-reviews]",
+    "element": "[data-testid=store-reviews]",
+    "note": "«تقييم المتجر» on the about page: average, count, latest reviews and «قيّم المتجر». Needs the noor fixture to have an about page. Used by reviews.md."
+  },
+  {
+    "id": "merchant/03-catalog/add-product-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/new",
+    "waitFor": "[data-testid=card-basic]",
+    "fullPage": true,
+    "note": "The card-based editor of «منتج جديد»: the main cards, «حالة النشر», «خصائص المنتج» and the sticky save bar. Used by add-product.md."
+  },
+  {
+    "id": "merchant/03-catalog/add-product-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/new?template=1",
+    "waitFor": "[data-testid=card-pricing]",
+    "element": "[data-testid=card-pricing]",
+    "note": "«المتغيرات والتسعير» of a new product started from the template «ملابس قطنية» (attributes 1 and 2): the «المتغيرات قبل الحفظ» table. Used by add-product.md."
+  },
+  {
+    "id": "merchant/03-catalog/add-product-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/new",
+    "waitFor": "[data-testid=product-save]",
+    "steps": [
+      {
+        "click": "[data-testid=product-save]"
+      },
+      {
+        "waitFor": "text=أكمل الحقول المطلوبة"
+      }
+    ],
+    "note": "Save on an empty form: fields marked red and «أكمل الحقول المطلوبة: …» next to «حفظ». Used by add-product.md."
+  },
+  {
+    "id": "merchant/03-catalog/edit-product-and-variants-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products",
+    "waitFor": "[data-testid=product-row-actions]",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "«المنتجات»: filters, the number strip and the table. Used by edit-product-and-variants.md."
+  },
+  {
+    "id": "merchant/03-catalog/edit-product-and-variants-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/1001",
+    "waitFor": "[data-testid=card-pricing]",
+    "element": "[data-testid=card-pricing]",
+    "note": "A saved product's «المتغيرات والتسعير» card with «مصفوفة المتغيرات». Fixture id 1001 = «ثوب قطن صيفي». Used by edit-product-and-variants.md."
+  },
+  {
+    "id": "merchant/03-catalog/edit-product-and-variants-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/1001?tab=history",
+    "waitFor": "[data-testid=card-history]",
+    "element": "[data-testid=card-history]",
+    "note": "«سجل التغييرات» opened by ?tab=history. Used by edit-product-and-variants.md."
+  },
+  {
+    "id": "merchant/03-catalog/organization-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/organization?tab=categories",
+    "waitFor": "[data-testid=category-tree]",
+    "note": "«التصنيفات» tab: the tree with drag handles. Used by organization.md."
+  },
+  {
+    "id": "merchant/03-catalog/organization-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/organization?tab=brands",
+    "waitFor": "text=الشعار",
+    "note": "«الماركات» tab. Used by organization.md."
+  },
+  {
+    "id": "merchant/03-catalog/organization-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/organization/collections/1",
+    "waitFor": "text=إضافة منتجات",
+    "note": "Collection editor of «هدايا العيد» (search, drag order, remove). Used by organization.md."
+  },
+  {
+    "id": "merchant/03-catalog/organization-4",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/organization?tab=badges",
+    "waitFor": "text=شارات المتجر",
+    "note": "«الشارات» tab with the preview and the read-only dynamic badges. Used by organization.md."
+  },
+  {
+    "id": "merchant/03-catalog/bundles-and-compatibility-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/1044?tab=advanced",
+    "waitFor": "[data-testid=bundle-total]",
+    "element": "[data-testid=panel-bundle]",
+    "note": "«الحزمة» panel of «طقم فناجين» (1044): components, «رسوم التجميع» and «سعر الحزمة (المكوّنات الأساسية)». Used by bundles-and-compatibility.md."
+  },
+  {
+    "id": "merchant/03-catalog/bundles-and-compatibility-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/1044?tab=advanced",
+    "waitFor": "[data-testid=compat-rules]",
+    "element": "[data-testid=compat-rules]",
+    "note": "«قواعد التوافق» with the add-rule row. Used by bundles-and-compatibility.md."
+  },
+  {
+    "id": "merchant/03-catalog/personalization-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/1017?tab=advanced",
+    "waitFor": "[data-testid=personalization-fields]",
+    "element": "[data-testid=panel-personalization]",
+    "note": "«حقول التخصيص» of «خاتم فضة» (1017): ordered fields, «إلزامي» and surcharges. Used by personalization.md."
+  },
+  {
+    "id": "merchant/03-catalog/auctions-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/1018?tab=advanced",
+    "waitFor": "[data-testid=auction-form]",
+    "element": "[data-testid=panel-auction]",
+    "note": "«المزاد» panel of «مسبحة كهرمان» (1018): settings and «العطاءات». Phone numbers are masked by the pipeline. Used by auctions.md."
+  },
+  {
+    "id": "merchant/03-catalog/serials-and-formula-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/1013?tab=advanced",
+    "waitFor": "[data-testid=serials-paste]",
+    "element": "[data-testid=panel-serials]",
+    "steps": [
+      {
+        "fill": "[data-testid=serials-paste]",
+        "value": "SN-DEMO-1\nSN-DEMO-1"
+      },
+      {
+        "waitFor": "[data-testid=serials-dups]"
+      }
+    ],
+    "note": "«الأكواد التسلسلية» of «ساعة ذكية» (1013) with a repeated code pasted: «أكواد مكررة:» shown and the add button disabled. Used by serials-and-formula.md."
+  },
+  {
+    "id": "merchant/03-catalog/serials-and-formula-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/1043",
+    "waitFor": "[data-testid=formula-preview]",
+    "element": "[data-testid=card-pricing]",
+    "note": "«تسعير بالمعادلة» of «زعفران» (1043) with «السعر الناتج:». Used by serials-and-formula.md."
+  },
+  {
+    "id": "merchant/03-catalog/tier-prices-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/1035?tab=advanced",
+    "waitFor": "[data-testid=tier-prices]",
+    "element": "[data-testid=panel-tiers]",
+    "note": "«أسعار الكميات» of «تمر سكري فاخر 1كغ» (1035): three tiers and «معاينة لكمية». Used by tier-prices.md."
+  },
+  {
+    "id": "merchant/03-catalog/import-products-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products/import",
+    "waitFor": "[data-testid=import-file]",
+    "note": "«استيراد المنتجات», stage «رفع الملف». Used by import-products.md."
+  },
+  {
+    "id": "merchant/03-catalog/export-products-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/products",
+    "waitFor": "[data-testid=product-row-actions]",
+    "steps": [
+      {
+        "click": "[aria-label=\"المزيد\"]"
+      },
+      {
+        "waitFor": "text=تصدير CSV بالفلاتر الحالية"
+      }
+    ],
+    "note": "The «المزيد» menu open with «تصدير CSV بالفلاتر الحالية». Used by export-products.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/orders-list-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/orders",
+    "waitFor": "[data-testid=orders-table]",
+    "note": "«الطلبات»: counters, filters and the table (newest first, 10480 on top). Used by orders-list.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/order-detail-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/orders/10480",
+    "waitFor": "[data-testid=order-detail]",
+    "fullPage": true,
+    "note": "Order 10480 («جديد»): header, items, customer, invoice and the side cards. Used by order-detail.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/order-detail-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/orders/10480",
+    "waitFor": "[data-testid=timeline]",
+    "element": "[data-testid=timeline]",
+    "note": "«الجدول الزمني» of order 10480. Used by order-detail.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/order-detail-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/orders/10480/print",
+    "waitFor": "[data-testid=order-print]",
+    "note": "Print view of order 10480. Used by order-detail.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/order-statuses-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/orders/10480",
+    "waitFor": "[data-testid=fulfillment-trigger-10480]",
+    "steps": [
+      {
+        "click": "[data-testid=fulfillment-trigger-10480]"
+      },
+      {
+        "waitFor": "[data-testid^=fulfillment-option-]"
+      }
+    ],
+    "note": "The fulfilment-status menu open on order 10480. Used by order-statuses.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/order-statuses-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/orders/statuses",
+    "waitFor": "[data-testid=status-row]",
+    "note": "«حالات الطلب» with the seeded statuses and «حالة جديدة». Used by order-statuses.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/payment-review-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/orders?status=payment_review",
+    "waitFor": "[data-testid=orders-table]",
+    "steps": [
+      {
+        "click": "[data-testid=orders-table] tbody tr >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=payment-review]"
+      }
+    ],
+    "element": "[data-testid=payment-review]",
+    "note": "The payment-review section (receipt, «المبلغ المُبلَّغ عنه», «الفرق») of the first «يتطلب مراجعة دفع» order. Used by payment-review.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/manual-order-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/orders/new",
+    "waitFor": "[data-testid=new-order-form]",
+    "note": "The empty «طلب يدوي» form. Used by manual-order.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/refunds-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/orders?status=completed",
+    "waitFor": "[data-testid=orders-table]",
+    "steps": [
+      {
+        "click": "[data-testid=orders-table] tbody tr >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=open-refund]"
+      },
+      {
+        "click": "[data-testid=open-refund]"
+      },
+      {
+        "waitFor": "[data-testid=refund-dialog]"
+      }
+    ],
+    "element": "[data-testid=refund-dialog]",
+    "note": "The «استرجاع مبلغ» dialog of the first «مكتمل» order. Used by refunds.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/refunds-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/returns/refunds-log",
+    "waitFor": "[data-testid=refunds-table]",
+    "note": "«سجل الاسترجاعات» (needs the plan feature refunds). Used by refunds.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/returns-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/returns",
+    "waitFor": "[data-testid=returns-table]",
+    "note": "«المرتجعات»: «ملخص المرتجعات» strip and the table. Used by returns.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/returns-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/returns?return=5001",
+    "waitFor": "[data-testid=return-approve]",
+    "steps": [
+      {
+        "click": "[data-testid=return-approve]"
+      },
+      {
+        "waitFor": "[data-testid=approve-form]"
+      }
+    ],
+    "element": "[data-testid=return-sheet]",
+    "note": "Return 5001 («مطلوب», cash) with «اعتماد» open and «موقع إعادة المخزون». Used by returns.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/rma-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/returns/rma",
+    "waitFor": "[data-testid=rma-scan-link]",
+    "note": "«مسار RMA»: «حالات RMA» strip and the table. Used by rma.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/rma-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/returns/rma/scan",
+    "waitFor": "[data-testid=scan-input]",
+    "note": "«مسح الاستلام» waiting for a scan («بانتظار المسح…»). Used by rma.md."
+  },
+  {
+    "id": "merchant/04-orders-returns/rma-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/returns/rma/804",
+    "waitFor": "[data-testid=qa-decision]",
+    "element": "[data-testid=rma-detail]",
+    "note": "RMA-804 («بانتظار الفحص»): «مسار المرتجع», «قرار الفحص» buttons and «الأحداث». Used by rma.md."
+  },
+  {
+    "id": "merchant/06-customers-wallets/customers-list-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/customers",
+    "waitFor": "[data-testid=customers-table]",
+    "note": "«العملاء» (sidebar «تقرير العميل»): segment bar, filters and the derived customer table. Used by customers-list.md."
+  },
+  {
+    "id": "merchant/06-customers-wallets/customers-list-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/customers?segment=dormant",
+    "waitFor": "[data-testid=segment-count]",
+    "element": "[data-testid=segment-bar]",
+    "note": "The segment line «الشريحة: خامل · N عميلاً» with «إنشاء حملة لهذه الشريحة» and «تصدير CSV». Used by customers-list.md."
+  },
+  {
+    "id": "merchant/06-customers-wallets/customer-profile-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/customers/967770841802",
+    "waitFor": "[data-testid=customer-profile]",
+    "fullPage": true,
+    "note": "Profile of M42's demo shopper 967770841802: header, number strip, the two COD trust readings and the tabs. Used by customer-profile.md."
+  },
+  {
+    "id": "merchant/06-customers-wallets/customer-profile-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/customers/967770841802?tab=reviews",
+    "waitFor": "[data-testid=profile-tab-reviews]",
+    "note": "The «التقييمات» tab (reviews by phone; «اعتماد» for hidden ones). Used by customer-profile.md."
+  },
+  {
+    "id": "merchant/06-customers-wallets/cod-control-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/customers/967770841802",
+    "waitFor": "[data-testid=cod-disable]",
+    "steps": [
+      {
+        "click": "[data-testid=cod-disable]"
+      },
+      {
+        "waitFor": "[data-testid=cod-dialog]"
+      }
+    ],
+    "element": "[data-testid=cod-dialog]",
+    "note": "The «إيقاف الدفع عند الاستلام» dialog (nothing is submitted). Used by cod-control.md."
+  },
+  {
+    "id": "merchant/06-customers-wallets/cod-control-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/customers/967770000099",
+    "waitFor": "[data-testid=cod-disabled-banner]",
+    "element": "[data-testid=cod-trust]",
+    "note": "The risky COD phone 967770000099, disabled in this store: «الدفع عند الاستلام موقوف لهذا العميل» with the reason and «إعادة التفعيل». Used by cod-control.md."
+  },
+  {
+    "id": "merchant/06-customers-wallets/export-customers-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/customers",
+    "waitFor": "[data-testid=export-open]",
+    "steps": [
+      {
+        "click": "[data-testid=export-open]"
+      },
+      {
+        "waitFor": "[data-testid=export-dialog]"
+      }
+    ],
+    "element": "[data-testid=export-dialog]",
+    "note": "The «تصدير العملاء» confirm dialog (not confirmed, so no file and no audit row). Used by export-customers.md."
+  },
+  {
+    "id": "merchant/06-customers-wallets/customer-wallets-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/customers/wallets",
+    "waitFor": "[data-testid=wallets-sort]",
+    "note": "«محافظ العملاء»: totals line, search, sort and the table. Used by customer-wallets.md."
+  },
+  {
+    "id": "merchant/06-customers-wallets/customer-wallets-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/customers/wallets/1",
+    "waitFor": "[data-testid=topup-open]",
+    "steps": [
+      {
+        "click": "[data-testid=topup-open]"
+      },
+      {
+        "waitFor": "[data-testid=topup-form]"
+      }
+    ],
+    "element": "[data-testid=topup-panel]",
+    "note": "«تعبئة محفظة …» for wallet 1 (amount, reason, note; not submitted). Wallet 7 is the inactive one. Used by customer-wallets.md."
+  },
+  {
+    "id": "merchant/06-customers-wallets/loyalty-points-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/customers/points",
+    "waitFor": "[data-testid=points-program]",
+    "note": "«نقاط الولاء»: programme line and balances, highest first. Used by loyalty-points.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/theme-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/design",
+    "waitFor": "[data-testid=identity-panel]",
+    "note": "«تصميم المتجر»: تبويب «الهوية» والقوالب الجاهزة والمعاينة والشريط العلوي (الحالة، «تجاهل»، «نشر»). Used by theme.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/theme-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/design?tab=identity",
+    "waitFor": "[data-testid=identity-panel]",
+    "element": "[data-testid=design-panel]",
+    "note": "The identity panel alone: colours, fonts, style and «الشعار». Used by theme.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/sections-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/design?tab=sections",
+    "waitFor": "[data-testid=sections-list]",
+    "note": "Tab «الأقسام»: «أقسام الصفحة الرئيسية», drag handles, switches. Used by sections.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/sections-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/design?tab=sections",
+    "waitFor": "[data-testid=sections-list]",
+    "steps": [
+      {
+        "click": "[data-testid=add-section]"
+      },
+      {
+        "click": "[data-testid=add-type-slider]"
+      },
+      {
+        "waitFor": "[data-testid=items-editor]"
+      }
+    ],
+    "note": "A new «سلايدر» opened in the section editor (draft only, nothing published). Used by sections.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/announcement-bar-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/design?tab=announcement",
+    "waitFor": "[data-testid=announcement-panel]",
+    "note": "Tab «شريط الإعلانات» with the live preview. Used by announcement-bar.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/coupons-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing",
+    "waitFor": "[data-testid=marketing-summary]",
+    "note": "«مركز التسويق»: summary line and the seven tools. Used by coupons.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/coupons-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/coupons/new",
+    "waitFor": "[data-testid=coupon-form]",
+    "note": "Form «كوبون جديد». Used by coupons.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/coupons-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/coupons",
+    "waitFor": "[data-testid=coupons-screen]",
+    "note": "Coupons list with the temporal states (fixtures WELCOME10…OFF, SARA20 linked to influencer 7). Used by coupons.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/offers-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/offers/new",
+    "waitFor": "[data-testid=offer-preview]",
+    "note": "Form «عرض جديد» with «شرط التطبيق» and the storefront preview. Used by offers.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/offers-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/offers/1",
+    "waitFor": "[data-testid=bxgy-fields]",
+    "note": "Offer 1 «البخور 3 بـ 2» (buy X get Y). Used by offers.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/offers-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/offers",
+    "waitFor": "[data-testid=offers-screen]",
+    "note": "Offers list by priority. Used by offers.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/abandoned-carts-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/abandoned-carts",
+    "waitFor": "[data-testid=abandoned-carts-screen]",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "Abandoned carts list with the status counters. Used by abandoned-carts.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/abandoned-carts-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/abandoned-carts?status=abandoned",
+    "waitFor": "[data-testid=abandoned-carts-screen]",
+    "steps": [
+      {
+        "click": "tbody tr >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=cart-sheet]"
+      }
+    ],
+    "note": "Cart detail sheet of the first «متروكة» cart with «إرسال تذكير» (not confirmed). Used by abandoned-carts.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/abandoned-carts-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/abandoned-carts/settings",
+    "waitFor": "[data-testid=abandoned-settings]",
+    "fullPage": true,
+    "note": "«إعدادات تذكير السلات». Used by abandoned-carts.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/campaigns-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/campaigns/new",
+    "waitFor": "[data-testid=campaign-form]",
+    "note": "Form «حملة جديدة»: channels (connected / «اربط القناة»), audiences, message. Used by campaigns.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/campaigns-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/campaigns/3",
+    "waitFor": "[data-testid=campaign-form]",
+    "steps": [
+      {
+        "click": "[data-testid=preview]"
+      },
+      {
+        "waitFor": "[data-testid=preview-sheet]"
+      }
+    ],
+    "note": "Scheduled campaign 3 «عودة العملاء الخاملين» with «معاينة الحملة» open. Used by campaigns.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/campaigns-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/campaigns",
+    "waitFor": "[data-testid=campaigns-screen]",
+    "note": "Campaigns list (sent, scheduled, draft fixtures 1–4). Used by campaigns.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/timeline-loyalty-gifting-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/timeline",
+    "waitFor": "[data-testid=timeline-months]",
+    "note": "«الجدول الزمني» month rows. Used by timeline-loyalty-gifting.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/timeline-loyalty-gifting-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/loyalty",
+    "waitFor": "[data-testid=loyalty-example]",
+    "note": "«نقاط الولاء» settings with the example line. Used by timeline-loyalty-gifting.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/timeline-loyalty-gifting-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/gifting",
+    "waitFor": "[data-testid=gifting-screen]",
+    "note": "«الإهداء» switch. Used by timeline-loyalty-gifting.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/affiliates-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/affiliates",
+    "waitFor": "[data-testid=partner-summary]",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "«المسوّقون والمؤثرون», tab «المسوّقون»: performance strip and list. Used by affiliates.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/affiliates-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/affiliates/1",
+    "waitFor": "[data-testid=partner-detail]",
+    "steps": [
+      {
+        "click": "[data-testid=settle-all]"
+      },
+      {
+        "waitFor": "[data-testid=settle-preview]"
+      }
+    ],
+    "note": "Affiliate 1 with the settle dialog preview «… عمليات — المجموع …» (not confirmed). Needs a fixture affiliate with pending sales — if affiliate 1 has none, pick another id from src/mocks/affiliates/state.ts. Used by affiliates.md."
+  },
+  {
+    "id": "merchant/07-marketing-design-partners/influencers-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/influencers/7",
+    "waitFor": "[data-testid=influencer-coupons]",
+    "fullPage": true,
+    "note": "Influencer 7 «سارة المؤثرة»: linked coupons and sales with the coupon column. Used by influencers.md."
+  },
+  {
+    "id": "merchant/08-finance/payment-gateways-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/payments",
+    "waitFor": "[data-testid=gateway-row]",
+    "element": "[data-testid=gateways]",
+    "note": "«ربط بوابات الدفع»: each gateway with its state and switch. Used by payment-gateways.md."
+  },
+  {
+    "id": "merchant/08-finance/payment-gateways-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/payments?gateway=kuraimi",
+    "waitFor": "[data-testid=gateway-form]",
+    "element": "[data-testid=gateway-sheet]",
+    "note": "The «حاسب الكريمي» credential form in the side sheet (secrets masked). Used by payment-gateways.md."
+  },
+  {
+    "id": "merchant/08-finance/payment-methods-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/payments",
+    "waitFor": "[data-testid=switch-sharwa-pay]",
+    "element": "[data-testid=store-switches]",
+    "note": "«طرق الدفع الأخرى»: «قبول شروة باي» and «قبول التحويل اليدوي» with the active-accounts line. Used by payment-methods.md."
+  },
+  {
+    "id": "merchant/08-finance/payout-accounts-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/payments/payout-accounts",
+    "waitFor": "[data-testid=customer-preview]",
+    "note": "«حسابات الاستلام»: bank/wallet tabs, the list and «كما يراها العميل». Used by payout-accounts.md."
+  },
+  {
+    "id": "merchant/08-finance/merchant-wallet-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/wallet",
+    "waitFor": "[data-testid=balance-row]",
+    "fullPage": true,
+    "note": "«محفظة المتجر»: four currency rows (balance, «المتاح للسحب», «محجوز») and «سجل الحركات». Used by merchant-wallet.md."
+  },
+  {
+    "id": "merchant/08-finance/merchant-wallet-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/wallet/withdrawals/new",
+    "waitFor": "[data-testid=withdrawal-form]",
+    "element": "[data-testid=withdrawal-form]",
+    "note": "The «طلب سحب» form before review (nothing is sent). Used by merchant-wallet.md."
+  },
+  {
+    "id": "merchant/08-finance/platform-dues-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/wallet/dues",
+    "waitFor": "[data-testid=dues-tab-commission]",
+    "note": "«المستحقات للمنصة»: tabs and either the totals strip or «العمولات غير مفعّلة حالياً», depending on the fixture's commission_enabled. Used by platform-dues.md."
+  },
+  {
+    "id": "merchant/08-finance/expenses-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/wallet/expenses",
+    "waitFor": "[data-testid=expense-ledger]",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "«المصروفات التشغيلية»: entry form and the month-grouped ledger; the mobile shot shows the «مصروف جديد» bar above the bottom navigation. Used by expenses.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/inventory-hub-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inventory",
+    "waitFor": "[data-testid=inventory-row]",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "«المخزون» table with the counter strip and the five sub-sections. Used by inventory-hub.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/inventory-hub-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inventory?location=1",
+    "waitFor": "[data-testid=source-hint]",
+    "note": "Per-location view (location 1 «المستودع الرئيسي»): «المصدر: مخزون الموقع …» and the on-hand/reserved/quarantine/available columns. Used by inventory-hub.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/adjust-stock-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inventory",
+    "waitFor": "[data-testid=inventory-row]",
+    "steps": [
+      {
+        "click": "[data-testid=qty-button] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=adjust-form]"
+      }
+    ],
+    "note": "«تعديل المخزون» sheet opened from the first editable quantity (not saved). Used by adjust-stock.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/movements-and-reservations-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inventory/movements",
+    "waitFor": "[data-testid=movements-summary]",
+    "note": "«سجل الحركات» with count and net change. Used by movements-and-reservations.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/movements-and-reservations-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inventory/items",
+    "waitFor": "[data-testid=serial]",
+    "note": "«الوحدات المسلسلة». Used by movements-and-reservations.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/movements-and-reservations-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inventory/reservations",
+    "waitFor": "text=الحجوزات",
+    "note": "«الحجوزات» list. Used by movements-and-reservations.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/writeoffs-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inventory/writeoffs",
+    "waitFor": "[data-testid=writeoffs-summary]",
+    "steps": [
+      {
+        "click": "[data-testid=new-writeoff]"
+      },
+      {
+        "waitFor": "[data-testid=writeoff-form]"
+      }
+    ],
+    "note": "«طلب إعدام مخزون» sheet open (not submitted). Used by writeoffs.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/writeoffs-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/approvals?type=stock_writeoff",
+    "waitFor": "text=إعدام",
+    "note": "A stock_writeoff card in the approvals queue. Needs plan feature staff_rbac on the fixture store and a pending write-off in the mock. Used by writeoffs.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/export-inventory-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inventory",
+    "waitFor": "[data-testid=export-csv]",
+    "element": "[data-testid=export-csv]",
+    "note": "The «تصدير CSV» button. Used by export-inventory.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/locations-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/locations/new",
+    "waitFor": "[data-testid=location-form]",
+    "fullPage": true,
+    "note": "Form «موقع جديد» (accordion sections). Used by locations.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/locations-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/locations",
+    "waitFor": "[data-testid=routing-link]",
+    "viewports": [
+      "desktop",
+      "mobile"
+    ],
+    "note": "«المواقع» list (WH-01 … 3PL-DMM fixtures). Used by locations.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/multi-location-mode-1",
+    "host": "shop",
+    "session": "merchant",
+    "path": "/dashboard/locations",
+    "waitFor": "[data-testid=locations-activation]",
+    "note": "Activation screen of a store with the mode off (empty fixture store `shop`; needs plan feature multi_location there). Used by multi-location-mode.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/multi-location-mode-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/locations",
+    "waitFor": "#multi_location_enabled",
+    "steps": [
+      {
+        "click": "#multi_location_enabled"
+      },
+      {
+        "click": "text=حفظ التغييرات"
+      },
+      {
+        "click": "[role=dialog] button:has-text('إيقاف')"
+      },
+      {
+        "waitFor": "[data-testid=multi-location-conflict]"
+      }
+    ],
+    "note": "Settings «المواقع»: switch off, save, confirm → «لم يُوقف تعدد المواقع» conflict panel (not merged). Selectors for the save/confirm buttons may need adjusting. Used by multi-location-mode.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/location-inventory-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/locations/1?tab=inventory",
+    "waitFor": "[data-testid=location-inventory]",
+    "note": "Location 1 inventory tab, below-reorder rows first. Used by location-inventory.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/location-inventory-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/locations/1?tab=inventory",
+    "waitFor": "[data-testid=location-inventory]",
+    "steps": [
+      {
+        "click": "[data-testid=row-adjust] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=row-editor]"
+      }
+    ],
+    "note": "Row editor open on the first row: adjust + limits (not saved). Used by location-inventory.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/location-staff-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/locations/2?tab=staff",
+    "waitFor": "[data-testid=location-staff]",
+    "note": "Location 2 «فرع الرياض» staff tab with the assignment form. Used by location-staff.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/routing-rules-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/locations/routing",
+    "waitFor": "[data-testid=routing-preview]",
+    "note": "«قواعد التوجيه» with «جرّب التوجيه». Used by routing-rules.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/suppliers-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/suppliers",
+    "waitFor": "[data-testid=new-supplier]",
+    "steps": [
+      {
+        "click": "[data-testid=new-supplier]"
+      },
+      {
+        "waitFor": "[data-testid=supplier-form]"
+      }
+    ],
+    "note": "Suppliers list with the «مورد جديد» sheet open (not saved). Used by suppliers.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/suppliers-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/suppliers/1",
+    "waitFor": "[data-testid=supplier-orders]",
+    "note": "Supplier 1 card and its orders. Used by suppliers.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/purchase-orders-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/purchase-orders/new",
+    "waitFor": "[data-testid=po-form]",
+    "note": "Form «أمر شراء جديد». Used by purchase-orders.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/purchase-orders-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/purchase-orders/22/receive",
+    "waitFor": "[data-testid=receive-lines]",
+    "note": "Receive screen of PO 22 (partially received fixture). Not submitted. Used by purchase-orders.md."
+  },
+  {
+    "id": "merchant/10-inventory-locations-procurement/purchase-orders-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/purchase-orders/22",
+    "waitFor": "[data-testid=po-timeline]",
+    "fullPage": true,
+    "note": "PO 22 detail with lines, progress and timeline. Used by purchase-orders.md."
+  },
+  {
+    "id": "merchant/11-shipping/shipping-settings-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping",
+    "waitFor": "[data-testid=fees-section]",
+    "element": "[data-testid=fees-section]",
+    "note": "«الرسوم العامة»: the fee in YER_NEW and the free-shipping threshold in the store currency, with «حفظ الرسوم». Used by shipping-settings.md."
+  },
+  {
+    "id": "merchant/11-shipping/delivery-methods-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/delivery-methods",
+    "waitFor": "[data-testid=customer-preview]",
+    "note": "The methods table (method 1 carries the «شروة شيب» tag; method 3 is inactive) and «كما يراها العميل». Used by delivery-methods.md."
+  },
+  {
+    "id": "merchant/11-shipping/delivery-methods-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/delivery-methods?method=1",
+    "waitFor": "[data-testid=method-form]",
+    "element": "[data-testid=method-form]",
+    "note": "The official «شروة شيب» method form: read-only name with its hint, price, time and the «نشطة» toggle. Nothing is saved. Used by delivery-methods.md."
+  },
+  {
+    "id": "merchant/11-shipping/pickup-locations-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/pickup-locations",
+    "waitFor": "[data-testid=pickups-list]",
+    "note": "Pickup points in checkout order with drag handles and «رفع»/«خفض»; the M22 hint shows when a fixture location is a pickup point. Used by pickup-locations.md."
+  },
+  {
+    "id": "merchant/11-shipping/delivery-providers-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/providers?tab=agents&provider=1",
+    "waitFor": "[data-testid=provider-form]",
+    "note": "Agents tab with the form of provider 1 «سارة الحربي — مندوبة الرياض» linked to staff #2. Nothing is saved. Used by delivery-providers.md."
+  },
+  {
+    "id": "merchant/11-shipping/carriers-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/carriers/aramex",
+    "waitFor": "[data-testid=credentials-form]",
+    "fullPage": true,
+    "note": "Aramex: connection state, «بيانات الاعتماد» with secret hints, «اختبار الاتصال» and «الأحداث الواردة» with the webhook URL. The test is not run. Used by carriers.md."
+  },
+  {
+    "id": "merchant/11-shipping/zones-packaging-sla-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/zones",
+    "waitFor": "[data-testid=schematic-map]",
+    "note": "«مناطق شروة شيب»: the read-only table and the schematic circles. Used by zones-packaging-sla.md."
+  },
+  {
+    "id": "merchant/11-shipping/zones-packaging-sla-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/zone-review?tab=restricted",
+    "waitFor": "[data-testid=add-restricted]",
+    "steps": [
+      {
+        "click": "[data-testid=add-restricted]"
+      },
+      {
+        "waitFor": "[data-testid=restricted-form]"
+      },
+      {
+        "fill": "[data-testid=rz-points]",
+        "value": "15.47, 44.15\n15.48, 44.21\n15.42, 44.20"
+      },
+      {
+        "wait": 300
+      }
+    ],
+    "element": "[data-testid=restricted-form]",
+    "note": "«نطاق محظور جديد» with three fixture points and the preview polygon. Not saved. Used by zones-packaging-sla.md."
+  },
+  {
+    "id": "merchant/11-shipping/zones-packaging-sla-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/zone-review?tab=sla",
+    "waitFor": "[data-testid=sla-tab]",
+    "note": "«قواعد SLA» list (zone / method / hours). Used by zones-packaging-sla.md."
+  },
+  {
+    "id": "merchant/11-shipping/zone-review-and-edge-cases-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/zone-review",
+    "waitFor": "[data-testid=zone-review-screen]",
+    "fullPage": true,
+    "note": "«مراجعة المناطق»: map with zones, restricted polygons and review points, then the queue with «تأكيد» / «تحويل إلى استلام» / «إلغاء». Used by zone-review-and-edge-cases.md."
+  },
+  {
+    "id": "merchant/11-shipping/zone-review-and-edge-cases-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/edge-cases",
+    "waitFor": "[data-testid=edge-strip]",
+    "note": "«الحالات الحدّية» with the four tabs and counts, notes under each event. Used by zone-review-and-edge-cases.md."
+  },
+  {
+    "id": "merchant/11-shipping/address-and-convert-to-pickup-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/edge-cases?kind=flagged",
+    "waitFor": "[data-testid=edge-strip]",
+    "steps": [
+      {
+        "click": "[data-testid=edge-address]:not([disabled]) >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=address-dialog]"
+      }
+    ],
+    "element": "[data-testid=address-dialog]",
+    "note": "«تحديث العنوان أثناء النقل» opened on the first in-transit row. Not confirmed. Check that the flagged tab has an in-transit row (fixture 705 is picked_up; 713/715 flagged). Used by address-and-convert-to-pickup.md."
+  },
+  {
+    "id": "merchant/11-shipping/address-and-convert-to-pickup-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/edge-cases?kind=sla_breach",
+    "waitFor": "[data-testid=edge-strip]",
+    "steps": [
+      {
+        "click": "[data-testid=edge-convert]:not([disabled]) >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=convert-dialog]"
+      }
+    ],
+    "element": "[data-testid=convert-dialog]",
+    "note": "«تحويل الطلب #… إلى استلام» opened on the first convertible row, showing the pickup select and «نسخة الشحنة». Not confirmed. Used by address-and-convert-to-pickup.md."
+  },
+  {
+    "id": "merchant/11-shipping/sharwa-ship-issue-waybill-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/sharwa-ship",
+    "waitFor": "[data-testid=pending-orders]",
+    "note": "«بانتظار الإصدار»: pending orders with the weight triple and the split plan. Used by sharwa-ship-issue-waybill.md."
+  },
+  {
+    "id": "merchant/11-shipping/sharwa-ship-issue-waybill-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/sharwa-ship",
+    "waitFor": "[data-testid=pending-orders]",
+    "steps": [
+      {
+        "click": "[data-testid=issue-open] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=issue-sheet]"
+      }
+    ],
+    "element": "[data-testid=issue-sheet]",
+    "note": "«إصدار بوليصة للطلب #…» with the weight preview and the active zones. «إصدار» is not pressed. Used by sharwa-ship-issue-waybill.md."
+  },
+  {
+    "id": "merchant/11-shipping/sharwa-ship-shipments-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/sharwa-ship?tab=waybills",
+    "waitFor": "[data-testid=waybill-link]",
+    "note": "«البوليصات»: counters, filters and the two status columns; 716 shows «رئيسة · 2 فرعية». Used by sharwa-ship-shipments.md."
+  },
+  {
+    "id": "merchant/11-shipping/sharwa-ship-shipments-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/sharwa-ship/716",
+    "waitFor": "[data-testid=timeline]",
+    "fullPage": true,
+    "note": "Waybill 716 (master with two children): the two statuses, events, «تعديل الحالة يدوياً», facts and items. Used by sharwa-ship-shipments.md."
+  },
+  {
+    "id": "merchant/11-shipping/awb-queue-and-rate-cards-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/sharwa-ship/queue",
+    "waitFor": "[data-testid=awb-row]",
+    "note": "«طابور إصدار AWB» rows of all statuses, «إعادة المحاولة» on failed ones. Not pressed. Used by awb-queue-and-rate-cards.md."
+  },
+  {
+    "id": "merchant/11-shipping/awb-queue-and-rate-cards-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/sharwa-ship/rate-cards",
+    "waitFor": "[data-testid=rate-row]",
+    "note": "«لقطات تسعيرة الناقلين» with drift and «بانتظار تأكيد التسعيرة». Used by awb-queue-and-rate-cards.md."
+  },
+  {
+    "id": "merchant/11-shipping/courier-supervision-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/supervisor",
+    "waitFor": "[data-testid=agent-row]",
+    "fullPage": true,
+    "note": "«إشراف المندوبين»: agents with shift, open shipments and custody; unassigned waybills; reversals. Used by courier-supervision.md."
+  },
+  {
+    "id": "merchant/11-shipping/courier-supervision-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/supervisor",
+    "waitFor": "[data-testid=agent-row]",
+    "steps": [
+      {
+        "click": "[data-testid=reassign-open]:not([disabled]) >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=reassign-dialog]"
+      }
+    ],
+    "element": "[data-testid=reassign-dialog]",
+    "note": "«إعادة إسناد طارئة» dialog for the first agent with the moved count and amount. «تأكيد النقل» is not pressed. Used by courier-supervision.md."
+  },
+  {
+    "id": "merchant/11-shipping/courier-supervision-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/shipping/agent-shifts",
+    "waitFor": "[data-testid=shift-row]",
+    "note": "«مناوبات المندوبين» log with the open shift of agent 1. Used by courier-supervision.md."
+  },
+  {
+    "id": "courier/11-shipping/sign-in-and-home-1",
+    "host": "noor",
+    "session": "staff",
+    "path": "/agent",
+    "waitFor": "[data-testid=open-shift]",
+    "viewports": [
+      "mobile"
+    ],
+    "note": "Courier home for agent 1 (staff session = سارة الحربي #2): name, «رصيد العهدة», open shift, bottom tabs. Used by sign-in-and-home.md."
+  },
+  {
+    "id": "courier/11-shipping/sign-in-and-home-2",
+    "host": "noor",
+    "session": "manager",
+    "path": "/agent",
+    "waitFor": "[data-testid=no-agent-profile]",
+    "viewports": [
+      "mobile"
+    ],
+    "note": "Manager session (منى القحطاني #4) has no agent profile: «حساب الموظف هذا غير مرتبط بأي ملف مندوب شحن.». Used by sign-in-and-home.md."
+  },
+  {
+    "id": "courier/11-shipping/shifts-1",
+    "host": "noor",
+    "session": "staff",
+    "path": "/agent",
+    "waitFor": "[data-testid=open-shift]",
+    "viewports": [
+      "mobile"
+    ],
+    "steps": [
+      {
+        "click": "[data-testid=handover-open]"
+      },
+      {
+        "waitFor": "[data-testid=handover-target]"
+      }
+    ],
+    "note": "«تسليم إلى مندوب آخر» opened: «رقم المندوب المستلم» and «تسليم». Nothing is sent. Used by shifts.md."
+  },
+  {
+    "id": "courier/11-shipping/shipments-1",
+    "host": "noor",
+    "session": "staff",
+    "path": "/agent/shipments?status=in_transit",
+    "waitFor": "[data-testid=agent-shipment]",
+    "viewports": [
+      "mobile"
+    ],
+    "note": "«شحناتي» on «قيد التوصيل» with tab counts and the amount to collect. Used by shipments.md."
+  },
+  {
+    "id": "courier/11-shipping/shipments-2",
+    "host": "noor",
+    "session": "staff",
+    "path": "/agent/shipments/710",
+    "waitFor": "[data-testid=agent-shipment-detail]",
+    "viewports": [
+      "mobile"
+    ],
+    "fullPage": true,
+    "note": "Shipment 710 (in transit, COD): «المطلوب تحصيله», items, events and the action bar. Used by shipments.md."
+  },
+  {
+    "id": "courier/11-shipping/shipments-3",
+    "host": "noor",
+    "session": "staff",
+    "path": "/agent/shipments/710",
+    "waitFor": "[data-testid=agent-shipment-detail]",
+    "viewports": [
+      "mobile"
+    ],
+    "steps": [
+      {
+        "click": "[data-testid=move-delivered]"
+      },
+      {
+        "waitFor": "[data-testid=delivery-form]"
+      }
+    ],
+    "element": "[data-testid=delivery-form]",
+    "note": "«تسليم وتحصيل» form opened from «تم التسليم». «إرسال التسليم» is not pressed. Used by shipments.md."
+  },
+  {
+    "id": "courier/11-shipping/custody-1",
+    "host": "noor",
+    "session": "staff",
+    "path": "/agent/custody",
+    "waitFor": "[data-testid=custody-entry]",
+    "viewports": [
+      "mobile"
+    ],
+    "note": "«العهدة»: «الرصيد الحالي» and the ledger with signs, waybills and shifts. Used by custody.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/settings-identity-contact-policies-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/identity",
+    "waitFor": "[data-testid=settings-identity]",
+    "note": "«الهوية»: store name, about, timezone with the clock, week start; the save indicator. Nothing is typed (no auto-save). Used by settings-identity-contact-policies.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/settings-identity-contact-policies-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/contact",
+    "waitFor": "[data-testid=settings-contact]",
+    "note": "«التواصل»: WhatsApp with its normalised hint, e-mail, the read-only «النطاق الخاص», four social links. Used by settings-identity-contact-policies.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/settings-identity-contact-policies-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/policies",
+    "waitFor": "[data-testid=policy-preview]",
+    "note": "«السياسات»: the return-policy editor with the toolbar and «كما يراها المشتري». Used by settings-identity-contact-policies.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/settings-currency-seo-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/currency",
+    "waitFor": "[data-testid=fx-preview]",
+    "note": "«العملات»: display currency, three rates with defaults, the 100 ر.س preview. «حفظ التغييرات» is not pressed. Used by settings-currency-seo.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/settings-currency-seo-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/seo",
+    "waitFor": "[data-testid=serp-preview]",
+    "note": "SEO section with counters, share image and «معاينة نتيجة البحث». Used by settings-currency-seo.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/staff-members-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff",
+    "waitFor": "[data-testid=staff-table]",
+    "note": "«الموظفون» list with the status strip, search and row actions. Used by staff-members.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/staff-members-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff",
+    "waitFor": "[data-testid=add-staff]",
+    "steps": [
+      {
+        "click": "[data-testid=add-staff]"
+      },
+      {
+        "waitFor": "[data-testid=staff-form]"
+      }
+    ],
+    "element": "[data-testid=staff-form]",
+    "note": "«إضافة موظف» sheet, empty. Not submitted. Used by staff-members.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/staff-members-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff",
+    "waitFor": "[data-testid=add-staff]",
+    "steps": [
+      {
+        "click": "[data-testid=add-staff]"
+      },
+      {
+        "waitFor": "[data-testid=staff-form]"
+      },
+      {
+        "fill": "#staff-name",
+        "value": "موظف تجريبي"
+      },
+      {
+        "fill": "#staff-phone",
+        "value": "0771999001"
+      },
+      {
+        "click": "[data-testid=staff-form-submit]"
+      },
+      {
+        "waitFor": "[data-testid=password-dialog]"
+      }
+    ],
+    "element": "[data-testid=password-dialog]",
+    "note": "Creates one fixture member (mock) and captures the one-time password dialog. Run last or reset mocks; the phone must not exist in the fixture. Used by staff-members.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/roles-and-assignments-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/roles",
+    "waitFor": "[data-testid=new-role]",
+    "note": "System roles (read-only) and custom roles with counts and «نسخ كدور مخصص». Used by roles-and-assignments.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/roles-and-assignments-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/roles/new?from=3",
+    "waitFor": "[data-testid=role-form]",
+    "fullPage": true,
+    "note": "A custom role cloned from role 3 («كاشير» in the fixture — check the id): name «… (مخصص)», discount ceiling, the grouped matrix and «n من N». Not saved. Used by roles-and-assignments.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/roles-and-assignments-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/2?tab=assignments",
+    "waitFor": "[data-testid=assignments-matrix]",
+    "note": "«التعيينات» of staff #2: one row per location, permission role and operational role. Used by roles-and-assignments.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/roles-and-assignments-4",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/2?tab=overrides",
+    "waitFor": "[data-testid=effective-permissions]",
+    "fullPage": true,
+    "note": "«الاستثناءات» and «الصلاحية النهائية» with sources. Used by roles-and-assignments.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/sessions-tokens-devices-roster-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/2?tab=sessions",
+    "waitFor": "[data-testid=sessions-list]",
+    "fullPage": true,
+    "note": "«الجلسات والأجهزة»: active sessions, personal tokens, trusted devices. Nothing is ended or created. Used by sessions-tokens-devices-roster.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/sessions-tokens-devices-roster-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/2?tab=roster",
+    "waitFor": "[data-testid=roster-grid]",
+    "note": "«الجدول»: the weekly grid with «إجازة» days. Used by sessions-tokens-devices-roster.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/approvals-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/approvals",
+    "waitFor": "[data-testid=approvals-table]",
+    "note": "«طلبات الموافقة» with the status strip and the type filter. Used by approvals.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/approvals-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/approvals",
+    "waitFor": "[data-testid=approvals-table]",
+    "steps": [
+      {
+        "click": "[data-testid=approvals-table] tbody tr >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=approval-sheet]"
+      }
+    ],
+    "element": "[data-testid=approval-sheet]",
+    "note": "The sheet of the first pending request: facts, entity link, «لقطة البيانات», note, «رفض»/«اعتماد». Not decided. Used by approvals.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/audit-and-alerts-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/audit-log",
+    "waitFor": "[data-testid=audit-table]",
+    "note": "«سجل التدقيق» with the verify button (not pressed). Used by audit-and-alerts.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/audit-and-alerts-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/staff/alerts",
+    "waitFor": "[data-testid=alerts-list]",
+    "note": "«تنبيهات السلوك»: levels, value vs limit, «الجلسات» and «تعليم كمقروء». Used by audit-and-alerts.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/custom-domain-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/domains",
+    "waitFor": "[data-testid=domain-list]",
+    "steps": [
+      {
+        "click": "[data-testid^=domain-row-]:not([data-testid=domain-row-subdomain]) >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=dns-records]"
+      }
+    ],
+    "element": "[data-testid=domain-sheet]",
+    "note": "The sheet of the first custom domain: status explainer and «سجلات DNS المطلوبة». Check that the noor fixture has a custom domain. Used by custom-domain.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/custom-domain-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/domains",
+    "waitFor": "[data-testid=domain-list]",
+    "note": "«النطاقات»: the read-only subdomain, custom domains with statuses and «أساسي». Used by custom-domain.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/tracking-pixels-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/marketing/tracking",
+    "waitFor": "[data-testid=tracking-form]",
+    "fullPage": true,
+    "note": "«أدوات التتبع»: master switch, the four groups and the write-only token fields. Not saved. Used by tracking-pixels.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/webhooks-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/webhooks",
+    "waitFor": "[data-testid=new-endpoint]",
+    "steps": [
+      {
+        "click": "[data-testid=new-endpoint]"
+      },
+      {
+        "waitFor": "[data-testid=endpoint-form]"
+      }
+    ],
+    "element": "[data-testid=endpoint-sheet]",
+    "note": "«نقطة نهاية جديدة» sheet with the event list. Not created. Used by webhooks.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/webhooks-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/webhooks",
+    "waitFor": "[data-testid=webhooks-screen]",
+    "note": "Endpoints list: state, last delivery, failure streak, «إعادة التفعيل» on an auto-disabled one. Used by webhooks.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/webhooks-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/webhooks/1",
+    "waitFor": "[data-testid=deliveries]",
+    "fullPage": true,
+    "note": "Endpoint 1 detail and «سجل التسليم» with filters and «إعادة الإرسال» on failed rows. Check that endpoint 1 exists in the mock. Used by webhooks.md."
+  },
+  {
+    "id": "merchant/12-settings-staff-integrations/integrations-status-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/settings/integrations",
+    "waitFor": "[data-testid=integration-groups]",
+    "fullPage": true,
+    "note": "«التكاملات»: the groups with statuses, «غير متاح في خطتك», last event and «إدارة»; owner section «الربط الصادر والتتبع». Used by integrations-status.md."
+  },
+  {
+    "id": "merchant/15-reports/reports-overview-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/reports",
+    "waitFor": "[data-testid=reports-index]",
+    "fullPage": true,
+    "note": "«التقارير» index: categories with their reports, disabled rows with «قريباً» / «غير متاح بعد», and the «إشعارات المتصفح» card at the bottom. Mock titles differ from Django (registry.ts). Used by reports-overview.md."
+  },
+  {
+    "id": "merchant/15-reports/reports-overview-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/reports/sales_overview",
+    "waitFor": "[data-testid=location-select]",
+    "note": "«المبيعات» with the range bar, «مقارنة بالفترة السابقة», «الموقع» select, «تحديث بيانات اليوم» and the export buttons. Needs multi-location on in the noor mock (has_locations true); otherwise the select is absent and waitFor times out. Used by reports-overview.md."
+  },
+  {
+    "id": "merchant/15-reports/exports-and-schedules-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/reports/exports",
+    "waitFor": "[data-testid=exports-table]",
+    "note": "«تصديراتي»: the last 50 jobs with «التقرير», «النطاق», «الصيغة», «أُنشئ», «الحالة». Mock jobs advance on each status read; capture once rows show mixed statuses. Used by exports-and-schedules.md."
+  },
+  {
+    "id": "merchant/15-reports/exports-and-schedules-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/reports/scheduled",
+    "waitFor": "[data-testid=schedule-new]",
+    "steps": [
+      {
+        "click": "[data-testid=schedule-new] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=schedule-form]"
+      }
+    ],
+    "element": "[role=dialog]",
+    "note": "«اشتراك جديد» dialog: «التقرير», «التكرار», «البريد المستلم». Not submitted. Used by exports-and-schedules.md."
+  },
+  {
+    "id": "merchant/15-reports/browser-notifications-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/reports",
+    "waitFor": "[data-testid=push-subscribers]",
+    "element": "[data-testid=push-broadcast]",
+    "note": "«إشعارات المتصفح» card as the owner: subscriber count and the form «عنوان الإشعار» / «نص الإشعار». Nothing sent. With 0 mock subscribers the form is disabled and shows the empty sentence. Used by browser-notifications.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/09-b2b/create-draft-1",
+    "session": "manager",
+    "path": "/dashboard/orders/b2b/new",
+    "waitFor": "[data-testid=b2b-form]",
+    "note": "«مسودة جملة جديدة» as «مدير المتجر» (a staff session, so no owner notice): customer, lines, «دور المعتمد»/«الفرع»/«العملة». Nothing submitted. Used by create-draft.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/09-b2b/approve-drafts-1",
+    "session": "merchant",
+    "path": "/dashboard/orders/b2b",
+    "waitFor": "[data-testid=b2b-table]",
+    "note": "«مسودات الجملة»: the pending queue, escalated first, with «اعتماد»/«رفض». Used by approve-drafts.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/09-b2b/approve-drafts-2",
+    "session": "merchant",
+    "path": "/dashboard/orders/b2b",
+    "waitFor": "[data-testid=b2b-table]",
+    "steps": [
+      {
+        "click": "[data-testid=b2b-open] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=b2b-sheet]"
+      },
+      {
+        "click": "[data-testid=b2b-sheet] [data-testid=b2b-approve]"
+      },
+      {
+        "waitFor": "[data-testid=b2b-confirm]"
+      }
+    ],
+    "note": "The draft sheet (lines, «طلب الموافقة») with the «اعتماد مسودة #…؟» confirmation open. Not confirmed. Used by approve-drafts.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/app-store-1",
+    "session": "merchant",
+    "path": "/dashboard/apps",
+    "waitFor": "[data-testid=apps-catalog]",
+    "note": "«متجر التطبيقات»: catalogue rows with price («مجاني» or amount + interval), state and button. Used by app-store.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/app-store-2",
+    "session": "merchant",
+    "path": "/dashboard/apps/whatsapp_bot",
+    "waitFor": "[data-testid=app-page]",
+    "note": "One app page: «السعر», «الحالة», «سجل التطبيق», «رسوم التطبيق». If the fixture app is not installed, click «تثبيت» to show the install dialog (do not confirm). Used by app-store.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/whatsapp-app-1",
+    "session": "merchant",
+    "path": "/dashboard/apps/whatsapp",
+    "waitFor": "[data-testid=wa-summary]",
+    "note": "WhatsApp panel: «ربط الجهاز» with «افتح SharwaConnect» and the «آخر 7 أيام» line. Needs whatsapp_bot installed and active in the noor fixture. Used by whatsapp-app.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/whatsapp-app-2",
+    "session": "merchant",
+    "path": "/dashboard/apps/whatsapp/usage",
+    "waitFor": "[data-testid=filter-usage-status]",
+    "note": "«سجل الاستخدام» with the status/event/date filters and order links. Used by whatsapp-app.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/whatsapp-templates-1",
+    "session": "merchant",
+    "path": "/dashboard/apps/whatsapp/templates/4",
+    "waitFor": "[data-testid=wa-template-editor]",
+    "note": "Editor of «تحديث حالة الشحن للعميل» (id 4): origin label, variable buttons, 1024 counter and the server preview. Used by whatsapp-templates.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/sharwa-ai-pairing-1",
+    "session": "merchant",
+    "path": "/dashboard/apps/sharwa-ai",
+    "waitFor": "[data-testid=ai-qr]",
+    "note": "«حالة الربط» while connecting: «جارٍ الربط…» and the QR with the scan hint. Needs a connecting fixture state (recipe). Used by sharwa-ai-pairing.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/sharwa-ai-pairing-2",
+    "session": "merchant",
+    "path": "/dashboard/apps/sharwa-ai",
+    "waitFor": "[data-testid=ai-phone]",
+    "note": "«مربوط» with the paired number and «منذ …». Used by sharwa-ai-pairing.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/sharwa-ai-pairing-3",
+    "session": "merchant",
+    "path": "/dashboard/apps/sharwa-ai",
+    "waitFor": "[data-testid=ai-reconnect]",
+    "note": "«تعذّر الربط» with the Arabic reason and «إعادة الربط». Needs an error fixture state (recipe). Used by sharwa-ai-pairing.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/sharwa-ai-settings-console-1",
+    "session": "merchant",
+    "path": "/dashboard/apps/sharwa-ai",
+    "waitFor": "[data-testid=ai-settings]",
+    "element": "[data-testid=ai-settings]",
+    "note": "«الإعدادات»: «تفعيل المساعد» and «أقصى ردود متتابعة للبوت قبل التصعيد» with the platform default as placeholder. Used by sharwa-ai-settings-console.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/sharwa-ai-settings-console-2",
+    "session": "merchant",
+    "path": "/dashboard/apps/sharwa-ai",
+    "waitFor": "[data-testid=ai-console]",
+    "element": "[data-testid=ai-console]",
+    "note": "«وحدة التحكم» with «افتح وحدة تحكم شروة AI». Not clicked. Used by sharwa-ai-settings-console.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/support-sessions-1",
+    "session": "merchant",
+    "path": "/dashboard/support/sessions",
+    "waitFor": "[data-testid=sessions-table]",
+    "note": "«جلسات الدعم الفني»: counters «مُصعَّدة»/«أتولّاها», filters and the escalated-first list. Used by support-sessions.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/support-sessions-2",
+    "session": "merchant",
+    "path": "/dashboard/support/sessions/1",
+    "waitFor": "[data-testid=session-timeline]",
+    "note": "Session 1 (escalated in the fixture): timeline with customer/bot messages, a folded «أداة» row and «استلام الجلسة». Not taken over. Used by support-sessions.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/support-tickets-1",
+    "session": "merchant",
+    "path": "/dashboard/wallet/tickets",
+    "waitFor": "[data-testid=tickets-table]",
+    "note": "«تذاكر الدعم»: status counters, filters and the list with inline status. Used by support-tickets.md."
+  },
+  {
+    "host": "noor",
+    "id": "merchant/14-apps-ai-support/support-tickets-2",
+    "session": "merchant",
+    "path": "/dashboard/wallet/tickets?ticket=1001",
+    "waitFor": "[data-testid=ticket-detail]",
+    "element": "[data-testid=ticket-sheet]",
+    "note": "Ticket 1001 in the side sheet: «الحالة», «المُسنَد إليه», description and dates. Used by support-tickets.md."
+  },
+  {
+    "id": "sharwa-pay/08-finance/sign-in-1",
+    "host": "",
+    "path": "/sharwa-pay",
+    "waitFor": "[data-testid=pay-login-phone]",
+    "steps": [
+      {
+        "fill": "[data-testid=pay-phone]",
+        "value": "0770000111"
+      },
+      {
+        "waitFor": "[data-testid=pay-phone-preview]"
+      }
+    ],
+    "viewports": [
+      "mobile"
+    ],
+    "note": "Platform origin: «محفظتك في كل متاجر شروة», «رقم الجوال» filled with a fake local number and the «سيُرسل الرمز إلى …» preview. Phone numbers are masked by the pipeline. Used by sign-in.md."
+  },
+  {
+    "id": "sharwa-pay/08-finance/sign-in-2",
+    "host": "",
+    "path": "/sharwa-pay",
+    "waitFor": "[data-testid=pay-login-phone]",
+    "steps": [
+      {
+        "fill": "[data-testid=pay-phone]",
+        "value": "0770000111"
+      },
+      {
+        "click": "[data-testid=pay-send]"
+      },
+      {
+        "waitFor": "[data-testid=pay-login-code]"
+      }
+    ],
+    "viewports": [
+      "mobile"
+    ],
+    "note": "«أدخل الرمز»: the six boxes and «صلاحية الرمز …» countdown after «إرسال الرمز» (mock OTP 123456, not typed). Used by sign-in.md."
+  },
+  {
+    "id": "sharwa-pay/08-finance/wallet-and-transactions-1",
+    "host": "",
+    "path": "/sharwa-pay",
+    "waitFor": "[data-testid=pay-login-phone]",
+    "steps": [
+      {
+        "fill": "[data-testid=pay-phone]",
+        "value": "0770000111"
+      },
+      {
+        "click": "[data-testid=pay-send]"
+      },
+      {
+        "waitFor": "[data-testid=pay-login-code]"
+      },
+      {
+        "fill": "[data-testid=otp-digit] >> nth=0",
+        "value": "123456"
+      },
+      {
+        "waitFor": "[data-testid=pay-dashboard]"
+      }
+    ],
+    "viewports": [
+      "mobile"
+    ],
+    "note": "The wallet after sign-in (mock OTP 123456): four «الأرصدة» rows, «آخر الحركات», «شحن»/«سحب». Use a fixture phone that has a wallet with movements. Used by wallet-and-transactions.md."
+  },
+  {
+    "id": "sharwa-pay/08-finance/wallet-and-transactions-2",
+    "host": "",
+    "path": "/sharwa-pay",
+    "waitFor": "[data-testid=pay-login-phone]",
+    "steps": [
+      {
+        "fill": "[data-testid=pay-phone]",
+        "value": "0770000111"
+      },
+      {
+        "click": "[data-testid=pay-send]"
+      },
+      {
+        "waitFor": "[data-testid=pay-login-code]"
+      },
+      {
+        "fill": "[data-testid=otp-digit] >> nth=0",
+        "value": "123456"
+      },
+      {
+        "waitFor": "[data-testid=pay-dashboard]"
+      },
+      {
+        "click": "text=كل الحركات"
+      },
+      {
+        "waitFor": "[data-testid=pay-transactions]"
+      }
+    ],
+    "viewports": [
+      "mobile"
+    ],
+    "note": "«الحركات» with the «العملة»/«السبب» filters and rows (reason, ±amount, store, «الرصيد بعدها»). Used by wallet-and-transactions.md."
+  },
+  {
+    "id": "sharwa-pay/08-finance/topup-and-withdraw-1",
+    "host": "",
+    "path": "/sharwa-pay",
+    "waitFor": "[data-testid=pay-login-phone]",
+    "steps": [
+      {
+        "fill": "[data-testid=pay-phone]",
+        "value": "0770000111"
+      },
+      {
+        "click": "[data-testid=pay-send]"
+      },
+      {
+        "waitFor": "[data-testid=pay-login-code]"
+      },
+      {
+        "fill": "[data-testid=otp-digit] >> nth=0",
+        "value": "123456"
+      },
+      {
+        "waitFor": "[data-testid=pay-dashboard]"
+      },
+      {
+        "click": "[data-testid=go-topup]"
+      },
+      {
+        "waitFor": "[data-testid=topup-form]"
+      }
+    ],
+    "viewports": [
+      "mobile"
+    ],
+    "note": "«شحن المحفظة» form, empty. Nothing sent. Used by topup-and-withdraw.md."
+  },
+  {
+    "id": "sharwa-pay/08-finance/topup-and-withdraw-2",
+    "host": "",
+    "path": "/sharwa-pay",
+    "waitFor": "[data-testid=pay-login-phone]",
+    "steps": [
+      {
+        "fill": "[data-testid=pay-phone]",
+        "value": "0770000111"
+      },
+      {
+        "click": "[data-testid=pay-send]"
+      },
+      {
+        "waitFor": "[data-testid=pay-login-code]"
+      },
+      {
+        "fill": "[data-testid=otp-digit] >> nth=0",
+        "value": "123456"
+      },
+      {
+        "waitFor": "[data-testid=pay-dashboard]"
+      },
+      {
+        "click": "[data-testid=go-withdraw]"
+      },
+      {
+        "waitFor": "[data-testid=withdraw-form]"
+      }
+    ],
+    "viewports": [
+      "mobile"
+    ],
+    "note": "«سحب من المحفظة» with «المتاح بهذه العملة». Nothing sent (a withdrawal debits at once). Used by topup-and-withdraw.md."
+  },
+  {
+    "id": "sharwa-pay/08-finance/topup-and-withdraw-3",
+    "host": "",
+    "path": "/sharwa-pay",
+    "waitFor": "[data-testid=pay-login-phone]",
+    "steps": [
+      {
+        "fill": "[data-testid=pay-phone]",
+        "value": "0770000111"
+      },
+      {
+        "click": "[data-testid=pay-send]"
+      },
+      {
+        "waitFor": "[data-testid=pay-login-code]"
+      },
+      {
+        "fill": "[data-testid=otp-digit] >> nth=0",
+        "value": "123456"
+      },
+      {
+        "waitFor": "[data-testid=pay-dashboard]"
+      },
+      {
+        "click": "[data-testid=my-requests]"
+      },
+      {
+        "waitFor": "[data-testid=pay-requests]"
+      }
+    ],
+    "viewports": [
+      "mobile"
+    ],
+    "note": "«طلباتي»: «طلبات الشحن» and «طلبات السحب» with statuses and rejection reasons. Used by topup-and-withdraw.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/inbox-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inbox",
+    "waitFor": "[data-testid=conversation-list]",
+    "note": "«المحادثات»: the conversation list with counts, channel names and the filters; no conversation open. Used by inbox.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/inbox-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inbox?c=1",
+    "waitFor": "[data-testid=thread]",
+    "steps": [
+      {
+        "click": "[data-testid=attach-product]"
+      },
+      {
+        "waitFor": "[data-testid=product-picker]"
+      },
+      {
+        "click": "[data-testid=pick-product] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=product-card]"
+      }
+    ],
+    "note": "Conversation 1 (ريم الأحمد, Instagram) with a product card just sent: «إرفاق منتج» → first product (sending is mock-only). Used by inbox.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/chat-to-order-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/inbox?c=1",
+    "waitFor": "[data-testid=thread]",
+    "steps": [
+      {
+        "click": "[data-testid=convert-open]"
+      },
+      {
+        "waitFor": "[data-testid=convert-dialog]"
+      },
+      {
+        "click": "[data-testid=convert-add-product]"
+      },
+      {
+        "click": "[data-testid=pick-product] >> nth=0"
+      }
+    ],
+    "element": "[data-testid=convert-dialog]",
+    "note": "«تحويل المحادثة إلى طلب» with one product added; not saved. Used by chat-to-order.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/connect-channels-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/social",
+    "waitFor": "[data-testid=channel-rows]",
+    "note": "«قنوات التواصل»: Meta «مربوط», TikTok Shop «خطأ في الربط» with its reason, Telegram «غير مربوط». Used by connect-channels.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/connect-channels-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/social",
+    "waitFor": "[data-testid=telegram-form]",
+    "element": "[data-testid=telegram-form]",
+    "note": "The Telegram row with «رمز البوت (Bot token)» and «ربط تيليجرام»; nothing submitted. Used by connect-channels.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/keywords-templates-access-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/social/keywords",
+    "waitFor": "[data-testid=keywords-table]",
+    "note": "«المحفّزات بالكلمات المفتاحية» table (word, match, reply, active). Used by keywords-templates-access.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/keywords-templates-access-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/social/templates",
+    "waitFor": "[data-testid=templates-list]",
+    "note": "«قوالب الردود» list with «عُدّل …». Used by keywords-templates-access.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/keywords-templates-access-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/social/staff-access",
+    "waitFor": "[data-testid=access-matrix]",
+    "note": "«وصول الموظفين للقنوات»: staff × Meta/TikTok/تيليجرام/واتساب with «عرض»/«ردّ». Nothing toggled. Used by keywords-templates-access.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/catalog-sync-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/social/catalog",
+    "waitFor": "[data-testid=sync-settings]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=sync-products]"
+      }
+    ],
+    "note": "«مزامنة الكتالوج» (Meta tab): settings, last run and «حالة المنتجات على القناة». Do not run the sync. Used by catalog-sync.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/catalog-sync-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/social/tiktok-categories",
+    "waitFor": "[data-testid=mapping-rows]",
+    "note": "«ربط فئات تيك توك» with the unmapped count. Nothing saved. Used by catalog-sync.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/marketplaces-connect-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/marketplaces",
+    "waitFor": "[data-testid=market-rows]",
+    "note": "«الأسواق الإلكترونية»: Amazon «مربوط» (Seller … · amazon.sa), Noon «غير مربوط», «آخر المهام». Used by marketplaces-connect.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/marketplaces-connect-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/marketplaces",
+    "waitFor": "[data-testid=market-rows]",
+    "steps": [
+      {
+        "click": "[data-testid=connect-noon]"
+      },
+      {
+        "waitFor": "[data-testid=noon-dialog]"
+      }
+    ],
+    "element": "[data-testid=noon-dialog]",
+    "note": "«ربط نون» dialog, empty; nothing submitted. Used by marketplaces-connect.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/marketplaces-connect-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/marketplaces/amazon?tab=settings",
+    "waitFor": "[data-testid=market-settings]",
+    "note": "Amazon settings with «معاينة سعر منتج نموذجي (من الخادم)». Not saved. Used by marketplaces-connect.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/marketplaces-listings-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/marketplaces/amazon",
+    "waitFor": "[data-testid=listings-table]",
+    "note": "Amazon «القوائم» with identifiers, prices, an override and statuses. Used by marketplaces-listings.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/marketplaces-listings-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/marketplaces/amazon",
+    "waitFor": "[data-testid=listings-table]",
+    "steps": [
+      {
+        "click": "[data-testid=listings-table] input[type=checkbox] >> nth=1"
+      },
+      {
+        "click": "[data-testid=listings-table] input[type=checkbox] >> nth=2"
+      },
+      {
+        "click": "[data-testid=bulk-push]"
+      },
+      {
+        "waitFor": "[data-testid=push-confirm]"
+      }
+    ],
+    "note": "«دفع القوائم إلى السوق» after selecting two rows; not confirmed. Used by marketplaces-listings.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/marketplaces-jobs-orders-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/marketplaces/jobs",
+    "waitFor": "[data-testid=jobs-table]",
+    "note": "«مهام المزامنة» with types, statuses, «المُطلِق» and «ناجح / فاشل». Do not trigger a job. Used by marketplaces-jobs-orders.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/marketplaces-jobs-orders-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/marketplaces/orders",
+    "waitFor": "[data-testid=market-orders-table]",
+    "note": "«طلبات الأسواق» with «التنفيذ» and «تأكيد الشحنة» (one «فشل التأكيد» row if the fixture has it). Used by marketplaces-jobs-orders.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-suppliers-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping",
+    "waitFor": "[data-testid=supplier-rows]",
+    "note": "«الدروبشيبينغ»: CJ, كنوات and ملف مسطّح «مربوط», مخازن «غير مربوط», attention counts. Used by dropshipping-suppliers.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-suppliers-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/suppliers/makhazen",
+    "waitFor": "[data-testid=connect-form]",
+    "note": "مخازن connect form «رمز الربط (API Token)»; nothing submitted. Used by dropshipping-suppliers.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-suppliers-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/suppliers/cj",
+    "waitFor": "[data-testid=sync-settings]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=order-settings]"
+      }
+    ],
+    "note": "CJ settings: «المزامنة», «إحالة الطلبات», «Webhook المورد». Do not rotate the webhook. Used by dropshipping-suppliers.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-catalog-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/catalog/cj",
+    "waitFor": "[data-testid=catalog-table]",
+    "note": "«كتالوج CJ Dropshipping» with cost, suggested price and import statuses. Nothing imported. Used by dropshipping-catalog.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-pricing-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/pricing-rules",
+    "waitFor": "[data-testid=rule-row]",
+    "steps": [
+      {
+        "click": "[data-testid=rule-row] >> nth=0 >> text=تعديل ومحاكاة"
+      },
+      {
+        "waitFor": "[data-testid=rule-form]"
+      },
+      {
+        "click": "[data-testid=rule-simulate]"
+      },
+      {
+        "waitFor": "[data-testid=simulation]"
+      }
+    ],
+    "element": "[data-testid=rule-sheet]",
+    "note": "Rule sheet of the first rule after «محاكاة»: the form and the simulation (affected count, sample). Not saved. Used by dropshipping-pricing.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-pricing-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/pricing-rules",
+    "waitFor": "[data-testid=rule-row]",
+    "steps": [
+      {
+        "click": "[data-testid=rule-apply] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=rule-apply-confirm]"
+      }
+    ],
+    "note": "«تطبيق «(القاعدة)»» dialog with the affected count; not confirmed. Used by dropshipping-pricing.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-feeds-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/feeds",
+    "waitFor": "[data-testid=feeds-list]",
+    "note": "«الملفات والموجزات»: list of feeds with status, schedule and last run. Used by dropshipping-feeds.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-feeds-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/feeds/new?feed=1&step=2",
+    "waitFor": "[data-testid=step-mapping]",
+    "note": "Wizard step 2 «الربط» for feed 1 (موجز مورد الأواني): the 20 target fields and the required-fields check. Used by dropshipping-feeds.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-feeds-3",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/feeds/new?feed=1&step=3",
+    "waitFor": "[data-testid=step-preview]",
+    "note": "Wizard step 3 «المعاينة»: preview table, error summary, approve button; nothing approved. Used by dropshipping-feeds.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-feeds-4",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/feeds/1",
+    "waitFor": "[data-testid=feed-schedule]",
+    "note": "Feed 1 detail: the URL feed schedule (720 min), «تشغيل الآن», errors CSV. Nothing saved. Used by dropshipping-feeds.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-orders-jobs-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/orders",
+    "waitFor": "[data-testid=supplier-orders-table]",
+    "note": "«طلبات الموردين»: attention section and orders table with status badges. `supplier-orders-table` is a DataTable testId prop — check the rendered attribute before the first run. Used by dropshipping-orders-jobs.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/dropshipping-orders-jobs-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/channels/dropshipping/jobs",
+    "waitFor": "[data-testid=drop-jobs-table]",
+    "note": "«مهام المزامنة»: jobs table with type, status, duration and processed/errors. `drop-jobs-table` is a DataTable testId prop — check the rendered attribute. Used by dropshipping-orders-jobs.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-open-shift-1",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "note": "Staff session (كاشير, location 2): «كاشير 1» available, «كاشير 2» busy with خالد الشهري, «كاشير المعرض (معطّل)» disabled; the force-closed notice of shift #88 (سارة الحربي) is visible. Used by pos-open-shift.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-open-shift-2",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "click": "[data-testid^=pos-register-] >> text=كاشير 1"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      }
+    ],
+    "note": "«كاشير 1» selected with 200.00 typed in «الرصيد الافتتاحي»; not submitted. Used by pos-open-shift.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-sell-1",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=كاشير 1"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      }
+    ],
+    "note": "Product grid right after opening a shift on «كاشير 1» with 200.00. Used by pos-sell.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-sell-2",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=كاشير 1"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      },
+      {
+        "click": "[data-testid=pos-product] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=pos-cart-line]"
+      },
+      {
+        "click": "[data-testid=pos-product] >> nth=1"
+      }
+    ],
+    "note": "Cart with products added from the grid, payment method and totals. If the first product opens the variant picker, pick the first variant; add two lines. Used by pos-sell.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-sell-3",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=كاشير 1"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      },
+      {
+        "click": "[data-testid=pos-product] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=pos-cart-line]"
+      },
+      {
+        "click": "[data-testid=pos-complete]"
+      },
+      {
+        "waitFor": "[data-testid=pos-receipt-dialog]"
+      }
+    ],
+    "element": "[data-testid=pos-receipt-dialog]",
+    "note": "Completed-sale receipt dialog (receipt number POS-0092-001 style). Used by pos-sell.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-sell-4",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=كاشير 1"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      },
+      {
+        "click": "[data-testid=pos-product] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=pos-cart-line]"
+      },
+      {
+        "click": "[data-testid=pos-complete]"
+      },
+      {
+        "waitFor": "[data-testid=pos-receipt-dialog]"
+      },
+      {
+        "click": "[data-testid=pos-new-sale]"
+      },
+      {
+        "click": "text=الإيصالات"
+      },
+      {
+        "waitFor": "[data-testid=pos-receipts]"
+      }
+    ],
+    "note": "«إيصالات الوردية» after one sale (the receipts list is empty at start). Used by pos-sell.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-discounts-1",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=كاشير 1"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      },
+      {
+        "click": "[data-testid=pos-product] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=pos-cart-line]"
+      },
+      {
+        "fill": "[data-testid=pos-cart-discount] input",
+        "value": "15"
+      },
+      {
+        "waitFor": "[data-testid=pos-discount-approval]"
+      }
+    ],
+    "note": "Cashier limit 10%: 15 typed in «نسبة خصم السلة» shows the «يتجاوز حدّك» box with the manager-code field; nothing submitted. `pos-cart-discount` may be the wrapper — fill its input. Used by pos-discounts.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-discounts-2",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=كاشير 1"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      },
+      {
+        "click": "[data-testid=pos-product] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=pos-cart-line]"
+      },
+      {
+        "fill": "[data-testid=pos-cart-discount] input",
+        "value": "15"
+      },
+      {
+        "waitFor": "[data-testid=pos-discount-approval]"
+      },
+      {
+        "click": "[data-testid=pos-discount-approval] >> text=إرسال طلب اعتماد للمدير"
+      },
+      {
+        "waitFor": "text=أُرسل طلب الاعتماد"
+      }
+    ],
+    "element": "[data-testid=pos-discount-approval]",
+    "note": "Same cart after «إرسال طلب اعتماد للمدير»: the pending-approval message. Used by pos-discounts.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-refunds-1",
+    "host": "noor",
+    "session": "manager",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=الكاشير الرئيسي"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      },
+      {
+        "click": "[data-testid=pos-product] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=pos-cart-line]"
+      },
+      {
+        "click": "[data-testid=pos-complete]"
+      },
+      {
+        "waitFor": "[data-testid=pos-receipt-dialog]"
+      },
+      {
+        "click": "[data-testid=pos-new-sale]"
+      },
+      {
+        "click": "text=الإيصالات"
+      },
+      {
+        "click": "[data-testid=pos-receipt-row] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=pos-refund]"
+      }
+    ],
+    "element": "[data-testid=pos-refund]",
+    "note": "Manager session («مدير المتجر», location 3, register «الكاشير الرئيسي»): open a shift, sell enough to total 250.00 (raise the quantity if needed), open the receipt from the receipt dialog. Refund panel visible. Used by pos-refunds.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-refunds-2",
+    "host": "noor",
+    "session": "manager",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=الكاشير الرئيسي"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      },
+      {
+        "click": "[data-testid=pos-product] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=pos-cart-line]"
+      },
+      {
+        "click": "[data-testid=pos-complete]"
+      },
+      {
+        "waitFor": "[data-testid=pos-receipt-dialog]"
+      },
+      {
+        "click": "[data-testid=pos-new-sale]"
+      },
+      {
+        "click": "text=الإيصالات"
+      },
+      {
+        "click": "[data-testid=pos-receipt-row] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=pos-refund]"
+      },
+      {
+        "fill": "[data-testid=refund-amount]",
+        "value": "250.00"
+      },
+      {
+        "click": "[data-testid=refund-submit]"
+      },
+      {
+        "waitFor": "[data-testid=refund-otp]"
+      }
+    ],
+    "element": "[data-testid=pos-refund]",
+    "note": "Same receipt: 250.00 typed in «المبلغ» and «استرجاع» pressed (above the 200 threshold) — the «رمز التحقق» field is shown; not confirmed. Used by pos-refunds.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-close-shift-1",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=كاشير 1"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      },
+      {
+        "click": "[data-testid=pos-product] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=pos-cart-line]"
+      },
+      {
+        "click": "[data-testid=pos-complete]"
+      },
+      {
+        "waitFor": "[data-testid=pos-receipt-dialog]"
+      },
+      {
+        "click": "[data-testid=pos-new-sale]"
+      },
+      {
+        "click": "text=درج الكاش"
+      },
+      {
+        "waitFor": "[data-testid=pos-drawer]"
+      },
+      {
+        "fill": "#mv-amount",
+        "value": "50.00"
+      },
+      {
+        "fill": "#mv-note",
+        "value": "فكّة من الإدارة"
+      },
+      {
+        "click": "[data-testid=mv-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-movements]"
+      }
+    ],
+    "note": "/pos/drawer after one cash sale and one «إدخال نقد» of 50.00 («فكّة من الإدارة»). Used by pos-close-shift.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-close-shift-2",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=كاشير 1"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      },
+      {
+        "click": "text=إغلاق الوردية"
+      },
+      {
+        "waitFor": "[data-testid=pos-close]"
+      },
+      {
+        "fill": "[data-testid=pos-actual]",
+        "value": "150.00"
+      }
+    ],
+    "note": "/pos/shift/close with 150.00 typed in «المبلغ المعدود فعلياً»; not submitted. Used by pos-close-shift.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/pos-close-shift-3",
+    "host": "noor",
+    "session": "staff",
+    "path": "/pos",
+    "waitFor": "[data-testid=pos-open]",
+    "steps": [
+      {
+        "waitFor": "[data-testid=pos-open]"
+      },
+      {
+        "click": "[data-testid^=pos-register-] >> text=كاشير 1"
+      },
+      {
+        "fill": "#opening-float",
+        "value": "200.00"
+      },
+      {
+        "click": "[data-testid=pos-open-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-grid]"
+      },
+      {
+        "click": "text=إغلاق الوردية"
+      },
+      {
+        "waitFor": "[data-testid=pos-close]"
+      },
+      {
+        "fill": "[data-testid=pos-actual]",
+        "value": "150.00"
+      },
+      {
+        "click": "[data-testid=pos-close-submit]"
+      },
+      {
+        "waitFor": "[data-testid=pos-close-result]"
+      }
+    ],
+    "note": "Shortage outcome after closing with 150.00 against an expected 200.00: «عجز في الدرج — بانتظار اعتماد المدير». The manager list «ورديات بانتظار اعتمادك» has no mock seed, so it is not pictured. Used by pos-close-shift.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/bookings-services-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/bookings/services",
+    "waitFor": "[data-testid=services-table]",
+    "note": "«الخدمات القابلة للحجز»: bookable services with duration and window count. Used by bookings-services.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/bookings-services-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/bookings/services",
+    "waitFor": "[data-testid=services-table]",
+    "steps": [
+      {
+        "click": "[data-testid=availability-link] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=availability-days]"
+      },
+      {
+        "fill": "[data-testid=window-start] >> nth=0",
+        "value": "08:00"
+      },
+      {
+        "waitFor": "[data-testid=save-bar]"
+      }
+    ],
+    "note": "Availability editor of the first service with one window edited so the «تغييرات غير محفوظة» bar shows; not saved. Used by bookings-services.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/bookings-slots-1",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/bookings",
+    "waitFor": "[data-testid=week-grid]",
+    "note": "«تقويم الحجوزات», current week: booked (solid), held (dashed) and one expired hold. Used by bookings-slots.md."
+  },
+  {
+    "id": "merchant/13-channels-operations/bookings-slots-2",
+    "host": "noor",
+    "session": "merchant",
+    "path": "/dashboard/bookings",
+    "waitFor": "[data-testid=week-grid]",
+    "steps": [
+      {
+        "click": "[data-testid=slot-block][data-status=booked] >> nth=0"
+      },
+      {
+        "waitFor": "[data-testid=slot-cancel]"
+      },
+      {
+        "click": "[data-testid=slot-cancel]"
+      },
+      {
+        "waitFor": "[data-testid=slot-cancel-confirm]"
+      }
+    ],
+    "note": "A «محجوز» block opened, then «إلغاء الحجز» pressed: the confirmation dialog is open, not confirmed. Used by bookings-slots.md."
+  }
+]

@@ -1,0 +1,17 @@
+# Sales channels & operations — القنوات والأسواق والدروبشيبينغ ونقطة البيع والحجوزات
+
+> Domain 13 — modules M16, M26, M27, M28, M29.
+
+> Folder index created by DOC-001 (Step 01). The roadmap checkbox of each `DOC-XXX` task is the source of truth for its status; the «Status» column is a convenience.
+
+## Pages
+
+| Page | DOC | Task | Status |
+|---|---|---|---|
+| [`m27-inbox-channels.md`](m27-inbox-channels.md) | DOC-222, DOC-223, DOC-224, DOC-225, DOC-226, DOC-227, DOC-228, DOC-229, DOC-230 | Document the M27 gate chain and per-staff channel access; Document inbox counters, conversation list/detail and the product picker; Document messages: incremental read and replies (`…/messages?after`, reply POST); Document chat-to-order conversion (`inbox/conversations/<id>/convert-to-order/`); Document channel connections: list, Telegram connect, disconnect, OAuth start; Document keyword triggers and reply templates (`channels/keywords[/<id>]`, `channels/templates[/<id>]`); Document channel catalog sync, product links and TikTok category mapping; Document staff channel access (`channels/staff-access`); Document M27 migrations, BFF wiring and tests | Written (Step 44) |
+| [`m28-marketplaces.md`](m28-marketplaces.md) | DOC-231, DOC-232, DOC-233, DOC-234 | Document marketplace connections: list, Amazon OAuth, Noon connect, disconnect, settings; Document marketplace listings, identifiers and price computation; Document listing push and marketplace jobs (`listings/push`, `<market>/jobs`, `jobs/`, `jobs/<id>/`, `errors.csv`); Document marketplace orders and shipment re-confirmation | Written (Steps 44 + 45) |
+| [`m29-dropshipping.md`](m29-dropshipping.md) | DOC-235, DOC-236, DOC-237, DOC-238, DOC-239, DOC-240, DOC-241 | Document dropshipping metadata and supplier connections; Document supplier inventory sync, webhook rotation, catalog browse and import; Document pricing rules: CRUD, simulation and apply; Document feeds (`feeds/`, `<id>/`, `mapping/`, `preview/`, `approve/`, `run/`, `errors.csv/`); Document supplier orders and resubmission (`orders/?status&supplier&attention&page`, `orders/<id>/resubmit/`); Document dropshipping jobs, retries and error CSVs; Document M29 migrations, BFF wiring and tests | Written (Step 45) |
+| [`m16-pos.md`](m16-pos.md) | DOC-242, DOC-243, DOC-244, DOC-245, DOC-246, DOC-247, DOC-248 | Document POS gates, context and registers (`pos/context/`, `pos/registers/?location`); Document POS shifts: open, current, pending; Document cash movements, shift close and variance resolution; Document POS product search, quote and sales (`pos/products/`, `pos/quote/`, `pos/orders/` GET/POST, `pos/orders/<id>/`); Document POS discount ceiling, manager code and discount approvals (`pos/discount-approvals/`); Document POS refunds with OTP step-up (`pos/orders/<id>/refund/`); Document POS force-close, migrations, BFF wiring and tests | Written (Steps 45 + 46) |
+| [`m26-bookings.md`](m26-bookings.md) | DOC-249, DOC-250, DOC-251, DOC-252 | Document merchant bookable services and availability (`bookings/services/`, `bookings/services/<id>/availability/`); Document merchant slot list and cancellation (`bookings/slots/`, `bookings/slots/<id>/cancel/`); Document buyer slot availability and holds (`catalog/products/<id>/slots/?date`, `…/slots/hold/`); Document booking bugs fixed and the cart/checkout integration | Written (Step 46) |
+
+Back to the [documentation home](../../../README.md).
