@@ -4,3 +4,4 @@ export * from "@/features/platform-admin/schemas/stores";
 export * from "@/features/platform-admin/schemas/billing";
 export * from "@/features/platform-admin/schemas/catalog";
 export * from "@/features/platform-admin/schemas/money";
+export * from "@/features/platform-admin/schemas/docs";

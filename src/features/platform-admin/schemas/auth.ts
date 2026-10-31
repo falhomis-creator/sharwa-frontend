@@ -18,7 +18,7 @@ export const adminSessionSchema = z.object({
 export type AdminSession = z.infer<typeof adminSessionSchema>;
 
 /** What each role may write. Reads are open to both. The server stays the final word (403). */
-export type AdminArea = "stores" | "billing" | "apps" | "catalog" | "zones" | "webhooks" | "dues" | "sharwa_pay";
+export type AdminArea = "stores" | "billing" | "apps" | "catalog" | "zones" | "webhooks" | "dues" | "sharwa_pay" | "docs";
 const OPERATOR_WRITES: readonly AdminArea[] = ["dues", "sharwa_pay"];
 
 export function canWrite(role: AdminRole | undefined, area: AdminArea): boolean {

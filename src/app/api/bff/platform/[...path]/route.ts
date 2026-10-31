@@ -14,9 +14,10 @@ import { isMocksOn, isModuleLive, notAvailable } from "@/mocks/runtime";
  * Live toggle PER ROW GROUP (`SHARWA_LIVE_MODULES`), so the console can go live module by
  * module (Phase 002):
  *   `platform`   — M20 (INT-030): auth/*, overview, stores/**, clients, webhook-events/**,
- *                  and the feature-override family (features catalog + kill switch, resolve,
- *                  feature-overrides list/bulk/delete) → `api/views_platform.py` (Django
- *                  admin session on the public schema).
+ *                  the feature-override family (features catalog + kill switch, resolve,
+ *                  feature-overrides list/bulk/delete) and docs-settings (documentation
+ *                  portal switches) → `api/views_platform.py` (Django admin session on the
+ *                  public schema).
  *   `platform_money` — M45 (INT-031): dues/** (overview, store detail, 8 actions),
  *                  sharwa-pay/** (top-ups, withdrawals, wallets), sharwa-ship/zones/**.
  *   `platform_billing` — M46 (INT-032): plans/**, plan-features, subscriptions/**,
@@ -28,7 +29,7 @@ import { isMocksOn, isModuleLive, notAvailable } from "@/mocks/runtime";
  * origin, a custom domain or the marketing origin gets 404, never the platform's data
  * (Django refuses it again: its platform views are public-schema only).
  */
-const M20_ROWS = /^(auth|overview|stores|clients|webhook-events|features|feature-overrides)(\/|$)/;
+const M20_ROWS = /^(auth|overview|stores|clients|webhook-events|features|feature-overrides|docs-settings)(\/|$)/;
 const M45_ROWS = /^(dues|sharwa-pay|sharwa-ship)(\/|$)/;
 const M46_ROWS = /^(plans|plan-features|subscriptions|billing-settings|apps|app-billing-overrides|market-categories)(\/|$)/;
 

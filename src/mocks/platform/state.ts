@@ -251,6 +251,26 @@ export interface ActionRow {
   detail: string;
 }
 
+export interface DocsSettingsRow {
+  enable_docs_portal: boolean;
+  enable_merchant_guide: boolean;
+  enable_help_center: boolean;
+  enable_dev_portal: boolean;
+  enable_owner_console_guide: boolean;
+  updated_at: string;
+}
+
+export function defaultDocsSettings(updatedAt: string): DocsSettingsRow {
+  return {
+    enable_docs_portal: true,
+    enable_merchant_guide: true,
+    enable_help_center: true,
+    enable_dev_portal: true,
+    enable_owner_console_guide: true,
+    updated_at: updatedAt,
+  };
+}
+
 export interface PlatformState {
   clients: ClientRow[];
   plans: PlanRow[];
@@ -259,6 +279,8 @@ export interface PlatformState {
   overrides: OverrideRow[];
   subscriptions: SubscriptionRowM[];
   billing: { subscriptions_enabled: boolean; commission_enabled: boolean; updated_at: string };
+  /** core.PlatformDocsSettings — every switch on, like Django's defaults. */
+  docs: DocsSettingsRow;
   apps: AppRow[];
   installations: InstallationRowM[];
   appOverrides: AppOverrideRow[];
@@ -403,6 +425,7 @@ function seed(): PlatformState {
     overrides: [],
     subscriptions: [],
     billing: { subscriptions_enabled: false, commission_enabled: false, updated_at: at(24 * 90) },
+    docs: defaultDocsSettings(at(24 * 30)),
     apps: [],
     installations: [],
     appOverrides: [],

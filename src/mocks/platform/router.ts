@@ -6,6 +6,7 @@ import { adminCookie, adminLoginMock, adminSessionFor, clearedAdminCookie } from
 import {
   cellKey,
   currentSubscription,
+  defaultDocsSettings,
   findClient,
   isStalled,
   logAction,
@@ -640,6 +641,39 @@ on("PATCH", "billing-settings", "billing", async ({ body, actor }) => {
   s.billing.updated_at = new Date().toISOString();
   logAction(null, actor, "billing_settings.update", `الباقات: ${s.billing.subscriptions_enabled ? "مفعّلة" : "متوقفة"} · العمولة: ${s.billing.commission_enabled ? "مفعّلة" : "متوقفة"}.`);
   return ok(billingView(), 160);
+});
+
+// ── documentation portal switches (core.PlatformDocsSettings) ─────────────────────────
+const DOCS_FLAG_LABELS = {
+  enable_docs_portal: "البوابة",
+  enable_merchant_guide: "دليل التاجر",
+  enable_help_center: "مركز المساعدة",
+  enable_dev_portal: "بوابة المطورين",
+  enable_owner_console_guide: "دليل لوحة المنصة",
+} as const;
+type DocsFlagKey = keyof typeof DOCS_FLAG_LABELS;
+
+function docsView() {
+  const s = st();
+  // A mock state seeded before this row existed (dev server kept running) gets the defaults.
+  s.docs ??= defaultDocsSettings(new Date().toISOString());
+  return { ...s.docs };
+}
+
+on("GET", "docs-settings", null, () => ok(docsView(), 80));
+
+on("PATCH", "docs-settings", "docs", async ({ body, actor }) => {
+  const b = await body();
+  const keys = (Object.keys(DOCS_FLAG_LABELS) as DocsFlagKey[]).filter((k) => has(b, k));
+  const e: Record<string, string[]> = {};
+  for (const k of keys) if (typeof b[k] !== "boolean") e[k] = ["يجب أن تكون القيمة صحيحة أو خاطئة."];
+  if (Object.keys(e).length) return bad(e);
+  const s = st();
+  docsView();
+  for (const k of keys) s.docs[k] = b[k] as boolean;
+  s.docs.updated_at = new Date().toISOString();
+  logAction(null, actor, "docs_settings.update", (Object.keys(DOCS_FLAG_LABELS) as DocsFlagKey[]).map((k) => `${DOCS_FLAG_LABELS[k]}: ${s.docs[k] ? "ظاهر" : "مخفي"}`).join(" · ") + ".");
+  return ok(docsView(), 140);
 });
 
 // ── M46: apps + billing overrides ──────────────────────────────────────────────────────

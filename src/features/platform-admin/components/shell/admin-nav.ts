@@ -1,4 +1,4 @@
-import { Banknote, Boxes, Gauge, LayoutGrid, Store, type LucideIcon } from "lucide-react";
+import { Banknote, BookOpen, Boxes, Gauge, LayoutGrid, Store, type LucideIcon } from "lucide-react";
 
 /**
  * Console navigation (M20 §6 «الشاشات», M45 §6, M46 §6). Visible paths are on
@@ -71,6 +71,14 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { key: "catalog.apps", title: "التطبيقات", path: "/apps", keywords: ["تطبيق", "App", "AppBillingOverride"] },
       { key: "catalog.categories", title: "فئات السوق", path: "/market-categories", keywords: ["فئة", "MarketCategory", "قطاع"] },
       { key: "catalog.zones", title: "مناطق شروة شيب", path: "/sharwa-ship/zones", keywords: ["منطقة", "SharwaShipZone", "شحن"] },
+    ],
+  },
+  {
+    key: "docs",
+    title: "التوثيق",
+    icon: BookOpen,
+    items: [
+      { key: "docs.settings", title: "إظهار بوابة التوثيق", path: "/docs-settings", keywords: ["توثيق", "أدلة", "docs", "PlatformDocsSettings", "مركز المساعدة", "بوابة المطورين"] },
     ],
   },
 ];

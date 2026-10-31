@@ -12,6 +12,7 @@ import {
   appOverrideSchema,
   appSchema,
   billingSettingsSchema,
+  docsSettingsSchema,
   clientOptionListSchema,
   deactivationStateSchema,
   duesDetailSchema,
@@ -46,6 +47,8 @@ import {
   type AssignInput,
   type BulkOverrideInput,
   type DeactivationAction,
+  type DocsSettings,
+  type DocsSettingsPatch,
   type DueActionInput,
   type PlanFeatureCell,
   type PlanInput,
@@ -80,6 +83,7 @@ export const adminKeys = {
   subscriptions: (p: Params) => storeKey(PLATFORM_STORE, "admin", "subscriptions", p as Record<string, unknown>),
   subscriptionsAll: storeKey(PLATFORM_STORE, "admin", "subscriptions"),
   billing: storeKey(PLATFORM_STORE, "admin", "billing-settings"),
+  docs: storeKey(PLATFORM_STORE, "admin", "docs-settings"),
   apps: storeKey(PLATFORM_STORE, "admin", "apps"),
   appOverrides: storeKey(PLATFORM_STORE, "admin", "app-overrides"),
   categories: storeKey(PLATFORM_STORE, "admin", "market-categories"),
@@ -363,6 +367,32 @@ export function usePatchBillingSettings() {
       qc.setQueryData(adminKeys.billing, data);
       void qc.invalidateQueries({ queryKey: adminKeys.all });
     },
+  });
+}
+
+// ── documentation portal switches ───────────────────────────────────────────────────
+export function useDocsSettings() {
+  return useQuery({ queryKey: adminKeys.docs, queryFn: ({ signal }) => apiFetch(`${BASE}/docs-settings`, docsSettingsSchema, { signal }) });
+}
+
+/**
+ * PATCH one or more switches. Optimistic: the switch moves at once and rolls back if the
+ * server refuses (403 for the operator role, 400 for an invalid value, network errors).
+ */
+export function usePatchDocsSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: DocsSettingsPatch) => apiFetch(`${BASE}/docs-settings`, docsSettingsSchema, { method: "PATCH", json: patch }),
+    onMutate: async (patch) => {
+      await qc.cancelQueries({ queryKey: adminKeys.docs });
+      const previous = qc.getQueryData<DocsSettings>(adminKeys.docs);
+      if (previous) qc.setQueryData<DocsSettings>(adminKeys.docs, { ...previous, ...patch });
+      return { previous };
+    },
+    onError: (_err, _patch, context) => {
+      if (context?.previous) qc.setQueryData(adminKeys.docs, context.previous);
+    },
+    onSuccess: (data) => qc.setQueryData(adminKeys.docs, data),
   });
 }
 
